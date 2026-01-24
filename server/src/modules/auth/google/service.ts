@@ -39,13 +39,9 @@ export const redirectGoogleLoginService = async (req: Request, res: Response) =>
     const user = await User.findOne({ email: data?.email })
 
     if (!user) {
-      // User doesn't exist - must register first
-      return res.status(404).json({
-        success: false,
-        message: 'No account found. Please complete registration first.',
-        redirectTo: '/auth?tab=signup',
-        email: data?.email // Pass email to pre-fill registration
-      });
+      // User doesn't exist - redirect to registration with error message
+      const errorMessage = encodeURIComponent('No account found. Please complete registration first.');
+      return res.redirect(`${process.env.CLIENT_URL}/auth?tab=signup&error=${errorMessage}&email=${encodeURIComponent(data?.email || '')}`);
     }
 
     // If user exists but registered with local provider, link Google account
@@ -58,10 +54,8 @@ export const redirectGoogleLoginService = async (req: Request, res: Response) =>
     
     // If user has Google ID but it doesn't match, this is a different Google account
     if (user.googleId && user.googleId !== data?.id) {
-      return res.status(400).json({
-        success: false,
-        message: 'This email is associated with a different Google account'
-      });
+      const errorMessage = encodeURIComponent('This email is associated with a different Google account');
+      return res.redirect(`${process.env.CLIENT_URL}/auth?tab=login&error=${errorMessage}`);
     }
 
     const tokenPayload = {
@@ -78,9 +72,13 @@ export const redirectGoogleLoginService = async (req: Request, res: Response) =>
     await User.updateOne({ _id: user?._id }, { refreshToken })
     res.cookie('accessToken', accessToken, ACCESS_TOKEN_CONFIG);
     res.cookie('refreshToken', refreshToken, REFRESH_TOKEN_CONFIG);
-    return res.status(200).json({message: "Login successful"});
+    
+    // Redirect to dashboard with success message
+    return res.redirect(`${process.env.CLIENT_URL}/dashboard?login=success`);
   } catch (error) {
-    handleError(error, res);
+    // On error, redirect to login with error message
+    const errorMessage = encodeURIComponent('Google login failed. Please try again.');
+    return res.redirect(`${process.env.CLIENT_URL}/auth?tab=login&error=${errorMessage}`);
   }
 
 };

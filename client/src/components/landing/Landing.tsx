@@ -15,7 +15,8 @@ import { Logo } from '../shared/Logo';
 import { Button } from '../ui/button';
 
 interface LandingProps {
-  onLogout: () => void;
+  onGetStarted: () => void;
+  onLogin: () => void;
 }
 
 
@@ -132,14 +133,13 @@ const BrandPromotionVideo: React.FC = () => {
   );
 };
 
-export const Landing: React.FC<LandingProps> = ({ onLogout }) => {
+export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-neutral-0 selection:bg-brand-100 selection:text-brand-700">
       {/* Navigation */}
-      {/* Navigation */}
-      <Navbar onLogout={onLogout} />
+      <Navbar onLogin={onLogin} />
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 overflow-hidden px-6">
@@ -181,11 +181,21 @@ export const Landing: React.FC<LandingProps> = ({ onLogout }) => {
             transition={{ delay: 0.3 }}
             className="flex flex-col sm:flex-row justify-center gap-4 pt-4"
           >
-            <Button variant="brand" size="lg" className="text-base h-14 px-8 rounded-xl shadow-xl shadow-brand-200/50 hover:-translate-y-1 active:translate-y-0">
+            <Button 
+              onClick={onGetStarted}
+              variant="brand" 
+              size="lg" 
+              className="text-base h-14 px-8 rounded-xl shadow-xl shadow-brand-200/50 hover:-translate-y-1 active:translate-y-0"
+            >
               Get started
             </Button>
-            <Button variant="brand-outline" size="lg" className="text-base h-14 px-8 rounded-xl">
-              Watch Preview
+            <Button 
+              onClick={onLogin}
+              variant="brand-outline" 
+              size="lg" 
+              className="text-base h-14 px-8 rounded-xl"
+            >
+              Sign In
             </Button>
           </motion.div>
         </div>

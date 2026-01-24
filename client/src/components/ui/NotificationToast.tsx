@@ -28,7 +28,7 @@ export function NotificationToast() {
           initial={{ opacity: 0, y: -50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -50, scale: 0.95 }}
-          className="fixed top-4 right-4 z-50 max-w-md"
+          className="fixed top-4 right-4 z-50 max-w-[400px]"
         >
           <div className={`${bgColors[notification.type]} border-2 rounded-xl shadow-lg p-4 flex items-start gap-3`}>
             {icons[notification.type]}

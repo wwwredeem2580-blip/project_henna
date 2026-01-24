@@ -60,19 +60,21 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
 
   const validateStep = (currentStep: Step): boolean => {
     try {
+      let result;
+      
       if (currentStep === 'org') {
-        businessInfoSchema.parse({
+        result = businessInfoSchema.safeParse({
           businessName: formData.businessName,
           businessEmail: formData.businessEmail,
           phoneNumber: formData.phoneNumber,
         });
       } else if (currentStep === 'verify') {
-        companyDetailsSchema.parse({
+        result = companyDetailsSchema.safeParse({
           companySize: formData.companySize,
           website: formData.website,
         });
       } else if (currentStep === 'basic') {
-        personalInfoSchema.parse({
+        result = personalInfoSchema.safeParse({
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
@@ -80,17 +82,20 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
           confirmPassword: formData.confirmPassword,
         });
       }
+
+      if (result && !result.success) {
+        const newErrors: Record<string, string> = {};
+        result.error.issues.forEach((err: any) => {
+          newErrors[err.path[0]] = err.message;
+        });
+        setErrors(newErrors);
+        return false;
+      }
       
       setErrors({});
       return true;
     } catch (error: any) {
-      if (error.errors) {
-        const newErrors: Record<string, string> = {};
-        error.errors.forEach((err: any) => {
-          newErrors[err.path[0]] = err.message;
-        });
-        setErrors(newErrors);
-      }
+      console.error('Validation error:', error);
       return false;
     }
   };
