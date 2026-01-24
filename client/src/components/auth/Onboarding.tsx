@@ -3,18 +3,19 @@
 import React, { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { RoleCard } from '../ui/RoleCard';
-import { Calendar, Ticket, ArrowRight } from 'lucide-react';
-import { UserRole } from '../../types';
+import { Calendar, Ticket, ArrowRight, BotIcon, VideoIcon, ShoppingBag, ShoppingCart, ShoppingBasket } from 'lucide-react';
+
+type OnboardingState = 'start' | 'demo';
 
 interface OnboardingProps {
-  onContinue: (role: UserRole) => void;
+  onContinue: (role: OnboardingState) => void;
   onLogin: () => void;
 }
 
 import { Logo } from '../shared/Logo';
 
 export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) => {
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [state, setState] = useState<OnboardingState | null>('start');
 
   // Added explicit Variants type to fix ease string assignment error
   const containerVariants: Variants = {
@@ -42,45 +43,45 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
           </motion.div>
 
           <motion.div variants={itemVariants} className="space-y-3">
-            <h1 className="text-3xl font-[300] tracking-tight text-slate-950 lg:text-5xl">
-              Start your journey with Zenny
+            <h1 className="text-3xl font-[300] tracking-tight text-slate-950 lg:text-3xl">
+              Start your journey
             </h1>
             <p className="text-slate-500 text-lg font-[300] leading-[1]">
-              Elevate your business in a way you've never imagined. Choose your path to continue.
+              Reduce support workload by 60% and boost conversions by 10% for your online store.
             </p>
           </motion.div>
 
           <motion.div variants={itemVariants} className="space-y-4">
             <RoleCard
-              title="I am a Host"
+              title="Start Onboarding"
               description="Organize hybrid events and grow your audience."
-              icon={<Calendar size={24} />}
-              selected={role === 'host'}
-              onClick={() => setRole('host')}
+              icon={<BotIcon size={24} />}
+              selected={state === 'start'}
+              onClick={() => setState('start')}
             />
             <RoleCard
-              title="I am a User"
+              title="View Demo"
               description="Discover and attend unique global experiences."
-              icon={<Ticket size={24} />}
-              selected={role === 'user'}
-              onClick={() => setRole('user')}
+              icon={<VideoIcon size={24} />}
+              selected={state === 'demo'}
+              onClick={() => setState('demo')}
             />
           </motion.div>
 
           <motion.button
             variants={itemVariants}
-            disabled={!role}
-            onClick={() => role && onContinue(role)}
+            disabled={!state}
+            onClick={() => state && onContinue(state)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-slate-950 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-slate-200/50"
+            className="w-full bg-slate-950 text-white font-[500] py-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-slate-200/50"
           >
             Get Started
             <ArrowRight size={20} />
           </motion.button>
 
-          <motion.p variants={itemVariants} className="text-center text-slate-400 font-bold text-sm">
-            Already have an account? <button onClick={onLogin} className="text-purple-600 hover:underline transition-colors">Sign In</button>
+          <motion.p variants={itemVariants} className="text-center text-slate-400 font-[400] text-sm">
+            Already have an account? <button onClick={onLogin} className="text-brand-500 hover:underline transition-colors">Sign In</button>
           </motion.p>
         </div>
       </motion.div>
@@ -115,16 +116,16 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
 
           <div className="grid grid-cols-2 gap-6 pt-4">
             <div className="aspect-video bg-brand-50 rounded-[2rem] border-2 border-dashed border-brand-200 flex items-center justify-center">
-              <Calendar className="text-brand-200" size={40} />
+              <BotIcon className="text-brand-200" size={40} />
             </div>
             <div className="aspect-video bg-brand-50 rounded-[2rem] border border-brand-200 flex items-center justify-center">
-              <Ticket className="text-brand-300" size={40} />
+              <ShoppingBasket className="text-brand-300" size={40} />
             </div>
           </div>
 
           <div className="p-8 bg-brand-400 rounded-[2.5rem] text-white space-y-3 shadow-3xl shadow-brand-500/30">
             <h3 className="font-[400] text-2xl tracking-tight leading-none text-white">Human-led, AI-powered</h3>
-            <p className="text-white/80 leading-[1] font-[300]">Built with Hostinger-level precision. Every pixel optimized for your event success.</p>
+            <p className="text-white/80 leading-[1] font-[300]">Built with Top-Notch precision. Every pixel optimized for your business success.</p>
           </div>
         </div>
       </motion.div>

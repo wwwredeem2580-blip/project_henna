@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zenny",
-  description: "An AI-powered customer support provider",
+  title: "Zenny - AI-Powered Customer Support",
+  description: "Reduce support workload by 60% and increase conversion by 10% for online stores doing $10k+/mo",
 };
 
 export default function RootLayout({

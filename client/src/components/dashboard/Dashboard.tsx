@@ -23,13 +23,13 @@ import {
   X
 } from 'lucide-react';
 
-interface HostDashboardProps {
+interface DashboardProps {
   onLogout: () => void;
 }
 
 import { Logo } from '@/components/shared/Logo';
 
-export const HostDashboard: React.FC<HostDashboardProps> = ({ onLogout }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const menuItems = [

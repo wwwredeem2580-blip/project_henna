@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 
 const userSchema = new mongoose.Schema({
-    // Identity
+    // Personal Identity (Primary Contact Person)
     firstName: {
         type: String,
         required: true,
@@ -12,8 +13,6 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-
-    // Email Addresses (Primary & Secondary)
     email: {
         type: String,
         required: true,
@@ -22,9 +21,66 @@ const userSchema = new mongoose.Schema({
         trim: true,
         index: true
     },
-
     photo: {
         type: String
+    },
+
+    // Business Information
+    businessName: {
+        type: String,
+        required: true,
+        trim: true,
+        index: true
+    },
+    businessEmail: {
+        type: String,
+        required: true,
+        lowercase: true,
+        trim: true
+    },
+    phoneNumber: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    website: {
+        type: String,
+        trim: true
+    },
+    
+    // Company Details
+    companySize: {
+        type: String,
+        enum: ['1-10', '11-50', '51-200', '201-500', '500+'],
+        required: true
+    },
+    // industry: {
+    //     type: String,
+    //     trim: true
+    // },
+    // monthlyRevenue: {
+    //     type: String,
+    //     enum: ['<10k', '10k-50k', '50k-100k', '100k-500k', '500k+'],
+    //     default: '10k-50k'
+    // },
+    
+    // Widget & Subscription
+    widgetId: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true
+    },
+    plan: {
+        type: String,
+        enum: ['free', 'starter', 'growth', 'enterprise'],
+        default: 'free',
+        index: true
+    },
+    onboardingCompleted: {
+        type: Boolean,
+        default: false,
+        index: true
     },
     
     // Auth
@@ -33,7 +89,7 @@ const userSchema = new mongoose.Schema({
     },
     provider: {
         type: String,
-        enum: ['google', 'local', 'facebook'],
+        enum: ['google', 'local'],
         default: 'local'
     },
     googleId: {
@@ -45,22 +101,22 @@ const userSchema = new mongoose.Schema({
         type: String
     },
     
-    // Verification Status (denormalized for quick access)
+    // Verification Status
     emailVerified: {
         type: Boolean,
         default: false,
         index: true
     },
     
-    // Role
+    // Role (B2B Team Structure)
     role: {
         type: String,
-        enum: ['user', 'admin'],
-        default: 'user',
+        enum: ['owner', 'admin', 'member'],
+        default: 'owner',
         index: true
     },
     
-    // Moderation (flattened from nested object)
+    // Account Status
     isSuspended: {
         type: Boolean,
         default: false,
@@ -92,9 +148,22 @@ const userSchema = new mongoose.Schema({
 
 // Indexes for common queries
 userSchema.index({ email: 1 });
+userSchema.index({ businessName: 1 });
+userSchema.index({ widgetId: 1 }, { sparse: true });
 userSchema.index({ role: 1, isSuspended: 1 });
+userSchema.index({ plan: 1, isSuspended: 1 });
 userSchema.index({ googleId: 1 }, { sparse: true });
 userSchema.index({ emailVerified: 1, role: 1 });
+userSchema.index({ onboardingCompleted: 1 });
+
+// Pre-save hook: Generate widgetId if not exists
+// userSchema.pre('save', function(this: any, next: (err?: Error) => void) {
+//     if (!this.widgetId && this.isNew) {
+//         // Generate unique widget ID: zny_<timestamp>_<random>
+//         this.widgetId = `zny_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+//     }
+//     next();
+// });
 
 // Virtual: Full Name
 userSchema.virtual('fullName').get(function() {

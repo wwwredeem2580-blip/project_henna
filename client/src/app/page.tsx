@@ -2,27 +2,26 @@
 
 import { Onboarding } from "@/components/auth/Onboarding";
 import { Login } from "@/components/auth/Login";
-import { SignupHost } from "@/components/auth/SignupHost";
-import { SignupUser } from "@/components/auth/SignupUser";
+import { Register } from "@/components/auth/Register";
 import { VerifyEmail } from "@/components/auth/VerifyEmail";
 import { Landing } from "@/components/landing/Landing";
-import { HostDashboard } from "@/components/dashboard/HostDashboard";
-import { UserRole } from "@/types";
+import { Dashboard } from "@/components/dashboard/Dashboard";
 import { useState } from "react";
 
-type AuthStep = 'onboarding' | 'login' | 'signup-host' | 'signup-user' | 'verify-email' | 'landing' | 'host-dashboard';
+type AuthStep = 'onboarding' | 'login' | 'register' | 'verify-email' | 'landing' | 'dashboard';
+type OnboardingState = 'start' | 'demo';
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState<AuthStep>('onboarding');
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [onboardingState, setOnboardingState] = useState<OnboardingState | null>(null);
 
-  const handleRoleSelect = (role: UserRole) => {
-    console.log("Selected role:", role);
-    setUserRole(role);
-    if (role === 'host') {
-      setCurrentStep('signup-host');
+  const handleRoleSelect = (state: OnboardingState) => {
+    console.log("Selected role:", state);
+    setOnboardingState(state);
+    if (state === 'start') {
+      setCurrentStep('register');
     } else {
-      setCurrentStep('signup-user');
+      setCurrentStep('landing');
     }
   };
 
@@ -46,32 +45,28 @@ export default function Home() {
   const handleLoginSuccess = () => {
     console.log("Login successful! Redirecting to dashboard...");
     // For now, assume login leads to host dashboard
-    setCurrentStep('host-dashboard');
+    setCurrentStep('dashboard');
   };
 
   const handleLogout = () => {
     setCurrentStep('onboarding');
-    setUserRole(null);
   };
 
   const handleLandingLogout = () => {
     setCurrentStep('onboarding');
-    setUserRole(null);
   };
 
   switch (currentStep) {
     case 'login':
       return <Login onLogin={handleLoginSuccess} onGoBack={handleGoBack} />;
-    case 'signup-host':
-      return <SignupHost onSuccess={handleSignupSuccess} onGoBack={handleGoBack} />;
-    case 'signup-user':
-      return <SignupUser onSuccess={handleSignupSuccess} onGoBack={handleGoBack} />;
+    case 'register':
+      return <Register onSuccess={handleSignupSuccess} onGoBack={handleGoBack} />;
     case 'verify-email':
       return <VerifyEmail onVerified={handleVerificationSuccess} />;
     case 'landing':
       return <Landing onLogout={handleLandingLogout} />;
-    case 'host-dashboard':
-      return <HostDashboard onLogout={handleLogout} />;
+    case 'dashboard':
+      return <Dashboard onLogout={handleLogout} />;
     default:
       return <Onboarding onContinue={handleRoleSelect} onLogin={handleLoginClick} />;
   }

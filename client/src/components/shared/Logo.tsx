@@ -17,7 +17,7 @@ export const Logo: React.FC<LogoProps> = ({ className = "w-auto h-6", strokeWidt
         {/* N */}
         <path d="M42 18V6L54 18V6" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
         {/* N */}
-        <path d="M42 18V6L54 18V6" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M60 18V6L72 18V6" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
         {/* Y */}
         <path d="M78 6L84 12L90 6 M84 12V18" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
       </svg>
