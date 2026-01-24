@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import nodemailer from 'nodemailer';
 import {
-    emailVerification,
+    emailVerificationTemplate,
   } from '../utils/email/emailVerification';
 
 const redisOptions = {
@@ -60,7 +60,7 @@ export const initEmailWorker = () => {
             case 'EMAIL_VERIFICATION':
                 to = payload.email;
                 subject = `Verify Your Email - Zenvy`;
-                html = emailVerification(payload.userName, payload.verificationUrl);
+                html = emailVerificationTemplate(payload);
                 break;
             default:
                 console.warn(`Unknown email job type: ${type}`);

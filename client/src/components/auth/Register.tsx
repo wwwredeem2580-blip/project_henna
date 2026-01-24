@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe } from 'lucide-react';
 import { authService } from '@/lib/api/auth';
 import { useNotification } from '@/lib/context/notification';
+import { businessInfoSchema, companyDetailsSchema, personalInfoSchema } from '@/schema/auth.schema';
 
 interface RegisterProps {
   onSuccess: () => void;
@@ -58,26 +59,40 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
   };
 
   const validateStep = (currentStep: Step): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (currentStep === 'org') {
-      if (!formData.businessName.trim()) newErrors.businessName = 'Business name is required';
-      if (!formData.businessEmail.trim()) newErrors.businessEmail = 'Business email is required';
-      if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
-    } else if (currentStep === 'verify') {
-      if (!formData.companySize) newErrors.companySize = 'Please select company size';
-    } else if (currentStep === 'basic') {
-      if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-      if (!formData.email.trim()) newErrors.email = 'Email is required';
-      if (!formData.password) newErrors.password = 'Password is required';
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
+    try {
+      if (currentStep === 'org') {
+        businessInfoSchema.parse({
+          businessName: formData.businessName,
+          businessEmail: formData.businessEmail,
+          phoneNumber: formData.phoneNumber,
+        });
+      } else if (currentStep === 'verify') {
+        companyDetailsSchema.parse({
+          companySize: formData.companySize,
+          website: formData.website,
+        });
+      } else if (currentStep === 'basic') {
+        personalInfoSchema.parse({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+        });
       }
+      
+      setErrors({});
+      return true;
+    } catch (error: any) {
+      if (error.errors) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err: any) => {
+          newErrors[err.path[0]] = err.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = (nextStep: Step) => {

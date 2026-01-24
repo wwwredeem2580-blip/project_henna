@@ -153,6 +153,16 @@ export const googleRegisterCallbackService = async (req: Request, res: Response)
     user.refreshToken = refreshToken;
     await user.save();
 
+    // Send verification email (even though Google email is verified, we want our own verification)
+    try {
+      const { sendVerificationEmail } = await import('../email-verification/service');
+      await sendVerificationEmail(user._id.toString(), user.email);
+      console.log(`📧 Verification email queued for: ${user.email}`);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail registration if email fails
+    }
+
     // Set cookies
     res.cookie('accessToken', accessToken, ACCESS_TOKEN_CONFIG);
     res.cookie('refreshToken', refreshToken, REFRESH_TOKEN_CONFIG);

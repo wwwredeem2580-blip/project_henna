@@ -67,10 +67,21 @@ export const registerService = async (req: Request, res: Response) => {
     });
     user.refreshToken = refreshToken;
     await user.save();
+    
+    // Send verification email
+    try {
+      const { sendVerificationEmail } = await import('../email-verification/service');
+      await sendVerificationEmail(user._id.toString(), user.email);
+      console.log(`📧 Verification email queued for: ${user.email}`);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail registration if email fails
+    }
+    
     res.cookie('accessToken', accessToken, ACCESS_TOKEN_CONFIG);
     res.cookie('refreshToken', refreshToken, REFRESH_TOKEN_CONFIG);
     return res.status(201).json({ 
-      message: 'Registration successful' 
+      message: 'Registration successful. Please check your email to verify your account.' 
     });
   } catch (error) {
     handleError(error, res);

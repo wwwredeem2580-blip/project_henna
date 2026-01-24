@@ -29,22 +29,26 @@ export const loginSchema = z.object({
     password: z.string({message: 'Password is required'}).min(1, 'Password is required'),
 });
 
-export const registerSchema = z.object({
-  // Business Information
+// Step 1: Business Information
+export const businessInfoSchema = z.object({
   businessName: z.string({message: 'Business name is required'})
     .trim()
     .min(MIN_BUSINESS_NAME_LENGTH, `Business name must be at least ${MIN_BUSINESS_NAME_LENGTH} characters long`)
     .max(MAX_BUSINESS_NAME_LENGTH, `Business name must be at most ${MAX_BUSINESS_NAME_LENGTH} characters long`),
   businessEmail: z.string().email({message: 'Please enter a valid business email address'}),
   phoneNumber: phoneNumberSchema,
-  website: z.string().url({message: 'Please enter a valid website URL'}).optional().or(z.literal('')),
-  
-  // Company Details
+});
+
+// Step 2: Company Details
+export const companyDetailsSchema = z.object({
   companySize: z.enum(['1-10', '11-50', '51-200', '201-500', '500+'], {
     message: 'Please select your company size'
   }),
-  
-  // Personal Information (Primary Contact)
+  website: z.string().url({message: 'Please enter a valid website URL'}).optional().or(z.literal('')),
+});
+
+// Step 3: Personal Information
+export const personalInfoSchema = z.object({
   firstName: z.string({message: 'First name is required'})
     .trim()
     .min(MIN_FIRST_NAME_LENGTH, `First name must be at least ${MIN_FIRST_NAME_LENGTH} characters long`)
@@ -56,4 +60,12 @@ export const registerSchema = z.object({
   email: z.string().email({message: 'Please enter a valid email address'}),
   password: strongPasswordSchema,
   confirmPassword: confirmPasswordSchema,
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
+
+// Full registration schema (all steps combined)
+export const registerSchema = businessInfoSchema
+  .merge(companyDetailsSchema)
+  .merge(personalInfoSchema);

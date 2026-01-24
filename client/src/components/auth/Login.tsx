@@ -1,8 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, ChevronLeft, Sparkles } from 'lucide-react';
+import { authService } from '@/lib/api/auth';
+import { useNotification } from '@/lib/context/notification';
+import { loginSchema } from '@/schema/auth.schema';
+import { useRouter } from 'next/navigation';
 
 interface LoginProps {
   onLogin: () => void;
@@ -10,6 +14,70 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
+  const router = useRouter();
+  const { showNotification } = useNotification();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const updateField = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Validate with schema
+      loginSchema.parse(formData);
+      setErrors({});
+      
+      setLoading(true);
+      await authService.login(formData);
+      
+      showNotification('success', 'Welcome back!', 'Successfully logged in');
+      onLogin(); // This will redirect to dashboard
+    } catch (error: any) {
+      if (error.errors) {
+        // Zod validation errors
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err: any) => {
+          newErrors[err.path[0]] = err.message;
+        });
+        setErrors(newErrors);
+      } else if (error?.response?.status === 404) {
+        // User not found
+        showNotification('error', 'Account Not Found', 'Please register first');
+        setErrors({ submit: 'No account found with this email' });
+      } else {
+        // Other errors
+        const message = error?.response?.data?.message || 'Login failed';
+        showNotification('error', 'Login Failed', message);
+        setErrors({ submit: message });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      const url = await authService.googleLogin();
+      window.location.href = url;
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to initiate Google login';
+      showNotification('error', 'Error', message);
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-white">
       {/* Left: Login Form */}
@@ -29,13 +97,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
 
           <div className="space-y-2">
             <h1 className="text-4xl font-[300] text-neutral-800 tracking-tight">Welcome Back</h1>
-            <p className="text-neutral-500 font-[300]">Log in to manage your events and tickets with ease.</p>
+            <p className="text-neutral-500 font-[300]">Log in to access your Zenny dashboard</p>
           </div>
 
-          <div className="space-y-6">
-            <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border-1 border-neutral-100 rounded-xl hover:bg-gray-50 transition-all font-[300] text-neutral-700">
+          <form onSubmit={handleEmailLogin} className="space-y-6">
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-neutral-200 rounded-xl hover:bg-gray-50 transition-all font-[500] text-neutral-700 disabled:opacity-50"
+            >
               <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
-              Sign in with Google
+              {loading ? 'Redirecting...' : 'Sign in with Google'}
             </button>
 
             <div className="flex items-center gap-4 text-neutral-200">
@@ -51,38 +124,52 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={20} />
                   <input
                     type="email"
+                    value={formData.email}
+                    onChange={(e) => updateField('email', e.target.value)}
                     placeholder="name@company.com"
                     className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
                 </div>
+                {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
               </div>
+              
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-[500] text-neutral-700 ml-1">Password</label>
-                  <button className="text-sm font-[500] text-neutral-700 hover:text-neutral-600">Forgot?</button>
+                  <button type="button" className="text-sm font-[500] text-neutral-700 hover:text-neutral-600">Forgot?</button>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={20} />
                   <input
                     type="password"
+                    value={formData.password}
+                    onChange={(e) => updateField('password', e.target.value)}
                     placeholder="••••••••"
                     className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
                 </div>
+                {errors.password && <p className="text-xs text-red-500 ml-1">{errors.password}</p>}
               </div>
             </div>
 
+            {errors.submit && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
+
             <button
-              onClick={onLogin}
-              className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-neutral-700 transition-all shadow-lg shadow-neutral-100"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
               <LogIn size={20} />
             </button>
-          </div>
+          </form>
 
           <p className="text-center text-neutral-500 font-[400]">
-            Don't have an account? <button className="text-brand-500 font-[500] hover:underline">Create one</button>
+            Don't have an account? <button onClick={onGoBack} className="text-brand-500 font-[500] hover:underline">Create one</button>
           </p>
         </div>
       </motion.div>
@@ -114,31 +201,17 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
           <div className='max-w-[500px] flex flex-col items-center gap-4'>
             <div className="inline-flex max-w-[400px] items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white">
               <Sparkles size={18} />
-              <span className="text-sm font-[500] uppercase tracking-wider">Experience the Future</span>
+              <span className="text-sm font-[500] uppercase tracking-wider">AI-Powered Support</span>
             </div>
 
             <h2 className="text-3xl lg:text-5xl font-black text-white leading-tight">
-              Elevate your <br />
-              <span className="text-brand-200">Experiences.</span>
+              Reduce Support <br />
+              <span className="text-brand-200">Workload by 60%</span>
             </h2>
 
-              <p className="text-white/80 text-lg font-[300] leading-relaxed">
-                Join thousands of event architects creating unfathomably clean moments for their community.
-              </p>
-
-              <div className="flex justify-center -space-x-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <img
-                    key={i}
-                    src={`https://picsum.photos/seed/${i + 20}/100/100`}
-                    className="w-16 h-16 rounded-full border-4 border-purple-600 shadow-xl"
-                    alt="user"
-                  />
-                ))}
-                <div className="w-16 h-16 rounded-full border-4 border-purple-600 bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-bold text-xl shadow-xl">
-                  +10k
-                </div>
-              </div>
+            <p className="text-white/80 text-lg font-[300] leading-relaxed">
+              Join businesses using Zenny to automate customer support and boost conversions.
+            </p>
           </div>
         </div>
       </motion.div>
