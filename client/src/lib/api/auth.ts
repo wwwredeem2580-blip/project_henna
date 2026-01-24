@@ -32,8 +32,19 @@ export const authService = {
   },
 
   googleLogin: async (): Promise<string> => {
-    const response = await apiClient.get(`/api/auth/google`) as string;
-    return response
+    const response = await apiClient.get(`/api/auth/google/login`) as { url: string };
+    return response.url;
+  },
+
+  // Google OAuth Registration (with business data)
+  initiateGoogleRegister: async (businessData: {
+    businessName: string;
+    businessEmail: string;
+    phoneNumber: string;
+    website?: string;
+    companySize: string;
+  }): Promise<{ url: string; state: string }> => {
+    return await apiClient.post('/api/auth/google/register/initiate', businessData);
   },
 
   sendVerification: async (email?: string): Promise<{ success: boolean; message: string }> => {
