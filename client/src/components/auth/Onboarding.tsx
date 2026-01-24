@@ -43,10 +43,10 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
 
           <motion.div variants={itemVariants} className="space-y-3">
             <h1 className="text-3xl font-[300] tracking-tight text-slate-950 lg:text-5xl">
-              Start your journey
+              Start your journey with Zenny
             </h1>
             <p className="text-slate-500 text-lg font-[300] leading-[1]">
-              Experience events in a way you've never imagined. Choose your path to continue.
+              Elevate your business in a way you've never imagined. Choose your path to continue.
             </p>
           </motion.div>
 
