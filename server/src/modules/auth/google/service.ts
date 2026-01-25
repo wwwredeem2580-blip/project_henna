@@ -24,10 +24,18 @@ export const getGoogleLoginUrlService = async (req: Request, res: Response) => {
 
 export const redirectGoogleLoginService = async (req: Request, res: Response) => {
 
-  const { code } = req.query;
+  const { code, state } = req.query;
   if(!code || typeof code !== 'string') throw new CustomError("Google login failed", 500)
 
   try {
+    // Check if this is a registration flow (state starts with 'reg_')
+    if (state && typeof state === 'string' && state.startsWith('reg_')) {
+      // This is a registration flow - delegate to registration handler
+      const { googleRegisterCallbackService } = await import('../google-register/service');
+      return await googleRegisterCallbackService(req, res);
+    }
+
+    // This is a login flow - continue with normal login
     const { tokens } = await GoogleClient.getToken(code);
     if (!tokens?.access_token) throw new CustomError("Google token exchange failed", 500)
 
@@ -46,14 +54,14 @@ export const redirectGoogleLoginService = async (req: Request, res: Response) =>
 
     // If user exists but registered with local provider, link Google account
     if (user.provider === 'local' && !user.googleId) {
-      user.googleId = data?.id;
+      user.googleId = data?.sub;
       user.provider = 'google';
       user.photo = data?.picture;
       await user.save();
     }
     
     // If user has Google ID but it doesn't match, this is a different Google account
-    if (user.googleId && user.googleId !== data?.id) {
+    if (user.googleId && user.googleId !== data?.sub) {
       const errorMessage = encodeURIComponent('This email is associated with a different Google account');
       return res.redirect(`${process.env.CLIENT_URL}/auth?tab=login&error=${errorMessage}`);
     }

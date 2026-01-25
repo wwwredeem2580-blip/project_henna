@@ -39,11 +39,12 @@ export const initiateGoogleRegisterService = async (req: Request, res: Response)
     });
 
     // Generate OAuth URL with state
+    // Use the same redirect URI as login to avoid mismatch
     const url = GoogleClient.generateAuthUrl({
       access_type: 'offline',
       scope: 'profile email',
       state: state,
-      redirect_uri: process.env.GOOGLE_OAUTH_REGISTER_REDIRECT_URI || 'http://localhost:3001/auth/google/register/callback'
+      // Don't override redirect_uri - use the one from GoogleClient initialization
     });
 
     return res.status(200).json({ url, state });

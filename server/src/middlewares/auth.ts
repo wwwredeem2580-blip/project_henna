@@ -20,6 +20,7 @@ export const requirePublic = async (req: Request, res: Response, next: NextFunct
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log(req.cookies)
     if(!req.cookies || !req.cookies.accessToken){
       return res.status(401).json({ message: 'Unauthorized' });
     }

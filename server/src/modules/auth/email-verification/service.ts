@@ -116,7 +116,7 @@ export const resendVerificationEmailService = async (req: Request, res: Response
 }
 
 
-export const sendVerificationEmail = async (userId: string, email: string, emailType: 'primary' | 'secondary' = 'primary'): Promise<{ success: boolean; message: string }> => {
+export const sendVerificationEmail = async (userId: string, email: string): Promise<{ success: boolean; message: string }> => {
     try {
       // Check if user exists
       const user = await User.findById(userId);
@@ -125,16 +125,8 @@ export const sendVerificationEmail = async (userId: string, email: string, email
       }
 
       // Check if email is already verified based on type
-      if (emailType === 'primary' && (user.primaryEmailVerified || user.emailVerified)) {
-        throw new CustomError('Primary email already verified', 400);
-      }
-      if (emailType === 'secondary' && user.secondaryEmailVerified) {
-        throw new CustomError('Secondary email already verified', 400);
-      }
-
-      // For primary email, check if user is host and primary email is required
-      if (emailType === 'primary' && user.role === 'host' && !user.primaryEmailVerified) {
-        // Allow sending verification for hosts
+      if (user.emailVerified) {
+        throw new CustomError('Email already verified', 400);
       }
 
       // Check for existing pending verification
@@ -172,11 +164,10 @@ export const sendVerificationEmail = async (userId: string, email: string, email
       await addEmailJob('EMAIL_VERIFICATION', {
         userName,
         email,
-        emailType,
         verificationUrl
       });
 
-      console.log(`📧 Email verification queued for: ${email} (${emailType})`);
+      console.log(`📧 Email verification queued for: ${email}`);
 
       return {
         success: true,

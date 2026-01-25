@@ -27,7 +27,7 @@ export const authService = {
   },
 
   refresh: async (): Promise<AuthResponse> => {
-    const response = await apiClient.post('/refresh') as AuthResponse;
+    const response = await apiClient.post('/api/auth/refresh') as AuthResponse;
     return response;
   },
 
