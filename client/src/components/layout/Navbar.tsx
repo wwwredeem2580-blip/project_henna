@@ -3,6 +3,8 @@
 import React from 'react';
 import { Logo } from '../shared/Logo';
 import { Button } from '../ui/button';
+import { useAuth } from '@/lib/context/auth';
+import { authService } from '@/lib/api/auth';
 
 interface NavbarProps {
   onLogin: () => void;
@@ -10,6 +12,12 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onLogin, onGetStarted }) => {
+  const { user } = useAuth();
+
+  const handleLogout = async () => {
+    await authService.logout();
+    onLogin();
+  }
   return (
     <nav className="sticky top-0 z-10 bg-neutral-0/80 backdrop-blur-xl border-b border-brand-100">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -29,24 +37,34 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onGetStarted }) => {
             About
           </a>
         </div>
-
-        <div className="hidden md:flex items-center gap-4">
+        {user ? (
           <Button 
-            onClick={onLogin}
-            variant="ghost" 
-            size="sm"
-            className='hover:scale-103'
+            onClick={handleLogout}
+            variant="brand-outline" 
+            size="sm" 
+            className="text-sm hidden md:flex h-8 px-6 rounded-xl"
           >
-            Sign In
+            Logout
           </Button>
-          <Button 
-            onClick={onGetStarted}
-            variant="brand" 
-            size="sm"
-          >
-            Get Started
-          </Button>
-        </div>
+        ) : (
+          <div className="hidden md:flex items-center gap-4">
+            <Button 
+              onClick={onLogin}
+              variant="ghost" 
+              size="sm"
+              className='hover:scale-103'
+            >
+              Sign In
+            </Button>
+            <Button 
+              onClick={onGetStarted}
+              variant="brand" 
+              size="sm"
+            >
+              Get Started
+            </Button>
+          </div>
+        )}
 
         {/* Mobile Menu Button */}
         <button className="md:hidden p-2">

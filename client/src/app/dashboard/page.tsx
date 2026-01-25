@@ -4,6 +4,7 @@ import { Dashboard } from '@/components/host/dashboard/Dashboard';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useNotification } from '@/lib/context/notification';
 import { useEffect } from 'react';
+import { authService } from '@/lib/api/auth';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -24,9 +25,9 @@ export default function DashboardPage() {
     }
   }, [login, registered, router, showNotification]);
 
-  const handleLogout = () => {
-    // TODO: Call logout API
-    router.push('/');
+  const handleLogout = async () => {
+    await authService.logout();
+    router.push('/onboarding');
   };
 
   return <Dashboard onLogout={handleLogout} />;

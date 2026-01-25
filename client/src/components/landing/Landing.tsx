@@ -13,6 +13,7 @@ import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
 import { Logo } from '../shared/Logo';
 import { Button } from '../ui/button';
+import { useAuth } from '@/lib/context/auth';
 
 interface LandingProps {
   onGetStarted: () => void;
@@ -135,7 +136,8 @@ const BrandPromotionVideo: React.FC = () => {
 
 export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
-
+  const { user } = useAuth();
+  
   return (
     <div className="min-h-screen bg-neutral-0 selection:bg-brand-100 selection:text-brand-700">
       {/* Navigation */}
@@ -175,7 +177,34 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             Top-notch precision for your events. Zenvy provides the infrastructure for high-end hybrid experiences, from automated payouts to encrypted document vaults.
           </motion.p>
 
-          <motion.div
+          {user ? (
+            <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row justify-center gap-4 pt-4"
+          >
+            <Button 
+              onClick={onGetStarted}
+              variant="brand" 
+              size="lg" 
+              className="text-base h-14 px-8 rounded-xl shadow-xl shadow-brand-200/50 hover:-translate-y-1 active:translate-y-0"
+            >
+              Explore Events
+            </Button>
+            {user.role === 'host' && (
+              <Button 
+                onClick={onGetStarted}
+                variant="brand-outline" 
+                size="lg" 
+                className="text-base h-14 px-8 rounded-xl"
+              >
+                Create Event
+              </Button>
+            )}
+          </motion.div>
+          ) : (
+            <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -198,6 +227,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
               Sign In
             </Button>
           </motion.div>
+          )}
         </div>
       </section>
 
