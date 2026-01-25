@@ -8,6 +8,7 @@ import { requireAuth } from '../../middlewares/auth';
 import { refreshService } from './refresh/service';
 import { verifyEmailService, sendVerificationEmailService, resendVerificationEmailService } from './email/service';
 import { verifyService } from './verify/service';
+import { sendOTPService, verifyOTPService, resendOTPService } from './phone-otp/service';
 
 const router = Router();
 
@@ -36,5 +37,10 @@ router.post('/email/resend-verification', requireAuth, resendVerificationEmailSe
 
 // Login State Verify
 router.post('/verify', requireAuth, verifyService);
+
+// Phone Verification
+router.post('/phone/verify', requireAuth, verifyOTPService);
+router.post('/phone/send', requireAuth, sendOTPService);
+router.post('/phone/resend', requireAuth, resendOTPService);
 
 export default router;
