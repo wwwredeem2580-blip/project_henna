@@ -28,11 +28,13 @@ export const redirectGoogleLoginService = async (req: Request, res: Response) =>
   if(!code || typeof code !== 'string') throw new CustomError("Google login failed", 500)
 
   try {
-    // Check if this is a registration flow (state starts with 'reg_')
-    if (state && typeof state === 'string' && state.startsWith('reg_')) {
-      // This is a registration flow - delegate to registration handler
-      const { googleRegisterCallbackService } = await import('../google-register/service');
-      return await googleRegisterCallbackService(req, res);
+    // Check if this is a registration flow (state starts with 'host_reg_' or 'user_reg_')
+    if (state && typeof state === 'string') {
+      if (state.startsWith('host_reg_') || state.startsWith('user_reg_')) {
+        // This is a registration flow - delegate to registration handler
+        const { googleRegisterCallbackService } = await import('../google-register/service');
+        return await googleRegisterCallbackService(req, res);
+      }
     }
 
     // This is a login flow - continue with normal login
@@ -72,6 +74,7 @@ export const redirectGoogleLoginService = async (req: Request, res: Response) =>
       role: user?.role,
       firstName: user?.firstName,
       lastName: user?.lastName,
+      emailVerified: user?.emailVerified,
     }
 
     const accessToken = generateAccessToken(tokenPayload)
@@ -81,8 +84,9 @@ export const redirectGoogleLoginService = async (req: Request, res: Response) =>
     res.cookie('accessToken', accessToken, ACCESS_TOKEN_CONFIG);
     res.cookie('refreshToken', refreshToken, REFRESH_TOKEN_CONFIG);
     
-    // Redirect to dashboard with success message
-    return res.redirect(`${process.env.CLIENT_URL}/dashboard?login=success`);
+    // Role-based redirect after login
+    const dashboardUrl = user.role === 'host' ? '/host/dashboard' : '/dashboard';
+    return res.redirect(`${process.env.CLIENT_URL}${dashboardUrl}?login=success`);
   } catch (error) {
     // On error, redirect to login with error message
     const errorMessage = encodeURIComponent('Google login failed. Please try again.');

@@ -35,6 +35,7 @@ export const loginService = async (req: Request, res: Response) => {
       role: user.role,
       firstName: user.firstName,
       lastName: user.lastName,
+      emailVerified: user.emailVerified,
     });
     const refreshToken = generateRefreshToken({ 
       sub: user._id.toString(), 
@@ -42,6 +43,7 @@ export const loginService = async (req: Request, res: Response) => {
       role: user.role,
       firstName: user.firstName,
       lastName: user.lastName,
+      emailVerified: user.emailVerified,
     });
     user.refreshToken = refreshToken;
     await user.save();

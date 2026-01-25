@@ -2,8 +2,8 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Login } from '@/components/auth/Login';
-import { SignupHost } from '@/components/auth/SignupHost';
 import { SignupUser } from '@/components/auth/SignupUser';
+import { SignupHost } from '@/components/auth/SignupHost';
 import { useEffect } from 'react';
 import { useNotification } from '@/lib/context/notification';
 
@@ -12,7 +12,7 @@ export default function AuthPage() {
   const router = useRouter();
   const { showNotification } = useNotification();
   const tab = searchParams.get('tab') || 'login';
-  const role = searchParams.get('role') || 'user';
+  const role = searchParams.get('role') as 'host' | 'user' | null;
   const error = searchParams.get('error');
   const email = searchParams.get('email');
 
@@ -21,39 +21,35 @@ export default function AuthPage() {
     if (error) {
       showNotification('error', 'Authentication Error', decodeURIComponent(error));
       // Clean up URL
-      const newUrl = `/auth?tab=${tab}${email ? `&email=${email}` : ''}`;
+      const newUrl = `/auth?tab=${tab}${role ? `&role=${role}` : ''}${email ? `&email=${email}` : ''}`;
       router.replace(newUrl);
     }
-  }, [error, tab, email, router, showNotification]);
+  }, [error, tab, role, email, router, showNotification]);
 
   const handleLoginSuccess = () => {
+    // Redirect will be handled by backend based on role
     router.push('/dashboard');
   };
 
   const handleRegisterSuccess = () => {
     showNotification('success', 'Registration Successful!', 'Please check your email to verify your account');
+    // Redirect will be handled by backend based on role
     router.push('/dashboard');
   };
 
   const handleGoBack = () => {
-    router.push('/');
+    router.push('/onboarding');
   };
 
-  const handleSwitchToRegister = () => {
-    router.push(`/auth?tab=signup&role=${role}`);
-  };
-
-  const handleSwitchToLogin = () => {
-    router.push(`/auth?tab=login&role=${role}`);
-  };
-
-  if (tab === 'signup' && role === 'host') {
+  // Registration flow - route based on role
+  if (tab === 'signup' || tab === 'register') {
+    if (role === 'user') {
+      return <SignupUser onSuccess={handleRegisterSuccess} onGoBack={handleGoBack} />;
+    }
+    // Default to host registration (or if role === 'host')
     return <SignupHost onSuccess={handleRegisterSuccess} onGoBack={handleGoBack} />;
   }
 
-  if (tab === 'signup' && role === 'user') {
-    return <SignupUser onSuccess={handleRegisterSuccess} onGoBack={handleGoBack} />;
-  }
-
+  // Login flow
   return <Login onLogin={handleLoginSuccess} onGoBack={handleGoBack} />;
 }

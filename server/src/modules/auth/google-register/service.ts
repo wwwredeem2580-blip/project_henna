@@ -16,23 +16,28 @@ const oauthStateStore = new Map<string, any>();
  */
 export const initiateGoogleRegisterService = async (req: Request, res: Response) => {
   try {
-    const { businessName, businessEmail, phoneNumber, website, companySize } = req.body;
+    const { role, ...businessData } = req.body;
 
-    // Validate business data
-    if (!businessName || !businessEmail || !phoneNumber || !companySize) {
-      throw new CustomError('Missing required business information', 400);
+    // Validate role
+    if (!role || !['host', 'user'].includes(role)) {
+      throw new CustomError('Invalid role specified. Must be "host" or "user"', 400);
     }
 
-    // Generate state parameter to store business data
-    const state = `reg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // For hosts, validate business data
+    if (role === 'host') {
+      const { businessName, businessEmail, phoneNumber, companyType } = businessData;
+      if (!businessName || !businessEmail || !phoneNumber || !companyType) {
+        throw new CustomError('Missing required business information for host registration', 400);
+      }
+    }
+
+    // Generate state with role prefix: {role}_reg_{timestamp}_{random}
+    const state = `${role}_reg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Store business data temporarily (expires in 10 minutes)
+    // Store data with role (expires in 10 minutes)
     oauthStateStore.set(state, {
-      businessName,
-      businessEmail,
-      phoneNumber,
-      website,
-      companySize,
+      role,
+      ...businessData,
       expiresAt: Date.now() + 10 * 60 * 1000
     });
 
@@ -67,18 +72,21 @@ export const googleRegisterCallbackService = async (req: Request, res: Response)
   }
 
   try {
-    // Retrieve business data from state
-    const businessData = oauthStateStore.get(state);
+    // Retrieve stored data from state
+    const storedData = oauthStateStore.get(state);
     
-    if (!businessData) {
+    if (!storedData) {
       throw new CustomError("OAuth session expired. Please try again.", 400);
     }
 
     // Check if expired
-    if (Date.now() > businessData.expiresAt) {
+    if (Date.now() > storedData.expiresAt) {
       oauthStateStore.delete(state);
       throw new CustomError("OAuth session expired. Please try again.", 400);
     }
+
+    // Extract role and business data
+    const { role, expiresAt, ...businessData } = storedData;
 
     // Exchange code for tokens
     const { tokens } = await GoogleClient.getToken(code);
@@ -110,8 +118,8 @@ export const googleRegisterCallbackService = async (req: Request, res: Response)
       throw new CustomError('User already exists with this email or Google account', 409);
     }
 
-    // Create user with business data + Google info
-    const user = await User.create({
+    // Create user with role-specific fields
+    const userData: any = {
       // Personal Information from Google
       firstName: googleUser.given_name,
       lastName: googleUser.family_name,
@@ -119,22 +127,24 @@ export const googleRegisterCallbackService = async (req: Request, res: Response)
       photo: googleUser.picture,
       googleId: googleUser.sub,
       
-      // Business Information from form
-      businessName: businessData.businessName,
-      businessEmail: businessData.businessEmail,
-      phoneNumber: businessData.phoneNumber,
-      website: businessData.website || undefined,
-      
-      // Company Details
-      companySize: businessData.companySize,
-      
-      // Account Setup
-      role: 'owner',
+      // Role and provider
+      role: role, // 'host' or 'user'
       provider: 'google',
-      plan: 'free',
-      onboardingCompleted: false,
       emailVerified: googleUser.email_verified || false,
-    });
+    };
+
+    // Add host-specific fields if role is 'host'
+    if (role === 'host') {
+      userData.businessName = businessData.businessName;
+      userData.businessEmail = businessData.businessEmail;
+      userData.phoneNumber = businessData.phoneNumber;
+      userData.website = businessData.website || undefined;
+      userData.companyType = businessData.companyType;
+      userData.plan = 'free';
+      userData.onboardingCompleted = false;
+    }
+
+    const user = await User.create(userData);
 
     // Generate tokens
     const tokenPayload = {
@@ -143,6 +153,7 @@ export const googleRegisterCallbackService = async (req: Request, res: Response)
       role: user.role,
       firstName: user.firstName,
       lastName: user.lastName,
+      emailVerified: user.emailVerified,
     };
 
     const accessToken = generateAccessToken(tokenPayload);
@@ -154,7 +165,7 @@ export const googleRegisterCallbackService = async (req: Request, res: Response)
 
     // Send verification email (even though Google email is verified, we want our own verification)
     try {
-      const { sendVerificationEmail } = await import('../email-verification/service');
+      const { sendVerificationEmail } = await import('../email/service');
       await sendVerificationEmail(user._id.toString(), user.email);
       console.log(`📧 Verification email queued for: ${user.email}`);
     } catch (emailError) {
@@ -169,8 +180,9 @@ export const googleRegisterCallbackService = async (req: Request, res: Response)
     // Clean up state
     oauthStateStore.delete(state);
 
-    // Redirect to dashboard
-    return res.redirect(`${process.env.CLIENT_URL}/dashboard?registered=true`);
+    // Role-based redirect
+    const dashboardUrl = user.role === 'host' ? '/host/dashboard' : '/dashboard';
+    return res.redirect(`${process.env.CLIENT_URL}${dashboardUrl}?registered=true`);
   } catch (error) {
     handleError(error, res);
   }

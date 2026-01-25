@@ -1,88 +1,220 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, ChevronLeft, Sparkles, UserPlus } from 'lucide-react';
+import { Mail, Lock, User, ChevronLeft, Sparkles, CheckCircle2 } from 'lucide-react';
+import { authService } from '@/lib/api/auth';
+import { useNotification } from '@/lib/context/notification';
+import { userRegisterSchema } from '@/schema/auth.schema';
 
 interface SignupUserProps {
   onSuccess: () => void;
   onGoBack: () => void;
 }
 
+interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
 export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) => {
+  const { showNotification } = useNotification();
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const [formData, setFormData] = useState<FormData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const updateField = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const result = userRegisterSchema.safeParse(formData);
+    
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach((err: any) => {
+        newErrors[err.path[0]] = err.message;
+      });
+      setErrors(newErrors);
+      return false;
+    }
+    
+    setErrors({});
+    return true;
+  };
+
+  const handleManualRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      await authService.registerUser(formData);
+      showNotification('success', 'Success!', 'Account created successfully');
+      onSuccess();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Registration failed';
+      showNotification('error', 'Error', message);
+      setErrors({ submit: message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    setLoading(true);
+    try {
+      const { url } = await authService.initiateGoogleRegister('user', {});
+      window.location.href = url;
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to initiate Google registration';
+      showNotification('error', 'Error', message);
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-50 rounded-full blur-[100px] -z-10 opacity-50" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-50 rounded-full blur-[80px] -z-10 opacity-50" />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[500px] space-y-8"
+        className="w-full max-w-[500px] bg-white p-8 md:p-12 rounded-[2rem] border border-gray-100 shadow-2xl shadow-gray-100/50"
       >
         <button
           onClick={onGoBack}
-          className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors group"
+          className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors group font-[400] mb-8"
         >
           <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           Back
         </button>
 
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="text-brand-500" size={24} strokeWidth={1} />
-            <span className="text-sm font-[500] uppercase tracking-widest text-brand-500">User Account</span>
-          </div>
-          <h1 className="text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Create your profile</h1>
-          <p className="text-gray-500 font-[300]">Discover and join the world's most elegant events.</p>
-        </div>
-
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-[500] text-neutral-700 ml-1">First Name</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-                <input type="text" placeholder="John" className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="text-brand-500" size={20} strokeWidth={1} />
+              <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Join as Attendee</span>
+            </div>
+            <h1 className="text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Create Your Account</h1>
+            <p className="text-gray-500 font-[300]">Discover and attend amazing events</p>
+          </div>
+
+          <form onSubmit={handleManualRegister} className="space-y-6">
+            {/* Google OAuth Button */}
+            <button
+              type="button"
+              onClick={handleGoogleRegister}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-neutral-200 rounded-xl hover:bg-gray-50 transition-all font-[500] text-neutral-700 disabled:opacity-50"
+            >
+              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+              {loading ? 'Redirecting...' : 'Continue with Google'}
+            </button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">or sign up with email</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-[500] text-neutral-700 ml-1">Last Name</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-                <input type="text" placeholder="Doe" className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all" />
+
+            {/* Manual Form */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-[500] text-neutral-700 ml-1">First Name *</label>
+                <input
+                  type="text"
+                  value={formData.firstName}
+                  onChange={(e) => updateField('firstName', e.target.value)}
+                  placeholder="John"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                />
+                {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-[500] text-neutral-700 ml-1">Last Name *</label>
+                <input
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) => updateField('lastName', e.target.value)}
+                  placeholder="Doe"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                />
+                {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
               </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-[500] text-neutral-700 ml-1">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-              <input type="email" placeholder="john@example.com" className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all" />
+            <div className="space-y-2">
+              <label className="text-sm font-[500] text-neutral-700 ml-1">Email Address *</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => updateField('email', e.target.value)}
+                placeholder="john@example.com"
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+              />
+              {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-[500] text-neutral-700 ml-1">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-              <input type="password" placeholder="••••••••" className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-[500] text-neutral-700 ml-1">Password *</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => updateField('password', e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                />
+                {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-[500] text-neutral-700 ml-1">Confirm *</label>
+                <input
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => updateField('confirmPassword', e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                />
+                {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-[500] text-neutral-700 ml-1">Confirm Password</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-              <input type="password" placeholder="••••••••" className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all" />
-            </div>
-          </div>
+            {errors.submit && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
 
-          <button
-            onClick={onSuccess}
-            className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
-          >
-            Create Account
-            <UserPlus size={20} />
-          </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
+              <CheckCircle2 size={20} />
+            </button>
+          </form>
         </div>
       </motion.div>
     </div>

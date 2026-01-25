@@ -7,12 +7,8 @@ export default function OnboardingPage() {
   const router = useRouter();
 
   const handleContinue = (role: 'host' | 'user') => {
-    if (role === 'host') {
-      router.push('/auth?tab=signup&role=host');
-    } else {
-      // Demo - could show a demo video or redirect to landing
-      router.push('/auth?tab=signup&role=user');
-    }
+    // Route to auth page with role parameter
+    router.push(`/auth?tab=signup&role=${role}`);
   };
 
   const handleLogin = () => {

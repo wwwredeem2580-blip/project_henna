@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { RoleCard } from '../ui/RoleCard';
-import { Calendar, Ticket, ArrowRight, BotIcon, VideoIcon, ShoppingBag, ShoppingCart, ShoppingBasket, Building2, User } from 'lucide-react';
+import { Calendar, Ticket, ArrowRight, BotIcon, VideoIcon, ShoppingBag, ShoppingCart, ShoppingBasket, Building2, User, ChevronLeft } from 'lucide-react';
 
 type OnboardingRole = 'host' | 'user';
 
@@ -13,8 +13,10 @@ interface OnboardingProps {
 }
 
 import { Logo } from '../shared/Logo';
+import { useRouter } from 'next/navigation';
 
 export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) => {
+  const router = useRouter();
   const [role, setRole] = useState<OnboardingRole>('host');
 
   // Added explicit Variants type to fix ease string assignment error
@@ -38,7 +40,14 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
         className="flex-1 flex flex-col justify-center items-center p-8 lg:p-20 z-10"
       >
         <div className="w-full max-w-[400px] space-y-8">
-          <motion.div variants={itemVariants} className="flex items-center gap-2.5 mb-8 group cursor-pointer">
+          <motion.div variants={itemVariants} className="flex flex-col gap-6 mb-8 group cursor-pointer">
+            <button
+              onClick={() => router.push('/')} 
+              className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors group font-[400]"
+            >
+              <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+              Back To Landing Page
+            </button>
             <Logo variant='full' className="text-neutral-950 max-w-[150px]" />
           </motion.div>
 

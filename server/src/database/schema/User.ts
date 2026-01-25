@@ -25,22 +25,22 @@ const userSchema = new mongoose.Schema({
         type: String
     },
 
-    // Business Information
+    // Business Information (only for hosts)
     businessName: {
         type: String,
-        required: true,
+        required: function(this: any) { return this.role === 'host'; },
         trim: true,
         index: true
     },
     businessEmail: {
         type: String,
-        required: true,
+        required: function(this: any) { return this.role === 'host'; },
         lowercase: true,
         trim: true
     },
     phoneNumber: {
         type: String,
-        required: true,
+        required: function(this: any) { return this.role === 'host'; },
         trim: true
     },
     website: {
@@ -48,16 +48,16 @@ const userSchema = new mongoose.Schema({
         trim: true
     },
     
-    // Company Details
+    // Company Details (only for hosts)
     companySize: {
         type: String,
         enum: ['1-10', '11-50', '51-200', '201-500', '500+'],
-        required: true
+        required: false
     },
     companyType: {
         type: String,
         enum: ['organizer', 'venue_owner', 'representative', 'artist'],
-        required: true
+        required: function() { return this.role === 'host'; }
     },
     // industry: {
     //     type: String,

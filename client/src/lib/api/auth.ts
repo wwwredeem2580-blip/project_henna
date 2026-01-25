@@ -12,6 +12,19 @@ export const authService = {
     return response;
   },
 
+  // Host registration (multi-step with business data)
+  registerHost: async (payload: any): Promise<AuthResponse> => {
+    const response = await apiClient.post('/api/auth/register/host', payload) as AuthResponse;
+    return response;
+  },
+
+  // User registration (simple)
+  registerUser: async (payload: any): Promise<AuthResponse> => {
+    const response = await apiClient.post('/api/auth/register/user', payload) as AuthResponse;
+    return response;
+  },
+
+  // Backward compatibility
   register: async (payload: RegisterPayload): Promise<AuthResponse> => {
     const response = await apiClient.post('/api/auth/register', payload) as AuthResponse;
     return response;
@@ -36,15 +49,12 @@ export const authService = {
     return response.url;
   },
 
-  // Google OAuth Registration (with business data)
-  initiateGoogleRegister: async (businessData: {
-    businessName: string;
-    businessEmail: string;
-    phoneNumber: string;
-    website?: string;
-    companyType: string;
-  }): Promise<{ url: string; state: string }> => {
-    return await apiClient.post('/api/auth/google/register/initiate', businessData);
+  // Google OAuth Registration (with role and optional business data)
+  initiateGoogleRegister: async (role: 'host' | 'user', businessData?: any): Promise<{ url: string; state: string }> => {
+    return await apiClient.post('/api/auth/google/register/initiate', {
+      role,
+      ...businessData
+    });
   },
 
   sendVerification: async (email?: string): Promise<{ success: boolean; message: string }> => {

@@ -122,7 +122,11 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
 
     setLoading(true);
     try {
-      await authService.register(formData);
+      const completeData = {
+        ...formData,
+      };
+
+      await authService.registerHost(completeData);
       showNotification('success', 'Success!', 'Account created successfully');
       onSuccess();
     } catch (error: any) {
@@ -138,13 +142,15 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
   const handleGoogleRegister = async () => {
     setLoading(true);
     try {
-      const { url } = await authService.initiateGoogleRegister({
+      const businessData = {
         businessName: formData.businessName,
         businessEmail: formData.businessEmail,
         phoneNumber: formData.phoneNumber,
         website: formData.website,
         companyType: formData.companyType,
-      });
+      };
+
+      const { url } = await authService.initiateGoogleRegister('host', businessData);
 
       // Redirect to Google OAuth
       window.location.href = url;

@@ -18,15 +18,15 @@ const strongPasswordSchema = z.string({message: 'Password is required'})
     return score >= 3;
   }, 'Password is too weak');
 
-const confirmPasswordSchema = z.string({message: 'Confirm password is required'}).min(1, 'Confirm password is required')
+const confirmPasswordSchema = z.string({message: 'Confirm password is required'}).min(1, 'Confirm password is required');
 
 // Phone number validation (E.164 format)
 const phoneNumberSchema = z.string({message: 'Phone number is required'})
-  .regex(/^\+?880[1][3-9]\d{8}$/, 'Please enter a valid phone number (e.g., 01700000000)');
+  .regex(/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number (e.g., +1234567890)');
 
 export const loginSchema = z.object({
-  email: z.string().email({message: 'Please enter a valid email address'}),
-  password: z.string({message: 'Password is required'}).min(1, 'Password is required'),
+    email: z.string().email({message: 'Please enter a valid email address'}),
+    password: z.string({message: 'Password is required'}).min(1, 'Password is required'),
 });
 
 // Step 1: Business Information
@@ -65,7 +65,28 @@ export const personalInfoSchema = z.object({
   path: ["confirmPassword"],
 });
 
-// Full registration schema (all steps combined)
-export const registerSchema = businessInfoSchema
+// Full host registration schema (all steps combined)
+export const hostRegisterSchema = businessInfoSchema
   .merge(companyDetailsSchema)
   .merge(personalInfoSchema);
+
+// User registration schema (simple - just personal info)
+export const userRegisterSchema = z.object({
+  firstName: z.string({message: 'First name is required'})
+    .trim()
+    .min(MIN_FIRST_NAME_LENGTH, `First name must be at least ${MIN_FIRST_NAME_LENGTH} characters long`)
+    .max(MAX_FIRST_NAME_LENGTH, `First name must be at most ${MAX_FIRST_NAME_LENGTH} characters long`),
+  lastName: z.string({message: 'Last name is required'})
+    .trim()
+    .min(MIN_LAST_NAME_LENGTH, `Last name must be at least ${MIN_LAST_NAME_LENGTH} characters long`)
+    .max(MAX_LAST_NAME_LENGTH, `Last name must be at most ${MAX_LAST_NAME_LENGTH} characters long`),
+  email: z.string().email({message: 'Please enter a valid email address'}),
+  password: strongPasswordSchema,
+  confirmPassword: confirmPasswordSchema,
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+// Backward compatibility
+export const registerSchema = hostRegisterSchema;

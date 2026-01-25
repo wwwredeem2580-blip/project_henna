@@ -23,6 +23,7 @@ export const refreshService = async (req: Request, res: Response) => {
           role: user.role,
           firstName: user.firstName,
           lastName: user.lastName,
+          emailVerified: user.emailVerified,
       };
       const accessToken = generateAccessToken(tokenPayload);
       const refreshToken = generateRefreshToken(tokenPayload);

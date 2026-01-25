@@ -11,6 +11,8 @@ import { loginSchema, registerSchema } from '@/schema/auth.schema';
 interface AuthContextType {
   user: JwtTokenPayload | null;
   loading: boolean;
+  isHost: boolean;
+  isUser: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
@@ -40,6 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const response = await authService.verify();
         setUser(response);
+
+        // If user is not verified and not on verify-email page, redirect
+        if (!response.emailVerified && pathname !== '/verify-email') {
+          router.push('/verify-email');
+          return;
+        }
       } catch (error) {
         setUser(null);
 
@@ -76,6 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       showNotification('success', 'Welcome back!', `Hello ${userResponse.firstName}!`);
 
+      // Check if email is verified
+      if (!userResponse.emailVerified) {
+        router.push('/verify-email');
+        return;
+      }
+
       // Handle post-login redirect
       const returnUrl = sessionStorage.getItem('authReturnUrl');
       if (returnUrl) {
@@ -84,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         // Default redirect based on role
         if (userResponse.role === 'host') {
-          router.push('/host-dashboard');
+          router.push('/host/dashboard');
         } else if (userResponse.role === 'admin') {
           router.push('/admin');
         } else {
@@ -117,8 +131,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authService.register(validatedData);
       const userResponse = await authService.verify();
       setUser(userResponse);
-      showNotification('success', 'Welcome!', 'Account created successfully');
-      router.push('/');
+      showNotification('success', 'Welcome!', 'Account created successfully. Please verify your email.');
+      
+      // Always redirect to verify email page after registration
+      router.push('/verify-email');
     } catch (error: any) {
       if (error.name === 'ZodError') {
         // Handle validation errors
@@ -165,10 +181,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Role-based helpers
+  const isHost = user?.role === 'host';
+  const isUser = user?.role === 'user';
+
   return (
     <AuthContext.Provider value={{
       user,
       loading,
+      isHost,
+      isUser,
       login,
       register,
       logout,
