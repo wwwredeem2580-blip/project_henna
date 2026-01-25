@@ -20,6 +20,13 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
 
+  useEffect(() => {
+    refreshToken();
+  }, []);
+
+  const refreshToken = async () => {
+    await authService.refresh();
+  };
   // Auto-verify if token is present in URL
   useEffect(() => {
     if (token && !verified) {
@@ -36,6 +43,7 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
       
       // Refresh auth to get updated user data
       await refreshAuth();
+      await refreshToken()
       
       // Redirect after a short delay
       setTimeout(() => {

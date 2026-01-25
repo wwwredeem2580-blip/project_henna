@@ -4,6 +4,8 @@ import { handleError } from '../../../utils/handleError';
 import CustomError from '../../../utils/CustomError';
 import crypto from 'crypto';
 import { addEmailJob } from '../../../workers/email.queue';
+import { generateAccessToken } from '../../../utils/auth/token';
+import { ACCESS_TOKEN_CONFIG } from '../../../utils/cookieConfig';
 
 const TOKEN_EXPIRY_HOURS = 24;
 const MAX_ATTEMPTS = 5;
@@ -64,8 +66,17 @@ export const verifyEmailService = async (req: Request, res: Response) => {
       emailVerified: true
     });
 
-    return res.status(200).json({
-      message: 'Email verified successfully'
+    const accessToken = generateAccessToken({ 
+      sub: user._id.toString(), 
+      email: user.email, 
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      emailVerified: user.emailVerified,
+    });
+    res.cookie('accessToken', accessToken, ACCESS_TOKEN_CONFIG);
+    return res.status(200).json({ 
+      message: 'Verification successful' 
     });
 
   } catch (error: any) {
