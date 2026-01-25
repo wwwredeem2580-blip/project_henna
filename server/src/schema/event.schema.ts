@@ -239,6 +239,16 @@ export const liveEventEditSchema = z.object({
   // Gallery updates (can add event photos)
   media: mediaSchema.optional(),
   
-  // Ticket operational controls
-  tickets: z.array(ticketSchema).optional(),
+  // Ticket operational controls - allow partial updates
+  tickets: z.array(z.object({
+    _id: z.string(),
+    quantity: z.number().int().positive().optional(),
+    isActive: z.boolean().optional(),
+    wristbandColor: z.string().optional(),
+    accentColor: z.string().optional(),
+    isDark: z.boolean().optional(),
+    glassMode: z.boolean().optional(),
+    cornerRadius: z.number().min(0).max(50).optional(),
+    perforationStyle: z.enum(['solid', 'dashed', 'dotted']).optional(),
+  })).optional(),
 });

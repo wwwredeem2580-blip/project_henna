@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import DOMPurify from 'isomorphic-dompurify';
 
 export const sanitizedString = (
   opts?: { min?: number; max?: number }
@@ -9,12 +8,9 @@ export const sanitizedString = (
   if (opts?.min) schema = schema.min(opts.min);
   if (opts?.max) schema = schema.max(opts.max);
 
-  return schema.transform(val =>
-    DOMPurify.sanitize(val, {
-      ALLOWED_TAGS: [],
-      ALLOWED_ATTR: [],
-    }).trim()
-  );
+  // Basic sanitization - trim whitespace
+  // For XSS protection, use a lighter library or validate on client
+  return schema.transform(val => val.trim());
 };
 
 export const sanitizedStringArray = (

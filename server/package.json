@@ -6,7 +6,7 @@
     "test": "tests"
   },
   "scripts": {
-    "dev": "nodemon --legacy-watch --watch src --watch packages --ext ts,js,json --exec ts-node src/index.ts",
+    "dev": "cross-env NODE_OPTIONS='--max-old-space-size=4096' nodemon --legacy-watch --watch src --watch packages --ext ts,js,json --exec ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest"
@@ -31,7 +31,6 @@
     "googleapis": "^170.1.0",
     "helmet": "^8.1.0",
     "imagekit": "^6.0.0",
-    "isomorphic-dompurify": "^2.35.0",
     "mongoose": "^9.1.5",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
@@ -51,6 +50,7 @@
     "@types/nodemailer": "^7.0.5",
     "@types/supertest": "^6.0.3",
     "@types/zxcvbn": "^4.4.5",
+    "cross-env": "^10.1.0",
     "jsonwebtoken": "^9.0.3",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",

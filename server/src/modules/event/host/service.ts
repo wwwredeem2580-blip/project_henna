@@ -23,10 +23,14 @@ export const createEventService = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const hostData = await User.findById(hostId).select('hostProfile');
+    const hostData = await User.findById(hostId).select('businessName businessEmail companyType firstName lastName');
 
     if (!hostData) {
-      return res.status(404).json({ message: "Host not found" });
+      throw new CustomError('Host not found', 404);
+    }
+
+    if (!hostData.businessName || !hostData.businessEmail || !hostData.companyType) {
+      throw new CustomError('Host profile incomplete. Please complete your business information before creating events.', 400);
     }
 
     const data = req.body;

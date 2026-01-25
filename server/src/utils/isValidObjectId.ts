@@ -1,3 +1,6 @@
 import { Types } from "mongoose";
 
-export const isValidObjectId = (id: string) => Types.ObjectId.isValid(id);
+export const isValidObjectId = (id: string): boolean => {
+  if (!id || typeof id !== 'string') return false;
+  return Types.ObjectId.isValid(id);
+};
