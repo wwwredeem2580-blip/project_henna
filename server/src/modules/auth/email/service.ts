@@ -66,15 +66,19 @@ export const verifyEmailService = async (req: Request, res: Response) => {
       emailVerified: true
     });
 
+    // Generate new access token with emailVerified=true
     const accessToken = generateAccessToken({ 
       sub: user._id.toString(), 
       email: user.email, 
       role: user.role,
       firstName: user.firstName,
       lastName: user.lastName,
-      emailVerified: user.emailVerified,
+      emailVerified: true, // Now verified!
     });
+    
+    // Set the new access token cookie
     res.cookie('accessToken', accessToken, ACCESS_TOKEN_CONFIG);
+    
     return res.status(200).json({ 
       message: 'Verification successful' 
     });

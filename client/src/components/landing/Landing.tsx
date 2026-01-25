@@ -145,7 +145,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
       <section className="relative pt-20 pb-16 overflow-hidden px-6">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-[radial-gradient(ellipse_at_top,_rgba(103,61,230,0.06)_0%,_transparent_70%)] pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto text-center relative z-10 space-y-8">
+        <div className="max-w-5xl mx-auto text-center relative z-1 space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

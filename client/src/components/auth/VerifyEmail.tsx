@@ -19,6 +19,7 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     refreshToken();
@@ -33,6 +34,30 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
       handleVerifyWithToken(token);
     }
   }, [token]);
+
+  // Periodic polling to check if email was verified (e.g., on another device)
+  useEffect(() => {
+    if (!verified && !verifying) {
+      const interval = setInterval(async () => {
+        try {
+          // Refresh auth to get latest user data
+          await refreshAuth();
+          // If user is now verified, show success
+          if (user?.emailVerified) {
+            setVerified(true);
+            showNotification('success', 'Email Verified!', 'Your email has been successfully verified');
+            setTimeout(() => {
+              onSuccess();
+            }, 1500);
+          }
+        } catch (error) {
+          // Silently fail - user might have logged out
+        }
+      }, 5000); // Check every 5 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [verified, verifying, user, refreshAuth, onSuccess, showNotification]);
 
   const handleVerifyWithToken = async (verificationToken: string) => {
     setVerifying(true);
@@ -67,6 +92,30 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
       showNotification('error', 'Error', message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCheckStatus = async () => {
+    setChecking(true);
+    try {
+      // Refresh auth to get latest token with updated emailVerified status
+      await refreshAuth();
+      
+      // Check if now verified
+      if (user?.emailVerified) {
+        setVerified(true);
+        showNotification('success', 'Email Verified!', 'Your email has been successfully verified');
+        setTimeout(() => {
+          onSuccess();
+        }, 1500);
+      } else {
+        showNotification('info', 'Not Verified Yet', 'Please check your email and click the verification link');
+      }
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to check status';
+      showNotification('error', 'Error', message);
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -138,6 +187,24 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
           </div>
 
           <button
+            onClick={handleCheckStatus}
+            disabled={checking}
+            className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
+          >
+            {checking ? (
+              <>
+                <RefreshCw size={20} className="animate-spin" />
+                Checking...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 size={20} />
+                I've Verified - Check Status
+              </>
+            )}
+          </button>
+
+          <button
             onClick={handleResendEmail}
             disabled={loading}
             className="w-full bg-white border-2 border-gray-200 text-gray-700 font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 transition-all disabled:opacity-50"
@@ -157,6 +224,8 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
 
           <p className="text-xs text-gray-400">
             Didn't receive the email? Check your spam folder or click resend.
+            <br />
+            <span className="text-brand-500">Auto-checking every 5 seconds...</span>
           </p>
         </div>
       </motion.div>
