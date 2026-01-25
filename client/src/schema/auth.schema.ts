@@ -22,11 +22,11 @@ const confirmPasswordSchema = z.string({message: 'Confirm password is required'}
 
 // Phone number validation (E.164 format)
 const phoneNumberSchema = z.string({message: 'Phone number is required'})
-  .regex(/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number (e.g., +1234567890)');
+  .regex(/^\+?880[1][3-9]\d{8}$/, 'Please enter a valid phone number (e.g., 01700000000)');
 
 export const loginSchema = z.object({
-    email: z.string().email({message: 'Please enter a valid email address'}),
-    password: z.string({message: 'Password is required'}).min(1, 'Password is required'),
+  email: z.string().email({message: 'Please enter a valid email address'}),
+  password: z.string({message: 'Password is required'}).min(1, 'Password is required'),
 });
 
 // Step 1: Business Information
@@ -41,8 +41,8 @@ export const businessInfoSchema = z.object({
 
 // Step 2: Company Details
 export const companyDetailsSchema = z.object({
-  companySize: z.enum(['1-10', '11-50', '51-200', '201-500', '500+'], {
-    message: 'Please select your company size'
+  companyType: z.enum(['organizer', 'venue_owner', 'representative', 'artist'], {
+    message: 'Please select your company type'
   }),
   website: z.string().url({message: 'Please enter a valid website URL'}).optional().or(z.literal('')),
 });

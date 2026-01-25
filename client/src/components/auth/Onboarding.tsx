@@ -3,19 +3,19 @@
 import React, { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { RoleCard } from '../ui/RoleCard';
-import { Calendar, Ticket, ArrowRight, BotIcon, VideoIcon, ShoppingBag, ShoppingCart, ShoppingBasket } from 'lucide-react';
+import { Calendar, Ticket, ArrowRight, BotIcon, VideoIcon, ShoppingBag, ShoppingCart, ShoppingBasket, Building2, User } from 'lucide-react';
 
-type OnboardingState = 'start' | 'demo';
+type OnboardingRole = 'host' | 'user';
 
 interface OnboardingProps {
-  onContinue: (role: OnboardingState) => void;
+  onContinue: (role: OnboardingRole) => void;
   onLogin: () => void;
 }
 
 import { Logo } from '../shared/Logo';
 
 export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) => {
-  const [state, setState] = useState<OnboardingState | null>('start');
+  const [role, setRole] = useState<OnboardingRole>('host');
 
   // Added explicit Variants type to fix ease string assignment error
   const containerVariants: Variants = {
@@ -47,31 +47,31 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
               Start your journey
             </h1>
             <p className="text-slate-500 text-lg font-[300] leading-[1]">
-              Reduce support workload by 60% and boost conversions by 10% for your online store.
+              Experience events in a way you've never imagined. Choose your path to continue.
             </p>
           </motion.div>
 
           <motion.div variants={itemVariants} className="space-y-4">
             <RoleCard
-              title="Start Onboarding"
+              title="I am a Host"
               description="Organize hybrid events and grow your audience."
-              icon={<BotIcon size={24} />}
-              selected={state === 'start'}
-              onClick={() => setState('start')}
+              icon={<Building2 size={24} />}
+              selected={role === 'host'}
+              onClick={() => setRole('host')}
             />
             <RoleCard
-              title="View Demo"
+              title="I am a User"
               description="Discover and attend unique global experiences."
-              icon={<VideoIcon size={24} />}
-              selected={state === 'demo'}
-              onClick={() => setState('demo')}
+              icon={<User size={24} />}
+              selected={role === 'user'}
+              onClick={() => setRole('user')}
             />
           </motion.div>
 
           <motion.button
             variants={itemVariants}
-            disabled={!state}
-            onClick={() => state && onContinue(state)}
+            disabled={!role}
+            onClick={() => role && onContinue(role)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="w-full bg-slate-950 text-white font-[500] py-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-slate-200/50"
@@ -119,7 +119,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
               <BotIcon className="text-brand-200" size={40} />
             </div>
             <div className="aspect-video bg-brand-50 rounded-[2rem] border border-brand-200 flex items-center justify-center">
-              <ShoppingBasket className="text-brand-300" size={40} />
+              <Calendar className="text-brand-300" size={40} />
             </div>
           </div>
 

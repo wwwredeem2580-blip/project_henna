@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerService } from './register/service';
+import { registerHostService, registerUserService } from './register/service';
 import { loginService } from './login/service';
 import { getGoogleLoginUrlService, redirectGoogleLoginService } from './google/service';
 import { initiateGoogleRegisterService, googleRegisterCallbackService } from './google-register/service';
@@ -11,7 +11,8 @@ import { verifyService } from './verify/service';
 
 const router = Router();
 
-router.post('/register', registerService);
+router.post('/register/host', registerHostService);
+router.post('/register/user', registerUserService);
 router.post('/login', loginService);
 
 // Google OAuth Login

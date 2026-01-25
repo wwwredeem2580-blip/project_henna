@@ -2,7 +2,8 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Login } from '@/components/auth/Login';
-import { Register } from '@/components/auth/Register';
+import { SignupHost } from '@/components/auth/SignupHost';
+import { SignupUser } from '@/components/auth/SignupUser';
 import { useEffect } from 'react';
 import { useNotification } from '@/lib/context/notification';
 
@@ -11,6 +12,7 @@ export default function AuthPage() {
   const router = useRouter();
   const { showNotification } = useNotification();
   const tab = searchParams.get('tab') || 'login';
+  const role = searchParams.get('role') || 'user';
   const error = searchParams.get('error');
   const email = searchParams.get('email');
 
@@ -38,15 +40,19 @@ export default function AuthPage() {
   };
 
   const handleSwitchToRegister = () => {
-    router.push('/auth?tab=signup');
+    router.push(`/auth?tab=signup&role=${role}`);
   };
 
   const handleSwitchToLogin = () => {
-    router.push('/auth?tab=login');
+    router.push(`/auth?tab=login&role=${role}`);
   };
 
-  if (tab === 'signup' || tab === 'register') {
-    return <Register onSuccess={handleRegisterSuccess} onGoBack={handleGoBack} />;
+  if (tab === 'signup' && role === 'host') {
+    return <SignupHost onSuccess={handleRegisterSuccess} onGoBack={handleGoBack} />;
+  }
+
+  if (tab === 'signup' && role === 'user') {
+    return <SignupUser onSuccess={handleRegisterSuccess} onGoBack={handleGoBack} />;
   }
 
   return <Login onLogin={handleLoginSuccess} onGoBack={handleGoBack} />;

@@ -29,7 +29,7 @@ export const loginSchema = z.object({
     password: z.string({error: () => ({message: 'Password is required'})}).min(1, 'Password is required'),
 });
 
-export const registerSchema = z.object({
+export const registerHostSchema = z.object({
   // Business Information
   businessName: z.string({error: () => ({message: 'Business name is required'})})
     .trim()
@@ -37,17 +37,35 @@ export const registerSchema = z.object({
     .max(MAX_BUSINESS_NAME_LENGTH, `Business name must be at most ${MAX_BUSINESS_NAME_LENGTH} characters long`),
   businessEmail: z.string().email({message: 'Please enter a valid business email address'}),
   phoneNumber: phoneNumberSchema,
-  website: z.string().url({message: 'Please enter a valid website URL'}).optional().or(z.literal('')),
+  website: z.url({message: 'Please enter a valid website URL'}).optional().or(z.literal('')),
   
   // Company Details
-  companySize: z.enum(['1-10', '11-50', '51-200', '201-500', '500+'], {
-    message: 'Please select your company size'
+  // companySize: z.enum(['1-10', '11-50', '51-200', '201-500', '500+'], {
+  //   message: 'Please select your company size'
+  // }),
+  companyType: z.enum(['organizer', 'venue_owner', 'representative', 'artist'], {
+    message: 'Please select your company type'
   }),
   // industry: z.string().optional(),
   // monthlyRevenue: z.enum(['<10k', '10k-50k', '50k-100k', '100k-500k', '500k+'], {
   //   message: 'Please select your monthly revenue range'
   // }).optional(),
   
+  // Personal Information (Primary Contact)
+  firstName: z.string({error: () => ({message: 'First name is required'})})
+    .trim()
+    .min(MIN_FIRST_NAME_LENGTH, `First name must be at least ${MIN_FIRST_NAME_LENGTH} characters long`)
+    .max(MAX_FIRST_NAME_LENGTH, `First name must be at most ${MAX_FIRST_NAME_LENGTH} characters long`),
+  lastName: z.string({error: () => ({message: 'Last name is required'})})
+    .trim()
+    .min(MIN_LAST_NAME_LENGTH, `Last name must be at least ${MIN_LAST_NAME_LENGTH} characters long`)
+    .max(MAX_LAST_NAME_LENGTH, `Last name must be at most ${MAX_LAST_NAME_LENGTH} characters long`),
+  email: z.string().email({message: 'Please enter a valid email address'}),
+  password: strongPasswordSchema,
+  confirmPassword: confirmPasswordSchema,
+});
+
+export const registerUserSchema = z.object({
   // Personal Information (Primary Contact)
   firstName: z.string({error: () => ({message: 'First name is required'})})
     .trim()

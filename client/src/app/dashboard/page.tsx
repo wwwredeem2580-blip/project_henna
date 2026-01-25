@@ -1,6 +1,6 @@
 'use client';
 
-import { Dashboard } from '@/components/dashboard/Dashboard';
+import { Dashboard } from '@/components/host/dashboard/Dashboard';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useNotification } from '@/lib/context/notification';
 import { useEffect } from 'react';

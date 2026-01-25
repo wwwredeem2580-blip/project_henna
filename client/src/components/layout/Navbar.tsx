@@ -6,11 +6,12 @@ import { Button } from '../ui/button';
 
 interface NavbarProps {
   onLogin: () => void;
+  onGetStarted: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onLogin }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onLogin, onGetStarted }) => {
   return (
-    <nav className="sticky top-0 z-50 bg-neutral-0/80 backdrop-blur-xl border-b border-brand-100">
+    <nav className="sticky top-0 z-5000 bg-neutral-0/80 backdrop-blur-xl border-b border-brand-100">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Logo variant="full" className="h-6 text-brand-600" strokeWidth="2" />
@@ -34,11 +35,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin }) => {
             onClick={onLogin}
             variant="ghost" 
             size="sm"
+            className='hover:scale-103'
           >
             Sign In
           </Button>
           <Button 
-            onClick={onLogin}
+            onClick={onGetStarted}
             variant="brand" 
             size="sm"
           >

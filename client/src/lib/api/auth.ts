@@ -42,7 +42,7 @@ export const authService = {
     businessEmail: string;
     phoneNumber: string;
     website?: string;
-    companySize: string;
+    companyType: string;
   }): Promise<{ url: string; state: string }> => {
     return await apiClient.post('/api/auth/google/register/initiate', businessData);
   },

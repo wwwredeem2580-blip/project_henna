@@ -54,6 +54,11 @@ const userSchema = new mongoose.Schema({
         enum: ['1-10', '11-50', '51-200', '201-500', '500+'],
         required: true
     },
+    companyType: {
+        type: String,
+        enum: ['organizer', 'venue_owner', 'representative', 'artist'],
+        required: true
+    },
     // industry: {
     //     type: String,
     //     trim: true
@@ -111,8 +116,8 @@ const userSchema = new mongoose.Schema({
     // Role (B2B Team Structure)
     role: {
         type: String,
-        enum: ['owner', 'admin', 'member'],
-        default: 'owner',
+        enum: ['user', 'host', 'admin'],
+        default: 'user',
         index: true
     },
     

@@ -22,7 +22,7 @@ interface FormData {
   website: string;
   
   // Step 2: Company Details
-  companySize: '1-10' | '11-50' | '51-200' | '201-500' | '500+';
+  companyType: 'organizer' | 'venue_owner' | 'representative' | 'artist';
   
   // Step 3: Personal Info
   firstName: string;
@@ -32,18 +32,18 @@ interface FormData {
   confirmPassword: string;
 }
 
-export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
+export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
   const { showNotification } = useNotification();
   const [step, setStep] = useState<Step>('org');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const companySizes = ['1-10', '11-50', '51-200', '201-500', '500+'];
+  const companyType = ['organizer', 'venue_owner', 'representative', 'artist'];
   const [formData, setFormData] = useState<FormData>({
     businessName: '',
     businessEmail: '',
-    phoneNumber: '',
+    phoneNumber: '+880',
     website: '',
-    companySize: '1-10',
+    companyType: 'organizer',
     firstName: '',
     lastName: '',
     email: '',
@@ -70,7 +70,7 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
         });
       } else if (currentStep === 'verify') {
         result = companyDetailsSchema.safeParse({
-          companySize: formData.companySize,
+          companyType: formData.companyType,
           website: formData.website,
         });
       } else if (currentStep === 'basic') {
@@ -143,7 +143,7 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
         businessEmail: formData.businessEmail,
         phoneNumber: formData.phoneNumber,
         website: formData.website,
-        companySize: formData.companySize,
+        companyType: formData.companyType,
       });
 
       // Redirect to Google OAuth
@@ -208,7 +208,7 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
                     type="text"
                     value={formData.businessName}
                     onChange={(e) => updateField('businessName', e.target.value)}
-                    placeholder="Zenny Studios"
+                    placeholder="Zenvy Studios"
                     className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-brand-600 focus:bg-white outline-none transition-all"
                   />
                 </div>
@@ -223,7 +223,7 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
                     type="email"
                     value={formData.businessEmail}
                     onChange={(e) => updateField('businessEmail', e.target.value)}
-                    placeholder="contact@zenny.com"
+                    placeholder="contact@zenvy.com"
                     className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-brand-600 focus:bg-white outline-none transition-all"
                   />
                 </div>
@@ -238,7 +238,7 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={(e) => updateField('phoneNumber', e.target.value)}
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="0 1*** **** **"
                     className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-brand-600 focus:bg-white outline-none transition-all"
                   />
                 </div>
@@ -264,24 +264,24 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
                   <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 2: Company Details</span>
                 </div>
                 <h2 className="text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Additional Information</h2>
-                <p className="text-gray-500 font-[300]">Tell us about your company size</p>
+                <p className="text-gray-500 font-[300]">Tell us about your business more</p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Company Size *</label>
+                <label className="text-sm font-medium text-slate-700">Business Type *</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {companySizes.map((size) => (
+                  {companyType.map((type) => (
                     <button
-                      key={size}
+                      key={type}
                       type="button"
-                      onClick={() => updateField('companySize', size)}
+                      onClick={() => updateField('companyType', type)}
                       className={`px-3 py-2 rounded-lg border-2 transition-all ${
-                        formData.companySize === size
+                        formData.companyType === type
                           ? 'border-brand-500 bg-brand-50 text-brand-700'
                           : 'border-slate-200 hover:border-brand-300'
                       }`}
                     >
-                      {size}
+                      {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </button>
                   ))}
                 </div>
@@ -320,7 +320,7 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => {
                   <Sparkles className="text-brand-500" size={20} strokeWidth={1} />
                   <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 3: Account Setup</span>
                 </div>
-                <h1 className="text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Your Account Details</h1>
+                <h1 className="text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Your Personal Details</h1>
                 <p className="text-gray-500 font-[300]">Choose how you'd like to sign up</p>
               </div>
 

@@ -6,8 +6,6 @@ import axios from 'axios';
 import { handleError } from '../../../utils/handleError';
 import { Request, Response } from 'express';
 import { ACCESS_TOKEN_CONFIG, REFRESH_TOKEN_CONFIG } from '../../../utils/cookieConfig';
-import { registerSchema } from '../../../schema/auth.schema';
-import bcrypt from 'bcrypt';
 
 // Temporary storage for OAuth state (in production, use Redis)
 const oauthStateStore = new Map<string, any>();

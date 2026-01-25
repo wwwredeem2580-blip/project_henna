@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 export default function OnboardingPage() {
   const router = useRouter();
 
-  const handleContinue = (state: 'start' | 'demo') => {
-    if (state === 'start') {
-      router.push('/auth?tab=signup');
+  const handleContinue = (role: 'host' | 'user') => {
+    if (role === 'host') {
+      router.push('/auth?tab=signup&role=host');
     } else {
       // Demo - could show a demo video or redirect to landing
-      router.push('/');
+      router.push('/auth?tab=signup&role=user');
     }
   };
 

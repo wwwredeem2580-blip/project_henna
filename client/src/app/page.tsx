@@ -11,7 +11,7 @@ export default function Home() {
   };
 
   const handleLogin = () => {
-    router.push('/onboarding');
+    router.push('/auth?tab=login&role=user');
   };
 
   return <Landing onGetStarted={handleGetStarted} onLogin={handleLogin} />;

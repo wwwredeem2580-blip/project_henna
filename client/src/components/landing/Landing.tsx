@@ -139,7 +139,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
   return (
     <div className="min-h-screen bg-neutral-0 selection:bg-brand-100 selection:text-brand-700">
       {/* Navigation */}
-      <Navbar onLogin={onLogin} />
+      <Navbar onLogin={onLogin} onGetStarted={onGetStarted} />
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 overflow-hidden px-6">
