@@ -4,6 +4,7 @@ import mediaRoutes from './modules/media/router';
 import supportRoutes from './modules/support/router';
 import eventRoutes from './modules/event/router';
 import hostRoutes from './modules/host/router';
+import ticketRoutes from './modules/ticket/router';
 
 
 const router = Router();
@@ -13,5 +14,6 @@ router.use('/media', mediaRoutes);
 router.use('/support', supportRoutes);
 router.use('/event', eventRoutes);
 router.use('/host', hostRoutes);
+router.use('/ticket', ticketRoutes);
 
 export default router;
