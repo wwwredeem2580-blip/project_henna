@@ -111,7 +111,7 @@ describe('Event Host Routes - Integration Tests', () => {
   describe('POST / - Create Event Draft', () => {
     it('should create a draft event with valid data', async () => {
       const res = await request(app)
-        .post('/event')
+        .post('/event/host')
         .set('Cookie', `accessToken=${hostToken}`)
         .send(validEventData)
         .expect(201);
@@ -128,22 +128,22 @@ describe('Event Host Routes - Integration Tests', () => {
 
     it('should fail without authentication', async () => {
       await request(app)
-        .post('/event')
+        .post('/event/host')
         .send(validEventData)
         .expect(401);
     });
 
     it('should fail for non-host users', async () => {
       await request(app)
-        .post('/event')
+        .post('/event/host')
         .set('Cookie', `accessToken=${userToken}`)
         .send(validEventData)
-        .expect(401);
+        .expect(403);
     });
 
     it('should fail with invalid title (too short)', async () => {
       const res = await request(app)
-        .post('/event')
+        .post('/event/host')
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ ...validEventData, title: 'Short' })
         .expect(400);
@@ -158,7 +158,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       const res = await request(app)
-        .post('/event')
+        .post('/event/host')
         .set('Cookie', `accessToken=${hostToken}`)
         .send(minimalData)
         .expect(201);
@@ -171,7 +171,7 @@ describe('Event Host Routes - Integration Tests', () => {
   describe('PUT /draft/:eventId - Update Draft Event', () => {
     beforeEach(async () => {
       const res = await request(app)
-        .post('/event')
+        .post('/event/host')
         .set('Cookie', `accessToken=${hostToken}`)
         .send(validEventData);
       eventId = res.body.eventId;
@@ -184,7 +184,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       const res = await request(app)
-        .put(`/event/draft/${eventId}`)
+        .put(`/event/host/draft/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updatedData)
         .expect(200);
@@ -195,7 +195,7 @@ describe('Event Host Routes - Integration Tests', () => {
 
     it('should fail with invalid event ID', async () => {
       await request(app)
-        .put('/event/draft/invalidid')
+        .put('/event/host/draft/invalidid')
         .set('Cookie', `accessToken=${hostToken}`)
         .send(validEventData)
         .expect(400);
@@ -206,7 +206,7 @@ describe('Event Host Routes - Integration Tests', () => {
       await Event.findByIdAndUpdate(eventId, { status: 'pending_approval' });
 
       await request(app)
-        .put(`/event/draft/${eventId}`)
+        .put(`/event/host/draft/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(validEventData)
         .expect(400);
@@ -237,7 +237,7 @@ describe('Event Host Routes - Integration Tests', () => {
       });
 
       await request(app)
-        .put(`/event/draft/${eventId}`)
+        .put(`/event/host/draft/${eventId}`)
         .set('Cookie', `accessToken=${anotherToken}`)
         .send(validEventData)
         .expect(403);
@@ -247,7 +247,7 @@ describe('Event Host Routes - Integration Tests', () => {
   describe('POST /submit/:eventId - Submit Event for Approval', () => {
     beforeEach(async () => {
       const res = await request(app)
-        .post('/event')
+        .post('/event/host')
         .set('Cookie', `accessToken=${hostToken}`)
         .send(validEventData);
       eventId = res.body.eventId;
@@ -266,7 +266,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       const res = await request(app)
-        .post(`/event/submit/${eventId}`)
+        .post(`/event/host/submit/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(completeData)
         .expect(200);
@@ -288,7 +288,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .post(`/event/submit/${eventId}`)
+        .post(`/event/host/submit/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(dataWithoutTerms)
         .expect(400);
@@ -298,7 +298,7 @@ describe('Event Host Routes - Integration Tests', () => {
       await Event.findByIdAndUpdate(eventId, { status: 'published' });
 
       await request(app)
-        .post(`/event/submit/${eventId}`)
+        .post(`/event/host/submit/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(validEventData)
         .expect(400);
@@ -322,7 +322,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/pending/${eventId}`)
+        .put(`/event/host/pending/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -341,7 +341,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/pending/${eventId}`)
+        .put(`/event/host/pending/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -351,7 +351,7 @@ describe('Event Host Routes - Integration Tests', () => {
       await Event.findByIdAndUpdate(eventId, { status: 'approved' });
 
       await request(app)
-        .put(`/event/pending/${eventId}`)
+        .put(`/event/host/pending/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ description: 'New description that meets the minimum length requirement for event descriptions.' })
         .expect(400);
@@ -376,7 +376,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/approved/${eventId}`)
+        .put(`/event/host/approved/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -391,7 +391,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/approved/${eventId}`)
+        .put(`/event/host/approved/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -406,7 +406,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/approved/${eventId}`)
+        .put(`/event/host/approved/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(400);
@@ -430,7 +430,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -451,7 +451,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -475,7 +475,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -496,7 +496,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -520,7 +520,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(400);
@@ -544,7 +544,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(400);
@@ -560,7 +560,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(400);
@@ -586,7 +586,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(400);
@@ -611,7 +611,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -630,7 +630,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/published/${eventId}`)
+        .put(`/event/host/published/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200); // Currently allows this, validation at purchase time
@@ -660,7 +660,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/live/${eventId}`)
+        .put(`/event/host/live/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -678,7 +678,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/live/${eventId}`)
+        .put(`/event/host/live/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(400);
@@ -696,7 +696,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/live/${eventId}`)
+        .put(`/event/host/live/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
@@ -718,10 +718,45 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .put(`/event/live/${eventId}`)
+        .put(`/event/host/live/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(updateData)
         .expect(200);
+    });
+  });
+
+  describe('DELETE /event/:eventId - Delete Event', () => {
+    beforeEach(async () => {
+      const event = await Event.create({
+        ...validEventData,
+        hostId,
+        status: 'draft',
+        slug: 'test-event-123'
+      });
+      eventId = event._id.toString();
+    });
+
+    it('should delete event successfully', async () => {
+      await request(app)
+        .delete(`/event/host/${eventId}`)
+        .set('Cookie', `accessToken=${hostToken}`)
+        .expect(200);
+    });
+
+    it('should fail for non-host users', async () => {
+      await request(app)
+        .delete(`/event/host/${eventId}`)
+        .set('Cookie', `accessToken=${userToken}`)
+        .expect(403);
+    });
+
+    it('should fail for non-existent event ID', async () => {
+      const fakeId = new mongoose.Types.ObjectId().toString();
+
+      await request(app)
+        .delete(`/event/host/${fakeId}`)
+        .set('Cookie', `accessToken=${hostToken}`)
+        .expect(404);
     });
   });
 
@@ -739,7 +774,7 @@ describe('Event Host Routes - Integration Tests', () => {
 
     it('should move rejected event back to draft', async () => {
       await request(app)
-        .post(`/event/rejected/${eventId}`)
+        .post(`/event/host/rejected/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .expect(200);
 
@@ -751,7 +786,7 @@ describe('Event Host Routes - Integration Tests', () => {
       await Event.findByIdAndUpdate(eventId, { status: 'published' });
 
       await request(app)
-        .post(`/event/rejected/${eventId}`)
+        .post(`/event/host/rejected/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .expect(400);
     });
@@ -770,7 +805,7 @@ describe('Event Host Routes - Integration Tests', () => {
 
     it('should pause sales for published event', async () => {
       await request(app)
-        .post(`/event/toggle-sales/${eventId}`)
+        .post(`/event/host/toggle-sales/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ reason: 'Temporary pause for maintenance' })
         .expect(200);
@@ -782,13 +817,13 @@ describe('Event Host Routes - Integration Tests', () => {
     it('should resume sales when toggled again', async () => {
       // Pause first
       await request(app)
-        .post(`/event/toggle-sales/${eventId}`)
+        .post(`/event/host/toggle-sales/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ reason: 'Pause' });
 
       // Resume
       await request(app)
-        .post(`/event/toggle-sales/${eventId}`)
+        .post(`/event/host/toggle-sales/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ reason: 'Resume' })
         .expect(200);
@@ -801,7 +836,7 @@ describe('Event Host Routes - Integration Tests', () => {
       await Event.findByIdAndUpdate(eventId, { status: 'draft' });
 
       await request(app)
-        .post(`/event/toggle-sales/${eventId}`)
+        .post(`/event/host/toggle-sales/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ reason: 'Test' })
         .expect(400);
@@ -811,7 +846,7 @@ describe('Event Host Routes - Integration Tests', () => {
       const longReason = 'a'.repeat(256);
 
       await request(app)
-        .post(`/event/toggle-sales/${eventId}`)
+        .post(`/event/host/toggle-sales/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ reason: longReason })
         .expect(400);
@@ -826,7 +861,7 @@ describe('Event Host Routes - Integration Tests', () => {
       });
 
       await request(app)
-        .post(`/event/toggle-sales/${eventId}`)
+        .post(`/event/host/toggle-sales/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ reason: 'Try to resume' })
         .expect(403);
@@ -846,7 +881,7 @@ describe('Event Host Routes - Integration Tests', () => {
 
     it('should handle malformed ObjectId gracefully', async () => {
       await request(app)
-        .put('/event/draft/not-an-objectid')
+        .put('/event/host/draft/not-an-objectid')
         .set('Cookie', `accessToken=${hostToken}`)
         .send(validEventData)
         .expect(400);
@@ -856,7 +891,7 @@ describe('Event Host Routes - Integration Tests', () => {
       const fakeId = new mongoose.Types.ObjectId().toString();
 
       await request(app)
-        .put(`/event/draft/${fakeId}`)
+        .put(`/event/host/draft/${fakeId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send(validEventData)
         .expect(404);
@@ -869,7 +904,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       const res = await request(app)
-        .post('/event')
+        .post('/event/host')
         .set('Cookie', `accessToken=${hostToken}`)
         .send(xssData)
         .expect(201);
@@ -882,12 +917,12 @@ describe('Event Host Routes - Integration Tests', () => {
     it('should handle concurrent updates gracefully', async () => {
       // Mongoose optimistic concurrency control will cause one to fail
       const update1 = request(app)
-        .put(`/event/draft/${eventId}`)
+        .put(`/event/host/draft/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ ...validEventData, title: 'Update 1 Title Event' });
 
       const update2 = request(app)
-        .put(`/event/draft/${eventId}`)
+        .put(`/event/host/draft/${eventId}`)
         .set('Cookie', `accessToken=${hostToken}`)
         .send({ ...validEventData, title: 'Update 2 Title Event' });
 
@@ -910,7 +945,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .post('/event')
+        .post('/event/host')
         .set('Cookie', `accessToken=${hostToken}`)
         .send(invalidData)
         .expect(400);
@@ -928,7 +963,7 @@ describe('Event Host Routes - Integration Tests', () => {
       };
 
       await request(app)
-        .post('/event')
+        .post('/event/host')
         .set('Cookie', `accessToken=${hostToken}`)
         .send(invalidData)
         .expect(400);

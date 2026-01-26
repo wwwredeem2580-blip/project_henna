@@ -30,28 +30,28 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     }
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(403).json({ message: 'Unauthorized' });
   }
 };
 
 export const requireHost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if(!req.user || req.user.role !== 'host') {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(403).json({ message: 'Unauthorized' });
     }
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(403).json({ message: 'Unauthorized' });
   }
 };
 
 export const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if(!req.user || req.user.role !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(403).json({ message: 'Unauthorized' });
     }
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(403).json({ message: 'Unauthorized' });
   }
 };
