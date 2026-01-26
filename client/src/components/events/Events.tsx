@@ -505,8 +505,6 @@ export default function Events() {
               ))}
             </div>
           </section>
-        
-        
       </main>
     </div>
   );
