@@ -371,7 +371,7 @@ export default function Events() {
                   {/* Price */}
                   <div className="flex justify-between items-center gap-2 mt-2">
                     <span className="text-xs text-slate-500 font-[300]">
-                      Only {Math.floor(Math.random() * 100)} tickets lest
+                      Only {Math.floor(Math.random() * 100)} tickets left
                     </span>
                     <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
                       <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100

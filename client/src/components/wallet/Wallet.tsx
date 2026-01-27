@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10 } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, QrCode, Rotate3D, Minus, ArrowDown, DownloadIcon, FileText } from "lucide-react";
 
 
 import React from 'react';
@@ -29,7 +29,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from "@/lib/context/auth";
 import { authService } from "@/lib/api/auth";
-import { BDTIcon, LightningIcon } from "../ui/Icons";
+import { BDTIcon, LightningIcon, LocationIcon } from "../ui/Icons";
+import { div } from "framer-motion/client";
+import { TicketCard } from "../ui/TicketCard";
 
 export default function WalletPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -116,8 +118,8 @@ export default function WalletPage() {
         {/* Header */}
         <header className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-2xl font-[400] tracking-normal text-slate-900">Explore Events</h1>
-            <p className="text-sm text-slate-500 font-[300]">Browse all the events handpicked for you</p>
+            <h1 className="text-2xl font-[400] tracking-normal text-slate-900">Wallet</h1>
+            <p className="text-sm text-slate-500 font-[300]">All your secure entries and digital invitations in one industry-grade vault.</p>
           </div>
           <div className="hidden lg:flex items-center gap-3">
             <button className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Wallet size={18}/></button>
@@ -128,221 +130,129 @@ export default function WalletPage() {
             </div>
           </div>
         </header>
-        {/* Trending */}
+        {/* Tickets */}
         <section className="space-y-6">
-          <div>
-            <h2 className="text-lg font-[300] text-slate-900 tracking-tight">🔥 Trending</h2>
-            <p className="text-xs text-slate-500 font-[300]">Events everybody's hooking up right now!</p>
-          </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Tickets</h2>
+                <p className="text-xs text-slate-500 font-[300]">All your tickets are at one place</p>
+              </div>
+            </div>
 
-          <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
-            {[
-              { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
-              { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
-              { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+              {[
+                { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
+                { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
+                { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
+                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
 
-            ].map((stat, i) => (
-              <motion.div
+              ].map((stat, i) => (
+            <div>
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden"
+                className='max-w-[90vw] group transition-all duration-300 p-4 flex items-center gap-0 overflow-hidden'
               >
-                <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                  <img
-                    src={'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                    alt={'Event Cover Image'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                    <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                      <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                      Live
+                <div className='rounded-tr-lg rounded-bl-lg overflow-hidden shrink-0 relative bg-slate-100 w-24 h-24'>
+                  <img src='https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60' alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                </div>
+
+                <div className="px-6 py-4 w-full h-full flex flex-col gap-1 relative">
+                    <div className="text-md font-[400] line-clamp-2 tracking-wide text-neutral-700">
+                      Summer festival 2026
                     </div>
+                    <div className="text-neutral-400 line-clamp-2 font-[500] text-[10px] uppercase tracking-widest">
+                      Rose View Hotel, Sylhet
+                    </div>
+                    <div className="mt-2">
+                      <div className="text-neutral-400 font-[500] line-clamp-2 text-[10px] uppercase tracking-widest">
+                        25 Jan, 2026
+                      </div>
+                      <div className="text-neutral-400 font-[500] line-clamp-2 text-[10px] uppercase tracking-widest">
+                        12:00 PM - 10:00 PM
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 line-clamp-1 font-[300]">
+                      Only 5 Days Left
+                    </span>
+                    <div className="mt-2">
+                      <button className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm">
+                        <DownloadIcon size={12} />
+                        Download All
+                      </button>
+                    </div>
+
+                  <div className="absolute bottom-18 right-2 transition-transform pointer-events-none">
+                    <ChevronDown size={24} className="group-hover:scale-120 group-hover:translate-y-1 transition-transform duration-300" strokeWidth={1}/>
                   </div>
                 </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                    <div className="flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                      🔥 Trending
+              </div>
+              <div className="px-4 max-w-full pb-6 overflow-x-auto">
+                <div className="flex gap-4">
+                  <div className="min-w-[300px] w-[300px]">
+                    <TicketCard  ticket={{
+                      _id: i.toString(),
+                      tier: 'Basic Entry',
+                      name: 'Event Name',
+                      controls: false,
+                      startDate: '25 Jan, 2026',
+                      endDate: '26 Jan, 2026',
+                      startTime: '10:00 AM',
+                      endTime: '4:00 PM',
+                      price: Math.floor(Math.random() * 3000),
+                      quantity: Math.floor(Math.random() * 100),
+                      benefits: [
+                        'Access to VIP lounge',
+                        'Dedicated entrance',
+                        'Premium food & beverage',
+                      ],
+                      venue: 'Rose View Hotel, Sylhet',
+                      onClick: () => {},
+                    }}
+                    />
+                    <div className="flex text-xs font-[400] text-slate-500 items-center gap-2 mt-2 justify-center">
+                      <button className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm">
+                        <DownloadIcon size={12} />
+                        QR Image
+                      </button>
+                      <button className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm">
+                        <FileText size={12} />
+                        PDF
+                      </button>
                     </div>
                   </div>
-                  <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Name</h2>
-                  <p className="text-xs text-slate-500 font-[300] line-clamp-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque illum rem quam consequatur tempora maxime perspiciatis, dolorum hic aut perferendis culpa iure eveniet voluptas exercitationem aspernatur earum, praesentium unde ea.</p>
-                  <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                    <span className="flex items-center gap-1 text-xs ">
-                      <Calendar size={12} strokeWidth={1}/>
-                      26 Jan 2026
-                    </span>
-                    <span className="flex items-center gap-1 text-xs">
-                      <Clock10 size={12} strokeWidth={1}/>
-                      9:00 AM - 5:00 PM
-                    </span>
-                  </div>
-                  {/* Price */}
-                  <div className="flex justify-between items-center gap-2 mt-2">
-                    <span className="text-xs text-slate-500 font-[300]">
-                      Only {Math.floor(Math.random() * 100)} tickets lest
-                    </span>
-                    <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                      <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100
-                    </span>
+                  <div className="min-w-[300px] w-[300px]">
+                    <TicketCard  ticket={{
+                      _id: i.toString(),
+                      tier: 'Basic Entry',
+                      name: 'Event Name',
+                      controls: false,
+                      startDate: '25 Jan, 2026',
+                      endDate: '26 Jan, 2026',
+                      startTime: '10:00 AM',
+                      endTime: '4:00 PM',
+                      price: Math.floor(Math.random() * 3000),
+                      quantity: Math.floor(Math.random() * 100),
+                      benefits: [
+                        'Access to VIP lounge',
+                        'Dedicated entrance',
+                        'Premium food & beverage',
+                      ],
+                      venue: 'Rose View Hotel, Sylhet',
+                      onClick: () => {},
+                    }}
+                    />
+                    
                   </div>
                 </div>
-                <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-              </motion.div>
+              </div>
+            </div>
             ))}
-          </div>
-        </section>
-        {/* Featured */}
-        <section className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="flex items-center gap-1 text-lg font-[300] text-slate-900 tracking-tight"><Logo className="w-6 text-brand-500" /> Featured</h2>
-                <p className="text-xs text-slate-500 font-[300]">Featured by Zenvy team</p>
-              </div>
-              <button className="text-[12px] font-[300] text-slate-400 hover:text-slate-900 transition-colors tracking-tight">See more</button>
-            </div>
-
-            <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
-              {[
-                { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
-                { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
-                { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden"
-                >
-                  <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                    <img
-                      src={'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                      alt={'Event Cover Image'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                        <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                        Live
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                      <div className="flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                        <Logo className="w-4 text-brand-500" /> Featured
-                      </div>
-                    </div>
-                    <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Name</h2>
-                    <p className="text-xs text-slate-500 font-[300] line-clamp-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque illum rem quam consequatur tempora maxime perspiciatis, dolorum hic aut perferendis culpa iure eveniet voluptas exercitationem aspernatur earum, praesentium unde ea.</p>
-                    <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                      <span className="flex items-center gap-1 text-xs ">
-                        <Calendar size={12} strokeWidth={1}/>
-                        26 Jan 2026
-                      </span>
-                      <span className="flex items-center gap-1 text-xs">
-                        <Clock10 size={12} strokeWidth={1}/>
-                        9:00 AM - 5:00 PM
-                      </span>
-                    </div>
-                    {/* Price */}
-                    <div className="flex justify-between items-center gap-2 mt-2">
-                      <span className="text-xs text-slate-500 font-[300]">
-                        Only {Math.floor(Math.random() * 100)} tickets lest
-                      </span>
-                      <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                        <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100
-                      </span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                </motion.div>
-              ))}
-            </div>
-          </section>
-
-          {/* Events */}
-        <section className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Explore</h2>
-                <p className="text-xs text-slate-500 font-[300]">Choose what's best for you</p>
-              </div>
-              <button className="text-[12px] font-[300] text-slate-400 hover:text-slate-900 transition-colors tracking-tight">See more</button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6 mb-10">
-              {[
-                { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
-                { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
-                { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden"
-                >
-                  <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                    <img
-                      src={'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                      alt={'Event Cover Image'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                        <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                        Live
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                    </div>
-                    <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Name</h2>
-                    <p className="text-xs text-slate-500 font-[300] line-clamp-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque illum rem quam consequatur tempora maxime perspiciatis, dolorum hic aut perferendis culpa iure eveniet voluptas exercitationem aspernatur earum, praesentium unde ea.</p>
-                    <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                      <span className="flex items-center gap-1 text-xs ">
-                        <Calendar size={12} strokeWidth={1}/>
-                        26 Jan 2026
-                      </span>
-                      <span className="flex items-center gap-1 text-xs">
-                        <Clock10 size={12} strokeWidth={1}/>
-                        9:00 AM - 5:00 PM
-                      </span>
-                    </div>
-                    {/* Price */}
-                    <div className="flex justify-between items-center gap-2 mt-2">
-                      <span className="text-xs text-slate-500 font-[300]">
-                        Only {Math.floor(Math.random() * 100)} tickets lest
-                      </span>
-                      <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                        <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100
-                      </span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                </motion.div>
-              ))}
             </div>
           </section>
       </main>
