@@ -18,6 +18,7 @@ import { useAuth } from '@/lib/context/auth';
 interface LandingProps {
   onGetStarted: () => void;
   onLogin: () => void;
+  onExploreEvents: () => void;
 }
 
 
@@ -134,7 +135,7 @@ const BrandPromotionVideo: React.FC = () => {
   );
 };
 
-export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
+export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExploreEvents }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { user } = useAuth();
   
@@ -185,7 +186,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             className="flex flex-col sm:flex-row justify-center gap-4 pt-4"
           >
             <Button 
-              onClick={onGetStarted}
+              onClick={onExploreEvents}
               variant="brand" 
               size="lg" 
               className="text-base h-14 px-8 rounded-xl shadow-xl shadow-brand-200/50 hover:-translate-y-1 active:translate-y-0"

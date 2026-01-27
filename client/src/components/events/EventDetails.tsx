@@ -280,6 +280,11 @@ export default function Events() {
                 _id: i.toString(),
                 tier: 'Basic Entry',
                 name: 'Event Name',
+                controls: true,
+                startDate: '25 Jan, 2026',
+                endDate: '26 Jan, 2026',
+                startTime: '10:00 AM',
+                endTime: '4:00 PM',
                 price: Math.floor(Math.random() * 3000),
                 quantity: Math.floor(Math.random() * 100),
                 benefits: [
@@ -291,7 +296,7 @@ export default function Events() {
                 onClick: () => {},
               }} key={i}/>
             ))}
-            <div className="flex flex-col gap-2 pt-4 max-w-[300px] border-t-2 border-brand-400 items-end justify-end">
+            <div className="flex flex-col gap-2 pt-4 w-full max-w-[350px] border-t-2 border-brand-400 items-end justify-end">
               <div className="flex items-center justify-between w-full gap-2">
                 <p>Total Amount</p>
                 <p><BDTIcon className="text-sm"/>100</p>
@@ -321,7 +326,7 @@ export default function Events() {
             </div>
           </div>
 
-          <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10 2xl:grid-cols-1 2xl:grid-flow-row 2xl:max-h-[70vh]">
+          <div className="grid pb-4 2xl:pr-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10 2xl:grid-cols-1 2xl:grid-flow-row 2xl:max-h-[70vh]">
             {[
               { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
               { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },

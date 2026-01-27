@@ -9,12 +9,9 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
         <div className="space-y-6">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
-              <Logo className="w-5 h-5 text-white" strokeWidth="2.5" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-neutral-950">Zenvy</span>
+            <Logo variant='full' />
           </div>
-          <p className="text-neutral-400 text-sm font-medium leading-relaxed">
+          <p className="text-neutral-400 text-sm font-[300] leading-relaxed">
             Engineering high-fidelity hybrid human experiences. The standard for modern event architecture.
           </p>
         </div>
@@ -51,7 +48,7 @@ export const Footer: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto pt-12 border-t border-brand-200 flex flex-col sm:flex-row justify-between items-center text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-300">
-         <p>© 2024 Zenvy Labs.</p>
+         <p>© 2026 Zenvy Inc.</p>
          <div className="flex gap-8 mt-4 sm:mt-0">
            <a href="#" className="hover:text-brand-600">Privacy</a>
            <a href="#" className="hover:text-brand-600">Security</a>

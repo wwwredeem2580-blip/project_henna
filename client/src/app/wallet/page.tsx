@@ -4,9 +4,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useNotification } from '@/lib/context/notification';
 import { useEffect } from 'react';
 import { publicService } from '@/lib/api/public';
-import Events from '@/components/events/Events';
+import Wallet from '@/components/wallet/Wallet';
 
-export default function EventsPage() {
+export default function WalletPage() {
   const router = useRouter();
   const { showNotification } = useNotification();
 
@@ -14,5 +14,5 @@ export default function EventsPage() {
     
   }, [router]);
 
-  return <Events />;
+  return <Wallet />;
 }

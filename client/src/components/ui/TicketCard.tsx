@@ -18,8 +18,13 @@ interface TicketCardProps {
     quantity: number;
     venue: string;
     _id: string;
+    startDate: string;
+    startTime: string;
     benefits: string[];
+    controls?: boolean;
     onClick: () => void;
+    endDate: string;
+    endTime: string;
   };
 }
 
@@ -57,30 +62,44 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
                   {ticket.name}
                 </div>
+                <div className="mt-2">
+                  <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
+                    {ticket.startDate} - {ticket.endDate}
+                  </div>
+                  <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
+                    {ticket.startTime} - {ticket.endTime}
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="flex flex-col items-start">
-              <span className="text-xs text-slate-500 font-[300]">
-                Only {ticket.quantity} tickets left
-              </span>
-              <span className="flex items-center text-md gap-1 mt-2 text-slate-500 font-[300]">
-                <span className="text-xs">For </span>
-                <BDTIcon className="text-xs"/>{ticket.price}
-              </span>
+              {ticket.controls && (
+                <>
+                <span className="text-xs text-slate-500 font-[300]">
+                  {ticket.quantity > 0 ? `Only ${ticket.quantity} tickets left` : 'Sold out'}
+                </span>
+                <span className="flex items-center text-md gap-1 mt-2 text-slate-500 font-[300]">
+                  <span className="text-xs">For </span>
+                  <BDTIcon className="text-xs"/>{ticket.price}
+                </span>
+                </>
+              )}
               <span className="flex items-center gap-1 text-xs text-slate-500 font-[300]">
                 <LocationIcon className="w-3"/> {ticket.venue}
               </span>
             </div>
-            <div className="absolute bottom-10 right-6 flex items-center gap-2" onClick={handleControlClick}>
-              <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10">
-                <Minus size={12}/>
-              </button>
-              <span className="text-xs font-[400] text-neutral-500">0</span>
-              <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10">
-                <Plus size={12}/>
-              </button>
-            </div>
+            {ticket.controls && (
+              <div className="absolute bottom-10 right-6 flex items-center gap-2" onClick={handleControlClick}>
+                <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10">
+                  <Minus size={12}/>
+                </button>
+                <span className="text-xs font-[400] text-neutral-500">0</span>
+                <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10">
+                  <Plus size={12}/>
+                </button>
+              </div>
+            )}
 
             <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
             <div className="absolute top-4 right-4 text-brand-400 opacity-50">

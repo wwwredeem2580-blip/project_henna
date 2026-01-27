@@ -14,5 +14,9 @@ export default function Home() {
     router.push('/auth?tab=login&role=user');
   };
 
-  return <Landing onGetStarted={handleGetStarted} onLogin={handleLogin} />;
+  const handleExploreEvents = () => {
+    router.push('/events');
+  };
+
+  return <Landing onGetStarted={handleGetStarted} onLogin={handleLogin} onExploreEvents={handleExploreEvents} />;
 }
