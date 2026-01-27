@@ -6,6 +6,7 @@ import eventRoutes from './modules/event/router';
 import hostRoutes from './modules/host/router';
 import ticketRoutes from './modules/ticket/router';
 import orderRoutes from './modules/order/router';
+import reviewRoutes from './modules/review/router';
 
 
 const router = Router();
@@ -17,5 +18,6 @@ router.use('/event', eventRoutes);
 router.use('/host', hostRoutes);
 router.use('/ticket', ticketRoutes);
 router.use('/order', orderRoutes);
+router.use('/review', reviewRoutes);
 
 export default router;

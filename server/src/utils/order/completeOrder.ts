@@ -70,20 +70,37 @@ async function sendOrderConfirmationEmail(order: any, ticketIds: any[]) {
 
         const event = await Event.findById(order.eventId);
         if (event && event.schedule) {
-            await addEmailJob('email-notification', {
-                type: 'ORDER_CONFIRMATION',
-                payload: {
-                    buyerEmail: order.buyerEmail,
-                    buyerName: order.buyerEmail.split('@')[0],
-                    orderNumber: order.orderNumber,
-                    eventTitle: event.title,
-                    eventDate: new Date(event.schedule.startDate).toLocaleDateString('en-US', {
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-                    }),
-                    ticketCount: ticketIds.length,
-                    totalAmount: order.pricing?.subtotal,
-                },
+            // Prepare tickets array for email
+            const tickets = order.tickets.map((item: any) => ({
+                ticketType: item.ticketType,
+                quantity: item.quantity,
+                price: item.price
+            }));
+
+            await addEmailJob('ORDER_CONFIRMATION', {
+                orderNumber: order.orderNumber,
+                buyerName: order.buyerEmail.split('@')[0],
+                buyerEmail: order.buyerEmail,
+                eventTitle: event.title,
+                eventDate: new Date(event.schedule.startDate).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                }),
+                eventTime: new Date(event.schedule.startDate).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                }),
+                venue: event.venue?.name || 'TBA',
+                venueAddress: event.venue?.address || 'Address TBA',
+                tickets,
+                totalAmount: order.pricing?.total || 0,
+                paymentMethod: order.paymentMethod || 'bKash',
+                transactionId: order.paymentDetails?.transactionId,
             });
+            
+            console.log(`[EMAIL_QUEUED] Order confirmation for ${order.orderNumber}`);
         }
     } catch (emailError) {
         console.error('[EMAIL_ERROR] Failed to queue order confirmation:', emailError);

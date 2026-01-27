@@ -6,7 +6,7 @@ import { publicService } from "@/lib/api/public";
 import { ticketService, Ticket } from "@/lib/api/ticket";
 import { pdfService } from "@/lib/api/pdf";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, QrCode, Rotate3D, Minus, ArrowDown, DownloadIcon, FileText, Eye } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, QrCode, Rotate3D, Minus, ArrowDown, DownloadIcon, FileText, Eye, Loader2 } from "lucide-react";
 
 
 import React from 'react';
@@ -43,6 +43,8 @@ export default function WalletPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [downloadingPDF, setDownloadingPDF] = useState<string | null>(null);
+  const [downloadingBulk, setDownloadingBulk] = useState<string | null>(null);
   const router = useRouter();
 
   let menuItems = [
@@ -115,21 +117,32 @@ export default function WalletPage() {
 
   // Handle single PDF download
   const handleDownloadPDF = async (ticketId: string) => {
+    if (downloadingPDF) return; // Prevent spam clicks
+    
     try {
+      setDownloadingPDF(ticketId);
       await pdfService.downloadTicketPDF(ticketId);
     } catch (error) {
       console.error('Failed to download PDF:', error);
       alert('Failed to download PDF. Please try again.');
+    } finally {
+      setDownloadingPDF(null);
     }
   };
 
   // Handle bulk PDF download
   const handleDownloadAllPDFs = async (ticketIds: string[]) => {
+    const eventId = ticketIds[0]; // Use first ticket ID as event identifier
+    if (downloadingBulk) return; // Prevent spam clicks
+    
     try {
+      setDownloadingBulk(eventId);
       await pdfService.downloadBulkTicketPDFs(ticketIds);
     } catch (error) {
       console.error('Failed to download PDFs:', error);
       alert('Failed to download PDFs. Please try again.');
+    } finally {
+      setDownloadingBulk(null);
     }
   };
 
@@ -296,10 +309,20 @@ export default function WalletPage() {
                                 const ticketIds = eventGroup.tickets.map(t => t._id);
                                 handleDownloadAllPDFs(ticketIds);
                               }}
-                              className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
+                              disabled={downloadingBulk === eventGroup.tickets[0]._id}
+                              className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <DownloadIcon size={12} />
-                              Download All ({eventGroup.tickets.length})
+                              {downloadingBulk === eventGroup.tickets[0]._id ? (
+                                <>
+                                  <Loader2 size={12} className="animate-spin" />
+                                  Downloading...
+                                </>
+                              ) : (
+                                <>
+                                  <DownloadIcon size={12} />
+                                  Download All ({eventGroup.tickets.length})
+                                </>
+                              )}
                             </button>
                           </div>
 
@@ -362,10 +385,20 @@ export default function WalletPage() {
                                         </button>
                                         <button 
                                           onClick={() => handleDownloadPDF(ticket._id)}
-                                          className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
+                                          disabled={downloadingPDF === ticket._id}
+                                          className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                          <FileText size={12} />
-                                          PDF
+                                          {downloadingPDF === ticket._id ? (
+                                            <>
+                                              <Loader2 size={12} className="animate-spin" />
+                                              Loading...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <FileText size={12} />
+                                              PDF
+                                            </>
+                                          )}
                                         </button>
                                       </div>
                                     </div>

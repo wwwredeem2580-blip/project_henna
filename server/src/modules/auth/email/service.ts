@@ -123,7 +123,9 @@ export const resendVerificationEmailService = async (req: Request, res: Response
     );
 
     // Send new verification email
-    return await sendVerificationEmail(userId, user.email);
+    const result = await sendVerificationEmail(userId, user.email);
+    
+    return res.status(200).json(result);
 
   } catch (error: any) {
     handleError(error, res);
@@ -177,9 +179,9 @@ export const sendVerificationEmail = async (userId: string, email: string): Prom
       const userName = `${user.firstName} ${user.lastName}`.trim() || 'Valued User';
 
       await addEmailJob('EMAIL_VERIFICATION', {
-        userName,
+        name: userName,
         email,
-        verificationUrl
+        verificationLink: verificationUrl
       });
 
       console.log(`📧 Email verification queued for: ${email}`);

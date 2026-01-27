@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 import {
     emailVerificationTemplate,
   } from '../utils/email/emailVerification';
+import { orderConfirmationTemplate } from '../utils/email/orderConfirmation';
 
 const redisOptions = {
   host: process.env.REDIS_HOST || 'localhost',
@@ -61,6 +62,11 @@ export const initEmailWorker = () => {
                 to = payload.email;
                 subject = `Verify Your Email - Zenvy`;
                 html = emailVerificationTemplate(payload);
+                break;
+            case 'ORDER_CONFIRMATION':
+                to = payload.buyerEmail;
+                subject = `Order Confirmed - ${payload.eventTitle}`;
+                html = orderConfirmationTemplate(payload);
                 break;
             default:
                 console.warn(`Unknown email job type: ${type}`);
