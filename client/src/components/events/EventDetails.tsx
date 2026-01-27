@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown } from "lucide-react";
 
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -36,8 +36,18 @@ export default function Events() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [allLocations, setAllLocations] = useState<any[]>([]);
+  const ticketSectionRef = React.useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const router = useRouter();
+
+  const scrollToTickets = () => {
+    if (ticketSectionRef.current) {
+      ticketSectionRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
 
   let menuItems = [
     { icon: <LayoutDashboard size={18} strokeWidth={1.5} />, label: 'Explore', active: true },
@@ -252,7 +262,7 @@ export default function Events() {
               </motion.div>
         </section>
         {/* Tickets */}
-        <section className="space-y-6 2xl:col-span-1">
+        <section ref={ticketSectionRef} className="space-y-6 2xl:col-span-1">
           <div className="">
             <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Tickets</h2>
             <p className="text-xs text-slate-500 font-[300]">What are you doing! Book yours right now.</p>
@@ -398,6 +408,22 @@ export default function Events() {
         </section>
         </div>
 
+        {/* Scroll to Tickets Button - Hidden on md and larger screens */}
+        <motion.button
+          onClick={scrollToTickets}
+          className="fixed bottom-6 right-6 md:hidden p-3 bg-brand-500 text-white rounded-full shadow-lg hover:bg-brand-400 transition-all z-50"
+          animate={{
+            y: [0, -10, 0], // Reverse jumping animation (up then down)
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ArrowDown size={24} />
+        </motion.button>
         
         
       </main>
