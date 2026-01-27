@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D } from "lucide-react";
 
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -313,6 +313,9 @@ export default function Events() {
                 </div>
                 
                 <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                <div className="absolute top-0 right-0 w-16 h-16 -mr-6 mt-4 rounded-full transition-transform group-hover:scale-110" >
+                  <Rotate3D size={16} className="text-brand-400"/>
+                </div>
                 </div>
                 <div>
                   <QrCode size={36} className="text-brand-400"/>
