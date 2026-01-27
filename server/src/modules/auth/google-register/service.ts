@@ -181,7 +181,7 @@ export const googleRegisterCallbackService = async (req: Request, res: Response)
     oauthStateStore.delete(state);
 
     // Role-based redirect
-    const dashboardUrl = user.role === 'host' ? '/host/dashboard' : '/dashboard';
+    const dashboardUrl = user.role === 'host' ? '/dashboard' : '/events';
     return res.redirect(`${process.env.CLIENT_URL}${dashboardUrl}?registered=true`);
   } catch (error) {
     handleError(error, res);

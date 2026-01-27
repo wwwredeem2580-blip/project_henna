@@ -5,6 +5,7 @@ import supportRoutes from './modules/support/router';
 import eventRoutes from './modules/event/router';
 import hostRoutes from './modules/host/router';
 import ticketRoutes from './modules/ticket/router';
+import orderRoutes from './modules/order/router';
 
 
 const router = Router();
@@ -15,5 +16,6 @@ router.use('/support', supportRoutes);
 router.use('/event', eventRoutes);
 router.use('/host', hostRoutes);
 router.use('/ticket', ticketRoutes);
+router.use('/order', orderRoutes);
 
 export default router;

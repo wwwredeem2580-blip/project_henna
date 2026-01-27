@@ -21,7 +21,7 @@ router.post('/login', loginService);
 
 // Google OAuth Login
 router.get('/google/login', getGoogleLoginUrlService);
-router.get('/google/redirect', redirectGoogleLoginService);
+router.get('/google/callback', redirectGoogleLoginService);
 
 // Google OAuth Registration (with business data and role)
 router.post('/google/register/initiate', initiateGoogleRegisterService);

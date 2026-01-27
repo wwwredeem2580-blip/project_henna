@@ -85,7 +85,7 @@ export const redirectGoogleLoginService = async (req: Request, res: Response) =>
     res.cookie('refreshToken', refreshToken, REFRESH_TOKEN_CONFIG);
     
     // Role-based redirect after login
-    const dashboardUrl = user.role === 'host' ? '/host/dashboard' : '/dashboard';
+    const dashboardUrl = user.role === 'host' ? '/dashboard' : '/events';
     return res.redirect(`${process.env.CLIENT_URL}${dashboardUrl}?login=success`);
   } catch (error) {
     // On error, redirect to login with error message
