@@ -43,6 +43,9 @@ export default function Events() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [allLocations, setAllLocations] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [trendingEvents, setTrendingEvents] = useState<any[]>([]);
+  const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -111,14 +114,16 @@ export default function Events() {
           const locations = [...new Set(eventsData.events.map((event: any) => event.venue.address.city))].sort();
           setAllLocations(locations);
         }
+        
+        setEvents(eventsData?.events || []);
 
         // Fetch trending events
-        // const trending = await publicService.getTrendingEvents(10);
-        // setTrendingEvents(trending);
+        const trending = await publicService.getTrendingEvents(10);
+        setTrendingEvents(trending);
 
         // Fetch featured events
-        // const featured = await publicService.getFeaturedEvents(10);
-        // setFeaturedEvents(featured);
+        const featured = await publicService.getFeaturedEvents(10);
+        setFeaturedEvents(featured);
       } catch (err) {
         console.error("Failed to fetch initial data", err);
       }
@@ -288,6 +293,7 @@ export default function Events() {
       </div>
 
         {/* Trending */}
+        {trendingEvents.length > 0 && (
         <section className="space-y-6">
           <div>
             <h2 className="text-lg font-[300] text-slate-900 tracking-tight">🔥 Trending</h2>
@@ -295,71 +301,76 @@ export default function Events() {
           </div>
 
           <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
-            {[
-              { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
-              { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
-              { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+            {trendingEvents.length > 0 && trendingEvents.map((event: any, i: number) => {
+              const minPrice = event.tickets?.tiers?.length > 0 
+                ? Math.min(...event.tickets.tiers.map((t: any) => t.price))
+                : 0;
+              const startDate = new Date(event.schedule?.startDate);
+              const endDate = new Date(event.schedule?.endDate);
+              const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+              const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden"
-              >
-                <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                  <img
-                    src={'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                    alt={'Event Cover Image'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                    <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                      <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                      Live
+              return (
+                <motion.div
+                  key={event._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  onClick={() => router.push(`/events/${event.slug || event._id}`)}
+                  className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
+                >
+                  <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
+                    <img
+                      src={event.media?.coverImage || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
+                      alt={event.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {event.status === 'live' && (
+                      <div className="absolute top-4 gap-2 left-4 flex items-center ">
+                        <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
+                          <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
+                          Live
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 ml-[-12px] mb-2">
+                      <div className="flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
+                        🔥 Trending
+                      </div>
+                    </div>
+                    <h2 className="text-lg font-[300] text-slate-900 tracking-tight truncate">{event.title}</h2>
+                    <p className="text-xs text-slate-500 font-[300] line-clamp-2">{event.tagline || event.description}</p>
+                    <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
+                      <span className="flex items-center gap-1 text-xs ">
+                        <Calendar size={12} strokeWidth={1}/>
+                        {formatDate(startDate)}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs">
+                        <Clock10 size={12} strokeWidth={1}/>
+                        {formatTime(startDate)} - {formatTime(endDate)}
+                      </span>
+                    </div>
+                    {/* Price */}
+                    <div className="flex justify-between items-center gap-2 mt-2">
+                      <span className="text-xs text-slate-500 font-[300]">
+                        {event.venue?.address?.city || 'Location TBA'}
+                      </span>
+                      <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
+                        <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{minPrice}
+                      </span>
                     </div>
                   </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                    <div className="flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                      🔥 Trending
-                    </div>
-                  </div>
-                  <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Name</h2>
-                  <p className="text-xs text-slate-500 font-[300] line-clamp-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque illum rem quam consequatur tempora maxime perspiciatis, dolorum hic aut perferendis culpa iure eveniet voluptas exercitationem aspernatur earum, praesentium unde ea.</p>
-                  <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                    <span className="flex items-center gap-1 text-xs ">
-                      <Calendar size={12} strokeWidth={1}/>
-                      26 Jan 2026
-                    </span>
-                    <span className="flex items-center gap-1 text-xs">
-                      <Clock10 size={12} strokeWidth={1}/>
-                      9:00 AM - 5:00 PM
-                    </span>
-                  </div>
-                  {/* Price */}
-                  <div className="flex justify-between items-center gap-2 mt-2">
-                    <span className="text-xs text-slate-500 font-[300]">
-                      Only {Math.floor(Math.random() * 100)} tickets lest
-                    </span>
-                    <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                      <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100
-                    </span>
-                  </div>
-                </div>
-                <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-              </motion.div>
-            ))}
+                  <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                </motion.div>
+              );
+            })}
           </div>
         </section>
+        )}
         {/* Featured */}
+        {featuredEvents.length > 0 && (
         <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -370,65 +381,74 @@ export default function Events() {
             </div>
 
             <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
-              {[
-                { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
-                { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
-                { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden"
-                >
-                  <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                    <img
-                      src={'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                      alt={'Event Cover Image'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                        <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                        Live
+              {featuredEvents.length > 0 && featuredEvents.map((event: any, i: number) => {
+                const minPrice = event.tickets?.tiers?.length > 0 
+                  ? Math.min(...event.tickets.tiers.map((t: any) => t.price))
+                  : 0;
+                const startDate = new Date(event.schedule?.startDate);
+                const endDate = new Date(event.schedule?.endDate);
+                const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+                const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+                return (
+                  <motion.div
+                    key={event._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    onClick={() => router.push(`/events/${event.slug || event._id}`)}
+                    className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
+                  >
+                    <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
+                      <img
+                        src={event.media?.coverImage || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
+                        alt={event.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {event.status === 'live' && (
+                        <div className="absolute top-4 gap-2 left-4 flex items-center ">
+                          <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
+                            <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
+                            Live
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 ml-[-12px] mb-2">
+                        <div className="flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
+                          <Logo className="w-4 text-brand-500" /> Featured
+                        </div>
+                      </div>
+                      <h2 className="text-lg font-[300] text-slate-900 tracking-tight truncate">{event.title}</h2>
+                      <p className="text-xs text-slate-500 font-[300] line-clamp-2">{event.tagline || event.description}</p>
+                      <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
+                        <span className="flex items-center gap-1 text-xs ">
+                          <Calendar size={12} strokeWidth={1}/>
+                          {formatDate(startDate)}
+                        </span>
+                        <span className="flex items-center gap-1 text-xs">
+                          <Clock10 size={12} strokeWidth={1}/>
+                          {formatTime(startDate)} - {formatTime(endDate)}
+                        </span>
+                      </div>
+                      {/* Price */}
+                      <div className="flex justify-between items-center gap-2 mt-2">
+                        <span className="text-xs text-slate-500 font-[300]">
+                          {event.venue?.address?.city || 'Location TBA'}
+                        </span>
+                        <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
+                          <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{minPrice}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                      <div className="flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                        <Logo className="w-4 text-brand-500" /> Featured
-                      </div>
-                    </div>
-                    <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Name</h2>
-                    <p className="text-xs text-slate-500 font-[300] line-clamp-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque illum rem quam consequatur tempora maxime perspiciatis, dolorum hic aut perferendis culpa iure eveniet voluptas exercitationem aspernatur earum, praesentium unde ea.</p>
-                    <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                      <span className="flex items-center gap-1 text-xs ">
-                        <Calendar size={12} strokeWidth={1}/>
-                        26 Jan 2026
-                      </span>
-                      <span className="flex items-center gap-1 text-xs">
-                        <Clock10 size={12} strokeWidth={1}/>
-                        9:00 AM - 5:00 PM
-                      </span>
-                    </div>
-                    {/* Price */}
-                    <div className="flex justify-between items-center gap-2 mt-2">
-                      <span className="text-xs text-slate-500 font-[300]">
-                        Only {Math.floor(Math.random() * 100)} tickets lest
-                      </span>
-                      <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                        <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100
-                      </span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                </motion.div>
-              ))}
+                    <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                  </motion.div>
+                );
+              })}
             </div>
           </section>
+          )}
 
           {/* Events */}
         <section className="space-y-6">
@@ -441,67 +461,72 @@ export default function Events() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6 mb-10">
-              {[
-                { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
-                { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
-                { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-                { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+              {events.length > 0 ? events.map((event: any, i: number) => {
+                const minPrice = event.tickets?.tiers?.length > 0 
+                  ? Math.min(...event.tickets.tiers.map((t: any) => t.price))
+                  : 0;
+                const startDate = new Date(event.schedule?.startDate);
+                const endDate = new Date(event.schedule?.endDate);
+                const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+                const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden"
-                >
-                  <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                    <img
-                      src={'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                      alt={'Event Cover Image'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                        <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                        Live
+                return (
+                  <motion.div
+                    key={event._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    onClick={() => router.push(`/events/${event.slug || event._id}`)}
+                    className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
+                  >
+                    <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
+                      <img
+                        src={event.media?.coverImage || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
+                        alt={event.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {event.status === 'live' && (
+                        <div className="absolute top-4 gap-2 left-4 flex items-center ">
+                          <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
+                            <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
+                            Live
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 ml-[-12px] mb-2">
+                      </div>
+                      <h2 className="text-lg font-[300] text-slate-900 tracking-tight truncate">{event.title}</h2>
+                      <p className="text-xs text-slate-500 font-[300] line-clamp-2">{event.tagline || event.description}</p>
+                      <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
+                        <span className="flex items-center gap-1 text-xs ">
+                          <Calendar size={12} strokeWidth={1}/>
+                          {formatDate(startDate)}
+                        </span>
+                        <span className="flex items-center gap-1 text-xs">
+                          <Clock10 size={12} strokeWidth={1}/>
+                          {formatTime(startDate)} - {formatTime(endDate)}
+                        </span>
+                      </div>
+                      {/* Price */}
+                      <div className="flex justify-between items-center gap-2 mt-2">
+                        <span className="text-xs text-slate-500 font-[300]">
+                          {event.venue?.address?.city || 'Location TBA'}
+                        </span>
+                        <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
+                          <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{minPrice}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                    </div>
-                    <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Name</h2>
-                    <p className="text-xs text-slate-500 font-[300] line-clamp-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque illum rem quam consequatur tempora maxime perspiciatis, dolorum hic aut perferendis culpa iure eveniet voluptas exercitationem aspernatur earum, praesentium unde ea.</p>
-                    <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                      <span className="flex items-center gap-1 text-xs ">
-                        <Calendar size={12} strokeWidth={1}/>
-                        26 Jan 2026
-                      </span>
-                      <span className="flex items-center gap-1 text-xs">
-                        <Clock10 size={12} strokeWidth={1}/>
-                        9:00 AM - 5:00 PM
-                      </span>
-                    </div>
-                    {/* Price */}
-                    <div className="flex justify-between items-center gap-2 mt-2">
-                      <span className="text-xs text-slate-500 font-[300]">
-                        Only {Math.floor(Math.random() * 100)} tickets lest
-                      </span>
-                      <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                        <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100
-                      </span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                </motion.div>
-              ))}
+                    <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                  </motion.div>
+                );
+              }) : (
+                <div className="col-span-full text-center py-10 text-slate-400">
+                  <p>No events found</p>
+                </div>
+              )}
             </div>
           </section>
       </main>

@@ -27,9 +27,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/featured/:limit', async (req, res) => {
+router.get('/featured', async (req, res) => {
   try {
-    const limit = parseInt(req.params.limit) || 10;
+    const limit = parseInt(req.query.limit as string) || 10;
     const events = await getFeaturedEventsService(limit);
     res.status(200).json(events);
   } catch (error) {
@@ -38,9 +38,9 @@ router.get('/featured/:limit', async (req, res) => {
   }
 });
 
-router.get('/trending/:limit', async (req, res) => {
+router.get('/trending', async (req, res) => {
   try {
-    const limit = parseInt(req.params.limit) || 10;
+    const limit = parseInt(req.query.limit as string) || 10;
     const events = await getTrendingEventsService(limit);
     res.status(200).json(events);
   } catch (error) {

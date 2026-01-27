@@ -43,7 +43,7 @@ export const getEventsService = async (filters: {
   
   const skip = (filters.page - 1) * filters.limit;
   const events = await Event.find(query)
-    .select('-hostId -__v -history')
+    .select('_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate tickets.tiers metrics.views status')
     .sort({ 'schedule.startDate': 1 })
     .skip(skip)
     .limit(filters.limit);
@@ -87,7 +87,7 @@ export const getFeaturedEventsService = async (limit: number) => {
     status: { $in: ['published', 'live'] },
     visibility: 'public',
   })
-    .select('-hostId -__v -history')
+    .select('_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate tickets.tiers metrics.views status')
     .sort({ 'features.featuredPriority': -1, 'features.featuredAt': -1 })
     .limit(limit);
   
