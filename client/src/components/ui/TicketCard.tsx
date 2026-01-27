@@ -39,6 +39,8 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     e.stopPropagation();
   };
 
+  const sameDay = ticket.startDate === ticket.endDate;
+
   return (
     <div className="relative w-full max-w-[350px] h-[180px] group cursor-pointer" onClick={handleFlip} style={{ perspective: '1000px' }}>
       <motion.div
@@ -64,7 +66,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 </div>
                 <div className="mt-2">
                   <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
-                    {ticket.startDate} - {ticket.endDate}
+                    {sameDay ? ticket.startDate : `${ticket.startDate} - ${ticket.endDate}`}
                   </div>
                   <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
                     {ticket.startTime} - {ticket.endTime}

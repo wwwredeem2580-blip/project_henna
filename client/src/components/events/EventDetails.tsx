@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { Logo } from "../shared/Logo";
@@ -35,6 +35,10 @@ import { TicketCard } from "../ui/TicketCard";
 export default function Events() {
   const [checkoutStep, setCheckoutStep] = useState<'selection' | 'checkout' | 'success'>('selection');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [event, setEvent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const params = useParams();
+  const eventId = params?.id as string;
 
   const onGoToWallet = () => {
     router.push('/wallet');
@@ -46,6 +50,25 @@ export default function Events() {
   const ticketSectionRef = React.useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const router = useRouter();
+
+  // Fetch event data
+  useEffect(() => {
+    const fetchEvent = async () => {
+      if (!eventId) return;
+      
+      try {
+        setLoading(true);
+        const eventData = await publicService.getEventDetails(eventId);
+        setEvent(eventData);
+      } catch (error) {
+        console.error('Failed to fetch event:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
+  }, [eventId]);
 
   const scrollToTickets = () => {
     if (ticketSectionRef.current) {
@@ -150,7 +173,15 @@ export default function Events() {
           </div>
         </header>
         
-
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-slate-500">Loading event details...</p>
+          </div>
+        ) : !event ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-slate-500">Event not found</p>
+          </div>
+        ) : (
 
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6">
         <section className="space-y-6 2xl:col-span-2">
@@ -164,34 +195,31 @@ export default function Events() {
                   {/* Main Image */}
                   <div className="relative aspect-[2/1] overflow-hidden rounded-tr-lg rounded-bl-lg">
                     <img
-                      src="https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60"
-                      alt="Event Cover Image"
+                      src={event?.media?.coverImage?.url || "https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60"}
+                      alt={event?.media?.coverImage?.alt || "Event Cover Image"}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
 
+                    {event?.status === 'live' && (
                     <div className="absolute top-4 left-4 flex items-center gap-2">
                       <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-light text-slate-900 border border-slate-100">
                         <span className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full" />
                         Live
                       </div>
                     </div>
+                    )}
                   </div>
 
                   {/* Vertical Gallery */}
                   <div className="flex flex-col gap-2 overflow-hidden">
-                    {[
-                      101,
-                      102,
-                      103,
-                      104
-                    ].map((id) => (
+                    {(event?.media?.gallery || []).slice(0, 4).map((img: any, idx: number) => (
                       <div
-                        key={id}
+                        key={idx}
                         className="aspect-[2/1] overflow-hidden rounded-tr-sm rounded-bl-sm"
                       >
                         <img
-                          src={`https://picsum.photos/id/${id}/200/120.jpg`}
-                          alt="Gallery image"
+                          src={img?.url || `https://picsum.photos/id/${101 + idx}/200/120.jpg`}
+                          alt={img?.caption || "Gallery image"}
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </div>
@@ -203,19 +231,22 @@ export default function Events() {
                   <div className="flex items-center gap-2 ml-[-12px] mb-2">
                     <div className="flex items-center gap-2 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-[300] text-slate-900 border border-slate-100">
                       <Music size={16} className="text-brand-500" strokeWidth={1}/>
-                      Concert
+                      {event?.category || 'Concert'}
                     </div>
                   </div>
-                  <h2 className="text-lg font-[300] text-slate-700 tracking-tight">Event Name</h2>
-                  <p className="text-sm text-neutral-500 font-[300] line-clamp-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque illum rem quam consequatur tempora maxime perspiciatis, dolorum hic aut perferendis culpa iure eveniet voluptas exercitationem aspernatur earum, praesentium unde ea.</p>
+                  <h2 className="text-lg font-[300] text-slate-700 tracking-tight">{event?.title || 'Event Name'}</h2>
+                  <p className="text-sm text-neutral-500 font-[300] line-clamp-2">{event?.tagline || 'Lorem ipsum dolor sit amet consectetur adipisicing elit.'}</p>
                   <div className="flex flex-col gap-2 mt-4 font-[300] text-slate-700">
                     <span className="flex items-center gap-2 text-sm ">
                       <Calendar className="text-neutral-600" size={14} strokeWidth={1}/>
-                      26th Jan 2026
+                      {event?.schedule?.startDate ? new Date(event.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '26th Jan 2026'}
                     </span>
                     <span className="flex items-center gap-2 text-sm">
                       <Clock10 className="text-neutral-600" size={14} strokeWidth={1}/>
-                      9:00 AM - 5:00 PM
+                      {event?.schedule?.startDate && event?.schedule?.endDate 
+                        ? `${new Date(event.schedule.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${new Date(event.schedule.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+                        : '9:00 AM - 5:00 PM'
+                      }
                     </span>
                   </div>
                   <section className="p-2 max-w-[400px] bg-brand-card rounded-tr-lg rounded-bl-lg border border-brand-divider flex items-center justify-between mt-4">
@@ -226,8 +257,8 @@ export default function Events() {
                       <div>
                         <p className="text-[10px] font-[500] uppercase tracking-widest text-neutral-600 mb-1">Venue</p>
                         <div className="flex flex-col items-start">
-                          <p className="text-xs text-neutral-500 font-[300]">Rose View Hotel</p>
-                          <p className="text-xs text-neutral-500 mt-[-4px] font-[300]">Dhaka, Bangladesh</p>
+                          <p className="text-xs text-neutral-500 font-[300]">{event?.venue?.name || 'Rose View Hotel'}</p>
+                          <p className="text-xs text-neutral-500 mt-[-4px] font-[300]">{event?.venue?.address?.city || 'Dhaka'}, {event?.venue?.address?.country || 'Bangladesh'}</p>
                         </div>
                       </div>
                     </div>
@@ -240,9 +271,7 @@ export default function Events() {
                       The Experience
                     </p>
                     <p className="text-xs font-[300] text-neutral-500">
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis quibusdam inventore quaerat alias commodi dignissimos laborum tenetur esse atque! Obcaecati magnam qui amet neque quia labore non, porro sunt. Dolores.
-                      Pariatur odit, unde ut voluptate reprehenderit laboriosam distinctio veniam expedita a hic, harum omnis magnam iure laudantium sed adipisci ullam dignissimos voluptates suscipit. Ipsum est qui cupiditate itaque aspernatur laboriosam?
-                      Ex vitae assumenda, odit numquam commodi atque cum a distinctio maxime perspiciatis voluptate ad tenetur nostrum delectus exercitationem accusantium similique illum hic placeat eius repellat consequatur non. Id, blanditiis! Molestiae.
+                      {event?.description || 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis quibusdam inventore quaerat alias commodi dignissimos laborum tenetur esse atque! Obcaecati magnam qui amet neque quia labore non, porro sunt. Dolores.'}
                     </p>
                   </div>
 
@@ -254,8 +283,8 @@ export default function Events() {
                       <div>
                         <p className="text-[10px] font-[500] uppercase tracking-widest text-neutral-600 mb-1">Organizer</p>
                         <div className="flex flex-col items-start">
-                          <p className="text-xs text-neutral-500 font-[300]">Zenvy Studios</p>
-                          <p className="text-xs text-brand-400 mt-[-4px] font-[300]">support@zenvystudios.com</p>
+                          <p className="text-xs text-neutral-500 font-[300]">{event?.organizer?.companyName || 'Zenvy Studios'}</p>
+                          <p className="text-xs text-brand-400 mt-[-4px] font-[300]">{event?.organizer?.companyEmail || 'support@zenvystudios.com'}</p>
                         </div>
                       </div>
                     </div>
@@ -277,28 +306,24 @@ export default function Events() {
 
           {/* Tickets Grid */}
           <div className="flex flex-col gap-6 mb-10">
-            {[
-              { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
-              { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
-              { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
-            ].map((stat, i) => (
+            {(event?.tickets || []).map((ticket: any, i: number) => (
               <TicketCard ticket={{
-                _id: i.toString(),
-                tier: 'Basic Entry',
-                name: 'Event Name',
+                _id: ticket._id || i.toString(),
+                tier: ticket.tier || ticket.name,
+                name: event?.title || 'Event Name',
                 controls: true,
-                startDate: '25 Jan, 2026',
-                endDate: '26 Jan, 2026',
-                startTime: '10:00 AM',
-                endTime: '4:00 PM',
-                price: Math.floor(Math.random() * 3000),
-                quantity: Math.floor(Math.random() * 100),
-                benefits: [
-                  'Access to VIP lounge',
+                startDate: event?.schedule?.startDate ? new Date(event.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '25 Jan, 2026',
+                endDate: event?.schedule?.endDate ? new Date(event.schedule.endDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '26 Jan, 2026',
+                startTime: event?.schedule?.startDate ? new Date(event.schedule.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '10:00 AM',
+                endTime: event?.schedule?.endDate ? new Date(event.schedule.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '4:00 PM',
+                price: ticket.price?.amount || 0,
+                quantity: ticket.quantity || 0,
+                benefits: ticket.benefits || [
+                  'Access to event',
                   'Dedicated entrance',
-                  'Premium food & beverage',
+                  'Premium experience',
                 ],
-                venue: 'Rose View Hotel, Sylhet',
+                venue: `${event?.venue?.name || 'Venue'}, ${event?.venue?.address?.city || 'City'}`,
                 onClick: () => {},
               }} key={i}/>
             ))}
@@ -393,6 +418,7 @@ export default function Events() {
           </div>
         </section>
         </div>
+        )}
 
         {/* Scroll to Tickets Button - Hidden on md and larger screens */}
         <motion.button
