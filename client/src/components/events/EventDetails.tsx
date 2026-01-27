@@ -258,13 +258,12 @@ export default function Events() {
             <p className="text-xs text-slate-500 font-[300]">What are you doing! Book yours right now.</p>
           </div>
 
-          {/* Stats Grid */}
+          {/* Tickets Grid */}
           <div className="flex flex-col items-end gap-6 mb-10">
             {[
               { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
               { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
               { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -310,6 +309,25 @@ export default function Events() {
                 </div>
               </motion.div>
             ))}
+            <div className="flex flex-col gap-2 pt-4 w-[300px] border-t-2 border-brand-400 items-end justify-end">
+              <div className="flex items-center justify-between w-full gap-2">
+                <p>Total Amount</p>
+                <p><BDTIcon className="text-sm"/>100</p>
+              </div>
+              <button className="py-1 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all">
+                Book Now
+              </button>
+              <p className="text-xs text-slate-500 font-[300]">Includes: 5% Platform Fee</p>
+              <div className="p-6 w-full bg-slate-50 rounded-[2rem] flex items-center gap-4">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-500 shadow-sm">
+                  <ShieldCheck size={20} strokeWidth={1}/>
+                </div>
+                <div>
+                  <p className="text-[12px] font-[400] text-slate-700">7-Day Safety Net Refund</p>
+                  <p className="text-[10px] text-neutral-500 font-[400]">Platform guaranteed authenticity</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
         </div>

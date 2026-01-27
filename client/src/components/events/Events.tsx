@@ -290,11 +290,11 @@ export default function Events() {
         {/* Trending */}
         <section className="space-y-6">
           <div>
-            <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Trending</h2>
+            <h2 className="text-lg font-[300] text-slate-900 tracking-tight">🔥 Trending</h2>
             <p className="text-xs text-slate-500 font-[300]">Events everybody's hooking up right now!</p>
           </div>
 
-          <div className="grid grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
+          <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
             {[
               { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
               { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
@@ -363,13 +363,13 @@ export default function Events() {
         <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Featured</h2>
+                <h2 className="flex items-center gap-1 text-lg font-[300] text-slate-900 tracking-tight"><Logo className="w-6 text-brand-500" /> Featured</h2>
                 <p className="text-xs text-slate-500 font-[300]">Featured by Zenvy team</p>
               </div>
               <button className="text-[12px] font-[300] text-slate-400 hover:text-slate-900 transition-colors tracking-tight">See more</button>
             </div>
 
-            <div className="grid grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
+            <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
               {[
                 { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
                 { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
