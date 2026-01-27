@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { ticketService, Ticket } from "@/lib/api/ticket";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, QrCode, Rotate3D, Minus, ArrowDown, DownloadIcon, FileText } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, QrCode, Rotate3D, Minus, ArrowDown, DownloadIcon, FileText, Eye } from "lucide-react";
 
 
 import React from 'react';
@@ -33,6 +33,7 @@ import { authService } from "@/lib/api/auth";
 import { BDTIcon, LightningIcon, LocationIcon } from "../ui/Icons";
 
 import { TicketCard } from "../ui/TicketCard";
+import { QRModal } from "./QRModal";
 
 export default function WalletPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,6 +41,7 @@ export default function WalletPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const router = useRouter();
 
   let menuItems = [
@@ -91,6 +93,24 @@ export default function WalletPage() {
     await authService.logout()
     router.push('/auth?tab=login')
   }
+
+  // Handle QR code download
+  const handleDownloadQR = async (qrCodeUrl: string, ticketNumber: string) => {
+    try {
+      const response = await fetch(qrCodeUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${ticketNumber}-QR.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download QR code:', error);
+    }
+  };
 
 
   return (
@@ -302,7 +322,14 @@ export default function WalletPage() {
                                       />
                                       <div className="flex text-xs font-[400] text-slate-500 items-center gap-2 mt-2 justify-center">
                                         <button 
-                                          onClick={() => window.open(ticket.qrCodeUrl, '_blank')}
+                                          onClick={() => setSelectedTicket(ticket)}
+                                          className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
+                                        >
+                                          <Eye size={12} />
+                                          Reveal QR
+                                        </button>
+                                        <button 
+                                          onClick={() => handleDownloadQR(ticket.qrCodeUrl, ticket.ticketNumber)}
                                           className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
                                         >
                                           <DownloadIcon size={12} />
@@ -328,6 +355,19 @@ export default function WalletPage() {
             )}
           </section>
       </main>
+
+      {/* QR Code Modal */}
+      {selectedTicket && (
+        <QRModal
+          isOpen={!!selectedTicket}
+          onClose={() => setSelectedTicket(null)}
+          qrCodeUrl={selectedTicket.qrCodeUrl}
+          ticketNumber={selectedTicket.ticketNumber}
+          eventTitle={selectedTicket.eventTitle}
+          ticketType={selectedTicket.ticketType}
+          onDownload={() => handleDownloadQR(selectedTicket.qrCodeUrl, selectedTicket.ticketNumber)}
+        />
+      )}
     </div>
   );
 };
