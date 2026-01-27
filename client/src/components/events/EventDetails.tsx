@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D, CheckCircle2 } from "lucide-react";
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckoutBKash } from './CheckoutBKash';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -32,7 +33,12 @@ import { BDTIcon, LightningIcon, LocationIcon } from "../ui/Icons";
 import { TicketCard } from "../ui/TicketCard";
 
 export default function Events() {
+  const [checkoutStep, setCheckoutStep] = useState<'selection' | 'checkout' | 'success'>('selection');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const onGoToWallet = () => {
+    router.push('/wallet');
+  };
   const [filters, setFilters] = useState<any>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -301,7 +307,10 @@ export default function Events() {
                 <p>Total Amount</p>
                 <p><BDTIcon className="text-sm"/>100</p>
               </div>
-              <button className="py-2 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all">
+              <button 
+                onClick={() => setCheckoutStep('checkout')}
+                className="py-2 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all"
+              >
                 Book Now
               </button>
               <p className="text-xs text-slate-500 font-[300]">Includes: 5% Platform Fee</p>
@@ -404,6 +413,40 @@ export default function Events() {
         
         
       </main>
+
+      {/* Checkout Modal Mockup */}
+      <AnimatePresence>
+        {checkoutStep === 'checkout' && (
+          <CheckoutBKash 
+            amount={100}
+            eventName={'Event Name'}
+            tierName={'General Admission'}
+            onClose={() => setCheckoutStep('selection')}
+            onSuccess={() => setCheckoutStep('success')}
+          />
+        )}
+
+        {checkoutStep === 'success' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-[450px] bg-slate-50 rounded-tr-lg rounded-bl-lg shadow-4xl p-12 text-center space-y-8">
+              <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-green-500 mx-auto shadow-inner">
+                <CheckCircle2 size={48} />
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-2xl font-[400] text-slate-950 tracking-tight">Awesome!</h3>
+                <p className="text-slate-500 text-sm font-[300] leading-relaxed">Your ticket is now safe in your Engraved Wallet. Check your email for confirmation.</p>
+              </div>
+              <button 
+                onClick={onGoToWallet}
+                className="w-full bg-brand-500 text-white py-3 rounded-tr-lg rounded-bl-lg font-[500] text-md hover:bg-brand-600 transition-all"
+              >
+                Go to My Wallet
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
