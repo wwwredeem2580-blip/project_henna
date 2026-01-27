@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { ticketService, Ticket } from "@/lib/api/ticket";
+import { pdfService } from "@/lib/api/pdf";
 import { Logo } from "../shared/Logo";
 import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, QrCode, Rotate3D, Minus, ArrowDown, DownloadIcon, FileText, Eye } from "lucide-react";
 
@@ -109,6 +110,26 @@ export default function WalletPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Failed to download QR code:', error);
+    }
+  };
+
+  // Handle single PDF download
+  const handleDownloadPDF = async (ticketId: string) => {
+    try {
+      await pdfService.downloadTicketPDF(ticketId);
+    } catch (error) {
+      console.error('Failed to download PDF:', error);
+      alert('Failed to download PDF. Please try again.');
+    }
+  };
+
+  // Handle bulk PDF download
+  const handleDownloadAllPDFs = async (ticketIds: string[]) => {
+    try {
+      await pdfService.downloadBulkTicketPDFs(ticketIds);
+    } catch (error) {
+      console.error('Failed to download PDFs:', error);
+      alert('Failed to download PDFs. Please try again.');
     }
   };
 
@@ -270,7 +291,11 @@ export default function WalletPage() {
                           </span>
                           <div className="mt-2">
                             <button 
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const ticketIds = eventGroup.tickets.map(t => t._id);
+                                handleDownloadAllPDFs(ticketIds);
+                              }}
                               className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
                             >
                               <DownloadIcon size={12} />
@@ -335,7 +360,10 @@ export default function WalletPage() {
                                           <DownloadIcon size={12} />
                                           QR Image
                                         </button>
-                                        <button className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm">
+                                        <button 
+                                          onClick={() => handleDownloadPDF(ticket._id)}
+                                          className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
+                                        >
                                           <FileText size={12} />
                                           PDF
                                         </button>
