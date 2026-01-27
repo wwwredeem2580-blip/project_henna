@@ -108,14 +108,12 @@ export default function Events() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Fetch locations
-        const eventsData = await publicService.getEvents({ page: 1, limit: 1000 });
-        if (eventsData?.events) {
-          const locations = [...new Set(eventsData.events.map((event: any) => event.venue.address.city))].sort();
+        // Fetch all events for location extraction
+        const allEventsData = await publicService.getEvents({ page: 1, limit: 1000 });
+        if (allEventsData?.events) {
+          const locations = [...new Set(allEventsData.events.map((event: any) => event.venue.address.city))].sort();
           setAllLocations(locations);
         }
-        
-        setEvents(eventsData?.events || []);
 
         // Fetch trending events
         const trending = await publicService.getTrendingEvents(10);
@@ -132,6 +130,25 @@ export default function Events() {
     fetchInitialData();
   }, []);
 
+  // Fetch filtered events when filters change
+  useEffect(() => {
+    const fetchFilteredEvents = async () => {
+      try {
+        const params: any = { page: currentPage, limit: 100 };
+        
+        if (filters.category) params.category = filters.category;
+        if (filters.location) params.location = filters.location;
+        if (filters.search) params.search = filters.search;
+
+        const eventsData = await publicService.getEvents(params);
+        setEvents(eventsData?.events || []);
+      } catch (err) {
+        console.error("Failed to fetch filtered events", err);
+      }
+    };
+
+    fetchFilteredEvents();
+  }, [filters, currentPage]);
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-950">
@@ -293,7 +310,7 @@ export default function Events() {
       </div>
 
         {/* Trending */}
-        {trendingEvents.length > 0 && (
+        {trendingEvents.length > 0 && activeFilters.length === 0 && (
         <section className="space-y-6">
           <div>
             <h2 className="text-lg font-[300] text-slate-900 tracking-tight">🔥 Trending</h2>
@@ -302,9 +319,9 @@ export default function Events() {
 
           <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
             {trendingEvents.length > 0 && trendingEvents.map((event: any, i: number) => {
-              const minPrice = event.tickets?.tiers?.length > 0 
-                ? Math.min(...event.tickets.tiers.map((t: any) => t.price))
-                : 0;
+              const minPrice = event.tickets?.length > 0 
+                  ? Math.min(...event.tickets.map((t: any) => t.price?.amount))
+                  : 0;
               const startDate = new Date(event.schedule?.startDate);
               const endDate = new Date(event.schedule?.endDate);
               const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -370,7 +387,7 @@ export default function Events() {
         </section>
         )}
         {/* Featured */}
-        {featuredEvents.length > 0 && (
+        {featuredEvents.length > 0 && activeFilters.length === 0 && (
         <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -382,8 +399,8 @@ export default function Events() {
 
             <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
               {featuredEvents.length > 0 && featuredEvents.map((event: any, i: number) => {
-                const minPrice = event.tickets?.tiers?.length > 0 
-                  ? Math.min(...event.tickets.tiers.map((t: any) => t.price))
+                const minPrice = event.tickets?.length > 0 
+                  ? Math.min(...event.tickets.map((t: any) => t.price?.amount))
                   : 0;
                 const startDate = new Date(event.schedule?.startDate);
                 const endDate = new Date(event.schedule?.endDate);
@@ -401,7 +418,7 @@ export default function Events() {
                   >
                     <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
                       <img
-                        src={event.media?.coverImage || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
+                        src={event.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
                         alt={event.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -462,8 +479,8 @@ export default function Events() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6 mb-10">
               {events.length > 0 ? events.map((event: any, i: number) => {
-                const minPrice = event.tickets?.tiers?.length > 0 
-                  ? Math.min(...event.tickets.tiers.map((t: any) => t.price))
+                const minPrice = event.tickets?.length > 0 
+                  ? Math.min(...event.tickets.map((t: any) => t.price?.amount))
                   : 0;
                 const startDate = new Date(event.schedule?.startDate);
                 const endDate = new Date(event.schedule?.endDate);
@@ -481,7 +498,7 @@ export default function Events() {
                   >
                     <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
                       <img
-                        src={event.media?.coverImage || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
+                        src={event.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
                         alt={event.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

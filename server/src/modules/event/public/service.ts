@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { Event } from '../../../database/event/event';
 import { EventViews } from '../../../database/auth/event';
-import { Review } from '../../../database/review/review';
 import CustomError from '../../../utils/CustomError';
 import { calculateTrendingScore } from '../../../utils/event/trending/engine';
 
@@ -18,10 +17,10 @@ export const getEventsService = async (filters: {
   page: number;
   limit: number;
 }) => {
-  const query: any = { status: { $in: ['published', 'live'] }, visibility: 'public' };
+  const query: any = { status: { $in: ['published', 'live'] }, 'moderation.visibility': 'public' };
   
   if (filters.category) {
-    query.type = filters.category;
+    query.category = filters.category;
   }
   
   if (filters.location) {
@@ -43,7 +42,7 @@ export const getEventsService = async (filters: {
   
   const skip = (filters.page - 1) * filters.limit;
   const events = await Event.find(query)
-    .select('_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate tickets.tiers metrics.views status')
+    .select('_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate tickets metrics.views status')
     .sort({ 'schedule.startDate': 1 })
     .skip(skip)
     .limit(filters.limit);
@@ -83,12 +82,12 @@ export const getEventDetailsService = async (identifier: string, userId?: string
 // --- Get Featured Events ---
 export const getFeaturedEventsService = async (limit: number) => {
   const events = await Event.find({
-    'features.isFeatured': true,
+    'moderation.features.isFeatured': true,
     status: { $in: ['published', 'live'] },
-    visibility: 'public',
+    'moderation.visibility': 'public',
   })
-    .select('_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate tickets.tiers metrics.views status')
-    .sort({ 'features.featuredPriority': -1, 'features.featuredAt': -1 })
+    .select('_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate tickets metrics.views status')
+    .sort({ 'moderation.features.featuredPriority': -1, 'moderation.features.featuredAt': -1 })
     .limit(limit);
   
   return events;
@@ -107,7 +106,7 @@ export const getTrendingEventsService = async (
   // 1. Fetch candidate events only
   const events = await Event.find({
     status: { $in: ['published', 'live'] },
-    visibility: 'public',
+    'moderation.visibility': 'public',
     createdAt: {
       $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
     },
@@ -121,41 +120,15 @@ export const getTrendingEventsService = async (
 
   if (!events.length) return [];
 
-  // 2. Aggregate reviews in one bounded query
-  const eventIds = events.map(e => e._id);
-
-  const reviewStats = await Review.aggregate([
-    { $match: { eventId: { $in: eventIds } } },
-    {
-      $group: {
-        _id: '$eventId',
-        averageRating: { $avg: '$rating' },
-        reviewCount: { $sum: 1 }
-      }
-    }
-  ]);
-
-  const reviewMap = new Map(
-    reviewStats.map(r => [
-      r._id.toString(),
-      {
-        averageRating: r.averageRating,
-        reviewCount: r.reviewCount
-      }
-    ])
-  );
-
-  // 3. Score events
+  // 2. Score events (without review data since reviews only exist for ended events)
   const scored = [];
 
   for (const event of events) {
-    const review = reviewMap.get(event._id.toString());
-
     const scoredEvent = calculateTrendingScore(
       {
         ...event,
-        averageRating: review?.averageRating ?? 0,
-        reviewCount: review?.reviewCount ?? 0
+        averageRating: 0, // Reviews don't exist for active events
+        reviewCount: 0
       },
       now
     );
@@ -168,13 +141,13 @@ export const getTrendingEventsService = async (
       });
     }
   }
-
-  // 4. Rank and limit
+  
+  // 3. Rank and limit
   scored.sort((a, b) => b.score - a.score);
 
   const top = scored.slice(0, limit);
 
-  // 5. Return clean domain response
+  // 4. Return clean domain response
   return top.map(({ event, score, breakdown }) => ({
     ...event,
     trendingScore: score,
