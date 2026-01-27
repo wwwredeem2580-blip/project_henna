@@ -148,8 +148,9 @@ export default function Events() {
   };
 
   const totalAmount = calculateTotal();
-  const platformFee = Math.round(totalAmount * 0.05); // 5% platform fee
-  const grandTotal = totalAmount + platformFee;
+  const platformFee = Math.ceil(totalAmount * 0.05); // 5% platform fee
+  const paymentProcessingFee = Math.ceil(totalAmount * 0.015); // 1.5% processing fee
+  const grandTotal = totalAmount + platformFee + paymentProcessingFee;
 
   // Handle Book Now button click
   const handleBookNow = async () => {
@@ -474,6 +475,10 @@ export default function Events() {
               <div className="flex items-center justify-between w-full gap-2">
                 <p className="text-xs text-slate-500">Platform Fee (5%)</p>
                 <p className="text-xs text-slate-500"><BDTIcon className="text-xs"/>{platformFee}</p>
+              </div>
+              <div className="flex items-center justify-between w-full gap-2">
+                <p className="text-xs text-slate-500">Payment Processing Fee (1.5%)</p>
+                <p className="text-xs text-slate-500"><BDTIcon className="text-xs"/>{paymentProcessingFee}</p>
               </div>
               <div className="flex items-center justify-between w-full gap-2 pt-2 border-t border-slate-200">
                 <p className="text-base font-[400] text-slate-900">Total Amount</p>

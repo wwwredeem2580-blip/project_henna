@@ -145,7 +145,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <CheckoutBKash
-        amount={order.pricing.total}
+        amount={order.pricing.subtotal}
         eventName={order.eventId.title}
         tierName={`${order.tickets.reduce((sum: number, t: any) => sum + t.quantity, 0)} Ticket(s)`}
         onClose={handlePaymentCancel}

@@ -12,6 +12,10 @@ declare global {
 
 export const requirePublic = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if(req.cookies && req.cookies.accessToken){
+      const decoded = validateAuthorization(req.cookies.accessToken, process.env.JWT_ACCESS_TOKEN_SECRET!);
+      req.user = decoded;
+    }
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Unauthorized' });

@@ -84,8 +84,8 @@ export const createOrderService = async (data: any) => {
   }));
 
   // Calculate overall pricing
-  const subtotal = ticketsWithSubtotal.reduce((sum: number, ticket: any) => sum + ticket.subtotal, 0);
-  const pricing = calculatePricing(subtotal, data.paymentMethod);
+  const total = ticketsWithSubtotal.reduce((sum: number, ticket: any) => sum + ticket.subtotal, 0);
+  const pricing = calculatePricing(total, data.paymentMethod);
   
   // *** FREE TICKET LOGIC ***
   if (pricing.subtotal === 0) {
