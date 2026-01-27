@@ -28,7 +28,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from "@/lib/context/auth";
 import { authService } from "@/lib/api/auth";
-import { BDTIcon, LightningIcon } from "../ui/Icons";
+import { BDTIcon, LightningIcon, LocationIcon } from "../ui/Icons";
+import { TicketCard } from "../ui/TicketCard";
 
 export default function Events() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -275,52 +276,15 @@ export default function Events() {
               { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
               { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
             ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="px-6 py-4 flex items-center justify-between max-w-[350px] rounded-tr-lg rounded-bl-lg w-full bg-slate-50 border border-slate-100 relative group overflow-hidden"
-              >
-                <div>
-                  <div className="flex gap-6 items-center justify-between">
-                  <div>
-                    <div className="text-md font-[400] tracking-wide text-neutral-700">
-                      Basic Entry
-                    </div>
-                    <div className="flex items-center gap-3 text-neutral-400 mb-4 font-[500] text-[10px] uppercase tracking-widest">
-                      Event Name
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all">
-                      <Minus size={12}/>
-                    </button>
-                    <span className="text-xs font-[400] text-neutral-500">0</span>
-                    <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all">
-                      <Plus size={12}/>
-                    </button>
-                  </div>
-                </div>
-                {/* Price */}
-                <div className="flex flex-col items-start gap-2 mt-2">
-                  <span className="text-xs text-slate-500 font-[300]">
-                    Only {Math.floor(Math.random() * 100)} tickets lest
-                  </span>
-                  <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                    <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100
-                  </span>
-                </div>
-                
-                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                <div className="absolute top-0 right-0 w-16 h-16 -mr-6 mt-4 rounded-full transition-transform group-hover:scale-110" >
-                  <Rotate3D size={16} className="text-brand-400"/>
-                </div>
-                </div>
-                <div>
-                  <QrCode size={36} className="text-brand-400"/>
-                </div>
-              </motion.div>
+              <TicketCard ticket={{
+                _id: i.toString(),
+                tier: 'Basic Entry',
+                name: 'Event Name',
+                price: Math.floor(Math.random() * 3000),
+                quantity: Math.floor(Math.random() * 100),
+                venue: 'Rose View Hotel, Sylhet',
+                onClick: () => {},
+              }} key={i}/>
             ))}
             <div className="flex flex-col gap-2 pt-4 w-[300px] border-t-2 border-brand-400 items-end justify-end">
               <div className="flex items-center justify-between w-full gap-2">
