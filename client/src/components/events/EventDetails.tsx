@@ -3,8 +3,9 @@
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
+import { orderService } from "@/lib/api/order";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D, CheckCircle2 } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D, CheckCircle2, Loader2 } from "lucide-react";
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,6 +43,8 @@ export default function Events() {
   const [loading, setLoading] = useState(true);
   const [ticketQuantities, setTicketQuantities] = useState<Record<string, number>>({});
   const [recommendedEvents, setRecommendedEvents] = useState<any[]>([]);
+  const [creatingOrder, setCreatingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const params = useParams();
   const eventId = params?.id as string;
 
@@ -94,6 +97,18 @@ export default function Events() {
     fetchEvent();
   }, [eventId]);
 
+  // Check for payment success from URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const paymentStatus = searchParams.get('payment');
+    
+    if (paymentStatus === 'success') {
+      setCheckoutStep('success');
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   // Ticket quantity handlers with validation
   const getTotalTickets = () => {
     return Object.values(ticketQuantities).reduce((sum, qty) => sum + qty, 0);
@@ -135,6 +150,61 @@ export default function Events() {
   const totalAmount = calculateTotal();
   const platformFee = Math.round(totalAmount * 0.05); // 5% platform fee
   const grandTotal = totalAmount + platformFee;
+
+  // Handle Book Now button click
+  const handleBookNow = async () => {
+    try {
+      setCreatingOrder(true);
+      setOrderError(null);
+
+      // Validate ticket selection
+      const totalTickets = getTotalTickets();
+      if (totalTickets === 0) {
+        setOrderError('Please select at least one ticket');
+        setCreatingOrder(false);
+        return;
+      }
+
+      // Prepare order payload
+      const orderTickets = event.tickets
+        .filter((ticket: any) => {
+          const quantity = ticketQuantities[ticket._id || ticket.name] || 0;
+          return quantity > 0;
+        })
+        .map((ticket: any) => ({
+          ticketVariantId: ticket._id,
+          variantName: ticket.tier || ticket.name,
+          quantity: ticketQuantities[ticket._id || ticket.name],
+          pricePerTicket: ticket.price?.amount || 0,
+        }));
+
+      // Determine payment method
+      const paymentMethod = grandTotal === 0 ? 'free' : 'bkash';
+
+      // Create order
+      const orderResponse = await orderService.createOrder({
+        eventId: event._id,
+        tickets: orderTickets,
+        paymentMethod,
+      });
+
+      // Handle response
+      if (orderResponse.isFree) {
+        // Free tickets - show success immediately
+        setCheckoutStep('success');
+      } else if (orderResponse.paymentUrl) {
+        // Paid tickets - redirect to checkout
+        router.push(orderResponse.paymentUrl);
+      } else {
+        throw new Error('Invalid order response');
+      }
+    } catch (error: any) {
+      console.error('Order creation failed:', error);
+      setOrderError(error.message || 'Failed to create order. Please try again.');
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
 
   const scrollToTickets = () => {
     if (ticketSectionRef.current) {
@@ -409,12 +479,24 @@ export default function Events() {
                 <p className="text-base font-[400] text-slate-900">Total Amount</p>
                 <p className="text-base font-[400] text-slate-900"><BDTIcon className="text-sm"/>{grandTotal}</p>
               </div>
+              {orderError && (
+                <div className="w-full max-w-[350px] p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-xs text-red-600 font-[400]">{orderError}</p>
+                </div>
+              )}
               <button 
-                onClick={() => setCheckoutStep('checkout')}
-                disabled={grandTotal === 0}
-                className="py-2 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleBookNow}
+                disabled={creatingOrder || grandTotal === 0}
+                className="py-2 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Book Now
+                {creatingOrder ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Creating Order...
+                  </>
+                ) : (
+                  'Book Now'
+                )}
               </button>
               <p className="text-xs text-slate-500 font-[300]">Includes: 5% Platform Fee</p>
               <div className="p-6 w-full bg-slate-50 rounded-[2rem] flex items-center gap-4">

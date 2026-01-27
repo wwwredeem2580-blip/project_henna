@@ -45,17 +45,5 @@ paymentSchema.index({ orderId: 1 });
 paymentSchema.index({ userId: 1, createdAt: -1 });
 paymentSchema.index({ status: 1, createdAt: -1 });
 
-// Pre-save middleware to set timestamps based on status
-paymentSchema.pre('save', function(next: any) {
-  if (this.isModified('status')) {
-    const now = new Date();
-    if (this.status === 'succeeded' && !this.succeededAt) {
-      this.succeededAt = now;
-    } else if (this.status === 'failed' && !this.failedAt) {
-      this.failedAt = now;
-    }
-  }
-  next();
-});
 
 export default paymentSchema;

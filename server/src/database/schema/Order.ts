@@ -185,20 +185,4 @@ orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ eventId: 1, status: 1 });
 orderSchema.index({ status: 1, expiresAt: 1 });
 
-// Auto-generate order number
-orderSchema.pre('save', function(next: any) {
-  if (this.isNew && !this.orderNumber) {
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    this.orderNumber = `ORD-${timestamp}-${random}`;
-  }
-  next();
-});
-
-// Update updatedAt on save
-orderSchema.pre('save', function(next: any) {
-  // Note: We don't have updatedAt field, but could add if needed
-  next();
-});
-
 export default orderSchema;

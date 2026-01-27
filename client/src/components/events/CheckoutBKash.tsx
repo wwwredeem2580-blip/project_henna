@@ -10,13 +10,15 @@ import {
   Loader2,
   Info
 } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface CheckoutBKashProps {
   amount: number;
   eventName: string;
   tierName: string;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (paymentId: string) => void;
+  orderId?: string;
 }
 
 type Step = 'number' | 'otp' | 'pin' | 'processing' | 'success';
@@ -26,12 +28,14 @@ export const CheckoutBKash: React.FC<CheckoutBKashProps> = ({
   eventName, 
   tierName, 
   onClose, 
-  onSuccess 
+  onSuccess,
+  orderId
 }) => {
   const [step, setStep] = useState<Step>('number');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [pin, setPin] = useState('');
+  const [paymentId] = useState(() => uuidv4()); // Generate payment ID once
 
   const handleNext = () => {
     if (step === 'number') setStep('otp');
@@ -40,7 +44,8 @@ export const CheckoutBKash: React.FC<CheckoutBKashProps> = ({
       setStep('processing');
       setTimeout(() => {
         setStep('success');
-        setTimeout(onSuccess, 2000);
+        // Pass paymentId to parent for callback processing
+        setTimeout(() => onSuccess(paymentId), 2000);
       }, 2500);
     }
   };

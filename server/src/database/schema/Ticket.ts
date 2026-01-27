@@ -53,17 +53,6 @@ const ticketSchema = new mongoose.Schema({
 });
 
 
-// Pre-save middleware to set default validUntil if not provided
-ticketSchema.pre('save', function(next: any) {
-  if (this.isNew && !this.validUntil && this.eventDate) {
-    // Set validUntil to end of event day if eventDate is provided
-    const eventEnd = new Date(this.eventDate);
-    eventEnd.setHours(23, 59, 59, 999); // End of the event day
-    this.validUntil = eventEnd;
-  }
-  next();
-});
-
 // Virtual for checking if ticket is expired
 ticketSchema.virtual('isExpired').get(function() {
   return new Date() > this.validUntil;

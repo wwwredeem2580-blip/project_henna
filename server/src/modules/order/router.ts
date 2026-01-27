@@ -61,7 +61,8 @@ router.get('/bkash/callback', async (req, res) => {
   try {
     const { orderId } = req.query;
     const { paymentId } = req.query;
-    if (!orderId || !paymentId || !isValidObjectId(orderId as string) || !isValidObjectId(paymentId as string)) {
+    console.log(orderId, paymentId);
+    if (!orderId || !paymentId || !isValidObjectId(orderId as string)) {
       throw new CustomError('Invalid order ID or payment ID', 400);
     }
     const result = await handleBkashCallbackService(orderId as string, paymentId as string);
