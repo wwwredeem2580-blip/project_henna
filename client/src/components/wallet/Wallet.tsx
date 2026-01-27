@@ -8,7 +8,7 @@ import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, QrCode, Rotate3D,
 
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -30,11 +30,12 @@ import {
 import { useAuth } from "@/lib/context/auth";
 import { authService } from "@/lib/api/auth";
 import { BDTIcon, LightningIcon, LocationIcon } from "../ui/Icons";
-import { div } from "framer-motion/client";
+
 import { TicketCard } from "../ui/TicketCard";
 
 export default function WalletPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const router = useRouter();
 
   let menuItems = [
@@ -133,10 +134,10 @@ export default function WalletPage() {
         {/* Tickets */}
         <section className="space-y-6">
             <div className="flex items-center justify-between">
-              <div>
+              {/* <div>
                 <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Tickets</h2>
                 <p className="text-xs text-slate-500 font-[300]">All your tickets are at one place</p>
-              </div>
+              </div> */}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -153,10 +154,10 @@ export default function WalletPage() {
                 { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
 
               ].map((stat, i) => (
-            <div>
+            <div key={i}>
               <div
-                key={i}
-                className='max-w-[90vw] group transition-all duration-300 p-4 flex items-center gap-0 overflow-hidden'
+                onClick={() => setExpandedId(expandedId === i ? null : i)}
+                className='max-w-[90vw] group cursor-pointer transition-all duration-300 p-4 flex items-center gap-0 overflow-hidden relative select-none'
               >
                 <div className='rounded-tr-lg rounded-bl-lg overflow-hidden shrink-0 relative bg-slate-100 w-24 h-24'>
                   <img src='https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60' alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -181,18 +182,31 @@ export default function WalletPage() {
                       Only 5 Days Left
                     </span>
                     <div className="mt-2">
-                      <button className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm">
+                      <button 
+                        onClick={(e) => e.stopPropagation()}
+                        className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
+                      >
                         <DownloadIcon size={12} />
                         Download All
                       </button>
                     </div>
 
                   <div className="absolute bottom-18 right-2 transition-transform pointer-events-none">
-                    <ChevronDown size={24} className="group-hover:scale-120 group-hover:translate-y-1 transition-transform duration-300" strokeWidth={1}/>
+                    <ChevronDown size={24} className={`group-hover:scale-120 transition-transform duration-300 ${expandedId === i ? 'rotate-180' : ''}`} strokeWidth={1}/>
                   </div>
                 </div>
               </div>
-              <div className="px-4 max-w-full pb-6 overflow-x-auto">
+              {/*Tickets*/}
+              <AnimatePresence>
+                {expandedId === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 max-w-full pb-6 overflow-x-auto">
                 <div className="flex gap-4">
                   <div className="min-w-[300px] w-[300px]">
                     <TicketCard  ticket={{
@@ -247,10 +261,22 @@ export default function WalletPage() {
                       onClick: () => {},
                     }}
                     />
-                    
+                    <div className="flex text-xs font-[400] text-slate-500 items-center gap-2 mt-2 justify-center">
+                      <button className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm">
+                        <DownloadIcon size={12} />
+                        QR Image
+                      </button>
+                      <button className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm">
+                        <FileText size={12} />
+                        PDF
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
+                </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             ))}
             </div>
