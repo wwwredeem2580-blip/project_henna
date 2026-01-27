@@ -3,6 +3,7 @@ import CustomError from "../../utils/CustomError";
 import { verifyTicketService, getTicketsService } from "./service";
 import { handleError } from "../../utils/handleError";
 import { isValidObjectId } from "../../utils/isValidObjectId";
+import { requireAuth } from "../../middlewares/auth";
 
 const router = Router();
 
@@ -24,7 +25,7 @@ router.post('/verify/:eventId', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
     if(!req.user || !req.user.sub){
       throw new CustomError('User not found', 404);
