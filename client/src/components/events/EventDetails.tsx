@@ -135,8 +135,8 @@ export default function Events() {
         
 
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6">
+        <section className="space-y-6 2xl:col-span-2">
           <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -252,14 +252,14 @@ export default function Events() {
               </motion.div>
         </section>
         {/* Tickets */}
-        <section className="space-y-6 xl:mr-10 2xl:mr-20">
-          <div className="text-right">
+        <section className="space-y-6 2xl:col-span-1">
+          <div className="">
             <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Tickets</h2>
             <p className="text-xs text-slate-500 font-[300]">What are you doing! Book yours right now.</p>
           </div>
 
           {/* Tickets Grid */}
-          <div className="flex flex-col items-end gap-6 mb-10">
+          <div className="flex flex-col gap-6 mb-10">
             {[
               { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
               { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
@@ -328,6 +328,72 @@ export default function Events() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="space-y-6 md:col-span-2 lg:col-span-2 2xl:col-span-1 2xl:items-end 2xl:place-items-end">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Suggested For You</h2>
+              <p className="text-xs text-slate-500 font-[300]">Choose what's best for you</p>
+            </div>
+          </div>
+
+          <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10 2xl:grid-cols-1 2xl:grid-flow-row 2xl:max-h-[70vh]">
+            {[
+              { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
+              { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
+              { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
+              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="p-0 bg-slate-50 2xl:max-w-[250px] border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden"
+              >
+                <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
+                  <img
+                    src={'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
+                    alt={'Event Cover Image'}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-4 gap-2 left-4 flex items-center ">
+                    <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
+                      <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
+                      Live
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-2 ml-[-12px] mb-2">
+                  </div>
+                  <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Name</h2>
+                  <p className="text-xs text-slate-500 font-[300] line-clamp-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque illum rem quam consequatur tempora maxime perspiciatis, dolorum hic aut perferendis culpa iure eveniet voluptas exercitationem aspernatur earum, praesentium unde ea.</p>
+                  <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
+                    <span className="flex items-center gap-1 text-xs ">
+                      <Calendar size={12} strokeWidth={1}/>
+                      26 Jan 2026
+                    </span>
+                    <span className="flex items-center gap-1 text-xs">
+                      <Clock10 size={12} strokeWidth={1}/>
+                      9:00 AM - 5:00 PM
+                    </span>
+                  </div>
+                  {/* Price */}
+                  <div className="flex justify-between items-center gap-2 mt-2">
+                    <span className="text-xs text-slate-500 font-[300]">
+                      Only {Math.floor(Math.random() * 100)} tickets lest
+                    </span>
+                    <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
+                      <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100
+                    </span>
+                  </div>
+                </div>
+                <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+              </motion.div>
+            ))}
           </div>
         </section>
         </div>
