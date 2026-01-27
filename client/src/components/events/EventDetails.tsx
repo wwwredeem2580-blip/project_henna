@@ -282,16 +282,21 @@ export default function Events() {
                 name: 'Event Name',
                 price: Math.floor(Math.random() * 3000),
                 quantity: Math.floor(Math.random() * 100),
+                benefits: [
+                  'Access to VIP lounge',
+                  'Dedicated entrance',
+                  'Premium food & beverage',
+                ],
                 venue: 'Rose View Hotel, Sylhet',
                 onClick: () => {},
               }} key={i}/>
             ))}
-            <div className="flex flex-col gap-2 pt-4 w-[300px] border-t-2 border-brand-400 items-end justify-end">
+            <div className="flex flex-col gap-2 pt-4 max-w-[300px] border-t-2 border-brand-400 items-end justify-end">
               <div className="flex items-center justify-between w-full gap-2">
                 <p>Total Amount</p>
                 <p><BDTIcon className="text-sm"/>100</p>
               </div>
-              <button className="py-1 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all">
+              <button className="py-2 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all">
                 Book Now
               </button>
               <p className="text-xs text-slate-500 font-[300]">Includes: 5% Platform Fee</p>
