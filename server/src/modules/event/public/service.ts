@@ -3,6 +3,7 @@ import { Event } from '../../../database/event/event';
 import { EventViews } from '../../../database/auth/event';
 import CustomError from '../../../utils/CustomError';
 import { calculateTrendingScore } from '../../../utils/event/trending/engine';
+import { getRecommendedEventsService } from '../../../utils/event/recommendation/engine';
 
 const CANDIDATE_LOOKBACK_DAYS = 30;
 const MIN_VIEWS_FOR_CANDIDATE = 20;
@@ -78,6 +79,9 @@ export const getEventDetailsService = async (identifier: string, userId?: string
 
   return event;
 };
+
+// Export recommendation service
+export { getRecommendedEventsService };
 
 // --- Get Featured Events ---
 export const getFeaturedEventsService = async (limit: number) => {

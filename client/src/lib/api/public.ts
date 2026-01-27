@@ -42,4 +42,20 @@ export const publicService = {
     const response = await apiClient.get(`/api/event/public/trending?limit=${limit}`);
     return response;
   },
+
+  getRecommendedEvents: async (params?: {
+    eventId?: string;
+    category?: string;
+    location?: string;
+    limit?: number;
+  }): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (params?.eventId) queryParams.append('eventId', params.eventId);
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.location) queryParams.append('location', params.location);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const response = await apiClient.get(`/api/event/public/recommended?${queryParams}`);
+    return response;
+  },
 };

@@ -3,7 +3,8 @@ import {
   getEventsService,
   getEventDetailsService,
   getFeaturedEventsService,
-  getTrendingEventsService
+  getTrendingEventsService,
+  getRecommendedEventsService
 } from './service';
 import { handleError } from '../../../utils/handleError';
 
@@ -48,6 +49,24 @@ router.get('/trending', async (req, res) => {
     handleError(error, res);
   }
 });
+
+router.get('/recommended', async (req, res) => {
+  try {
+    const context = {
+      currentEventId: req.query.eventId as string,
+      currentEventCategory: req.query.category as string,
+      currentEventLocation: req.query.location as string,
+      userId: req.user?.sub,
+      limit: parseInt(req.query.limit as string) || 10
+    };
+    const recommendations = await getRecommendedEventsService(context);
+    res.status(200).json(recommendations);
+  } catch (error) {
+    console.error('Error fetching recommended events:', error);
+    handleError(error, res);
+  }
+});
+
 
 router.get('/:identifier', async (req, res) => {
   try {

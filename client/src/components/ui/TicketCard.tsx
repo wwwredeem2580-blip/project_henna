@@ -25,6 +25,9 @@ interface TicketCardProps {
     onClick: () => void;
     endDate: string;
     endTime: string;
+    selectedQuantity?: number;
+    onIncrement?: () => void;
+    onDecrement?: () => void;
   };
 }
 
@@ -93,11 +96,19 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             </div>
             {ticket.controls && (
               <div className="absolute bottom-10 right-6 flex items-center gap-2" onClick={handleControlClick}>
-                <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10">
+                <button 
+                  onClick={ticket.onDecrement}
+                  disabled={!ticket.selectedQuantity || ticket.selectedQuantity <= 0}
+                  className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
                   <Minus size={12}/>
                 </button>
-                <span className="text-xs font-[400] text-neutral-500">0</span>
-                <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10">
+                <span className="text-xs font-[400] text-neutral-500 min-w-[20px] text-center">{ticket.selectedQuantity || 0}</span>
+                <button 
+                  onClick={ticket.onIncrement}
+                  disabled={!ticket.quantity || (ticket.selectedQuantity ?? 0) >= ticket.quantity}
+                  className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
                   <Plus size={12}/>
                 </button>
               </div>

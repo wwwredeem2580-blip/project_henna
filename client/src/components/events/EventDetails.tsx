@@ -33,10 +33,15 @@ import { BDTIcon, LightningIcon, LocationIcon } from "../ui/Icons";
 import { TicketCard } from "../ui/TicketCard";
 
 export default function Events() {
+  // Configuration
+  const MAX_TICKETS_PER_ORDER = 5; // Easy to change - maximum total tickets per order
+  
   const [checkoutStep, setCheckoutStep] = useState<'selection' | 'checkout' | 'success'>('selection');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [ticketQuantities, setTicketQuantities] = useState<Record<string, number>>({});
+  const [recommendedEvents, setRecommendedEvents] = useState<any[]>([]);
   const params = useParams();
   const eventId = params?.id as string;
 
@@ -60,6 +65,25 @@ export default function Events() {
         setLoading(true);
         const eventData = await publicService.getEventDetails(eventId);
         setEvent(eventData);
+        // Initialize ticket quantities to 0
+        const initialQuantities: Record<string, number> = {};
+        eventData?.tickets?.forEach((ticket: any) => {
+          initialQuantities[ticket._id || ticket.name] = 0;
+        });
+        setTicketQuantities(initialQuantities);
+
+        // Fetch recommendations based on current event
+        try {
+          const recommendations = await publicService.getRecommendedEvents({
+            eventId: eventData._id,
+            category: eventData.category,
+            location: eventData.venue?.address?.city,
+            limit: 5
+          });
+          setRecommendedEvents(recommendations);
+        } catch (recError) {
+          console.error('Failed to fetch recommendations:', recError);
+        }
       } catch (error) {
         console.error('Failed to fetch event:', error);
       } finally {
@@ -69,6 +93,48 @@ export default function Events() {
 
     fetchEvent();
   }, [eventId]);
+
+  // Ticket quantity handlers with validation
+  const getTotalTickets = () => {
+    return Object.values(ticketQuantities).reduce((sum, qty) => sum + qty, 0);
+  };
+
+  const handleIncrement = (ticketId: string, maxQuantity: number) => {
+    setTicketQuantities(prev => {
+      const current = prev[ticketId] || 0;
+      const totalTickets = getTotalTickets();
+      
+      // Cannot exceed MAX_TICKETS_PER_ORDER total across all types
+      if (totalTickets >= MAX_TICKETS_PER_ORDER) return prev;
+      // Cannot exceed available quantity for this ticket
+      if (current >= maxQuantity) return prev;
+      
+      return { ...prev, [ticketId]: current + 1 };
+    });
+  };
+
+  const handleDecrement = (ticketId: string) => {
+    setTicketQuantities(prev => {
+      const current = prev[ticketId] || 0;
+      // Cannot go below 0
+      if (current <= 0) return prev;
+      return { ...prev, [ticketId]: current - 1 };
+    });
+  };
+
+  // Calculate total price
+  const calculateTotal = () => {
+    if (!event?.tickets) return 0;
+    return event.tickets.reduce((total: number, ticket: any) => {
+      const quantity = ticketQuantities[ticket._id || ticket.name] || 0;
+      const price = ticket.price?.amount || 0;
+      return total + (quantity * price);
+    }, 0);
+  };
+
+  const totalAmount = calculateTotal();
+  const platformFee = Math.round(totalAmount * 0.05); // 5% platform fee
+  const grandTotal = totalAmount + platformFee;
 
   const scrollToTickets = () => {
     if (ticketSectionRef.current) {
@@ -325,16 +391,28 @@ export default function Events() {
                 ],
                 venue: `${event?.venue?.name || 'Venue'}, ${event?.venue?.address?.city || 'City'}`,
                 onClick: () => {},
+                selectedQuantity: ticketQuantities[ticket._id || ticket.name] || 0,
+                onIncrement: () => handleIncrement(ticket._id || ticket.name, ticket.quantity || 0),
+                onDecrement: () => handleDecrement(ticket._id || ticket.name),
               }} key={i}/>
             ))}
             <div className="flex flex-col gap-2 pt-4 w-full max-w-[350px] border-t-2 border-brand-400 items-end justify-end">
               <div className="flex items-center justify-between w-full gap-2">
-                <p>Total Amount</p>
-                <p><BDTIcon className="text-sm"/>100</p>
+                <p className="text-sm text-slate-600">Subtotal</p>
+                <p className="text-sm text-slate-600"><BDTIcon className="text-sm"/>{totalAmount}</p>
+              </div>
+              <div className="flex items-center justify-between w-full gap-2">
+                <p className="text-xs text-slate-500">Platform Fee (5%)</p>
+                <p className="text-xs text-slate-500"><BDTIcon className="text-xs"/>{platformFee}</p>
+              </div>
+              <div className="flex items-center justify-between w-full gap-2 pt-2 border-t border-slate-200">
+                <p className="text-base font-[400] text-slate-900">Total Amount</p>
+                <p className="text-base font-[400] text-slate-900"><BDTIcon className="text-sm"/>{grandTotal}</p>
               </div>
               <button 
                 onClick={() => setCheckoutStep('checkout')}
-                className="py-2 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all"
+                disabled={grandTotal === 0}
+                className="py-2 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Book Now
               </button>
@@ -361,60 +439,63 @@ export default function Events() {
           </div>
 
           <div className="grid pb-4 2xl:pr-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10 2xl:grid-cols-1 2xl:grid-flow-row 2xl:max-h-[70vh]">
-            {[
-              { label: 'Active Events', value: '11', icon: <Calendar size={18}/> },
-              { label: 'Pipeline Value', value: '$847', icon: <Plus size={18}/>, prefix: '$' },
-              { label: 'Checked-in', value: '5', icon: <UserCircle size={18}/> },
-              { label: 'Total Revenue', value: '$148.94', icon: <ShoppingBag size={18}/>, prefix: '$' },
-            ].map((stat, i) => (
+            {recommendedEvents.map((recEvent: any, i: number) => {
+              const minPrice = recEvent.tickets?.length > 0 
+                ? Math.min(...recEvent.tickets.map((t: any) => t.price?.amount || 0))
+                : 0;
+              const startDate = new Date(recEvent.schedule?.startDate);
+              const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+              const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+              
+              return (
               <motion.div
-                key={i}
+                key={recEvent._id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="p-0 bg-slate-50 2xl:max-w-[250px] border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden"
+                onClick={() => router.push(`/events/${recEvent.slug || recEvent._id}`)}
+                className="p-0 bg-slate-50 2xl:max-w-[250px] border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
               >
                 <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
                   <img
-                    src={'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                    alt={'Event Cover Image'}
+                    src={recEvent.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
+                    alt={recEvent.media?.coverImage?.alt || 'Event Cover Image'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
+                  {recEvent.status === 'live' && (
                   <div className="absolute top-4 gap-2 left-4 flex items-center ">
                     <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
                       <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
                       Live
                     </div>
                   </div>
+                  )}
                 </div>
                 <div className="p-6">
                   <div className="flex items-center gap-2 ml-[-12px] mb-2">
                   </div>
-                  <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Name</h2>
-                  <p className="text-xs text-slate-500 font-[300] line-clamp-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque illum rem quam consequatur tempora maxime perspiciatis, dolorum hic aut perferendis culpa iure eveniet voluptas exercitationem aspernatur earum, praesentium unde ea.</p>
+                  <h2 className="text-lg font-[300] text-slate-900 tracking-tight">{recEvent.title}</h2>
+                  <p className="text-xs text-slate-500 font-[300] line-clamp-2">{recEvent.tagline || 'Join us for an amazing experience'}</p>
                   <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
                     <span className="flex items-center gap-1 text-xs ">
                       <Calendar size={12} strokeWidth={1}/>
-                      26 Jan 2026
+                      {formatDate(startDate)}
                     </span>
                     <span className="flex items-center gap-1 text-xs">
                       <Clock10 size={12} strokeWidth={1}/>
-                      9:00 AM - 5:00 PM
+                      {formatTime(startDate)}
                     </span>
                   </div>
                   {/* Price */}
                   <div className="flex justify-between items-center gap-2 mt-2">
-                    <span className="text-xs text-slate-500 font-[300]">
-                      Only {Math.floor(Math.random() * 100)} tickets left
-                    </span>
                     <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                      <span className="text-xs">From</span> <BDTIcon className="text-xs"/>100
+                      <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{minPrice}
                     </span>
                   </div>
                 </div>
                 <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
               </motion.div>
-            ))}
+            )})}
           </div>
         </section>
         </div>
@@ -444,9 +525,9 @@ export default function Events() {
       <AnimatePresence>
         {checkoutStep === 'checkout' && (
           <CheckoutBKash 
-            amount={100}
-            eventName={'Event Name'}
-            tierName={'General Admission'}
+            amount={grandTotal}
+            eventName={event?.title || 'Event'}
+            tierName={`${Object.values(ticketQuantities).reduce((sum, qty) => sum + qty, 0)} Ticket(s)`}
             onClose={() => setCheckoutStep('selection')}
             onSuccess={() => setCheckoutStep('success')}
           />
