@@ -12,6 +12,16 @@ import { BDTIcon } from '@/components/ui/Icons';
 import { formatDate, formatTime } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { DocumentUploader } from '@/components/ui/DocumentUploader';
+import { 
+  basicInfoSchema, 
+  eventDetailsSchema, 
+  logisticsSchema, 
+  verificationSchema, 
+  ticketsStepSchema,
+  platformSchema,
+  validateTicketCapacity,
+  validateUniqueTicketNames
+} from '@/schema/event.schema';
 
 interface RegisterProps {
   onSuccess: () => void;
@@ -124,10 +134,10 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
       sessions: [],
     },
     venue: {
-      name: 'Example Venue',
+      name: '',
       address: {
-        street: '123 Main St',
-        city: 'Dhaka',
+        street: '',
+        city: '',
         country: 'Bangladesh',
       },
       coordinates: {
@@ -157,45 +167,135 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
     }
   };
 
-  // const validateStep = (currentStep: Step): boolean => {
-  //   try {
-  //     let result;
-      
-  //     if (currentStep === 'basic') {
-  //       result = stepBasicsSchema.safeParse(formData);
-  //     } else if (currentStep === 'details') {
-  //       result = stepDetailsSchema.safeParse(formData);
-  //     } else if (currentStep === 'logistics') {
-  //       result = stepLogisticsSchema.safeParse(formData);
-  //     } else if (currentStep === 'verification') {
-  //       result = stepVerifySchema.safeParse(formData);
-  //     } else if (currentStep === 'tickets') {
-  //       result = stepTicketsSchema.safeParse(formData);
-  //     } else if (currentStep === 'review') {
-  //       result = stepReviewSchema.safeParse(formData);
-  //     }
+  const updateVenueField = (field: keyof typeof formData.venue, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      venue: { ...prev.venue, [field]: value }
+    }));
+    if (errors[`venue.${field}`]) {
+      setErrors(prev => ({ ...prev, [`venue.${field}`]: '' }));
+    }
+  };
 
-  //     if (result && !result.success) {
-  //       const newErrors: Record<string, string> = {};
-  //       result.error.issues.forEach((err: any) => {
-  //         newErrors[err.path[0]] = err.message;
-  //       });
-  //       setErrors(newErrors);
-  //       return false;
-  //     }
+  const updateVenueAddress = (field: keyof typeof formData.venue.address, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      venue: {
+        ...prev.venue,
+        address: { ...prev.venue.address, [field]: value }
+      }
+    }));
+    if (errors[`venue.address.${field}`]) {
+      setErrors(prev => ({ ...prev, [`venue.address.${field}`]: '' }));
+    }
+  };
+
+  const updateScheduleField = (field: keyof typeof formData.schedule, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      schedule: { ...prev.schedule, [field]: value }
+    }));
+    if (errors[`schedule.${field}`]) {
+      setErrors(prev => ({ ...prev, [`schedule.${field}`]: '' }));
+    }
+  };
+
+  const validateStep = (currentStep: Step): boolean => {
+    try {
+      let result;
+      const newErrors: Record<string, string> = {};
       
-  //     setErrors({});
-  //     return true;
-  //   } catch (error: any) {
-  //     console.error('Validation error:', error);
-  //     return false;
-  //   }
-  // };
+      if (currentStep === 'basic') {
+        result = basicInfoSchema.safeParse({
+          title: formData.title,
+          tagline: formData.tagline,
+          category: formData.category,
+        });
+      } else if (currentStep === 'details') {
+        result = eventDetailsSchema.safeParse({
+          description: formData.description,
+          coverImage: formData.media?.coverImage?.url || '',
+        });
+      } else if (currentStep === 'logistics') {
+        result = logisticsSchema.safeParse({
+          venue: {
+            name: formData.venue.name,
+            capacity: Number(formData.venue.capacity) || 0,
+            address: {
+              street: formData.venue.address.street || '',
+              city: formData.venue.address.city || '',
+              country: 'Bangladesh',
+            },
+          },
+          schedule: {
+            startDate: formData.schedule.startDate,
+            endDate: formData.schedule.endDate,
+            doors: formData.schedule.doors,
+          },
+        });
+      } else if (currentStep === 'verification') {
+        // Verification is optional, so we don't validate it strictly
+        return true;
+      } else if (currentStep === 'tickets') {
+        // Validate tickets
+        result = ticketsStepSchema.safeParse({
+          tickets: formData.tickets,
+        });
+
+        // Additional custom validations
+        if (result && result.success) {
+          // Check total capacity
+          const capacityCheck = validateTicketCapacity(formData.tickets, formData.venue.capacity);
+          if (!capacityCheck.valid) {
+            newErrors.tickets = capacityCheck.error!;
+            setErrors(newErrors);
+            showNotification('error', 'Validation Error', capacityCheck.error!);
+            return false;
+          }
+
+          // Check unique names
+          const uniqueCheck = validateUniqueTicketNames(formData.tickets);
+          if (!uniqueCheck.valid) {
+            newErrors.tickets = uniqueCheck.error!;
+            setErrors(newErrors);
+            showNotification('error', 'Validation Error', uniqueCheck.error!);
+            return false;
+          }
+        }
+      } else if (currentStep === 'platform') {
+        result = platformSchema.safeParse({
+          termsAccepted: formData.platform.terms.termsAccepted,
+          legalPermissionAccepted: formData.platform.terms.legalPermissionAccepted,
+          platformTermsAccepted: formData.platform.terms.platformTermsAccepted,
+        });
+      }
+
+      if (result && !result.success) {
+        result.error.issues.forEach((err: any) => {
+          const fieldPath = err.path.join('.');
+          newErrors[fieldPath] = err.message;
+        });
+        setErrors(newErrors);
+        
+        // Show first error as notification
+        const firstError = Object.values(newErrors)[0];
+        showNotification('error', 'Validation Error', firstError);
+        return false;
+      }
+      
+      setErrors({});
+      return true;
+    } catch (error: any) {
+      console.error('Validation error:', error);
+      showNotification('error', 'Validation Error', 'An unexpected error occurred');
+      return false;
+    }
+  };
 
   const handleNext = (nextStep: Step) => {
-    // if (validateStep(step)) {
+    if (validateStep(step)) {
       setStep(nextStep);
-    // }
+    }
   };
 
   const handleBack = () => {
@@ -459,22 +559,22 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   <input
                     type="text"
                     value={formData.venue.name}
-                    onChange={(e) => updateField('venue[name]', e.target.value)}
+                    onChange={(e) => updateVenueField('name', e.target.value)}
                     placeholder="Grand Hotel"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
-                  {errors.venue?.name && <p className="text-xs text-red-500">{errors.venue?.name}</p>}
+                  {errors['venue.name'] && <p className="text-xs text-red-500">{errors['venue.name']}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-[500] text-neutral-700 ml-1">Venue Capacity *</label>
                   <input
                     type="text"
                     value={formData.venue.capacity}
-                    onChange={(e) => updateField('venue[capacity]', e.target.value)}
+                    onChange={(e) => updateVenueField('capacity', Number(e.target.value) || 0)}
                     placeholder="1000"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
-                  {errors.venue?.capacity && <p className="text-xs text-red-500">{errors.venue?.capacity}</p>}
+                  {errors['venue.capacity'] && <p className="text-xs text-red-500">{errors['venue.capacity']}</p>}
                 </div>
               </div>
 
@@ -485,7 +585,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     <button
                       key={type}
                       type="button"
-                      onClick={() => updateField('venue.type', type)}
+                      onClick={() => updateVenueField('type', type as 'indoor' | 'outdoor' | 'hybrid')}
                       className={`px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 transition-all ${
                         formData.venue?.type === type
                           ? 'border-brand-500 bg-brand-50 text-brand-700'
@@ -496,30 +596,30 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     </button>
                   ))}
                 </div>
-                {errors.venue?.type && <p className="text-xs text-red-500 ml-1">{errors.venue?.type}</p>}
+                {errors['venue.type'] && <p className="text-xs text-red-500 ml-1">{errors['venue.type']}</p>}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-[500] text-neutral-700 ml-1">Venue Street *</label>
                   <input
                     type="text"
-                    value={formData.venue.street}
-                    onChange={(e) => updateField('venue[street]', e.target.value)}
+                    value={formData.venue.address.street}
+                    onChange={(e) => updateVenueAddress('street', e.target.value)}
                     placeholder="123 Main St"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
-                  {errors.venue?.street && <p className="text-xs text-red-500">{errors.venue?.street}</p>}
+                  {errors['venue.address.street'] && <p className="text-xs text-red-500">{errors['venue.address.street']}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-[500] text-neutral-700 ml-1">Venue City *</label>
                   <input
                     type="text"
-                    value={formData.venue.city}
-                    onChange={(e) => updateField('venue[city]', e.target.value)}
+                    value={formData.venue.address.city}
+                    onChange={(e) => updateVenueAddress('city', e.target.value)}
                     placeholder="Dhaka"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
-                  {errors.venue?.city && <p className="text-xs text-red-500">{errors.venue?.city}</p>}
+                  {errors['venue.address.city'] && <p className="text-xs text-red-500">{errors['venue.address.city']}</p>}
                 </div>
               </div>
 

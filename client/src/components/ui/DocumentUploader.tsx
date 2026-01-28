@@ -146,23 +146,26 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
       {/* Upload Area */}
       {!allSuccess && (
-        <div
-          onClick={() => !isUploading && fileInputRef.current?.click()}
-          className={`p-8 border-2 border-dashed rounded-2xl bg-gray-50 flex flex-col items-center justify-center gap-4 transition-all ${
-            isUploading
-              ? 'cursor-not-allowed opacity-60'
-              : 'cursor-pointer hover:border-brand-300 group'
-          } border-gray-200`}
-        >
-          <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400 group-hover:text-brand-600 transition-colors">
+        <div className="p-8 border-2 border-dashed rounded-2xl bg-gray-50 flex flex-col items-center justify-center gap-4 transition-all border-gray-200">
+          <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400 transition-colors">
             <Upload size={24} />
           </div>
-          <div className="text-center">
-            <p className="font-[500] text-neutral-800">Upload Verification Documents</p>
-            <p className="text-sm text-neutral-500">PDF, JPG or PNG (Max {maxSizeMB}MB each)</p>
-            <p className="text-xs text-neutral-400 mt-1">
-              Maximum {maxFiles} files • {files.length}/{maxFiles} selected
-            </p>
+          <div className="text-center space-y-3">
+            <div>
+              <p className="font-[500] text-neutral-800">Upload Verification Documents</p>
+              <p className="text-sm text-neutral-500">PDF, JPG or PNG (Max {maxSizeMB}MB each)</p>
+              <p className="text-xs text-neutral-400 mt-1">
+                Maximum {maxFiles} files • {files.length}/{maxFiles} selected
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed text-sm font-[500]"
+            >
+              {isUploading ? 'Uploading...' : 'Choose Files'}
+            </button>
           </div>
         </div>
       )}
