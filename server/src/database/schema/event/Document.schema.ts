@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 export const documentSchema = new mongoose.Schema({
-  type: String,
+  type: { type: String, default: 'verification_docs' },
   url: String,
   filename: String,
   objectKey: String,
