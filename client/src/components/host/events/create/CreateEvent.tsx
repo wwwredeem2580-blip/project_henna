@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe, Upload, Ticket, Trash, Edit, Plus, Calendar, Clock10 } from 'lucide-react';
+import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe, Upload, Ticket, Trash, Edit, Plus, Calendar, Clock10, Save, Check, Loader2 } from 'lucide-react';
 import { authService } from '@/lib/api/auth';
+import { eventsService } from '@/lib/api/events';
 import { useNotification } from '@/lib/context/notification';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { businessInfoSchema, companyDetailsSchema, personalInfoSchema } from '@/schema/auth.schema';
 import { TicketCard } from '@/components/ui/TicketCard';
 import { TicketConfiguratorModal } from '@/components/ui/TicketConfiguratorModal';
@@ -86,7 +88,6 @@ interface FormData {
     address: {
       street: string;
       city: string;
-      country: string;
     };
     coordinates: {
       type: 'Point';
@@ -116,6 +117,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [editingTicketIndex, setEditingTicketIndex] = useState<number | null>(null);
   const [scheduleModalState, setScheduleModalState] = useState<'date' | 'start-time' | 'end-time' | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const companyType = ['organizer', 'venue_owner', 'representative', 'artist'];
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -131,8 +133,8 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
     },
     description: '',
     schedule: {
-      startDate: '2026-01-28',
-      endDate: '2026-01-28',
+      startDate: new Date().toISOString(),
+      endDate: new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString(),
       isMultiDay: false,
       timezone: 'Asia/Dhaka',
       doors: '10:00 AM',
@@ -144,7 +146,6 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
       address: {
         street: '',
         city: '',
-        country: 'Bangladesh',
       },
       coordinates: {
         type: 'Point',
@@ -164,6 +165,87 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
         platformTermsAccepted: true,
       }
     },
+  });
+
+  // Filter out empty strings and empty arrays from data
+  const filterEmptyValues = (obj: any): any => {
+    if (Array.isArray(obj)) {
+      const filtered = obj.filter(item => {
+        if (typeof item === 'string') return item.trim() !== '';
+        if (Array.isArray(item)) return item.length > 0;
+        if (typeof item === 'object' && item !== null) return Object.keys(filterEmptyValues(item)).length > 0;
+        return true;
+      });
+      return filtered.length > 0 ? filtered : undefined;
+    }
+
+    if (typeof obj === 'object' && obj !== null) {
+      const filtered: any = {};
+      Object.keys(obj).forEach(key => {
+        const value = obj[key];
+        
+        if (value === '' || value === null || value === undefined) {
+          return; // Skip empty strings, null, undefined
+        }
+        
+        if (Array.isArray(value)) {
+          const filteredArray = filterEmptyValues(value);
+          if (filteredArray && filteredArray.length > 0) {
+            filtered[key] = filteredArray;
+          }
+        } else if (typeof value === 'object') {
+          const filteredObj = filterEmptyValues(value);
+          if (filteredObj && Object.keys(filteredObj).length > 0) {
+            filtered[key] = filteredObj;
+          }
+        } else {
+          filtered[key] = value;
+        }
+      });
+      return filtered;
+    }
+
+    return obj;
+  };
+
+  // Auto-save handler
+  const handleAutoSave = async (data: FormData, currentDraftId: string | null) => {
+    try {
+      // Only auto-save if minimum required fields are present
+      const hasMinimumData = 
+        data.title && 
+        data.title.length >= 5 &&
+        data.tagline && 
+        data.tagline.length >= 10;
+
+      if (!hasMinimumData) {
+        return currentDraftId || '';
+      }
+
+      // Filter out empty values to prevent validation errors
+      const cleanedData = filterEmptyValues(data);
+
+      if (currentDraftId) {
+        const response = await eventsService.updateDraft(currentDraftId, cleanedData as any);
+        return currentDraftId;
+      } else {
+        const response = await eventsService.createDraft(cleanedData as any);
+        setDraftId(response.eventId);
+        return response.eventId;
+      }
+    } catch (error: any) {
+      console.error('Auto-save failed:', error);
+      return currentDraftId || '';
+    }
+  };
+
+  // Auto-save hook
+  const { isSaving, lastSaved, error: autoSaveError } = useAutoSave({
+    data: formData,
+    draftId,
+    onSave: handleAutoSave,
+    interval: 3000,
+    enabled: true,
   });
 
   const updateField = (field: keyof FormData, value: string) => {
@@ -437,6 +519,14 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Basic Information</h2>
                 <p className="text-gray-500 text-sm sm:text-base font-[300]">How should we identify your event?</p>
+                
+                {/* Auto-save status indicator */}
+                <div className={`text-center mt-3 transition-opacity duration-300 ${isSaving ? 'opacity-100' : 'opacity-0'}`}>
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-slate-400 bg-white/50 px-2 py-1 rounded-full backdrop-blur-sm border border-white/20">
+                    <Loader2 size={10} className="animate-spin" />
+                    Saving changes...
+                  </span>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -1030,16 +1120,16 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <DocumentUploader
                   maxFiles={5}
                   maxSizeMB={5}
-                  onUploadComplete={(urls) => {
+                  onUploadComplete={(uploadedFiles) => {
                     setFormData(prev => ({
                       ...prev,
                       verification: {
                         ...prev.verification,
-                        documents: urls.map(url => ({
+                        documents: uploadedFiles.map(file => ({
                           type: 'verification',
-                          url,
-                          filename: url.split('/').pop() || '',
-                          objectKey: url
+                          url: '', // Backblaze files don't have direct URLs
+                          filename: file.filename,
+                          objectKey: file.objectKey
                         }))
                       }
                     }));
@@ -1058,10 +1148,26 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
               </div>
 
               <button
-                onClick={onSuccess}
-                className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    if (draftId) {
+                      await eventsService.submitEvent(draftId);
+                      showNotification('success', 'Event submission!', 'Event submitted successfully!');
+                      onSuccess();
+                    } else {
+                      showNotification('error', 'Event submission!', 'Please wait for draft to save');
+                    }
+                  } catch (error: any) {
+                    showNotification('error', 'Event submission!', error.message || 'Failed to submit event');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading || !draftId}
+                className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Event
+                {loading ? 'Submitting...' : 'Submit Event'}
                 <CheckCircle2 size={20} />
               </button>
             </motion.div>

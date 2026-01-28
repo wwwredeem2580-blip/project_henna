@@ -9,12 +9,34 @@ import {
   updateLiveEventService,
   updateStatusRejectedToDraftService,
   toggleSalesStatusService,
-  deleteEventService
+  deleteEventService,
+  getDraftEventsService
 } from './service';
 import { handleError } from '../../../utils/handleError';
 import { isValidObjectId } from '../../../utils/isValidObjectId';
 
 const router = Router();
+
+router.get('/draft/:eventId', async (req, res) => {
+  try {
+    const hostId = req.user?.sub;
+    const eventId = req.params.eventId;
+
+    if (!isValidObjectId(eventId)) {
+      return res.status(400).json({ message: "Invalid event ID" });
+    }
+    
+    if (!hostId) {
+      return res.status(401).json({ message: "Host not found" });
+    }
+
+    const result = await getDraftEventsService(hostId, eventId);
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('Error creating event:', error);
+    handleError(error, res);
+  }
+});
 
 router.post('/', async (req, res) => {
   try {

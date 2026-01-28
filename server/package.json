@@ -41,6 +41,7 @@
     "socket.io": "^4.8.3",
     "uuid": "^13.0.0",
     "zod": "^4.3.6",
+    "zod-deep-partial": "^1.2.0",
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {

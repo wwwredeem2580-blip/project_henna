@@ -3,10 +3,10 @@ import { z } from 'zod';
 // Step 1: Basic Information
 export const basicInfoSchema = z.object({
   title: z.string()
-    .min(5, 'Title must be at least 5 characters')
+    .min(10, 'Title must be at least 10 characters')
     .max(100, 'Title must not exceed 100 characters'),
   tagline: z.string()
-    .min(10, 'Tagline must be at least 10 characters')
+    .min(5, 'Tagline must be at least 5 characters')
     .max(200, 'Tagline must not exceed 200 characters'),
   category: z.enum(['concert', 'sports', 'conference', 'festival', 'theater', 'comedy', 'networking', 'workshop', 'other']),
 });
@@ -32,7 +32,6 @@ export const venueSchema = z.object({
     address: z.object({
       street: z.string().min(1, 'Street address is required'),
       city: z.string().min(1, 'City is required'),
-      country: z.string().default('Bangladesh'),
     }),
   }),
 });

@@ -8,6 +8,7 @@ import {
   ticketSchema,
 } from './event';
 import { sanitizedString, sanitizedStringArray } from '../utils/zodSanitizer';
+import { zodDeepPartial } from "zod-deep-partial";
 
 const MAX_CATEGORIES = 3;
 const MAX_DOCUMENTS = 5;
@@ -34,14 +35,17 @@ export const categorySchema = z.enum([
 
 // Step 1: Basics
 export const stepBasicsSchema = z.object({
-  title: sanitizedString({ min: 10, max: 100 }),
-
-  tagline: sanitizedString({ min: 5, max: MAX_TAGLINE_LENGTH }).optional(),
+  title: z.string({ error: 'Event title is required' })
+    .min(10, 'Event title must be at least 10 characters')
+    .max(100, 'Title must be less than 100 characters'),
+  tagline: z.string({ error: 'Event tagline is required' })
+    .min(5, 'Event tagline must be at least 5 characters')
+    .max(MAX_TAGLINE_LENGTH, `Tagline must be less than ${MAX_TAGLINE_LENGTH} characters`),
 
   category: categorySchema,
 
   subCategory: z
-    .array(sanitizedString({ min: 2, max: 50 }))
+    .array(z.string({ error: 'Sub-category is required' }).min(2, 'Sub-category must be at least 2 characters').max(50, 'Sub-category must be less than 50 characters'))
     .max(MAX_CATEGORIES, `Maximum ${MAX_CATEGORIES} sub-categories allowed`)
     .optional(),
 });
@@ -50,21 +54,20 @@ export const stepBasicsSchema = z.object({
 
 // Step 2: Details
 export const stepDetailsSchema = z.object({
-  media: mediaSchema.optional(),
+  media: mediaSchema,
 
-  description: sanitizedString({
-    min: 50,
-    max: MAX_DESCRIPTION_LENGTH,
-  }),
+  description: z.string({ error: 'Event description is required' })
+    .min(50, 'Event description must be at least 50 characters')
+    .max(MAX_DESCRIPTION_LENGTH, `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters`),
 
   highlights: z
-    .array(sanitizedString({ max: 100 }))
+    .array(z.string({ error: 'Highlight is required' }).max(100, 'Highlight must be less than 100 characters'))
     .max(10, 'Cannot have more than 10 highlights')
     .optional(),
 
   languages: z
-    .array(sanitizedString({ min: 2, max: 30 }))
-    .min(1, 'At least one language is required'),
+    .array(z.string({ error: 'Language is required' }).min(2, 'Language must be at least 2 characters').max(30, 'Language must be less than 30 characters'))
+    .min(1, 'At least one language is required').optional(),
 });
 
 
@@ -162,25 +165,25 @@ export const submitEventSchema = z.object({
 });
 
 
-export const createEventSchema = submitEventSchema
-  .partial()
-  .extend({
-    title: stepBasicsSchema.shape.title,
-  });
+export const createEventSchema = zodDeepPartial(submitEventSchema).extend({
+  title: submitEventSchema.shape.title, // re-require title
+});
+
 
 // Pending Edit Schema
 export const pendingApprovalEditSchema = z.object({
   // Editable fields
-  description: sanitizedString({
-    min: 50,
-    max: MAX_DESCRIPTION_LENGTH,
-  }).optional(),
-  tagline: sanitizedString({
-    min: 5,
-    max: MAX_TAGLINE_LENGTH,
-  }).optional(),
-  highlights: z.array(sanitizedString({ max: 100 })).max(10, 'Cannot have more than 10 highlights').optional(),
-  languages: z.array(sanitizedString({ min: 2, max: 30 })).optional(),
+  description: z.string({ error: 'Event description is required' })
+    .min(50, 'Event description must be at least 50 characters')
+    .max(MAX_DESCRIPTION_LENGTH, `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters`)
+    .optional(),
+
+  tagline: z.string({ error: 'Event tagline is required' })
+    .min(5, 'Event tagline must be at least 5 characters')
+    .max(MAX_TAGLINE_LENGTH, `Tagline must be less than ${MAX_TAGLINE_LENGTH} characters`)
+    .optional(),
+  highlights: z.array(z.string({ error: 'Highlight is required' }).max(100, 'Highlight must be less than 100 characters')).max(10, 'Cannot have more than 10 highlights').optional(),
+  languages: z.array(z.string({ error: 'Language is required' }).min(2, 'Language must be at least 2 characters').max(30, 'Language must be less than 30 characters')).optional(),
   media: mediaSchema.optional(),
   
   // Can add docs, not remove
@@ -191,13 +194,19 @@ export const pendingApprovalEditSchema = z.object({
 
 // Approved Edit Schema
 export const approvedEventEditSchema = z.object({
-  description: sanitizedString({ min: 50, max: MAX_DESCRIPTION_LENGTH }).optional(),
-  tagline: sanitizedString({ min: 5, max: MAX_TAGLINE_LENGTH }).optional(),
-  highlights: z.array(sanitizedString({ max: 100 }))
+  description: z.string({ error: 'Event description is required' })
+    .min(50, 'Event description must be at least 50 characters')
+    .max(MAX_DESCRIPTION_LENGTH, `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters`)
+    .optional(),
+  tagline: z.string({ error: 'Event tagline is required' })
+    .min(5, 'Event tagline must be at least 5 characters')
+    .max(MAX_TAGLINE_LENGTH, `Tagline must be less than ${MAX_TAGLINE_LENGTH} characters`)
+    .optional(),
+  highlights: z.array(z.string({ error: 'Highlight is required' }).max(100, 'Highlight must be less than 100 characters'))
     .max(10, 'Cannot have more than 10 highlights')
     .optional()
     .transform(arr => (arr?.length ? arr : undefined)),
-  languages: z.array(sanitizedString({ min: 2, max: 30 }))
+  languages: z.array(z.string({ error: 'Language is required' }).min(2, 'Language must be at least 2 characters').max(30, 'Language must be less than 30 characters'))
     .optional()
     .transform(arr => (arr?.length ? arr : undefined)),
   media: mediaSchema.optional(),
@@ -221,12 +230,15 @@ export const approvedEventEditSchema = z.object({
 
 // Published Event Edit Schema
 export const publishedEventEditSchema = z.object({
-  description: sanitizedString({ min: 50, max: MAX_DESCRIPTION_LENGTH }).optional(),
-  highlights: z.array(sanitizedString({ max: 100 }))
+  description: z.string({ error: 'Event description is required' })
+    .min(50, 'Event description must be at least 50 characters')
+    .max(MAX_DESCRIPTION_LENGTH, `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters`)
+    .optional(),
+  highlights: z.array(z.string({ error: 'Highlight is required' }).max(100, 'Highlight must be less than 100 characters'))
     .max(10, 'Cannot have more than 10 highlights')
     .optional()
     .transform(arr => (arr?.length ? arr : undefined)),
-  languages: z.array(sanitizedString({ min: 2, max: 30 }))
+  languages: z.array(z.string({ error: 'Language is required' }).min(2, 'Language must be at least 2 characters').max(30, 'Language must be less than 30 characters'))
     .optional()
     .transform(arr => (arr?.length ? arr : undefined)),
   media: mediaSchema.optional(),

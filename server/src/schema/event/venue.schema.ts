@@ -5,7 +5,6 @@ export const venueTypeSchema = z.enum(['indoor', 'outdoor', 'hybrid'], { error: 
 export const addressSchema = z.object({
   street: z.string().optional(),
   city: z.string({ error: 'City is required' }).min(1, 'City is required'),
-  country: z.string({ error: 'Country is required' }).min(1, 'Country is required'),
 });
 
 export const venueSchema = z.object({

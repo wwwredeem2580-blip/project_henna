@@ -12,6 +12,30 @@ import { validateDescriptionEdit, validateTicketPriceChange, validateTicketQuant
 import { processAutomaticPriceReductionRefunds } from "../../../utils/event/processAutomaticPriceReductionRefunds";
 
 
+export const getDraftEventsService = async (hostId: string, eventId: string) => {
+  const hostData = await User.findById(hostId).select('businessName businessEmail companyType firstName lastName');
+
+  if (!hostData) {
+    throw new CustomError('Host not found', 404);
+  }
+
+  const event = await Event.findById(eventId);
+
+  if (!event) {
+    throw new CustomError('Event not found', 404);
+  }
+
+  if (event.hostId.toString() !== hostId) {
+    throw new CustomError('Unauthorized', 403);
+  }
+
+  if (event.status !== 'draft') {
+    throw new CustomError('Event is not in draft state', 400);
+  }
+
+  return event;
+};
+
 // Draft Stage
 export const createEventService = async (hostId: string, data: any) => {
   const hostData = await User.findById(hostId).select('businessName businessEmail companyType firstName lastName');
@@ -30,6 +54,8 @@ export const createEventService = async (hostId: string, data: any) => {
     companyEmail: hostData.businessEmail,
     host: `${hostData.firstName} ${hostData.lastName}`,
   };
+
+  console.log(data);
 
   const validatedData = createEventSchema.parse(data);
 
