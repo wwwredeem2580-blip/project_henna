@@ -21,7 +21,40 @@ export const eventDetailsSchema = z.object({
     .min(1, 'Cover image is required'),
 });
 
-// Step 3: Logistics
+// Step 3: Venue Setup
+export const venueSchema = z.object({
+  venue: z.object({
+    name: z.string()
+      .min(3, 'Venue name must be at least 3 characters'),
+    capacity: z.number()
+      .int('Capacity must be a whole number')
+      .positive('Capacity must be greater than 0'),
+    address: z.object({
+      street: z.string().min(1, 'Street address is required'),
+      city: z.string().min(1, 'City is required'),
+      country: z.string().default('Bangladesh'),
+    }),
+  }),
+});
+
+// Step 4: Event Schedule
+export const scheduleSchema = z.object({
+  schedule: z.object({
+    startDate: z.string()
+      .min(1, 'Start date is required')
+      .refine((date) => new Date(date) > new Date(), {
+        message: 'Start date must be in the future'
+      }),
+    endDate: z.string()
+      .min(1, 'End date is required'),
+    doors: z.string().optional(),
+  }).refine((data) => new Date(data.endDate) > new Date(data.startDate), {
+    message: 'End date must be after start date',
+    path: ['endDate'],
+  }),
+});
+
+// Legacy: Combined logistics schema (for backward compatibility)
 export const logisticsSchema = z.object({
   venue: z.object({
     name: z.string()

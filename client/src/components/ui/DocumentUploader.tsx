@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { mediaService } from '@/lib/api/media';
 
 interface DocumentUploaderProps {
-  onUploadComplete: (urls: string[]) => void;
+  onUploadComplete: (files: Array<{ objectKey: string; filename: string; uploadedAt: Date }>) => void;
   onUploadError?: (error: string) => void;
   maxFiles?: number;
   maxSizeMB?: number;
@@ -16,7 +16,8 @@ interface FileWithProgress {
   file: File;
   progress: number;
   status: 'pending' | 'uploading' | 'success' | 'error';
-  url?: string;
+  objectKey?: string;
+  filename?: string;
   error?: string;
 }
 
@@ -89,16 +90,17 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
       const filesToUpload = files.map(f => f.file);
       const response = await mediaService.uploadDocuments(filesToUpload);
 
-      // Update files with success status and URLs
+      // Update files with success status and objectKeys
       setFiles(prev => prev.map((f, i) => ({
         ...f,
         status: 'success',
         progress: 100,
-        url: response.urls[i],
+        objectKey: response.files[i].objectKey,
+        filename: response.files[i].filename,
       })));
 
-      // Call success callback
-      onUploadComplete(response.urls);
+      // Call success callback with file metadata
+      onUploadComplete(response.files);
     } catch (error: any) {
       console.error('Upload error:', error);
       const errorMessage = error.message || 'Upload failed. Please try again.';

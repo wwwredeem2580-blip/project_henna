@@ -12,9 +12,14 @@ import { BDTIcon } from '@/components/ui/Icons';
 import { formatDate, formatTime } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { DocumentUploader } from '@/components/ui/DocumentUploader';
+import { ScheduleBuilder } from '@/components/ui/ScheduleBuilder';
+import { DateInput } from '@/components/ui/DateInput';
+import { TimeInput } from '@/components/ui/TimeInput';
 import { 
   basicInfoSchema, 
   eventDetailsSchema, 
+  venueSchema,
+  scheduleSchema,
   logisticsSchema, 
   verificationSchema, 
   ticketsStepSchema,
@@ -28,7 +33,7 @@ interface RegisterProps {
   onGoBack: () => void;
 }
 
-type Step = 'basic' | 'details' | 'logistics' | 'verification' | 'tickets' | 'platform';
+type Step = 'basic' | 'details' | 'venue' | 'schedule' | 'verification' | 'tickets' | 'platform';
 const eventCategory = ['concert', 'sports', 'conference', 'festival', 'theater', 'comedy', 'networking', 'workshop', 'other'];
 const venueType = ['indoor', 'outdoor', 'hybrid'];
 interface document {
@@ -110,6 +115,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [editingTicketIndex, setEditingTicketIndex] = useState<number | null>(null);
+  const [scheduleModalState, setScheduleModalState] = useState<'date' | 'start-time' | 'end-time' | null>(null);
   const companyType = ['organizer', 'venue_owner', 'representative', 'artist'];
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -216,8 +222,8 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
           description: formData.description,
           coverImage: formData.media?.coverImage?.url || '',
         });
-      } else if (currentStep === 'logistics') {
-        result = logisticsSchema.safeParse({
+      } else if (currentStep === 'venue') {
+        result = venueSchema.safeParse({
           venue: {
             name: formData.venue.name,
             capacity: Number(formData.venue.capacity) || 0,
@@ -227,6 +233,9 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
               country: 'Bangladesh',
             },
           },
+        });
+      } else if(currentStep === 'schedule') {
+        result = scheduleSchema.safeParse({
           schedule: {
             startDate: formData.schedule.startDate,
             endDate: formData.schedule.endDate,
@@ -303,10 +312,12 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
       onGoBack();
     } else if (step === 'details') {
       setStep('basic');
-    } else if (step === 'logistics') {
+    } else if (step === 'venue') {
       setStep('details');
+    } else if (step === 'schedule') {
+      setStep('venue');
     } else if (step === 'verification') {
-      setStep('logistics');
+      setStep('schedule');
     } else if (step === 'tickets') {
       setStep('verification');
     } else if (step === 'platform') {
@@ -532,18 +543,18 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
               </div>
 
               <button
-                onClick={() => handleNext('logistics')}
+                onClick={() => handleNext('venue')}
                 className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
               >
-                Next: Event Setup
+                Next: Venue Setup
                 <ArrowRight size={20} />
               </button>
             </motion.div>
           )}
 
-          {/* Step 3: Logistics */}
-          {step === 'logistics' && (
-            <motion.div key="logistics" {...stepVariants} className="space-y-6">
+          {/* Step 3: Venue Setup */}
+          {step === 'venue' && (
+            <motion.div key="venue" {...stepVariants} className="space-y-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 mb-2">
                   <ShieldCheck className="text-brand-500" size={20} />
@@ -624,6 +635,138 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
               </div>
 
               <button
+                onClick={() => handleNext('schedule')}
+                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+              >
+                Next: Event Schedule
+                <ArrowRight size={20} />
+              </button>
+            </motion.div>
+          )}
+
+          {/* Step 4: Event Schedule */}
+          {step === 'schedule' && (
+            <motion.div key="schedule" {...stepVariants} className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="text-brand-500" size={20} />
+                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 4: Event Schedule</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Event Schedule</h2>
+                <p className="text-gray-500 text-sm sm:text-base font-[300]">Set up your event dates and times</p>
+              </div>
+
+              {/* Mode Toggle */}
+              <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+                <button
+                  type="button"
+                  onClick={() => updateScheduleField('type', 'single')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    (formData.schedule?.type || 'single') === 'single'
+                      ? 'bg-white text-brand-600 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Single Day Event
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateScheduleField('type', 'multiple')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    formData.schedule?.type === 'multiple'
+                      ? 'bg-white text-brand-600 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Multi-Day Event
+                </button>
+              </div>
+
+              {formData.schedule?.type === 'multiple' ? (
+                <div className="space-y-2">
+                  <ScheduleBuilder
+                    sessions={formData.schedule?.sessions || []}
+                    onChange={(sessions) => {
+                      updateScheduleField('sessions', sessions);
+                      if (sessions.length > 0) {
+                        const sortedSessions = sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                        updateScheduleField('startDate', sortedSessions[0].startTime);
+                        updateScheduleField('endDate', sortedSessions[sortedSessions.length - 1].endTime);
+                        updateScheduleField('isMultiDay', true);
+                      }
+                    }}
+                  />
+                  {errors['schedule.sessions'] && <p className="text-xs text-red-500 ml-1">{errors['schedule.sessions']}</p>}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <DateInput
+                    label="Event Date"
+                    value={formData.schedule.startDate || ''}
+                    isOpen={scheduleModalState === 'date'}
+                    onOpen={() => setScheduleModalState('date')}
+                    onClose={() => setScheduleModalState(null)}
+                    onChange={(val) => {
+                      const date = new Date(val);
+                      // Preserve time if it exists, otherwise set to 6 PM
+                      if (formData.schedule.startDate) {
+                        const oldDate = new Date(formData.schedule.startDate);
+                        date.setHours(oldDate.getHours(), oldDate.getMinutes(), 0, 0);
+                      } else {
+                        date.setHours(18, 0, 0, 0);
+                      }
+                      updateScheduleField('startDate', date.toISOString());
+                      
+                      // Update end date to same day, 3 hours later
+                      const endDate = new Date(date);
+                      if (formData.schedule.endDate) {
+                        const oldEnd = new Date(formData.schedule.endDate);
+                        endDate.setHours(oldEnd.getHours(), oldEnd.getMinutes(), 0, 0);
+                      } else {
+                        endDate.setHours(21, 0, 0, 0);
+                      }
+                      updateScheduleField('endDate', endDate.toISOString());
+                      updateScheduleField('isMultiDay', false);
+                      setScheduleModalState(null);
+                    }}
+                    minDate={new Date(Date.now() + 24 * 60 * 60 * 1000)}
+                    error={!!errors['schedule.startDate']}
+                  />
+                  {errors['schedule.startDate'] && <p className="text-xs text-red-500 ml-1">{errors['schedule.startDate']}</p>}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <TimeInput
+                      label="Start Time"
+                      value={formData.schedule.startDate || ''}
+                      isOpen={scheduleModalState === 'start-time'}
+                      onOpen={() => setScheduleModalState('start-time')}
+                      onClose={() => setScheduleModalState(null)}
+                      onChange={(val) => {
+                        updateScheduleField('startDate', val);
+                        setScheduleModalState(null);
+                      }}
+                      error={!!errors['schedule.startDate']}
+                    />
+
+                    <TimeInput
+                      label="End Time"
+                      value={formData.schedule.endDate || ''}
+                      isOpen={scheduleModalState === 'end-time'}
+                      onOpen={() => setScheduleModalState('end-time')}
+                      onClose={() => setScheduleModalState(null)}
+                      onChange={(val) => {
+                        updateScheduleField('endDate', val);
+                        setScheduleModalState(null);
+                      }}
+                      minTime={formData.schedule.startDate ? new Date(new Date(formData.schedule.startDate).getTime() + 60 * 60 * 1000).toISOString() : undefined}
+                      error={!!errors['schedule.endDate']}
+                    />
+                  </div>
+                  {errors['schedule.endDate'] && <p className="text-xs text-red-500 ml-1">{errors['schedule.endDate']}</p>}
+                </div>
+              )}
+
+              <button
                 onClick={() => handleNext('verification')}
                 className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
               >
@@ -633,27 +776,43 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             </motion.div>
           )}
 
-          {/* Step 4: Verification */}
+          {/* Step 5: Verification */}
           {step === 'verification' && (
             <motion.div key="verification" {...stepVariants} className="space-y-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 mb-2">
                   <ShieldCheck className="text-brand-500" size={20} />
-                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 4: Verification</span>
+                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 5: Verification</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Verification</h2>
                 <p className="text-gray-500 text-sm sm:text-base font-[300]">Help us to keep the platform safe for everyone</p>
               </div>
 
-              <div className="p-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex flex-col items-center justify-center gap-4 hover:border-brand-300 transition-colors cursor-pointer group">
-                <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400 group-hover:text-brand-600 transition-colors">
-                  <Upload size={24} />
-                </div>
-                <div className="text-center">
-                  <p className="font-[500] text-neutral-800">Upload Verification Documents</p>
-                  <p className="text-sm text-neutral-500">PDF, JPG or PNG (Max 5MB)</p>
-                </div>
-              </div>
+              <DocumentUploader
+                onUploadComplete={(uploadedFiles) => {
+                  // Convert uploaded files to document objects
+                  const documents = uploadedFiles.map((file) => ({
+                    type: 'verification',
+                    url: '', // Backblaze files don't have direct URLs
+                    filename: file.filename,
+                    objectKey: file.objectKey
+                  }));
+                  
+                  setFormData(prev => ({
+                    ...prev,
+                    verification: {
+                      ...prev.verification,
+                      documents: documents
+                    }
+                  }));
+                }}
+                onUploadError={(error) => {
+                  setErrors(prev => ({ ...prev, 'verification.documents': error }));
+                }}
+                maxFiles={5}
+                maxSizeMB={5}
+              />
+              {errors['verification.documents'] && <p className="text-xs text-red-500 ml-1">{errors['verification.documents']}</p>}
 
               <button
                 onClick={() => handleNext('tickets')}
