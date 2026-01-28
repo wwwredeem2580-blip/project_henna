@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe, Upload, Ticket, Trash, Edit, Plus, Calendar, Clock10, Save } from 'lucide-react';
 import { authService } from '@/lib/api/auth';
@@ -165,6 +165,36 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
       }
     },
   });
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const draftId = urlParams.get('draftId');
+    if (draftId) {
+      setDraftId(draftId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (draftId) {
+      getDraft();
+    }
+  }, [draftId]);
+
+  const getDraft = async () => {
+    if (draftId) {
+      const draft = await eventsService.getDraft(draftId);
+      if (draft) {
+        for (const key in formData) {
+          if (draft[key] !== undefined) {
+            setFormData(prev => ({
+              ...prev,
+              [key]: draft[key]
+            }));
+          }
+        }
+      }
+    }
+  }
 
   // Filter out empty strings, arrays, and objects
   const filterEmptyValues = (obj: any): any => {
@@ -531,7 +561,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <label className="text-sm font-[500] text-neutral-700 ml-1">Title *</label>
                 <input
                   type="text"
-                  value={formData.title}
+                  value={formData.title || ''}
                   onChange={(e) => updateField('title', e.target.value)}
                   placeholder="Gala Night 2026"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
@@ -564,7 +594,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <label className="text-sm font-[500] text-neutral-700 ml-1">Tagline</label>
                 <input
                   type="text"
-                  value={formData.tagline}
+                  value={formData.tagline || ''}
                   onChange={(e) => updateField('tagline', e.target.value)}
                   placeholder="Experience the magic of music"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
@@ -625,14 +655,14 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 onUploadError={(error) => {
                   setErrors(prev => ({ ...prev, coverImage: error }));
                 }}
-                currentImage={formData.media?.coverImage?.url}
+                currentImage={formData.media?.coverImage?.url || ''}
               />
 
 
               <div className="space-y-2">
                 <label className="text-sm font-[500] text-neutral-700 ml-1">Description *</label>
                 <textarea
-                  value={formData.description}
+                  value={formData.description || ''}
                   onChange={(e) => updateField('description', e.target.value)}
                   placeholder="Event description"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
@@ -640,13 +670,23 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 {errors.description && <p className="text-xs text-red-500">{errors.description}</p>}
               </div>
 
-              <button
-                onClick={() => handleNext('venue')}
-                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
-              >
-                Next: Venue Setup
-                <ArrowRight size={20} />
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={loading}
+                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={18} />
+                  {loading ? 'Saving...' : 'Save Draft'}
+                </button>
+                <button
+                  onClick={() => handleNext('venue')}
+                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                >
+                  Next: Venue Setup
+                  <ArrowRight size={20} />
+                </button>
+              </div>
             </motion.div>
           )}
 
@@ -667,7 +707,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   <label className="text-sm font-[500] text-neutral-700 ml-1">Venue Name *</label>
                   <input
                     type="text"
-                    value={formData.venue.name}
+                    value={formData.venue.name || ''}
                     onChange={(e) => updateVenueField('name', e.target.value)}
                     placeholder="Grand Hotel"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
@@ -678,7 +718,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   <label className="text-sm font-[500] text-neutral-700 ml-1">Venue Capacity *</label>
                   <input
                     type="text"
-                    value={formData.venue.capacity}
+                    value={formData.venue.capacity || ''}
                     onChange={(e) => updateVenueField('capacity', Number(e.target.value) || 0)}
                     placeholder="1000"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
@@ -712,7 +752,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   <label className="text-sm font-[500] text-neutral-700 ml-1">Venue Street *</label>
                   <input
                     type="text"
-                    value={formData.venue.address.street}
+                    value={formData?.venue?.address?.street || ''}
                     onChange={(e) => updateVenueAddress('street', e.target.value)}
                     placeholder="123 Main St"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
@@ -723,7 +763,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   <label className="text-sm font-[500] text-neutral-700 ml-1">Venue City *</label>
                   <input
                     type="text"
-                    value={formData.venue.address.city}
+                    value={formData?.venue?.address?.city || ''}
                     onChange={(e) => updateVenueAddress('city', e.target.value)}
                     placeholder="Dhaka"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
@@ -731,14 +771,23 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   {errors['venue.address.city'] && <p className="text-xs text-red-500">{errors['venue.address.city']}</p>}
                 </div>
               </div>
-
-              <button
-                onClick={() => handleNext('schedule')}
-                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
-              >
-                Next: Event Schedule
-                <ArrowRight size={20} />
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={loading}
+                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={18} />
+                  {loading ? 'Saving...' : 'Save Draft'}
+                </button>
+                <button
+                  onClick={() => handleNext('schedule')}
+                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                >
+                  Next: Event Schedule
+                  <ArrowRight size={20} />
+                </button>
+              </div>
             </motion.div>
           )}
 
@@ -863,14 +912,23 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   {errors['schedule.endDate'] && <p className="text-xs text-red-500 ml-1">{errors['schedule.endDate']}</p>}
                 </div>
               )}
-
-              <button
-                onClick={() => handleNext('verification')}
-                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
-              >
-                Next: Verification
-                <ArrowRight size={20} />
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={loading}
+                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={18} />
+                  {loading ? 'Saving...' : 'Save Draft'}
+                </button>
+                <button
+                  onClick={() => handleNext('verification')}
+                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                >
+                  Next: Verification
+                  <ArrowRight size={20} />
+                </button>
+              </div>
             </motion.div>
           )}
 
@@ -1056,7 +1114,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   </AnimatePresence>
                 )}
               </section>
-
+              
               <button
                 onClick={() => handleNext('platform')}
                 disabled={formData.tickets.length === 0}
@@ -1129,30 +1187,40 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   By clicking create, you agree to our event verification process, terms and conditions.
                 </p>
               </div>
-
-              <button
-                onClick={async () => {
-                  setLoading(true);
-                  try {
-                    if (draftId) {
-                      await eventsService.submitEvent(draftId);
-                      showNotification('success', 'Event submission!', 'Event submitted successfully!');
-                      onSuccess();
-                    } else {
-                      showNotification('error', 'Event submission!', 'Please wait for draft to save');
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={loading}
+                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={18} />
+                  {loading ? 'Saving...' : 'Save Draft'}
+                </button>
+                <button
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      if (draftId) {
+                        await eventsService.submitEvent(draftId);
+                        showNotification('success', 'Event submission!', 'Event submitted successfully!');
+                        onSuccess();
+                      } else {
+                        showNotification('error', 'Event submission!', 'Please wait for draft to save');
+                      }
+                    } catch (error: any) {
+                      showNotification('error', 'Event submission!', error.message || 'Failed to submit event');
+                    } finally {
+                      setLoading(false);
                     }
-                  } catch (error: any) {
-                    showNotification('error', 'Event submission!', error.message || 'Failed to submit event');
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                disabled={loading || !draftId}
-                className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Submitting...' : 'Submit Event'}
-                <CheckCircle2 size={20} />
-              </button>
+                  }}
+                  disabled={loading || !draftId}
+                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Submitting...' : 'Submit Event'}
+                  <CheckCircle2 size={20} />
+                </button>
+              </div>
+              
             </motion.div>
           )}
         </AnimatePresence>
@@ -1168,7 +1236,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
         onSave={handleSaveTicket}
         eventData={{
           title: formData.title || 'Your Event',
-          venue: `${formData.venue.name}, ${formData.venue.address.city}`,
+          venue: `${formData.venue.name}, ${formData.venue.address?.city || ''}`,
           startDate: new Date(formData.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
           endDate: new Date(formData.schedule.endDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
           startTime: formData.schedule.doors,
