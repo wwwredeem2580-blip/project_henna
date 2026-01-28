@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, LogIn } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, LogIn, Globe, CreditCard } from "lucide-react";
 
 import {
   LayoutDashboard,
@@ -29,15 +29,16 @@ export default function Sidebar() {
   const router = useRouter();
 
   let menuItems = [
-    { icon: <LayoutDashboard size={18} strokeWidth={1.5} />, label: 'Explore', path: '/events', active: pathname === '/events' },
+    { icon: <Globe size={18} strokeWidth={1} />, label: 'Explore', path: '/events', active: pathname === '/events' },
     { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Wallet', path: '/wallet', active: pathname === '/wallet', requireRole: 'user' },
     { icon: <User size={18} strokeWidth={1} />, label: 'Profile', path: '/profile', active: pathname === '/profile', requireRole: 'user' },
     { icon: <Settings size={18} strokeWidth={1} />, label: 'Settings', path: '/settings', active: pathname === '/settings', requireRole: 'user' },
-    { icon: <LayoutDashboard size={18} strokeWidth={1.5} />, label: 'Dashboard', path: '/dashboard', active: pathname === '/dashboard', requireRole: 'host' },
-    { icon: <MessageSquare size={18} strokeWidth={1.5} />, label: 'Conversations', path: '/host/conversations', active: pathname === '/host/conversations', requireRole: 'host' },
+    { icon: <LayoutDashboard size={18} strokeWidth={1} />, label: 'Dashboard', path: '/dashboard', active: pathname === '/dashboard', requireRole: 'host' },
+    { icon: <MessageSquare size={18} strokeWidth={1} />, label: 'Conversations', path: '/host/conversations', active: pathname === '/host/conversations', requireRole: 'host' },
     { icon: <Calendar size={18} strokeWidth={1} />, label: 'My Events', path: '/host/events', active: pathname === '/host/events', requireRole: 'host' },
-    { icon: <Plus size={18} strokeWidth={1} />, label: 'Create Event', path: '/host/create-event', active: pathname === '/host/create-event', requireRole: 'host' },
-    { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Wallet', path: '/host/wallet', active: pathname === '/host/wallet', requireRole: 'host' },
+    { icon: <Plus size={18} strokeWidth={1} />, label: 'Create Event', path: '/host/events/create', active: pathname === '/host/events/create', requireRole: 'host' },
+    { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Orders', path: '/host/orders', active: pathname === '/host/orders', requireRole: 'host' },
+    { icon: <CreditCard size={18} strokeWidth={1} />, label: 'Payout', path: '/host/payout', active: pathname === '/host/payout', requireRole: 'host' },
     { icon: <BarChart3 size={18} strokeWidth={1} />, label: 'Analytics', path: '/host/analytics', active: pathname === '/host/analytics', requireRole: 'host' },
     { icon: <User size={18} strokeWidth={1} />, label: 'Profile', path: '/host/profile', active: pathname === '/host/profile', requireRole: 'host' },
     { icon: <Settings size={18} strokeWidth={1} />, label: 'Settings', path: '/host/settings', active: pathname === '/host/settings', requireRole: 'host' },
