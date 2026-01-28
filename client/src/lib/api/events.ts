@@ -32,7 +32,6 @@ interface EventData {
     address: {
       street: string;
       city: string;
-      country: string;
     };
     coordinates: {
       type: 'Point';
@@ -82,7 +81,7 @@ class EventsService {
   /**
    * Update an existing event draft
    */
-  async updateDraft(eventId: string, data: Partial<EventData>): Promise<EventDraftResponse> {
+  async updateDraft(eventId: string, data: EventData): Promise<EventDraftResponse> {
     return await apiClient.put(`/api/event/host/draft/${eventId}`, data);
   }
 
@@ -96,8 +95,8 @@ class EventsService {
   /**
    * Submit event for approval
    */
-  async submitEvent(eventId: string): Promise<any> {
-    return await apiClient.post(`/api/event/host/submit/${eventId}`, {});
+  async submitEvent(eventId: string, data: Partial<EventData>): Promise<any> {
+    return await apiClient.post(`/api/event/host/submit/${eventId}`, data);
   }
 
   /**

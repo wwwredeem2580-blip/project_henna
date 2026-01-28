@@ -55,8 +55,6 @@ export const createEventService = async (hostId: string, data: any) => {
     host: `${hostData.firstName} ${hostData.lastName}`,
   };
 
-  console.log(data);
-
   const validatedData = createEventSchema.parse(data);
 
   const sanitizedData = buildEventForCreate(validatedData);

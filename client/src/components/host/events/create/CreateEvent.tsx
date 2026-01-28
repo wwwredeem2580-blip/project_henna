@@ -1201,7 +1201,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     setLoading(true);
                     try {
                       if (draftId) {
-                        await eventsService.submitEvent(draftId);
+                        await eventsService.submitEvent(draftId, formData);
                         showNotification('success', 'Event submission!', 'Event submitted successfully!');
                         onSuccess();
                       } else {
