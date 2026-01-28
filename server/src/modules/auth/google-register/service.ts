@@ -115,7 +115,8 @@ export const googleRegisterCallbackService = async (req: Request, res: Response)
     if (existingUser) {
       // Clean up state
       oauthStateStore.delete(state);
-      throw new CustomError('User already exists with this email or Google account', 409);
+      const errorMessage = encodeURIComponent('User already exists with this email or Google account');
+      return res.redirect(`${process.env.CLIENT_URL}/auth?tab=login&error=${errorMessage}`);
     }
 
     // Create user with role-specific fields
