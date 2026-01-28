@@ -3,25 +3,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  LayoutDashboard,
-  MessageSquare,
   Calendar,
   ShoppingBag,
-  BarChart3,
-  Settings,
-  LogOut,
-  Search,
-  Bell,
   Star,
   Trash2,
   UserCircle,
   HelpCircle,
   Plus,
-  ArrowUpRight,
-  MoreHorizontal,
-  Menu,
-  X
+  LogIn,
+  UserPlus,
 } from 'lucide-react';
+import { useAuth } from '@/lib/context/auth';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -29,98 +21,18 @@ interface DashboardProps {
 
 import { Logo } from '@/components/shared/Logo';
 
-export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+import Sidebar from '@/components/layout/Sidebar';
 
-  const menuItems = [
-    { icon: <LayoutDashboard size={18} strokeWidth={1.5} />, label: 'Dashboard', active: true },
-    { icon: <MessageSquare size={18} strokeWidth={1} />, label: 'Conversation' },
-    { icon: <Calendar size={18} strokeWidth={1} />, label: 'Events' },
-    { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Orders' },
-    { icon: <BarChart3 size={18} strokeWidth={1} />, label: 'Analytics' },
-    { icon: <Settings size={18} strokeWidth={1} />, label: 'Settings' },
-  ];
+export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
+
+  const { user } = useAuth();
 
   return (
-    <div className="flex min-h-screen bg-white font-sans text-slate-950">
-      {/* Mobile Menu Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`w-64 overflow-y-auto border-r border-slate-100 flex flex-col fixed h-full bg-white z-40 transition-transform duration-300 lg:translate-x-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="p-6 flex items-center gap-3">
-          <Logo variant='full' />
-        </div>
-
-        <nav className="flex-1 px-4 py-4">
-          <div className="text-[10px] font-[500] text-slate-400 uppercase tracking-widest mb-4 px-4">Menu</div>
-          <ul className="space-y-1">
-            {menuItems.map((item) => (
-              <li key={item.label}>
-                <button className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-[400] transition-all ${
-                  item.active ? 'bg-slate-50 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                }`}>
-                  {item.icon}
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-8">
-            <div className="flex items-center justify-between px-4 mb-4">
-              <div className="text-[10px] font-[500] text-slate-400 uppercase tracking-widest">Domains</div>
-              <button className="text-slate-400 hover:text-brand-500"><Plus size={14}/></button>
-            </div>
-            <ul className="space-y-1">
-              {['zenvystudios.com', 'liveevents.pro', 'global-art.io'].map((domain) => (
-                <li key={domain}>
-                  <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-[500] text-neutral-500 hover:text-neutral-900 transition-colors">
-                    <div className="w-2 h-2 rounded-full bg-brand-200" />
-                    {domain}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </nav>
-
-        <div className="p-4 border-t border-slate-50">
-          <div className="text-[10px] font-[500] text-slate-400 uppercase tracking-widest mb-2 px-4">Options</div>
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-[500] text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all"
-          >
-            <LogOut size={18} />
-            Sign out
-          </button>
-        </div>
-      </aside>
+    <div className="flex flex-col lg:flex-row min-h-screen bg-white font-sans text-slate-950">
+      <Sidebar />
 
       {/* Main Content */}
       <main className="flex-1 lg:ml-64 p-4 lg:p-8">
-        {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between mb-6">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 text-slate-600 hover:text-slate-900"
-          >
-            <Menu size={24} />
-          </button>
-          <div className="flex items-center gap-2">
-            <Logo variant='full' />
-          </div>
-          <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
-            <img src="https://picsum.photos/seed/user1/100/100" alt="Avatar" className="w-full h-full object-cover" />
-          </div>
-        </div>
 
         {/* Header */}
         <header className="flex items-center justify-between mb-10">
@@ -129,11 +41,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             <p className="text-sm text-slate-500 font-[300]">A detailed overview of your metrics, usage, customers and more</p>
           </div>
           <div className="hidden lg:flex items-center gap-3">
-            <button className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Trash2 size={18}/></button>
-            <button className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Star size={18}/></button>
-            <button className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
-            <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
-              <img src="https://picsum.photos/seed/user1/100/100" alt="Avatar" className="w-full h-full object-cover" />
+              <button className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Trash2 size={18}/></button>
+              <button className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Star size={18}/></button>
+              <button className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
+              <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
+              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
           </div>
         </header>

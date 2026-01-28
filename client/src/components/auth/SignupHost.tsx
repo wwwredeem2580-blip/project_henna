@@ -168,7 +168,7 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-0 sm:p-6 relative overflow-hidden">
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-50 rounded-full blur-[100px] -z-10 opacity-50" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-50 rounded-full blur-[80px] -z-10 opacity-50" />
@@ -202,8 +202,8 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
                   <Building2 className="text-brand-500" size={20} />
                   <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 1: Organization</span>
                 </div>
-                <h2 className="text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Business Information</h2>
-                <p className="text-gray-500 font-[300]">How should we identify your brand?</p>
+                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Business Information</h2>
+                <p className="text-gray-500 text-sm sm:text-base font-[300]">How should we identify your brand?</p>
               </div>
 
               <div className="space-y-2">
@@ -253,7 +253,7 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
 
               <button
                 onClick={() => handleNext('verify')}
-                className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
               >
                 Next: Company Details
                 <ArrowRight size={20} />
@@ -269,19 +269,19 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
                   <ShieldCheck className="text-brand-500" size={20} />
                   <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 2: Company Details</span>
                 </div>
-                <h2 className="text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Additional Information</h2>
-                <p className="text-gray-500 font-[300]">Tell us about your business more</p>
+                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Additional Information</h2>
+                <p className="text-gray-500 text-sm sm:text-base font-[300]">Tell us about your business more</p>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">Business Type *</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {companyType.map((type) => (
                     <button
                       key={type}
                       type="button"
                       onClick={() => updateField('companyType', type)}
-                      className={`px-3 py-2 rounded-lg border-2 transition-all ${
+                      className={`px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 transition-all ${
                         formData.companyType === type
                           ? 'border-brand-500 bg-brand-50 text-brand-700'
                           : 'border-slate-200 hover:border-brand-300'
@@ -310,7 +310,7 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
 
               <button
                 onClick={() => handleNext('basic')}
-                className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
               >
                 Next: Account Setup
                 <ArrowRight size={20} />
@@ -326,8 +326,8 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
                   <Sparkles className="text-brand-500" size={20} strokeWidth={1} />
                   <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 3: Account Setup</span>
                 </div>
-                <h1 className="text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Your Personal Details</h1>
-                <p className="text-gray-500 font-[300]">Choose how you'd like to sign up</p>
+                <h1 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Your Personal Details</h1>
+                <p className="text-gray-500 text-sm sm:text-base font-[300]">Choose how you'd like to sign up</p>
               </div>
 
               {/* Google OAuth Button */}
@@ -335,7 +335,7 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
                 type="button"
                 onClick={handleGoogleRegister}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-neutral-200 rounded-xl hover:bg-gray-50 transition-all font-[500] text-neutral-700 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border-1 sm:border-2 border-neutral-200 rounded-xl hover:bg-gray-50 transition-all font-[500] text-neutral-700 disabled:opacity-50"
               >
                 <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
                 {loading ? 'Redirecting...' : 'Continue with Google'}
@@ -422,7 +422,7 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
               <button
                 onClick={handleManualRegister}
                 disabled={loading}
-                className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
+                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
               >
                 {loading ? 'Creating Account...' : 'Complete Registration'}
                 <CheckCircle2 size={20} />

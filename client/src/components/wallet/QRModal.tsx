@@ -56,7 +56,7 @@ export const QRModal: React.FC<QRModalProps> = ({
                 <div className="flex justify-center">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-brand-500/20 to-brand-600/20 rounded-2xl blur-xl"></div>
-                    <div className="relative bg-white p-6 rounded-tr-xl rounded-bl-xl border-2 border-slate-100 shadow-lg">
+                    <div className="relative bg-white p-6 rounded-tr-xl rounded-bl-xl border-2 border-slate-100">
                       <img
                         src={qrCodeUrl}
                         alt="QR Code"

@@ -39,7 +39,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
         animate="visible"
         className="flex-1 flex flex-col justify-center items-center p-8 lg:p-20 z-10"
       >
-        <div className="w-full max-w-[400px] space-y-8">
+        <div className="w-full max-w-[400px] space-y-4 sm:space-y-8">
           <motion.div variants={itemVariants} className="flex flex-col gap-6 mb-8 group cursor-pointer">
             <button
               onClick={() => router.push('/')} 
@@ -52,10 +52,10 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
           </motion.div>
 
           <motion.div variants={itemVariants} className="space-y-3">
-            <h1 className="text-3xl font-[300] tracking-tight text-slate-950 lg:text-3xl">
+            <h1 className="text-2xl sm:text-3xl font-[300] tracking-tight text-slate-950 lg:text-3xl">
               Start your journey
             </h1>
-            <p className="text-slate-500 text-lg font-[300] leading-[1]">
+            <p className="text-slate-500 text-md sm:text-lg font-[300] leading-[1]">
               Experience events in a way you've never imagined. Choose your path to continue.
             </p>
           </motion.div>
@@ -83,7 +83,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
             onClick={() => role && onContinue(role)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-slate-950 text-white font-[500] py-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-slate-200/50"
+            className="w-full bg-slate-950 text-white font-[500] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-slate-200/50"
           >
             Get Started
             <ArrowRight size={20} />

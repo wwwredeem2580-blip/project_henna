@@ -88,7 +88,7 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-0 sm:p-6 relative overflow-hidden">
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-50 rounded-full blur-[100px] -z-10 opacity-50" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-50 rounded-full blur-[80px] -z-10 opacity-50" />
@@ -112,8 +112,8 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
               <Sparkles className="text-brand-500" size={20} strokeWidth={1} />
               <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Join as Attendee</span>
             </div>
-            <h1 className="text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Create Your Account</h1>
-            <p className="text-gray-500 font-[300]">Discover and attend amazing events</p>
+            <h1 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Create Your Account</h1>
+            <p className="text-gray-500 text-sm sm:text-base font-[300]">Discover and attend amazing events</p>
           </div>
 
           <form onSubmit={handleManualRegister} className="space-y-6">
@@ -122,7 +122,7 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
               type="button"
               onClick={handleGoogleRegister}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-neutral-200 rounded-xl hover:bg-gray-50 transition-all font-[500] text-neutral-700 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-1 sm:border-2 border-neutral-200 rounded-xl hover:bg-gray-50 transition-all font-[500] text-neutral-700 disabled:opacity-50"
             >
               <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
               {loading ? 'Redirecting...' : 'Continue with Google'}
@@ -209,7 +209,7 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
+              className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
             >
               {loading ? 'Creating Account...' : 'Create Account'}
               <CheckCircle2 size={20} />

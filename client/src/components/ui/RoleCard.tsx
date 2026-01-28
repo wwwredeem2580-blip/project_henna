@@ -23,7 +23,7 @@ export const RoleCard: React.FC<RoleCardProps> = ({ title, description, icon, se
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        "relative cursor-pointer p-6 rounded-[1.5rem] border-2 transition-all duration-300",
+        "relative cursor-pointer p-4 sm:p-6 rounded-[1.5rem] border-2 transition-all duration-300",
         selected
           ? "border-brand-500 bg-brand-50 shadow-xl shadow-brand-100/50"
           : "border-brand-200 bg-white hover:border-brand-300 hover:shadow-xl hover:shadow-brand-50"
@@ -31,23 +31,23 @@ export const RoleCard: React.FC<RoleCardProps> = ({ title, description, icon, se
     >
       <div className="flex items-center gap-4">
         <div className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300",
+          "w-10 sm:w-12 h-10 sm:h-12 rounded-xl flex items-center justify-center transition-all duration-300",
           selected ? "bg-brand-500 text-white shadow-lg shadow-brand-200" : "bg-brand-100 text-brand-400"
         )}>
           {icon}
         </div>
         <div className="flex-1">
           <h3 className={cn(
-            "text-lg font-[400] tracking-tight transition-colors",
+            "text-md sm:text-lg font-[400] tracking-tight transition-colors",
             selected ? "text-slate-950" : "text-slate-950"
           )}>
             {title}
           </h3>
-          <p className="text-sm text-slate-500 font-[300]">
+          <p className="text-xs sm:text-sm text-slate-500 font-[300]">
             {description}
           </p>
         </div>
-        <div className="ml-2">
+        <div className="ml-2 sm:block hidden">
           {selected && (
             <motion.div
               initial={{ scale: 0 }}
