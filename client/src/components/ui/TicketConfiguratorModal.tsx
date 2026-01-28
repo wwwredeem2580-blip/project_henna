@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, ArrowLeft, CheckCircle, Plus, Trash2, Sparkles, QrCode, Rotate3D, Minus } from 'lucide-react';
 import { BDTIcon, LocationIcon } from './Icons';
@@ -60,6 +60,26 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
       benefits: [],
     }
   );
+
+  // Update ticketData when editingTicket changes
+  useEffect(() => {
+    if (editingTicket) {
+      setTicketData(editingTicket);
+      setStep('details'); // Reset to first step when editing
+    } else {
+      // Reset to default when creating new ticket
+      setTicketData({
+        name: '',
+        tier: '',
+        price: 0,
+        quantity: 0,
+        wristbandColor: WRISTBAND_COLORS[0].value,
+        benefits: [],
+      });
+      setStep('details');
+    }
+  }, [editingTicket, isOpen]); // Also depend on isOpen to reset when modal opens
+
 
   const updateField = (field: keyof TicketData, value: any) => {
     setTicketData(prev => ({ ...prev, [field]: value }));

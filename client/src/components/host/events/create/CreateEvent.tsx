@@ -970,6 +970,37 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
               />
               {errors['verification.documents'] && <p className="text-xs text-red-500 ml-1">{errors['verification.documents']}</p>}
 
+              {/* Display uploaded documents */}
+              {formData.verification?.documents && formData.verification.documents.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <label className="text-sm font-[500] text-neutral-700 ml-1">Uploaded Documents ({formData.verification.documents.length})</label>
+                  <div className="space-y-2">
+                    {formData.verification.documents.map((doc, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Upload size={16} className="text-brand-500" />
+                          <span className="text-sm text-gray-700">{doc.filename}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              verification: {
+                                ...prev.verification,
+                                documents: prev.verification.documents.filter((_, i) => i !== index)
+                              }
+                            }));
+                          }}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={() => handleNext('tickets')}
                 className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
