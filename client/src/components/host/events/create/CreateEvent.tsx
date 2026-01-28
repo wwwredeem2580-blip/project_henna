@@ -2,11 +2,10 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe, Upload, Ticket, Trash, Edit, Plus, Calendar, Clock10, Save, Check, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe, Upload, Ticket, Trash, Edit, Plus, Calendar, Clock10, Save } from 'lucide-react';
 import { authService } from '@/lib/api/auth';
 import { eventsService } from '@/lib/api/events';
 import { useNotification } from '@/lib/context/notification';
-import { useAutoSave } from '@/hooks/useAutoSave';
 import { businessInfoSchema, companyDetailsSchema, personalInfoSchema } from '@/schema/auth.schema';
 import { TicketCard } from '@/components/ui/TicketCard';
 import { TicketConfiguratorModal } from '@/components/ui/TicketConfiguratorModal';
@@ -167,14 +166,17 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
     },
   });
 
-  // Filter out empty strings and empty arrays from data
+  // Filter out empty strings, arrays, and objects
   const filterEmptyValues = (obj: any): any => {
     if (Array.isArray(obj)) {
       const filtered = obj.filter(item => {
         if (typeof item === 'string') return item.trim() !== '';
         if (Array.isArray(item)) return item.length > 0;
-        if (typeof item === 'object' && item !== null) return Object.keys(filterEmptyValues(item)).length > 0;
-        return true;
+        if (typeof item === 'object' && item !== null) {
+          const cleaned = filterEmptyValues(item);
+          return cleaned && Object.keys(cleaned).length > 0;
+        }
+        return item !== null && item !== undefined;
       });
       return filtered.length > 0 ? filtered : undefined;
     }
@@ -184,8 +186,9 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
       Object.keys(obj).forEach(key => {
         const value = obj[key];
         
+        // Skip empty strings, null, undefined
         if (value === '' || value === null || value === undefined) {
-          return; // Skip empty strings, null, undefined
+          return;
         }
         
         if (Array.isArray(value)) {
@@ -202,51 +205,41 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
           filtered[key] = value;
         }
       });
-      return filtered;
+      return Object.keys(filtered).length > 0 ? filtered : undefined;
     }
 
     return obj;
   };
 
-  // Auto-save handler
-  const handleAutoSave = async (data: FormData, currentDraftId: string | null) => {
+  // Manual save draft handler
+  const handleSaveDraft = async () => {
+    setLoading(true);
     try {
-      // Only auto-save if minimum required fields are present
-      const hasMinimumData = 
-        data.title && 
-        data.title.length >= 5 &&
-        data.tagline && 
-        data.tagline.length >= 10;
-
-      if (!hasMinimumData) {
-        return currentDraftId || '';
-      }
-
-      // Filter out empty values to prevent validation errors
-      const cleanedData = filterEmptyValues(data);
-
-      if (currentDraftId) {
-        const response = await eventsService.updateDraft(currentDraftId, cleanedData as any);
-        return currentDraftId;
+      // Filter out empty values before saving
+      const cleanedData = filterEmptyValues(formData);
+      
+      if (draftId) {
+        // Update existing draft
+        await eventsService.updateDraft(draftId, cleanedData as any);
+        showNotification('success', 'Draft Saved', 'Your event draft has been updated successfully');
       } else {
+        // Create new draft
         const response = await eventsService.createDraft(cleanedData as any);
         setDraftId(response.eventId);
-        return response.eventId;
+        
+        // Update URL with draftId
+        const url = new URL(window.location.href);
+        url.searchParams.set('draftId', response.eventId);
+        window.history.pushState({}, '', url.toString());
+        
+        showNotification('success', 'Draft Created', 'Your event draft has been saved successfully');
       }
     } catch (error: any) {
-      console.error('Auto-save failed:', error);
-      return currentDraftId || '';
+      showNotification('error', 'Save Failed', error.message || 'Failed to save draft');
+    } finally {
+      setLoading(false);
     }
   };
-
-  // Auto-save hook
-  const { isSaving, lastSaved, error: autoSaveError } = useAutoSave({
-    data: formData,
-    draftId,
-    onSave: handleAutoSave,
-    interval: 3000,
-    enabled: true,
-  });
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -449,6 +442,19 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
       }));
       showNotification('success', 'Ticket Updated', 'Ticket has been updated successfully');
     } else {
+      // Check capacity before adding new ticket
+      const currentTotal = getTotalTicketsAllocated();
+      const newTotal = currentTotal + ticketData.quantity;
+      
+      if (formData.venue.capacity > 0 && newTotal > formData.venue.capacity) {
+        showNotification(
+          'error', 
+          'Capacity Exceeded', 
+          `Cannot add ticket. Total tickets (${newTotal}) would exceed venue capacity (${formData.venue.capacity})`
+        );
+        return;
+      }
+      
       // Add new ticket
       setFormData(prev => ({
         ...prev,
@@ -519,14 +525,6 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Basic Information</h2>
                 <p className="text-gray-500 text-sm sm:text-base font-[300]">How should we identify your event?</p>
-                
-                {/* Auto-save status indicator */}
-                <div className={`text-center mt-3 transition-opacity duration-300 ${isSaving ? 'opacity-100' : 'opacity-0'}`}>
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-slate-400 bg-white/50 px-2 py-1 rounded-full backdrop-blur-sm border border-white/20">
-                    <Loader2 size={10} className="animate-spin" />
-                    Saving changes...
-                  </span>
-                </div>
               </div>
 
               <div className="space-y-2">
@@ -574,13 +572,23 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 {errors.tagline && <p className="text-xs text-red-500">{errors.tagline}</p>}
               </div>
 
-              <button
-                onClick={() => handleNext('details')}
-                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
-              >
-                Next: Event Details
-                <ArrowRight size={20} />
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={loading}
+                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={18} />
+                  {loading ? 'Saving...' : 'Save Draft'}
+                </button>
+                <button
+                  onClick={() => handleNext('details')}
+                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                >
+                  Next: Event Details
+                  <ArrowRight size={20} />
+                </button>
+              </div>
             </motion.div>
           )}
 
@@ -1113,31 +1121,6 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   </div>
                   <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
                 </motion.div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-[500] text-neutral-700 ml-1">Verification Documents (Optional)</label>
-                <DocumentUploader
-                  maxFiles={5}
-                  maxSizeMB={5}
-                  onUploadComplete={(uploadedFiles) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      verification: {
-                        ...prev.verification,
-                        documents: uploadedFiles.map(file => ({
-                          type: 'verification',
-                          url: '', // Backblaze files don't have direct URLs
-                          filename: file.filename,
-                          objectKey: file.objectKey
-                        }))
-                      }
-                    }));
-                  }}
-                  onUploadError={(error) => {
-                    setErrors(prev => ({ ...prev, documents: error }));
-                  }}
-                />
               </div>
 
               <div className="p-4 bg-brand-50 rounded-xl border border-brand-100 flex items-start gap-3">

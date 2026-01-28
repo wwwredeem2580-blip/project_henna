@@ -97,7 +97,7 @@ export const verificationSchema = z.object({
 export const ticketSchema = z.object({
   name: z.string()
     .min(3, 'Ticket name must be at least 3 characters'),
-  tier: z.enum(['standard', 'premium', 'vip']),
+  tier: z.string(),
   price: z.object({
     amount: z.number()
       .nonnegative('Price must be 0 or greater'),
