@@ -10,6 +10,8 @@ import { TicketCard } from '@/components/ui/TicketCard';
 import { TicketConfiguratorModal } from '@/components/ui/TicketConfiguratorModal';
 import { BDTIcon } from '@/components/ui/Icons';
 import { formatDate, formatTime } from '@/lib/utils';
+import { ImageUploader } from '@/components/ui/ImageUploader';
+import { DocumentUploader } from '@/components/ui/DocumentUploader';
 
 interface RegisterProps {
   onSuccess: () => void;
@@ -393,15 +395,30 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <p className="text-gray-500 text-sm sm:text-base font-[300]">Tell us about your event more</p>
               </div>
 
-              <div className="p-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex flex-col items-center justify-center gap-4 hover:border-brand-300 transition-colors cursor-pointer group">
-                <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400 group-hover:text-brand-600 transition-colors">
-                  <Upload size={24} />
-                </div>
-                <div className="text-center">
-                  <p className="font-[500] text-neutral-800">Upload Event Cover Image</p>
-                  <p className="text-sm text-neutral-500">JPG or PNG (Max 5MB)</p>
-                </div>
-              </div>
+
+              <ImageUploader
+                type="event_cover"
+                maxSizeMB={5}
+                acceptedFormats={['image/jpeg', 'image/png']}
+                onUploadComplete={(url, fileId) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    media: {
+                      ...prev.media,
+                      coverImage: {
+                        url,
+                        alt: formData.title || 'Event cover image',
+                        thumbnailUrl: url
+                      }
+                    }
+                  }));
+                }}
+                onUploadError={(error) => {
+                  setErrors(prev => ({ ...prev, coverImage: error }));
+                }}
+                currentImage={formData.media?.coverImage?.url}
+              />
+
 
               <div className="space-y-2">
                 <label className="text-sm font-[500] text-neutral-700 ml-1">Description *</label>
@@ -747,6 +764,31 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   </div>
                   <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
                 </motion.div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-[500] text-neutral-700 ml-1">Verification Documents (Optional)</label>
+                <DocumentUploader
+                  maxFiles={5}
+                  maxSizeMB={5}
+                  onUploadComplete={(urls) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      verification: {
+                        ...prev.verification,
+                        documents: urls.map(url => ({
+                          type: 'verification',
+                          url,
+                          filename: url.split('/').pop() || '',
+                          objectKey: url
+                        }))
+                      }
+                    }));
+                  }}
+                  onUploadError={(error) => {
+                    setErrors(prev => ({ ...prev, documents: error }));
+                  }}
+                />
               </div>
 
               <div className="p-4 bg-brand-50 rounded-xl border border-brand-100 flex items-start gap-3">
