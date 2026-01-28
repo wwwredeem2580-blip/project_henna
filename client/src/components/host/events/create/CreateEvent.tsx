@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe, Upload, Ticket, Trash, Edit, Plus } from 'lucide-react';
+import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe, Upload, Ticket, Trash, Edit, Plus, Calendar, Clock10 } from 'lucide-react';
 import { authService } from '@/lib/api/auth';
 import { useNotification } from '@/lib/context/notification';
 import { businessInfoSchema, companyDetailsSchema, personalInfoSchema } from '@/schema/auth.schema';
 import { TicketCard } from '@/components/ui/TicketCard';
 import { TicketConfiguratorModal } from '@/components/ui/TicketConfiguratorModal';
+import { BDTIcon } from '@/components/ui/Icons';
+import { formatDate, formatTime } from '@/lib/utils';
 
 interface RegisterProps {
   onSuccess: () => void;
@@ -100,7 +102,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
   const [formData, setFormData] = useState<FormData>({
     title: '',
     tagline: '',
-    category: '',
+    category: 'concert',
     subCategory: [],
     media: {
       coverImage: {
@@ -139,9 +141,9 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
     tickets: [],
     platform: {
       terms: {
-        termsAccepted: false,
-        legalPermissionAccepted: false,
-        platformTermsAccepted: false,
+        termsAccepted: true,
+        legalPermissionAccepted: true,
+        platformTermsAccepted: true,
       }
     },
   });
@@ -295,18 +297,18 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
         layout
         className="w-full max-w-[500px] bg-white p-8 md:p-12 rounded-[2rem] border border-gray-100 shadow-2xl shadow-gray-100/50"
       >
-        <div className="mb-12 flex justify-between items-center">
+        <div className="mb-12 text-xs sm:text-sm flex justify-between items-center">
           <button
             onClick={handleBack}
             className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors group font-[400]"
           >
             <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-            {step === 'basic' ? 'Back' : 'Previous Step'}
+            {step === 'basic' ? 'Back' : 'Previous'}
           </button>
 
           <div className="flex gap-2">
             {(['basic', 'details', 'logistics', 'verification', 'tickets', 'platform'] as Step[]).map((s) => (
-              <div key={s} className={`h-1.5 w-8 rounded-full transition-all duration-500 ${step === s ? 'bg-brand-500' : 'bg-gray-100'}`} />
+              <div key={s} className={`h-1.5 w-6 sm:w-8 rounded-full transition-all duration-500 ${step === s ? 'bg-brand-500' : 'bg-gray-100'}`} />
             ))}
           </div>
         </div>
@@ -330,7 +332,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   type="text"
                   value={formData.title}
                   onChange={(e) => updateField('title', e.target.value)}
-                  placeholder="Doe"
+                  placeholder="Gala Night 2026"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                 />
                 {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
@@ -363,7 +365,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   type="text"
                   value={formData.tagline}
                   onChange={(e) => updateField('tagline', e.target.value)}
-                  placeholder="Doe"
+                  placeholder="Experience the magic of music"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                 />
                 {errors.tagline && <p className="text-xs text-red-500">{errors.tagline}</p>}
@@ -406,7 +408,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <textarea
                   value={formData.description}
                   onChange={(e) => updateField('description', e.target.value)}
-                  placeholder="Doe"
+                  placeholder="Event description"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                 />
                 {errors.description && <p className="text-xs text-red-500">{errors.description}</p>}
@@ -441,7 +443,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     type="text"
                     value={formData.venue.name}
                     onChange={(e) => updateField('venue[name]', e.target.value)}
-                    placeholder="John"
+                    placeholder="Grand Hotel"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
                   {errors.venue?.name && <p className="text-xs text-red-500">{errors.venue?.name}</p>}
@@ -452,7 +454,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     type="text"
                     value={formData.venue.capacity}
                     onChange={(e) => updateField('venue[capacity]', e.target.value)}
-                    placeholder="Doe"
+                    placeholder="1000"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
                   {errors.venue?.capacity && <p className="text-xs text-red-500">{errors.venue?.capacity}</p>}
@@ -486,7 +488,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     type="text"
                     value={formData.venue.street}
                     onChange={(e) => updateField('venue[street]', e.target.value)}
-                    placeholder="John"
+                    placeholder="123 Main St"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
                   {errors.venue?.street && <p className="text-xs text-red-500">{errors.venue?.street}</p>}
@@ -497,7 +499,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     type="text"
                     value={formData.venue.city}
                     onChange={(e) => updateField('venue[city]', e.target.value)}
-                    placeholder="Doe"
+                    placeholder="Dhaka"
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                   />
                   {errors.venue?.city && <p className="text-xs text-red-500">{errors.venue?.city}</p>}
@@ -704,14 +706,54 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <p className="text-gray-500 text-sm sm:text-base font-[300]">Please Review your Event and our Platform Policy</p>
               </div>
 
-              <div className="p-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex flex-col items-center justify-center gap-4 hover:border-brand-300 transition-colors cursor-pointer group">
-                <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400 group-hover:text-brand-600 transition-colors">
-                  <Upload size={24} />
-                </div>
-                <div className="text-center">
-                  <p className="font-[500] text-neutral-800">Upload Verification Documents</p>
-                  <p className="text-sm text-neutral-500">PDF, JPG or PNG (Max 5MB)</p>
-                </div>
+              <div className="px-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
+                >
+                  <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
+                    <img
+                      src={formData.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
+                      alt={formData.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 ml-[-12px] mb-2">
+                    </div>
+                    <h2 className="text-lg font-[300] text-slate-900 tracking-tight truncate">{formData.title || "Event Title"}</h2>
+                    <p className="text-xs text-slate-500 font-[300] line-clamp-2">{formData.tagline || formData.description || "Event Description"}</p>
+                    <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
+                      <span className="flex items-center gap-1 text-xs ">
+                        <Calendar size={12} strokeWidth={1}/>
+                        {formatDate(formData.schedule.startDate || "Event Start Date")}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs">
+                        <Clock10 size={12} strokeWidth={1}/>
+                        {formatTime(formData.schedule.startDate || "Event Start Time")} - {formatTime(formData.schedule.endDate || "Event End Time")}
+                      </span>
+                    </div>
+                    {/* Price */}
+                    <div className="flex justify-between items-center gap-2 mt-2">
+                      <span className="text-xs text-slate-500 font-[300]">
+                        {formData.venue?.address?.city || 'Location TBA'}
+                      </span>
+                      <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
+                        <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{formData?.tickets[0]?.price?.amount || "0"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                </motion.div>
+              </div>
+
+              <div className="p-4 bg-brand-50 rounded-xl border border-brand-100 flex items-start gap-3">
+                <div className="mt-0.5"><CheckCircle2 size={16} className="text-brand-600" /></div>
+                <p className="text-xs text-brand-800 font-[400] leading-relaxed">
+                  By clicking create, you agree to our event verification process, terms and conditions.
+                </p>
               </div>
 
               <button
