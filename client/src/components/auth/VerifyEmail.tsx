@@ -40,10 +40,15 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
     if (!verified && !verifying) {
       const interval = setInterval(async () => {
         try {
-          // Refresh auth to get latest user data
-          await refreshAuth();
-          // If user is now verified, show success
-          if (user?.emailVerified) {
+          // Call dedicated check endpoint
+          const status = await authService.checkVerificationStatus();
+          
+          // If user is now verified, refresh token and show success
+          if (status.verified) {
+            // Refresh token to get updated emailVerified claim
+            await authService.refresh();
+            await refreshAuth();
+            
             setVerified(true);
             showNotification('success', 'Email Verified!', 'Your email has been successfully verified');
             setTimeout(() => {
@@ -57,7 +62,7 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
 
       return () => clearInterval(interval);
     }
-  }, [verified, verifying, user, refreshAuth, onSuccess, showNotification]);
+  }, [verified, verifying, onSuccess, showNotification]);
 
   const handleVerifyWithToken = async (verificationToken: string) => {
     setVerifying(true);
@@ -66,16 +71,16 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
       setVerified(true);
       showNotification('success', 'Email Verified!', 'Your email has been successfully verified');
       
-      // Refresh auth to get updated user data
+      // Refresh token to get updated emailVerified claim
+      await authService.refresh();
       await refreshAuth();
-      await refreshToken()
       
       // Redirect after a short delay
       setTimeout(() => {
         onSuccess();
       }, 1500);
     } catch (error: any) {
-      const message = error?.response?.data?.message || 'Verification failed';
+      const message = error?.message || 'Verification failed';
       showNotification('error', 'Verification Failed', message);
     } finally {
       setVerifying(false);
@@ -98,11 +103,15 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
   const handleCheckStatus = async () => {
     setChecking(true);
     try {
-      // Refresh auth to get latest token with updated emailVerified status
-      await refreshAuth();
+      // Call dedicated check endpoint
+      const status = await authService.checkVerificationStatus();
       
       // Check if now verified
-      if (user?.emailVerified) {
+      if (status.verified) {
+        // Refresh token to get updated emailVerified claim
+        await authService.refresh();
+        await refreshAuth();
+        
         setVerified(true);
         showNotification('success', 'Email Verified!', 'Your email has been successfully verified');
         setTimeout(() => {

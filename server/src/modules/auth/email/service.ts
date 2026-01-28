@@ -66,21 +66,10 @@ export const verifyEmailService = async (req: Request, res: Response) => {
       emailVerified: true
     });
 
-    // Generate new access token with emailVerified=true
-    const accessToken = generateAccessToken({ 
-      sub: user._id.toString(), 
-      email: user.email, 
-      role: user.role,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      emailVerified: true, // Now verified!
-    });
-    
-    // Set the new access token cookie
-    res.cookie('accessToken', accessToken, ACCESS_TOKEN_CONFIG);
-    
+    // Return success WITHOUT setting cookies (stateless)
     return res.status(200).json({ 
-      message: 'Verification successful' 
+      success: true,
+      message: 'Email verified successfully! You can now close this page and return to the app.'
     });
 
   } catch (error: any) {
@@ -126,6 +115,34 @@ export const resendVerificationEmailService = async (req: Request, res: Response
     const result = await sendVerificationEmail(userId, user.email);
     
     return res.status(200).json(result);
+
+  } catch (error: any) {
+    handleError(error, res);
+  }
+}
+
+
+/**
+ * Check if user's email has been verified
+ * This endpoint is called by the verify-email page to poll verification status
+ */
+export const checkVerificationStatusService = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || !req.user.sub) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = req.user.sub;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new CustomError('User not found', 404);
+    }
+
+    return res.status(200).json({
+      verified: user.emailVerified,
+      email: user.email
+    });
 
   } catch (error: any) {
     handleError(error, res);

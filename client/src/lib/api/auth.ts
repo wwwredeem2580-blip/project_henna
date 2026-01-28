@@ -62,11 +62,31 @@ export const authService = {
   },
 
   verifyEmail: async (token: string): Promise<{ success: boolean; message: string }> => {
-    return await apiClient.post('/api/auth/email/verify', { token });
+    // Use plain fetch instead of apiClient to avoid authentication requirement
+    // This allows verification from different browsers/devices without cookies
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/email/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Still include credentials to set new cookie if user is logged in
+      body: JSON.stringify({ token }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Verification failed');
+    }
+
+    return await response.json();
   },
 
   resendVerification: async (): Promise<{ success: boolean; message: string }> => {
     return await apiClient.post('/api/auth/email/resend-verification');
+  },
+
+  checkVerificationStatus: async (): Promise<{ verified: boolean; email: string }> => {
+    return await apiClient.get('/api/auth/email/check-status');
   }
 
 };

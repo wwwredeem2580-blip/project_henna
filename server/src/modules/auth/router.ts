@@ -6,7 +6,7 @@ import { initiateGoogleRegisterService, googleRegisterCallbackService } from './
 import { logoutService } from './logout/service';
 import { requireAuth } from '../../middlewares/auth';
 import { refreshService } from './refresh/service';
-import { verifyEmailService, sendVerificationEmailService, resendVerificationEmailService } from './email/service';
+import { verifyEmailService, sendVerificationEmailService, resendVerificationEmailService, checkVerificationStatusService } from './email/service';
 import { verifyService } from './verify/service';
 import { sendOTPService, verifyOTPService, resendOTPService } from './phone-otp/service';
 
@@ -34,6 +34,7 @@ router.post('/refresh', refreshService);
 router.post('/email/verify', verifyEmailService);
 router.post('/email/send-verification', requireAuth, sendVerificationEmailService);
 router.post('/email/resend-verification', requireAuth, resendVerificationEmailService);
+router.get('/email/check-status', requireAuth, checkVerificationStatusService);
 
 // Login State Verify
 router.post('/verify', requireAuth, verifyService);
