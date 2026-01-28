@@ -1,0 +1,496 @@
+'use client';
+
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, ArrowRight, ArrowLeft, CheckCircle, Plus, Trash2, Sparkles, QrCode, Rotate3D, Minus } from 'lucide-react';
+import { BDTIcon, LocationIcon } from './Icons';
+
+interface TicketData {
+  name: string;
+  tier: string;
+  price: number;
+  quantity: number;
+  wristbandColor: string;
+  benefits: string[];
+}
+
+interface TicketConfiguratorModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (ticket: TicketData) => void;
+  eventData?: {
+    title: string;
+    venue: string;
+    startDate: string;
+    endDate: string;
+    startTime: string;
+    endTime: string;
+  };
+  editingTicket?: TicketData | null;
+}
+
+type Step = 'details' | 'benefits';
+
+const WRISTBAND_COLORS = [
+  { name: 'Purple', value: '#9333ea' },
+  { name: 'Blue', value: '#3b82f6' },
+  { name: 'Green', value: '#10b981' },
+  { name: 'Red', value: '#ef4444' },
+  { name: 'Orange', value: '#f97316' },
+  { name: 'Pink', value: '#ec4899' },
+];
+
+export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  eventData,
+  editingTicket,
+}) => {
+  const [step, setStep] = useState<Step>('details');
+  const [newBenefit, setNewBenefit] = useState('');
+  
+  const [ticketData, setTicketData] = useState<TicketData>(
+    editingTicket || {
+      name: '',
+      tier: '',
+      price: 0,
+      quantity: 0,
+      wristbandColor: WRISTBAND_COLORS[0].value,
+      benefits: [],
+    }
+  );
+
+  const updateField = (field: keyof TicketData, value: any) => {
+    setTicketData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const [isFlipped, setIsFlipped] = useState(false);
+  
+  const handleFlip = () => {
+    setIsFlipped(!isFlipped);
+  };
+
+  const handleControlClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const addBenefit = () => {
+    if (newBenefit.trim()) {
+      updateField('benefits', [...ticketData.benefits, newBenefit.trim()]);
+      setNewBenefit('');
+    }
+  };
+
+  const removeBenefit = (index: number) => {
+    updateField('benefits', ticketData.benefits.filter((_, i) => i !== index));
+  };
+
+  const handleSave = () => {
+    onSave(ticketData);
+    onClose();
+    // Reset form
+    setTicketData({
+      name: '',
+      tier: '',
+      price: 0,
+      quantity: 0,
+      wristbandColor: WRISTBAND_COLORS[0].value,
+      benefits: [],
+    });
+    setStep('details');
+  };
+
+  const handleClose = () => {
+    onClose();
+    setStep('details');
+  };
+
+  const sameDay = eventData?.startDate === eventData?.endDate;
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+          />
+          {/* Modal */}
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="bg-slate-50 rounded-tr-xl rounded-bl-xl shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-slate-100">
+                <div>
+                  <h2 className="text-xl font-[300] text-slate-700">
+                    {editingTicket ? 'Edit Ticket' : 'Create New Ticket'}
+                  </h2>
+                  <p className="text-xs text-slate-500 font-[300] mt-1">
+                    {step === 'details' ? 'Configure ticket details' : 'Add ticket benefits'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <X size={20} className="text-slate-500" />
+                </button>
+              </div>
+
+              {/* Content - Split Layout on Large Screens */}
+              <div className="flex flex-col lg:flex-row lg:h-[350px]">
+                {/* Left Side - Editor */}
+                <div className="flex-1 p-6 overflow-y-auto">
+                  <AnimatePresence mode="wait">
+                    {/* Step 1: Ticket Details */}
+                    {step === 'details' && (
+                      <motion.div
+                        key="details"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="space-y-6"
+                      >
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-[500] text-neutral-600 ml-1">Ticket Name</label>
+                            <input
+                              type="text"
+                              value={ticketData.name}
+                              onChange={(e) => updateField('name', e.target.value)}
+                              placeholder="Standard"
+                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-[500] text-neutral-600 ml-1">Tier</label>
+                            <input
+                              type="text"
+                              value={ticketData.tier}
+                              onChange={(e) => updateField('tier', e.target.value)}
+                              placeholder="Basic"
+                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-[500] text-neutral-600 ml-1">Price (BDT)</label>
+                            <input
+                              value={ticketData.price}
+                              onChange={(e) => updateField('price', parseFloat(e.target.value) || 0)}
+                              placeholder="0"
+                              min="0"
+                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-[500] text-neutral-600 ml-1">Quantity</label>
+                            <input
+                              value={ticketData.quantity}
+                              onChange={(e) => updateField('quantity', parseInt(e.target.value) || 0)}
+                              placeholder="0"
+                              min="0"
+                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-[500] text-neutral-600 ml-1">Wristband Color</label>
+                          <div className="flex gap-3 pt-2">
+                            {WRISTBAND_COLORS.map((color) => (
+                              <button
+                                key={color.value}
+                                type="button"
+                                onClick={() => updateField('wristbandColor', color.value)}
+                                className={`flex items-center gap-2 p-1 rounded-lg border-2 transition-all ${
+                                  ticketData.wristbandColor === color.value
+                                    ? 'border-brand-500 bg-brand-50'
+                                    : 'border-slate-200 hover:border-slate-300'
+                                }`}
+                              >
+                                <div
+                                  className="w-4 h-4 rounded-full"
+                                  style={{ backgroundColor: color.value }}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Step 2: Benefits */}
+                    {step === 'benefits' && (
+                      <motion.div
+                        key="benefits"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="space-y-6"
+                      >
+                        <div className="space-y-2">
+                          <label className="text-sm font-[500] text-slate-700">Add Benefits</label>
+                          <div className="flex gap-2">
+                            <input
+                              value={newBenefit}
+                              onChange={(e) => setNewBenefit(e.target.value)}
+                              onKeyPress={(e) => e.key === 'Enter' && addBenefit()}
+                              placeholder="e.g., Access to VIP lounge"
+                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                            />
+                            <button
+                              onClick={addBenefit}
+                              className="px-2 py-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all"
+                            >
+                              <Plus size={16} strokeWidth={2}/>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-[500] text-slate-700">
+                            Benefits List ({ticketData.benefits.length})
+                          </label>
+                          {ticketData.benefits.length === 0 ? (
+                            <div className="p-8 border-2 border-dashed border-slate-200 rounded-xl text-center">
+                              <Sparkles size={32} className="mx-auto text-slate-300 mb-2" />
+                              <p className="text-sm text-slate-500 font-[300]">
+                                No benefits added yet
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                              {ticketData.benefits.map((benefit, index) => (
+                                <motion.div
+                                  key={index}
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -10 }}
+                                  className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg group"
+                                >
+                                  <CheckCircle size={16} className="text-brand-500 flex-shrink-0" />
+                                  <span className="flex-1 text-sm text-slate-700">{benefit}</span>
+                                  <button
+                                    onClick={() => removeBenefit(index)}
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all"
+                                  >
+                                    <Trash2 size={14} className="text-red-500" />
+                                  </button>
+                                </motion.div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Right Side - Live Preview (Hidden on Mobile) */}
+                <div className="hidden lg:flex lg:w-[400px] p-6 bg-[radial-gradient(circle_at_top_right,rgba(103,61,230,0.1),transparent)] items-center justify-center border-l border-slate-100">
+                  <div className="space-y-4 w-full">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Sparkles size={16} className="text-brand-500" />
+                      <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">
+                        Live Preview
+                      </span>
+                    </div>
+
+                    <div className="relative w-full max-w-[350px] h-[180px] group cursor-pointer" onClick={handleFlip} style={{ perspective: '1000px' }}>
+                      <motion.div
+                        className="w-full h-full relative"
+                        initial={false}
+                        animate={{ rotateY: (isFlipped) ? 180 : 0 }}
+                        transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
+                        style={{ transformStyle: 'preserve-3d' }}
+                      >
+                        {/* Front Face */}
+                        <div
+                          className="absolute w-full h-full rounded-tr-lg rounded-bl-lg bg-slate-50 overflow-hidden"
+                          style={{ backfaceVisibility: 'hidden' }}
+                        >
+                          <div className="px-6 py-4 h-full flex flex-col justify-between relative">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="text-md font-[400] tracking-wide text-neutral-700">
+                                  {ticketData.tier || 'Ticket Tier'}
+                                </div>
+                                <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
+                                  {ticketData.name || 'Ticket Name'}
+                                </div>
+                                <div className="mt-2">
+                                  <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
+                                    {sameDay ? eventData?.startDate : `${eventData?.startDate} - ${eventData?.endDate}`}
+                                  </div>
+                                  <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
+                                    {eventData?.startTime} - {eventData?.endTime}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col items-start">
+                              {true && (
+                                <>
+                                <span className="text-xs text-slate-500 font-[300]">
+                                  {ticketData.quantity > 0 ? `Only ${ticketData.quantity} tickets left` : 'Sold out'}
+                                </span>
+                                <span className="flex items-center text-md gap-1 mt-2 text-slate-500 font-[300]">
+                                  <span className="text-xs">For </span>
+                                  <BDTIcon className="text-xs"/>{ticketData.price}
+                                </span>
+                                </>
+                              )}
+                              <span className="flex items-center gap-1 text-xs text-slate-500 font-[300]">
+                                <LocationIcon className="w-3"/> {eventData?.venue}
+                              </span>
+                            </div>
+                            {true && (
+                              <div className="absolute bottom-10 right-6 flex items-center gap-2" onClick={handleControlClick}>
+                                <button 
+                                  disabled={true}
+                                  className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <Minus size={12}/>
+                                </button>
+                                <span className="text-xs font-[400] text-neutral-500 min-w-[20px] text-center">{0}</span>
+                                <button 
+                                  disabled={true}
+                                  className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <Plus size={12}/>
+                                </button>
+                              </div>
+                            )}
+
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
+                            <div className="absolute top-4 right-4 text-brand-400 opacity-50">
+                              <Rotate3D size={16} />
+                            </div>
+                            
+                            <div className="absolute bottom-18 right-6 text-brand-400/20">
+                              <QrCode size={36} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Back Face */}
+                        <div
+                          className="absolute w-full h-full bg-slate-50 rounded-tr-lg rounded-bl-lg text-neutral-600 overflow-hidden relative"
+                          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                        >
+                          <div className="px-6 py-4 h-full flex flex-col gap-6 relative">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="text-md font-[400] flex items-center gap-2 tracking-wide text-neutral-700">
+                                  <Sparkles size={16} className='text-brand-500' strokeWidth={1}/>
+                                  Benefits
+                                </div>
+                                <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
+                                  {ticketData.name}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex text-[12px] flex-col items-start">
+                              {ticketData.benefits.length > 0 ? (
+                                ticketData.benefits.map((benefit, index) => (
+                                  <div key={index} className='flex items-center gap-2'>
+                                    <CheckCircle size={12} className='text-brand-500' strokeWidth={1}/>
+                                    <span className='line-clamp-1'>{benefit}</span>
+                                  </div>
+                                )).slice(0, 3)
+                              ) : (
+                                <span className='text-xs text-slate-500 font-[300]'>No benefits</span>
+                              )}
+                              {ticketData.benefits.length > 3 && (
+                                <button className='text-xs text-brand-500 font-[300] mt-2 hover:underline'>
+                                  See more...
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
+                            <div className="absolute top-4 right-4 text-brand-400 opacity-50">
+                              <Rotate3D size={16} />
+                            </div>
+                            
+                            <div className="absolute bottom-18 right-6 text-brand-400/20">
+                              <QrCode size={36} />
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex items-center justify-between p-6 border-t border-slate-100 bg-slate-50">
+                <div className="flex gap-2">
+                  {(['details', 'benefits'] as Step[]).map((s) => (
+                    <div
+                      key={s}
+                      className={`h-1.5 w-8 rounded-full transition-all duration-300 ${
+                        step === s ? 'bg-brand-500' : 'bg-slate-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  {step === 'benefits' && (
+                    <button
+                      onClick={() => {setStep('details'); setIsFlipped(false)}}
+                      className="px-2 py-1 text-xs bg-white border border-slate-200 text-slate-700 rounded-tr-md rounded-bl-md hover:bg-slate-50 transition-all flex items-center gap-2"
+                    >
+                      <ArrowLeft size={16} />
+                      Back
+                    </button>
+                  )}
+                  
+                  {step === 'details' ? (
+                    <button
+                      onClick={() => {setStep('benefits'); setIsFlipped(true)}}
+                      disabled={!ticketData.name || !ticketData.tier || ticketData.price <= 0 || ticketData.quantity <= 0}
+                      className="px-4 py-2 text-xs bg-brand-500 text-white rounded-tr-md rounded-bl-md hover:bg-brand-600 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next: Benefits
+                      <ArrowRight size={16} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSave}
+                      className="px-4 py-2 text-xs bg-brand-500 text-white rounded-tr-md rounded-bl-md hover:bg-brand-600 transition-all flex items-center gap-2"
+                    >
+                      <CheckCircle size={16} />
+                      Save Ticket
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};

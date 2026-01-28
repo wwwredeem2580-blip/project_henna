@@ -7,7 +7,7 @@ import { authService } from '@/lib/api/auth';
 import { useNotification } from '@/lib/context/notification';
 import { businessInfoSchema, companyDetailsSchema, personalInfoSchema } from '@/schema/auth.schema';
 import { TicketCard } from '@/components/ui/TicketCard';
-import { TicketConfigurator } from '@/components/ui/TicketConfigurator';
+import { TicketConfiguratorModal } from '@/components/ui/TicketConfiguratorModal';
 
 interface RegisterProps {
   onSuccess: () => void;
@@ -94,6 +94,8 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
   const [step, setStep] = useState<Step>('basic');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [editingTicketIndex, setEditingTicketIndex] = useState<number | null>(null);
   const companyType = ['organizer', 'venue_owner', 'representative', 'artist'];
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -109,26 +111,26 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
     },
     description: '',
     schedule: {
-      startDate: '',
-      endDate: '',
+      startDate: '2026-01-28',
+      endDate: '2026-01-28',
       isMultiDay: false,
-      timezone: '',
-      doors: '',
+      timezone: 'Asia/Dhaka',
+      doors: '10:00 AM',
       type: 'single',
       sessions: [],
     },
     venue: {
-      name: '',
+      name: 'Example Venue',
       address: {
-        street: '',
-        city: '',
-        country: '',
+        street: '123 Main St',
+        city: 'Dhaka',
+        country: 'Bangladesh',
       },
       coordinates: {
         type: 'Point',
         coordinates: [0, 0],
       },
-      capacity: 0,
+      capacity: 100,
       type: 'indoor'
     },
     verification: {
@@ -208,6 +210,73 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
     } else {
       setStep('platform');
     }
+  };
+
+  const handleAddTicket = () => {
+    setEditingTicketIndex(null);
+    setIsTicketModalOpen(true);
+  };
+
+  const handleEditTicket = (index: number) => {
+    setEditingTicketIndex(index);
+    setIsTicketModalOpen(true);
+  };
+
+  const handleDeleteTicket = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      tickets: prev.tickets.filter((_, i) => i !== index)
+    }));
+    showNotification('success', 'Ticket Deleted', 'Ticket has been removed successfully');
+  };
+
+  const handleSaveTicket = (ticketData: any) => {
+    if (editingTicketIndex !== null) {
+      // Edit existing ticket
+      setFormData(prev => ({
+        ...prev,
+        tickets: prev.tickets.map((t, i) => 
+          i === editingTicketIndex 
+            ? {
+                name: ticketData.name,
+                tier: ticketData.tier,
+                price: { amount: ticketData.price, currency: 'BDT' },
+                quantity: ticketData.quantity,
+                wristbandColor: ticketData.wristbandColor,
+                benefits: ticketData.benefits,
+                isVisible: true,
+                isActive: true,
+              }
+            : t
+        )
+      }));
+      showNotification('success', 'Ticket Updated', 'Ticket has been updated successfully');
+    } else {
+      // Add new ticket
+      setFormData(prev => ({
+        ...prev,
+        tickets: [...prev.tickets, {
+          name: ticketData.name,
+          tier: ticketData.tier,
+          price: { amount: ticketData.price, currency: 'BDT' },
+          quantity: ticketData.quantity,
+          wristbandColor: ticketData.wristbandColor,
+          benefits: ticketData.benefits,
+          isVisible: true,
+          isActive: true,
+        }]
+      }));
+      showNotification('success', 'Ticket Created', 'New ticket has been added successfully');
+    }
+  };
+
+  const getTotalTicketsAllocated = () => {
+    return formData.tickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
+  };
+
+  const getCapacityPercentage = () => {
+    if (formData.venue.capacity === 0) return 0;
+    return Math.min((getTotalTicketsAllocated() / formData.venue.capacity) * 100, 100);
   };
 
   const stepVariants = {
@@ -482,7 +551,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             <motion.div key="tickets" {...stepVariants} className="space-y-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="text-brand-500" size={20} />
+                  <Ticket className="text-brand-500" size={20} />
                   <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 5: Tickets</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Setup Tickets</h2>
@@ -496,17 +565,19 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     <div className="flex items-center gap-4">
                       <div className='h-7 sm:h-8 md:h-9 lg:h-10 w-[3px] bg-brand-400'></div>
                       <p className="text-xl sm:text-2xl md:text-2xl lg:text-2xl font-[300] tracking-wider text-gray-800">
-                        0 <span className="text-[10px] font-[500] text-gray-400 uppercase tracking-[0.1em]">out of</span> 100
+                        {getTotalTicketsAllocated()} <span className="text-[10px] font-[500] text-gray-400 uppercase tracking-[0.1em]">out of</span> {formData.venue.capacity}
                       </p>
                     </div>
                     <p className="text-[10px] font-[300] text-gray-400 uppercase tracking-[0.2em] mt-2">
                       Total Capacity
                     </p>
                   </div>
-                  <div className={`flex items-center gap-2 px-3 py-1 bg-brand-50 text-brand-600 border-brand-100 rounded-full border`}>
-                    <div className={`w-2 h-2 rounded-full bg-brand-500`} />
+                  <div className={`flex items-center gap-2 px-3 py-1 ${
+                    getCapacityPercentage() > 100 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-brand-50 text-brand-600 border-brand-100'
+                  } rounded-full border`}>
+                    <div className={`w-2 h-2 rounded-full ${getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-brand-500'}`} />
                     <span className="text-[10px] font-[400] uppercase tracking-widest">
-                      0%
+                      {Math.round(getCapacityPercentage())}%
                     </span>
                   </div>
                 </div>
@@ -514,106 +585,106 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 {/* Capacity Bar */}
                 <div className="w-full h-2 bg-slate-100 rounded-tr-sm rounded-bl-sm overflow-hidden">
                   <div 
-                    className={`h-full transition-all duration-500 bg-indigo-500`}
-                    style={{ width: `${Math.min(21, 100)}%` }}
+                    className={`h-full transition-all duration-500 ${
+                      getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-brand-500'
+                    }`}
+                    style={{ width: `${Math.min(getCapacityPercentage(), 100)}%` }}
                   ></div>
                 </div>
               </div>
-              {/*Tickets*/}
+
+              {/* Created Tickets */}
               <section className='space-y-6'>
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg sm:text-xl md:text-xl lg:text-xl font-[300] text-neutral-700 leading-[0.9] tracking-tight">
-                    Created Tickets
+                    Created Tickets ({formData.tickets.length})
                   </h2>
-                  <button title="Add New Ticket" className="text-slate-500 font-[600] text-[10px] uppercase tracking-widest hover:text-brand-500 hover:scale-120 transition-all">
-                    <Plus size={16} />
+                  <button 
+                    onClick={handleAddTicket}
+                    title="Add New Ticket" 
+                    className="flex items-center gap-2 px-3 py-2 text-xs font-[500] text-brand-500 border border-brand-200 rounded-lg hover:bg-brand-50 transition-all"
+                  >
+                    <Plus size={14} />
+                    Add Ticket
                   </button>
                 </div>
-                <AnimatePresence>
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="max-w-full pb-6 overflow-x-auto">
-                      <div className="flex gap-4">
-                        {[{eventDate: '2026-01-28', validUntil: '2026-01-28', venueAddress: 'Venue Address', eventVenue: 'Event Venue', ticketType: 'General Admission', eventTitle: 'Event Title', price: 100, _id: '123', ticketNumber: '123', qrCodeUrl: 'https://example.com/qr-code', ticketTheme: {benefits: ['Benefit 1', 'Benefit 2']}}].map((ticket) => {
-                          const ticketEventDate = new Date(ticket.eventDate);
-                          const ticketEndDate = new Date(ticket.validUntil);
-                          
-                          return (
-                            <div key={ticket._id} className="min-w-[300px] w-[300px]">
-                              <TicketCard ticket={{
-                                _id: ticket._id,
-                                tier: ticket.ticketType,
-                                name: ticket.eventTitle,
-                                controls: false,
-                                startDate: ticketEventDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-                                endDate: ticketEndDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-                                startTime: ticketEventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-                                endTime: ticketEndDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-                                price: ticket.price,
-                                quantity: 1,
-                                benefits: ticket.ticketTheme?.benefits || [
-                                  'Access to event',
-                                  'Dedicated entrance',
-                                ],
-                                venue: `${ticket.eventVenue}, ${ticket.venueAddress}`,
-                                onClick: () => {},
-                              }}
-                              />
-                              <div className="flex text-xs font-[400] text-slate-500 items-center gap-2 mt-2 justify-center">
-                                <button 
-                                  className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
-                                >
-                                  <Edit size={12} />
-                                  Edit
-                                </button>
-                                <button 
-                                  className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
-                                >
-                                  <Trash size={12} />
-                                  Delete
-                                </button>
+
+                {formData.tickets.length === 0 ? (
+                  <div className="p-12 border-2 border-dashed border-slate-200 rounded-xl text-center">
+                    <Ticket size={48} className="mx-auto text-slate-300 mb-4" />
+                    <p className="text-sm text-slate-500 font-[300] mb-4">
+                      No tickets created yet
+                    </p>
+                    <button
+                      onClick={handleAddTicket}
+                      className="px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all text-sm font-[500]"
+                    >
+                      Create Your First Ticket
+                    </button>
+                  </div>
+                ) : (
+                  <AnimatePresence>
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="max-w-full pb-6 overflow-x-auto">
+                        <div className="flex gap-4">
+                          {formData.tickets.map((ticket, index) => {
+                            const ticketEventDate = new Date(formData.schedule.startDate);
+                            const ticketEndDate = new Date(formData.schedule.endDate);
+                            
+                            return (
+                              <div key={index} className="min-w-[300px] w-[300px]">
+                                <TicketCard ticket={{
+                                  _id: `ticket-${index}`,
+                                  tier: ticket.tier,
+                                  name: ticket.name,
+                                  controls: false,
+                                  startDate: ticketEventDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+                                  endDate: ticketEndDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+                                  startTime: formData.schedule.doors,
+                                  endTime: formData.schedule.doors,
+                                  price: ticket.price.amount,
+                                  quantity: ticket.quantity,
+                                  benefits: ticket.benefits,
+                                  venue: `${formData.venue.name}, ${formData.venue.address.city}`,
+                                  onClick: () => {},
+                                }}
+                                />
+                                <div className="flex text-xs font-[400] text-slate-500 items-center gap-2 mt-2 justify-center">
+                                  <button 
+                                    onClick={() => handleEditTicket(index)}
+                                    className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
+                                  >
+                                    <Edit size={12} />
+                                    Edit
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteTicket(index)}
+                                    className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-red-300 text-red-500 px-2 py-1 rounded-sm"
+                                  >
+                                    <Trash size={12} />
+                                    Delete
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
+                    </motion.div>
+                  </AnimatePresence>
+                )}
               </section>
-
-              {/*Ticket Configurator*/}
-              <section>
-                <TicketConfigurator ticket={
-                  {
-                  _id: '123',
-                  tier: 'General Admission',
-                  name: 'Event Title',
-                  controls: true,
-                  startDate: '2026-01-28',
-                  endDate: '2026-01-28',
-                  startTime: '10:00 AM',
-                  endTime: '11:00 AM',
-                  price: 100,
-                  quantity: 1,
-                  benefits: [
-                    'Access to event',
-                    'Dedicated entrance',
-                  ],
-                  venue: 'Venue Address',
-                  onClick: () => {},
-                }}/>
-              </section>
-
 
               <button
                 onClick={() => handleNext('platform')}
-                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                disabled={formData.tickets.length === 0}
+                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next: Platform Policy
                 <ArrowRight size={20} />
@@ -654,6 +725,36 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Ticket Configurator Modal */}
+      <TicketConfiguratorModal
+        isOpen={isTicketModalOpen}
+        onClose={() => {
+          setIsTicketModalOpen(false);
+          setEditingTicketIndex(null);
+        }}
+        onSave={handleSaveTicket}
+        eventData={{
+          title: formData.title || 'Your Event',
+          venue: `${formData.venue.name}, ${formData.venue.address.city}`,
+          startDate: new Date(formData.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+          endDate: new Date(formData.schedule.endDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+          startTime: formData.schedule.doors,
+          endTime: formData.schedule.doors,
+        }}
+        editingTicket={
+          editingTicketIndex !== null && formData.tickets[editingTicketIndex]
+            ? {
+                name: formData.tickets[editingTicketIndex].name,
+                tier: formData.tickets[editingTicketIndex].tier,
+                price: formData.tickets[editingTicketIndex].price.amount,
+                quantity: formData.tickets[editingTicketIndex].quantity,
+                wristbandColor: formData.tickets[editingTicketIndex].wristbandColor,
+                benefits: formData.tickets[editingTicketIndex].benefits,
+              }
+            : null
+        }
+      />
     </div>
   );
 };
