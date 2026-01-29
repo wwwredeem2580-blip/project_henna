@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Login } from '@/components/auth/Login';
 import { SignupUser } from '@/components/auth/SignupUser';
@@ -7,7 +8,7 @@ import { SignupHost } from '@/components/auth/SignupHost';
 import { useEffect } from 'react';
 import { useNotification } from '@/lib/context/notification';
 
-export default function AuthPage() {
+function AuthContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -52,4 +53,12 @@ export default function AuthPage() {
 
   // Login flow
   return <Login onLogin={handleLoginSuccess} onGoBack={handleGoBack} />;
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-white"><div className="text-brand-600">Loading...</div></div>}>
+      <AuthContent />
+    </Suspense>
+  );
 }

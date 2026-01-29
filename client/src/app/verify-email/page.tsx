@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/context/auth';
 import { authService } from '@/lib/api/auth';
 import { useNotification } from '@/lib/context/notification';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isHost } = useAuth();
@@ -142,13 +142,6 @@ export default function VerifyEmailPage() {
         </motion.div>
       </div>
     );
-  } else {
-    return (
-      <VerifyEmail 
-        onSuccess={handleVerificationSuccess} 
-        onGoBack={handleGoBack}
-      />
-    );
   }
 
   // Otherwise, show the verify email component for logged-in users
@@ -157,5 +150,13 @@ export default function VerifyEmailPage() {
       onSuccess={handleVerificationSuccess} 
       onGoBack={handleGoBack}
     />
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 text-brand-500 animate-spin" /></div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

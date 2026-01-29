@@ -1,12 +1,13 @@
 'use client';
 
+import { Suspense } from 'react';
 import { Dashboard } from '@/components/host/dashboard/Dashboard';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useNotification } from '@/lib/context/notification';
 import { useEffect } from 'react';
 import { authService } from '@/lib/api/auth';
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showNotification } = useNotification();
@@ -31,4 +32,12 @@ export default function DashboardPage() {
   };
 
   return <Dashboard onLogout={handleLogout} />;
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-brand-600">Loading...</div></div>}>
+      <DashboardContent />
+    </Suspense>
+  );
 }
