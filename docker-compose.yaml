@@ -1,4 +1,4 @@
-version: "3.9"
+# Remove the version line - it's obsolete in Docker Compose v2+
 
 services:
   # -------------------------------
@@ -10,12 +10,17 @@ services:
       dockerfile: Dockerfile
       target: production
     image: zenvy-client:latest
-    ports:
-      - "3000:3000"
+    container_name: zenvy-client
+    # Don't expose port externally - nginx will handle it
+    # ports:
+    #   - "3000:3000"
     environment:
       - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
       - NEXT_TELEMETRY_DISABLED=1
+    networks:
+      - app-network
+    restart: unless-stopped
 
   # -------------------------------
   # Backend
@@ -26,14 +31,22 @@ services:
       dockerfile: Dockerfile
       target: production
     image: zenvy-server:latest
-    ports:
-      - "3001:3001"
+    container_name: zenvy-server
+    # Don't expose port externally - nginx will handle it
+    # ports:
+    #   - "3001:3001"
     env_file:
       - ./server/.env
     environment:
       - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+    networks:
+      - app-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   # ------------------------------
   # nginx Reverse Proxy
   # ------------------------------
@@ -44,12 +57,12 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      # nginx config
+      # nginx config - mount the FILE directly
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       
       # SSL certificates (Cloudflare origin certificates)
-      - ./ssl/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
-      - ./ssl/privkey.pem:/etc/ssl/private/privkey.pem:ro
+      - ./nginx/certs/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+      - ./nginx/certs/privkey.pem:/etc/ssl/private/privkey.pem:ro
       
       # Logs (optional - for debugging)
       - ./nginx/logs:/var/log/nginx
@@ -59,6 +72,7 @@ services:
       - client
       - server
     restart: unless-stopped
+
   # -------------------------------
   # Redis
   # -------------------------------
@@ -69,6 +83,9 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
 
   # -------------------------------
   # ChromaDB
@@ -83,6 +100,9 @@ services:
     environment:
       - IS_PERSISTENT=TRUE
       - ANONYMIZED_TELEMETRY=FALSE
+    networks:
+      - app-network
+    restart: unless-stopped
 
 networks:
   app-network:
