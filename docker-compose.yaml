@@ -34,21 +34,31 @@ services:
       - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+  # ------------------------------
+  # nginx Reverse Proxy
+  # ------------------------------
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
+    image: nginx:alpine
     container_name: zenvy-nginx
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      # nginx config
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      
+      # SSL certificates (Cloudflare origin certificates)
+      - ./ssl/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+      - ./ssl/privkey.pem:/etc/ssl/private/privkey.pem:ro
+      
+      # Logs (optional - for debugging)
+      - ./nginx/logs:/var/log/nginx
+    networks:
+      - app-network
     depends_on:
       - client
       - server
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/certs:/etc/ssl/certs
-
+    restart: unless-stopped
   # -------------------------------
   # Redis
   # -------------------------------
@@ -74,6 +84,10 @@ services:
       - IS_PERSISTENT=TRUE
       - ANONYMIZED_TELEMETRY=FALSE
 
+networks:
+  app-network:
+    driver: bridge
+    
 # -------------------------------
 # Volumes
 # -------------------------------
