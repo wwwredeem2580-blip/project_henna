@@ -38,12 +38,17 @@ services:
     build:
       context: ./nginx
       dockerfile: Dockerfile
+    container_name: zenvy-nginx
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - client
       - server
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/ssl/certs
+
   # -------------------------------
   # Redis
   # -------------------------------
