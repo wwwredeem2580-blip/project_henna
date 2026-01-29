@@ -1,18 +1,16 @@
-# Use the official Nginx Alpine image for a lightweight container
 FROM nginx:1.29-alpine
 
-# Remove default config (optional, to avoid conflicts)
-RUN rm -f /etc/nginx/conf.d/default.conf
+# Remove default config
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy our custom configuration
-COPY conf.d/ /etc/nginx/conf.d/
+# Copy your nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy SSL certificates if you want to manage them inside the container
-# (Otherwise Cloudflare SSL can handle HTTPS)
-# COPY ssl/ /etc/ssl/certs/
+# Copy Cloudflare origin certs (you need to put them in ./nginx/certs/)
+COPY certs/fullchain.pem /etc/ssl/certs/fullchain.pem
+COPY certs/privkey.pem /etc/ssl/private/privkey.pem
 
-# Expose ports
+# Expose HTTP and HTTPS
 EXPOSE 80 443
 
-# Start Nginx in foreground (required for Docker)
 CMD ["nginx", "-g", "daemon off;"]
