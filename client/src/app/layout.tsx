@@ -16,8 +16,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zenny - AI-Powered Customer Support",
-  description: "Reduce support workload by 60% and increase conversion by 10% for online stores doing $10k+/mo",
+  title: "Zenvy - Event Management Platform",
+  description: "",
+  icons: {
+    icon: '/logo/logo.png',
+  },
 };
 
 export default function RootLayout({
