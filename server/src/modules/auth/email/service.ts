@@ -191,7 +191,7 @@ export const sendVerificationEmail = async (userId: string, email: string): Prom
       });
 
       // Send email via email worker
-      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+      const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
 
       const userName = `${user.firstName} ${user.lastName}`.trim() || 'Valued User';
 
