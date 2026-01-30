@@ -404,6 +404,8 @@ export const EventTicketsTab = ({ data, onUpdate, onRefetch }: EventTicketsTabPr
                 quantity: data.event.tickets[editingTicketIndex].quantity,
                 wristbandColor: data.event.tickets[editingTicketIndex].wristbandColor || '#000000',
                 benefits: data.event.tickets[editingTicketIndex].benefits || [],
+                isVisible: data.event.tickets[editingTicketIndex].isVisible,
+                isActive: data.event.tickets[editingTicketIndex].isActive,
               }
             : null
         }
