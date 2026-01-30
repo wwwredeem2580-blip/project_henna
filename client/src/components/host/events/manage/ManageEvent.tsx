@@ -22,6 +22,7 @@ import { EventTicketsTab } from "./tabs/EventTicketsTab";
 import { EventDetailsTab } from "./tabs/EventDetailsTab";
 import { EventCheckInTab } from "./tabs/EventCheckInTab";
 import { EventAnalyticsTab } from "./tabs/EventAnalyticsTab";
+import { useNotification } from "@/lib/context/notification";
 
 
 export default function ManageEvent() {
@@ -31,6 +32,7 @@ export default function ManageEvent() {
   const router = useRouter();
   const { user } = useAuth();
   const { id } = useParams();
+  const { showNotification } = useNotification();
 
   // Fetch host event analytics/details
   useEffect(() => {
@@ -40,6 +42,13 @@ export default function ManageEvent() {
         // Using the analytics service which returns the combined structure we designed
         const eventData = await hostAnalyticsService.getEventAnalytics(id as string);
         setData(eventData);
+        
+        // Redirect draft events to host events page
+        if (eventData.event.status === 'draft') {
+          showNotification('info', 'Event Not Submitted', 'Event management is only available after submitting your event for approval.');
+          router.push('/host/events');
+          return;
+        }
       } catch (err: any) {
         console.error('Failed to fetch event:', err);
         setError(err.message || 'Failed to load event data');
@@ -51,39 +60,54 @@ export default function ManageEvent() {
     if (id) {
         fetchEventData();
     }
-  }, [id]);
+  }, [id, router, showNotification]);
 
   const handleUpdateData = (newData: HostEventDetailsResponse) => {
     setData(newData);
   };
 
-  const tabs = [
-    {
-      label: 'Overview',
-      content: <EventOverview data={data} />,
-      icon: <Layout size={16} />,
-    },
-    {
-      label: 'Tickets',
-      content: <EventTicketsTab data={data} onUpdate={handleUpdateData} />,
-      icon: <Ticket size={16} />
-    },
-    {
-      label: 'Details',
-      content: <EventDetailsTab data={data} />,
-      icon: <Info size={16} />
-    },
-    {
-      label: 'Check-in',
-      content: <EventCheckInTab data={data} />,
-      icon: <CheckIcon size={16} />
-    },
-    {
-      label: 'Analytics',
-      content: <EventAnalyticsTab data={data} />,
-      icon: <ChartBar size={16} />
+  // Determine which tabs to show based on event status
+  const getAvailableTabs = () => {
+    const status = data?.event?.status;
+    
+    const allTabs = [
+      {
+        label: 'Overview',
+        content: <EventOverview data={data} />,
+        icon: <Layout size={16} />,
+      },
+      {
+        label: 'Tickets',
+        content: <EventTicketsTab data={data} onUpdate={handleUpdateData} />,
+        icon: <Ticket size={16} />
+      },
+      {
+        label: 'Details',
+        content: <EventDetailsTab data={data} onUpdate={handleUpdateData} />,
+        icon: <Info size={16} />
+      },
+      {
+        label: 'Check-in',
+        content: <EventCheckInTab data={data} />,
+        icon: <CheckIcon size={16} />
+      },
+      {
+        label: 'Analytics',
+        content: <EventAnalyticsTab data={data} />,
+        icon: <ChartBar size={16} />
+      }
+    ];
+
+    // For pending_approval and approved: only show Tickets and Details
+    if (status === 'pending_approval' || status === 'approved') {
+      return allTabs.filter(tab => tab.label === 'Tickets' || tab.label === 'Details');
     }
-  ];
+
+    // For published, live, ended: show all tabs
+    return allTabs;
+  };
+
+  const tabs = getAvailableTabs();
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-white font-sans text-slate-950">

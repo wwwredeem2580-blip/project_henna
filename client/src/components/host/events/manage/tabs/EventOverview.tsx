@@ -45,7 +45,15 @@ export const EventOverview = ({ data }: { data: HostEventDetailsResponse | null 
 
       // Update the local data to reflect the change
       if (data?.event) {
+        // Update both the deprecated field and the new structure
         data.event.salesPaused = result.salesPaused;
+        if (data.event.moderation) {
+          if (!data.event.moderation.sales) {
+            data.event.moderation.sales = { paused: result.salesPaused };
+          } else {
+            data.event.moderation.sales.paused = result.salesPaused;
+          }
+        }
       }
     } catch (error: any) {
       console.error('Toggle sales pause error:', error);
@@ -57,6 +65,9 @@ export const EventOverview = ({ data }: { data: HostEventDetailsResponse | null 
   };
 
   const canToggleSales = event?.status === 'published' || event?.status === 'live';
+  
+  // Get sales paused status from the correct field (with fallback for backward compatibility)
+  const salesPaused = event?.moderation?.sales?.paused ?? event?.salesPaused ?? false;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-slide-up mb-24">
@@ -100,17 +111,17 @@ export const EventOverview = ({ data }: { data: HostEventDetailsResponse | null 
                 onClick={handleToggleSalesPause}
                 disabled={!canToggleSales || isTogglingPause}
                 className={`flex items-center justify-between p-4 rounded-2xl border transition-all group ${
-                  event?.salesPaused
+                  salesPaused
                     ? 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
                     : 'bg-amber-50 border-amber-100 text-amber-600 hover:bg-amber-100'
                 } ${!canToggleSales || isTogglingPause ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex items-center gap-3">
-                  {event?.salesPaused ? <Play size={18} strokeWidth={1} /> : <Pause size={18} strokeWidth={1} />}
+                  {salesPaused ? <Play size={18} strokeWidth={1} /> : <Pause size={18} strokeWidth={1} />}
                   <span className="text-xs font-[400] uppercase tracking-widest">
                     {isTogglingPause
                       ? 'Updating...'
-                      : event?.salesPaused
+                      : salesPaused
                         ? 'Resume Sales'
                         : 'Pause Sales'
                     }

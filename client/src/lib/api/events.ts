@@ -105,6 +105,13 @@ class EventsService {
   async deleteEvent(eventId: string): Promise<void> {
     return await apiClient.delete(`/api/event/host/${eventId}`);
   }
+
+  /**
+   * Toggle sales pause status for an event
+   */
+  async toggleSalesPause(eventId: string, reason?: string): Promise<{ message: string; salesPaused: boolean }> {
+    return await apiClient.post(`/api/event/host/toggle-sales/${eventId}`, { reason });
+  }
 }
 
 export const eventsService = new EventsService();

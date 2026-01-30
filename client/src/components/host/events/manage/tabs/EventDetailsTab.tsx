@@ -9,27 +9,112 @@ import { useNotification } from '@/lib/context/notification';
 
 interface EventDetailsTabProps {
   data: HostEventDetailsResponse | null;
+  onUpdate: (newData: HostEventDetailsResponse) => void;
 }
 
-export const EventDetailsTab = ({ data }: EventDetailsTabProps) => {
+export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
   const [mode, setMode] = useState<'preview' | 'edit'>('preview');
   const [description, setDescription] = useState(data?.event?.description || '');
+  const [tagline, setTagline] = useState(data?.event?.tagline || '');
   const [coverImage, setCoverImage] = useState(data?.event?.media?.coverImage?.url || '');
   const [gallery, setGallery] = useState(data?.event?.media?.gallery || []);
+  const [scheduleStart, setScheduleStart] = useState(data?.event?.schedule?.startDate || '');
+  const [scheduleEnd, setScheduleEnd] = useState(data?.event?.schedule?.endDate || '');
   const { showNotification } = useNotification();
 
   // Sync state with data when data loads
   useState(() => {
     if (data?.event) {
         setDescription(data.event.description || '');
+        setTagline(data.event.tagline || '');
         setCoverImage(data.event.media?.coverImage?.url || '');
         setGallery(data.event.media?.gallery || []);
+        setScheduleStart(data.event.schedule?.startDate || '');
+        setScheduleEnd(data.event.schedule?.endDate || '');
     }
   });
 
+  // Check if schedule can be modified
+  const canModifySchedule = () => {
+    const status = data?.event?.status;
+    const scheduleModified = data?.event?.schedule?.scheduleModified;
+    
+    // Only approved events can modify schedule, and only once
+    return status === 'approved' && !scheduleModified;
+  };
+
+  // Validate schedule change is within ±2 hours
+  const validateScheduleChange = (newStart: string, newEnd: string): boolean => {
+    if (!data?.event?.schedule) return false;
+    
+    const originalStart = new Date(data.event.schedule.startDate);
+    const originalEnd = new Date(data.event.schedule.endDate);
+    const newStartDate = new Date(newStart);
+    const newEndDate = new Date(newEnd);
+    
+    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+    
+    const startDiff = Math.abs(newStartDate.getTime() - originalStart.getTime());
+    const endDiff = Math.abs(newEndDate.getTime() - originalEnd.getTime());
+    
+    return startDiff <= TWO_HOURS_MS && endDiff <= TWO_HOURS_MS;
+  };
+
   const handleSave = () => {
-    // In a real implementation, this would call an API to update the event
-    // for now we just show a success message
+    if (!data) return;
+    
+    // Validate schedule changes for approved events
+    if (canModifySchedule() && (scheduleStart !== data.event.schedule?.startDate || scheduleEnd !== data.event.schedule?.endDate)) {
+      if (!validateScheduleChange(scheduleStart, scheduleEnd)) {
+        showNotification(
+          'error',
+          'Invalid Schedule Change',
+          'Schedule can only be modified by ±2 hours from the original time.'
+        );
+        return;
+      }
+      
+      // Show warning for schedule modification
+      const confirmed = window.confirm(
+        `⚠️ Schedule Modification Warning\n\n` +
+        `You are about to modify the event schedule. This can only be done ONCE.\n` +
+        `All attendees will be notified of this change.\n\n` +
+        `Original: ${new Date(data.event.schedule!.startDate).toLocaleString()}\n` +
+        `New: ${new Date(scheduleStart).toLocaleString()}\n\n` +
+        `Continue?`
+      );
+      
+      if (!confirmed) return;
+    }
+    
+    // Update the data with new values
+    const updatedData: HostEventDetailsResponse = {
+      ...data,
+      event: {
+        ...data.event,
+        description,
+        tagline,
+        schedule: canModifySchedule() && (scheduleStart !== data.event.schedule?.startDate || scheduleEnd !== data.event.schedule?.endDate)
+          ? {
+              ...data.event.schedule!,
+              startDate: scheduleStart,
+              endDate: scheduleEnd,
+              scheduleModified: true
+            }
+          : data.event.schedule,
+        media: {
+          ...data.event.media,
+          coverImage: {
+            url: coverImage,
+            alt: data.event.media?.coverImage?.alt || data.event.title
+          },
+          gallery
+        }
+      }
+    };
+    
+    // Call the parent's update handler
+    onUpdate(updatedData);
     showNotification('success', 'Changes Saved', 'Event details have been updated.');
     setMode('preview');
   };
@@ -168,22 +253,75 @@ export const EventDetailsTab = ({ data }: EventDetailsTabProps) => {
                     {data?.event?.title || 'Event Name'}
                     {mode === 'edit' && <span className="text-xs text-slate-400 font-normal px-2 py-1 border rounded-md">Locked</span>}
                   </h2>
-                  <p className={`text-sm text-neutral-500 font-[300] line-clamp-2 ${mode === 'edit' ? 'opacity-50' : ''}`}>
-                    {data?.event?.tagline || 'Lorem ipsum dolor sit amet consectetur adipisicing elit.'}
-                  </p>
+                  {mode === 'edit' ? (
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        value={tagline}
+                        onChange={(e) => setTagline(e.target.value)}
+                        placeholder="Event tagline..."
+                        className="w-full text-sm text-neutral-600 font-[300] px-3 py-2 border border-brand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400"
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-neutral-500 font-[300] line-clamp-2">
+                      {data?.event?.tagline || 'Lorem ipsum dolor sit amet consectetur adipisicing elit.'}
+                    </p>
+                  )}
                   
-                  <div className={`flex flex-col gap-2 mt-4 font-[300] text-slate-700 ${mode === 'edit' ? 'opacity-50' : ''}`}>
-                    <span className="flex items-center gap-2 text-sm ">
-                      <Calendar className="text-neutral-600" size={14} strokeWidth={1}/>
-                      {data?.event?.schedule?.startDate ? new Date(data.event.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date'}
-                    </span>
-                    <span className="flex items-center gap-2 text-sm">
-                      <Clock10 className="text-neutral-600" size={14} strokeWidth={1}/>
-                      {data?.event?.schedule?.startDate && data?.event?.schedule?.endDate 
-                        ? `${new Date(data.event.schedule.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${new Date(data.event.schedule.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
-                        : 'Time'
-                      }
-                    </span>
+                  <div className={`flex flex-col gap-2 mt-4 font-[300] text-slate-700 ${mode === 'edit' && !canModifySchedule() ? 'opacity-50' : ''}`}>
+                    {mode === 'edit' && canModifySchedule() ? (
+                      <>
+                        <div className="mb-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                          <p className="text-xs text-amber-800 font-medium">⚠️ Schedule can be modified by ±2 hours only once</p>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="flex items-center gap-2 text-xs font-medium text-neutral-600 mb-1">
+                              <Calendar size={12} /> Start Date & Time
+                            </label>
+                            <input
+                              type="datetime-local"
+                              value={scheduleStart ? new Date(scheduleStart).toISOString().slice(0, 16) : ''}
+                              onChange={(e) => setScheduleStart(new Date(e.target.value).toISOString())}
+                              className="w-full text-sm px-3 py-2 border border-brand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex items-center gap-2 text-xs font-medium text-neutral-600 mb-1">
+                              <Clock10 size={12} /> End Date & Time
+                            </label>
+                            <input
+                              type="datetime-local"
+                              value={scheduleEnd ? new Date(scheduleEnd).toISOString().slice(0, 16) : ''}
+                              onChange={(e) => setScheduleEnd(new Date(e.target.value).toISOString())}
+                              className="w-full text-sm px-3 py-2 border border-brand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <span className="flex items-center gap-2 text-sm justify-between">
+                          <span className="flex items-center gap-2">
+                            <Calendar className="text-neutral-600" size={14} strokeWidth={1}/>
+                            {data?.event?.schedule?.startDate ? new Date(data.event.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date'}
+                          </span>
+                          {mode === 'edit' && !canModifySchedule() && (
+                            <span className="text-xs text-slate-400 font-normal px-2 py-1 border rounded-md">
+                              {data?.event?.schedule?.scheduleModified ? 'Already Modified' : 'Locked'}
+                            </span>
+                          )}
+                        </span>
+                        <span className="flex items-center gap-2 text-sm">
+                          <Clock10 className="text-neutral-600" size={14} strokeWidth={1}/>
+                          {data?.event?.schedule?.startDate && data?.event?.schedule?.endDate 
+                            ? `${new Date(data.event.schedule.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${new Date(data.event.schedule.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+                            : 'Time'
+                          }
+                        </span>
+                      </>
+                    )}
                   </div>
 
                   <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 ${mode === 'edit' ? 'opacity-50 pointer-events-none' : ''}`}>

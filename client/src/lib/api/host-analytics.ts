@@ -4,8 +4,16 @@ export interface HostEventDetailsResponse {
   event: {
     _id: string;
     title: string;
-    status: 'draft' | 'published' | 'live' | 'ended' | 'cancelled';
-    salesPaused: boolean;
+    status: 'draft' | 'pending_approval' | 'approved' | 'published' | 'live' | 'ended' | 'cancelled';
+    salesPaused: boolean; // Deprecated - use moderation.sales.paused
+    moderation?: {
+      sales?: {
+        paused: boolean;
+        pausedAt?: Date;
+        pausedBy?: string;
+        pausedReason?: string;
+      };
+    };
     venue?: {
       name: string;
       capacity: number;
@@ -18,6 +26,7 @@ export interface HostEventDetailsResponse {
       startDate: string;
       endDate: string;
       doors?: string;
+      scheduleModified?: boolean; // Track if schedule has been modified (for one-time-only rule)
     };
     media?: {
       coverImage?: {
@@ -87,15 +96,10 @@ export interface HostEventDetailsResponse {
 
 export const hostAnalyticsService = {
   getEventAnalytics: async (eventId: string): Promise<HostEventDetailsResponse> => {
-    // In a real app, this would hit an endpoint like `/host/events/${eventId}/analytics`
-    // For now, we might fetch the basic event and mock the analytics if the API doesn't exist yet
-    // Or if the user says "use dummy data for now", we can return a mock structure here or in the component.
-    // I will implement the fetch assuming the endpoint will exist or return mock data if it fails/is missing.
     try {
-        const response = await apiClient.get<HostEventDetailsResponse>(`/host/events/${eventId}/analytics`);
-        return response.data;
+        return await apiClient.get<HostEventDetailsResponse>(`/api/host/event/${eventId}`);
     } catch (error) {
-        console.warn("Analytics API not found, returning mock data");
+        console.warn("Analytics API error, returning mock data:", error);
         // Return structured mock data for development
         return mockHostEventAnalytics(eventId);
     }
