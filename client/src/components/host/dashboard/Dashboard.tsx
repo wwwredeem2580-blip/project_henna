@@ -141,77 +141,112 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         ) : null}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Left Column: Usage */}
+          {/* Left Column: Events */}
           <section className="space-y-6">
             <div>
               <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Upcoming Events</h2>
               <p className="text-xs text-slate-500 font-[300]">Your current plan metrics and limits</p>
             </div>
 
-            <table className="w-full text-left border-collapse overflow-x-auto">
-              <thead>
-                <tr className="border-b border-gray-50 bg-gray-50/50">
-                  <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Event</th>
-                  <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                  <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Sold</th>
-                  <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Revenue</th>
-                  <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
-                      <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-                    </td>
+            {/* scroll container */}
+            <div className="w-full overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-50 bg-gray-50/50">
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Event</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Sold</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Revenue</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
                   </tr>
-                ) : events.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
-                      No upcoming events found
-                    </td>
-                  </tr>
-                ) : (
-                  events.map((event: any) => (
-                  <tr key={event.eventId} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <img src={event.coverImage || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=500&auto=format&fit=crop&q=60'} className="w-10 h-10 rounded-tr-sm rounded-bl-sm object-cover" alt="" />
-                        <div>
-                          <p className="text-sm font-[500] text-neutral-700 truncate max-w-[150px]">{event.title}</p>
-                          <p className="text-[10px] whitespace-nowrap text-slate-400">{new Date(event.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 whitespace-nowrap rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        event.status === 'live' ? 'bg-green-100 text-green-600' : event.status === 'published' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'
-                      }`}>
-                        {event.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-sm font-[400] text-gray-700">{event.ticketsSoldPercentage}%</span>
-                        <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
-                          <div className={`h-full bg-brand-500 rounded-full`} style={{ width: `${event.ticketsSoldPercentage}%` }} />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-[400] text-gray-900">
-                      <BDTIcon /> {event.revenue}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => router.push(`/host/events/${event.eventId}`)} className="p-2 text-gray-400 hover:text-brand-600 transition-colors">
-                        <MoreHorizontal size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-                )}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody className="divide-y divide-gray-50">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                        <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                      </td>
+                    </tr>
+                  ) : events.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                        No upcoming events found
+                      </td>
+                    </tr>
+                  ) : (
+                    events.map((event: any) => (
+                      <tr key={event.eventId} className="hover:bg-gray-50/50 transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={event.coverImage || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=500&auto=format&fit=crop&q=60'}
+                              className="w-10 h-10 rounded-tr-sm rounded-bl-sm object-cover"
+                              alt=""
+                            />
+                            <div>
+                              <p className="text-sm font-[500] text-neutral-700 truncate max-w-[150px]">
+                                {event.title}
+                              </p>
+                              <p className="text-[10px] whitespace-nowrap text-slate-400">
+                                {new Date(event.startDate).toLocaleDateString('en-US', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2 py-1 whitespace-nowrap rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              event.status === 'live'
+                                ? 'bg-green-100 text-green-600'
+                                : event.status === 'published'
+                                ? 'bg-blue-100 text-blue-600'
+                                : 'bg-amber-100 text-amber-600'
+                            }`}
+                          >
+                            {event.status}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-sm font-[400] text-gray-700">
+                              {event.ticketsSoldPercentage}%
+                            </span>
+                            <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-brand-500 rounded-full"
+                                style={{ width: `${event.ticketsSoldPercentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4 text-sm font-[400] text-gray-900">
+                          <BDTIcon /> {event.revenue}
+                        </td>
+
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => router.push(`/host/events/manage/${event.eventId}`)}
+                            className="p-2 text-gray-400 hover:text-brand-600 transition-colors"
+                          >
+                            <MoreHorizontal size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </section>
+
 
           {/* Right Column: Transactions */}
           <section className="space-y-6">

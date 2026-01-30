@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music, Calendar, Clock10, Building2, User, Save, Upload, X, Trash, Loader2 } from 'lucide-react';
+import { Music, Calendar, Clock10, Building2, User, Save, Upload, X, Trash, Loader2, AlertCircle } from 'lucide-react';
 import Switch from '@/components/ui/Switch';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
 import { DocumentUploader } from '@/components/ui/DocumentUploader';
@@ -441,14 +441,13 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
 
 
         {/* Right Column: Verification Documents (Only for Pending Approval) */}
-        {data?.event?.status === 'pending_approval' && (
           <div className="max-w-[400px] mx-auto space-y-6">
               <div className="bg-white p-6 rounded-[2rem] flex flex-col h-full">
                  <div className="mb-6">
                       <h3 className="text-lg font-[300] text-slate-800 mb-2">Additional Verification Documents</h3>
                       <p className="text-xs text-slate-500 font-[300]">Upload additional necessary documents for event verification. NOTE: These are for internal review only.</p>
                  </div>
-                 
+                 {data?.event?.status === 'pending_approval' ? (
                  <div className="flex-1">
                     <DocumentUploader 
                          onUploadComplete={(files) => {
@@ -461,9 +460,14 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
                          maxSizeMB={5}
                     />
                  </div>
+                 ) : (
+                    <p className="text-xs flex items-center gap-2 text-slate-500 font-[300]">
+                      <AlertCircle className="w-4 h-4 text-brand-500" />
+                      No need to upload documents. Your event is already verified.
+                    </p>
+                 )}
               </div>
           </div>
-        )}
       </div>
     </section>
   );
