@@ -150,8 +150,20 @@ export const hostAnalyticsService = {
     return await apiClient.get<DashboardMetrics>('/api/host/analytics/metrics');
   },
 
-  getHostOrders: async (page: number = 1, limit: number = 10): Promise<HostOrdersResponse> => {
-    return await apiClient.get<HostOrdersResponse>(`/api/host/analytics/orders?page=${page}&limit=${limit}`);
+  getHostOrders: async (
+    page: number = 1, 
+    limit: number = 10,
+    filters?: { eventId?: string; status?: string; search?: string }
+  ): Promise<HostOrdersResponse> => {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    if (filters?.eventId) params.append('eventId', filters.eventId);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.search) params.append('search', filters.search);
+    
+    return await apiClient.get<HostOrdersResponse>(`/api/host/analytics/orders?${params.toString()}`);
   }
 };
 
