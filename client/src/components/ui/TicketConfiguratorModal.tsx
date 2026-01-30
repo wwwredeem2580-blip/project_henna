@@ -27,6 +27,15 @@ interface TicketConfiguratorModalProps {
     endTime: string;
   };
   editingTicket?: TicketData | null;
+  validationContext?: {
+    eventStatus?: string;
+    existingTicket?: {
+      price: number;
+      sold: number;
+      reserved: number;
+      benefits: string[];
+    };
+  };
 }
 
 type Step = 'details' | 'benefits';
@@ -46,9 +55,15 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
   onSave,
   eventData,
   editingTicket,
+  validationContext,
 }) => {
   const [step, setStep] = useState<Step>('details');
   const [newBenefit, setNewBenefit] = useState('');
+  const [validationErrors, setValidationErrors] = useState<{
+    price?: string;
+    quantity?: string;
+    benefits?: string;
+  }>({});
   
   const [ticketData, setTicketData] = useState<TicketData>(
     editingTicket || {
@@ -78,7 +93,51 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
       });
       setStep('details');
     }
+    setValidationErrors({}); // Clear errors when ticket changes
   }, [editingTicket, isOpen]); // Also depend on isOpen to reset when modal opens
+
+  // Real-time validation
+  useEffect(() => {
+    if (!validationContext?.existingTicket) {
+      setValidationErrors({});
+      return;
+    }
+
+    const errors: typeof validationErrors = {};
+    const { existingTicket, eventStatus } = validationContext;
+    const soldCount = existingTicket.sold || 0;
+    const reservedCount = existingTicket.reserved || 0;
+    const totalCommitted = soldCount + reservedCount;
+
+    // Only validate for published/live events with sales
+    if ((eventStatus === 'published' || eventStatus === 'live') && totalCommitted > 0) {
+      // Quantity validation
+      if (ticketData.quantity < totalCommitted) {
+        errors.quantity = `Cannot set quantity below ${totalCommitted} (${soldCount} sold + ${reservedCount} reserved)`;
+      }
+
+      // Price validation
+      if (ticketData.price < existingTicket.price) {
+        if (totalCommitted >= 10) {
+          errors.price = `Cannot lower price with ${totalCommitted}+ sales. Contact support for assistance.`;
+        } else if (totalCommitted > 0) {
+          const refundAmount = (existingTicket.price - ticketData.price) * totalCommitted;
+          errors.price = `⚠️ Reducing price will trigger BDT ${refundAmount} in refunds to ${totalCommitted} buyers (deducted from your payout)`;
+        }
+      }
+
+      // Benefits validation
+      const existingBenefits = existingTicket.benefits || [];
+      const newBenefits = ticketData.benefits || [];
+      const removedBenefits = existingBenefits.filter(b => !newBenefits.includes(b));
+      
+      if (removedBenefits.length > 0) {
+        errors.benefits = `Cannot remove benefits: "${removedBenefits.join('", "')}" - ${soldCount} tickets already sold with these benefits`;
+      }
+    }
+
+    setValidationErrors(errors);
+  }, [ticketData.price, ticketData.quantity, ticketData.benefits, validationContext]);
 
 
   const updateField = (field: keyof TicketData, value: any) => {
@@ -215,8 +274,21 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                               onChange={(e) => updateField('price', parseFloat(e.target.value) || 0)}
                               placeholder="0"
                               min="0"
-                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                              className={`w-full px-4 py-2 bg-gray-50 border-1 rounded-tr-md rounded-bl-md outline-none transition-all ${
+                                validationErrors.price
+                                  ? validationErrors.price.includes('⚠️')
+                                    ? 'border-amber-400 focus:border-amber-500'
+                                    : 'border-red-400 focus:border-red-500'
+                                  : 'border-neutral-300 focus:border-purple-600 focus:bg-white'
+                              }`}
                             />
+                            {validationErrors.price && (
+                              <p className={`text-xs ml-1 ${
+                                validationErrors.price.includes('⚠️') ? 'text-amber-600' : 'text-red-500'
+                              }`}>
+                                {validationErrors.price}
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
@@ -226,8 +298,15 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                               onChange={(e) => updateField('quantity', parseInt(e.target.value) || 0)}
                               placeholder="0"
                               min="0"
-                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                              className={`w-full px-4 py-2 bg-gray-50 border-1 rounded-tr-md rounded-bl-md outline-none transition-all ${
+                                validationErrors.quantity
+                                  ? 'border-red-400 focus:border-red-500'
+                                  : 'border-neutral-300 focus:border-purple-600 focus:bg-white'
+                              }`}
                             />
+                            {validationErrors.quantity && (
+                              <p className="text-xs text-red-500 ml-1">{validationErrors.quantity}</p>
+                            )}
                           </div>
                         </div>
 
@@ -315,6 +394,11 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                                   </button>
                                 </motion.div>
                               ))}
+                            </div>
+                          )}
+                          {validationErrors.benefits && (
+                            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                              <p className="text-xs text-red-600">{validationErrors.benefits}</p>
                             </div>
                           )}
                         </div>
@@ -499,7 +583,12 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                   ) : (
                     <button
                       onClick={handleSave}
-                      className="px-4 py-2 text-xs bg-brand-500 text-white rounded-tr-md rounded-bl-md hover:bg-brand-600 transition-all flex items-center gap-2"
+                      disabled={
+                        !!validationErrors.quantity || 
+                        !!validationErrors.benefits || 
+                        (!!validationErrors.price && !validationErrors.price.includes('⚠️'))
+                      }
+                      className="px-4 py-2 text-xs bg-brand-500 text-white rounded-tr-md rounded-bl-md hover:bg-brand-600 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <CheckCircle size={16} />
                       Save Ticket

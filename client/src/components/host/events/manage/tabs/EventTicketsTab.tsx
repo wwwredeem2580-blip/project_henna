@@ -70,51 +70,16 @@ export const EventTicketsTab = ({ data, onUpdate }: EventTicketsTabProps) => {
       const reservedCount = 0; // TODO: Add reserved count from backend
       const totalCommitted = soldCount + reservedCount;
       
-      // Validate quantity constraints for published/live events
-      if ((status === 'published' || status === 'live') && totalCommitted > 0) {
-        // Cannot reduce quantity below sold+reserved
-        if (ticketData.quantity < totalCommitted) {
-          showNotification(
-            'error',
-            'Invalid Quantity',
-            `Cannot set quantity below ${totalCommitted} (${soldCount} sold + ${reservedCount} reserved)`
-          );
-          return;
-        }
-        
-        // Price lowering constraints
+      // Only show confirmation for price reduction warnings (validation already done in modal)
+      if ((status === 'published' || status === 'live') && totalCommitted > 0 && totalCommitted < 10) {
         if (ticketData.price < existingTicket.price.amount) {
-          if (totalCommitted >= 10) {
-            showNotification(
-              'error',
-              'Cannot Lower Price',
-              `This ticket has ${totalCommitted} committed sales. Please contact support to lower the price.`
-            );
-            return;
-          } else if (totalCommitted > 0) {
-            // Show warning for price reduction with < 10 sales
-            const confirmed = window.confirm(
-              `⚠️ Price Reduction Warning\n\n` +
-              `Lowering the price will trigger partial refunds to ${totalCommitted} early buyers.\n` +
-              `Refund amount: BDT ${(existingTicket.price.amount - ticketData.price) * totalCommitted}\n\n` +
-              `This will be deducted from your payout. Continue?`
-            );
-            if (!confirmed) return;
-          }
-        }
-        
-        // Cannot remove benefits if tickets sold
-        const existingBenefits = existingTicket.benefits || [];
-        const newBenefits = ticketData.benefits || [];
-        const removedBenefits = existingBenefits.filter(b => !newBenefits.includes(b));
-        
-        if (removedBenefits.length > 0) {
-          showNotification(
-            'error',
-            'Cannot Remove Benefits',
-            `Cannot remove benefits from tickets with existing sales. You can only add new benefits.`
+          const confirmed = window.confirm(
+            `⚠️ Price Reduction Warning\n\n` +
+            `Lowering the price will trigger partial refunds to ${totalCommitted} early buyers.\n` +
+            `Refund amount: BDT ${(existingTicket.price.amount - ticketData.price) * totalCommitted}\n\n` +
+            `This will be deducted from your payout. Continue?`
           );
-          return;
+          if (!confirmed) return;
         }
       }
       
@@ -349,6 +314,19 @@ export const EventTicketsTab = ({ data, onUpdate }: EventTicketsTabProps) => {
                 benefits: data.event.tickets[editingTicketIndex].benefits || [],
               }
             : null
+        }
+        validationContext={
+          editingTicketIndex !== null && data?.event?.tickets[editingTicketIndex]
+            ? {
+                eventStatus: data.event.status,
+                existingTicket: {
+                  price: data.event.tickets[editingTicketIndex].price.amount,
+                  sold: data.event.tickets[editingTicketIndex].sold || 0,
+                  reserved: 0, // TODO: Add reserved count from backend
+                  benefits: data.event.tickets[editingTicketIndex].benefits || [],
+                },
+              }
+            : undefined
         }
       />
     </section>
