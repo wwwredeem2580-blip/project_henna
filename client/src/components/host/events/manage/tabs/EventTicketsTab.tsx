@@ -1,12 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Ticket, Plus, Edit, Trash } from 'lucide-react';
+import { Ticket, Plus, Edit, Trash, Save, Loader2 } from 'lucide-react';
 import Switch from '@/components/ui/Switch';
 import { formatTime } from '@/lib/utils';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
 import { TicketCard } from '@/components/ui/TicketCard';
 import { TicketConfiguratorModal } from '@/components/ui/TicketConfiguratorModal';
 import { useNotification } from '@/lib/context/notification';
+import { eventsService } from '@/lib/api/events';
 
 interface EventTicketsTabProps {
   data: HostEventDetailsResponse | null;
@@ -18,6 +19,77 @@ export const EventTicketsTab = ({ data, onUpdate }: EventTicketsTabProps) => {
   const [editingTicketIndex, setEditingTicketIndex] = useState<number | null>(null);
   const ticketSectionRef = useRef<HTMLDivElement>(null);
   const { showNotification } = useNotification();
+  
+  // Save functionality state
+  const [saving, setSaving] = useState(false);
+  const [initialTickets, setInitialTickets] = useState<any[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Track initial state when data loads
+  useEffect(() => {
+    if (data?.event?.tickets && initialTickets.length === 0) {
+      setInitialTickets(JSON.parse(JSON.stringify(data.event.tickets)));
+    }
+  }, [data?.event?.tickets]);
+
+  // Detect changes by comparing current tickets with initial state
+  useEffect(() => {
+    if (!data?.event?.tickets || initialTickets.length === 0) {
+      setHasChanges(false);
+      return;
+    }
+
+    const currentTickets = JSON.stringify(data.event.tickets);
+    const original = JSON.stringify(initialTickets);
+    setHasChanges(currentTickets !== original);
+  }, [data?.event?.tickets, initialTickets]);
+
+  const handleSave = async () => {
+    if (!data?.event || !hasChanges) return;
+
+    try {
+      setSaving(true);
+
+      const result = await eventsService.updateEventByStatus(
+        data.event._id,
+        data.event.status,
+        { tickets: data.event.tickets }
+      );
+
+      // Handle warnings (price reductions, capacity warnings)
+      if (result.warnings && result.warnings.length > 0) {
+        result.warnings.forEach(warning => {
+          showNotification('info', 'Notice', warning);
+        });
+      }
+
+      // Handle refunds
+      if (result.refundsRequired && result.refundsRequired.length > 0) {
+        const totalRefund = result.refundsRequired.reduce(
+          (sum, r) => sum + (r.refundAmount || 0),
+          0
+        );
+        showNotification(
+          'info',
+          'Refunds Processed',
+          `BDT ${totalRefund} in refunds will be deducted from your next payout.`
+        );
+      }
+
+      showNotification('success', 'Saved', result.message || 'Tickets updated successfully');
+
+      // Update initial state to new saved state
+      setInitialTickets(JSON.parse(JSON.stringify(data.event.tickets)));
+      setHasChanges(false);
+
+    } catch (error: any) {
+      console.error('Save error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save changes';
+      showNotification('error', 'Save Failed', errorMessage);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleAddTicket = () => {
     setEditingTicketIndex(null);
@@ -328,7 +400,42 @@ export const EventTicketsTab = ({ data, onUpdate }: EventTicketsTabProps) => {
               }
             : undefined
         }
-      />
+        />
+      
+      {/* Save Button */}
+      <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 flex justify-between items-center mt-8">
+        <div className="text-xs text-slate-600">
+          {hasChanges ? (
+            <span className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+              Unsaved changes
+            </span>
+          ) : (
+            <span className="flex items-center gap-2 text-emerald-600">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+              All changes saved
+            </span>
+          )}
+        </div>
+        
+        <button
+          onClick={handleSave}
+          disabled={!hasChanges || saving}
+          className="px-6 py-2.5 bg-brand-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-600 transition-all flex items-center gap-2 font-[400] text-xs"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save size={16} />
+              Save Changes
+            </>
+          )}
+        </button>
+      </div>
     </section>
   );
 };
