@@ -148,7 +148,7 @@ export const EventTicketsTab = ({ data, onUpdate, onRefetch }: EventTicketsTabPr
       const existingTicket = data.event.tickets[editingTicketIndex];
       const status = data.event.status;
       const soldCount = existingTicket.sold || 0;
-      const reservedCount = 0; // TODO: Add reserved count from backend
+      const reservedCount = existingTicket.reserved || 0;
       const totalCommitted = soldCount + reservedCount;
       
       // Only show confirmation for price reduction warnings (validation already done in modal)
@@ -411,7 +411,7 @@ export const EventTicketsTab = ({ data, onUpdate, onRefetch }: EventTicketsTabPr
                 existingTicket: {
                   price: data.event.tickets[editingTicketIndex].price.amount,
                   sold: data.event.tickets[editingTicketIndex].sold || 0,
-                  reserved: 0, // TODO: Add reserved count from backend
+                  reserved: data.event.tickets[editingTicketIndex].reserved || 0,
                   benefits: data.event.tickets[editingTicketIndex].benefits || [],
                 },
               }

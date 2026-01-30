@@ -396,7 +396,14 @@ export default function Events() {
 
           {/* Tickets Grid */}
           <div className="flex flex-col gap-6 mb-10">
-            {(event?.tickets || []).map((ticket: any, i: number) => (
+            {(event?.tickets || []).map((ticket: any, i: number) => {
+              // Calculate available quantity: total - sold - reserved
+              const sold = ticket.sold || 0;
+              const reserved = ticket.reserved || 0;
+              const totalQuantity = ticket.quantity || 0;
+              const availableQuantity = Math.max(0, totalQuantity - sold - reserved);
+              
+              return (
               <TicketCard ticket={{
                 _id: ticket._id || i.toString(),
                 tier: ticket.tier || ticket.name,
@@ -407,7 +414,7 @@ export default function Events() {
                 startTime: event?.schedule?.startDate ? new Date(event.schedule.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '10:00 AM',
                 endTime: event?.schedule?.endDate ? new Date(event.schedule.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '4:00 PM',
                 price: ticket.price?.amount || 0,
-                quantity: ticket.quantity || 0,
+                quantity: availableQuantity,
                 benefits: ticket.benefits || [
                   'Access to event',
                   'Dedicated entrance',
@@ -416,10 +423,11 @@ export default function Events() {
                 venue: `${event?.venue?.name || 'Venue'}, ${event?.venue?.address?.city || 'City'}`,
                 onClick: () => {},
                 selectedQuantity: ticketQuantities[ticket._id || ticket.name] || 0,
-                onIncrement: () => handleIncrement(ticket._id || ticket.name, ticket.quantity || 0),
+                onIncrement: () => handleIncrement(ticket._id || ticket.name, availableQuantity),
                 onDecrement: () => handleDecrement(ticket._id || ticket.name),
               }} key={i}/>
-            ))}
+              );
+            })}
             <div className="flex flex-col gap-2 pt-4 w-full max-w-[350px] border-t-2 border-brand-400 items-end justify-end">
               <div className="flex items-center justify-between w-full gap-2">
                 <p className="text-sm text-slate-600">Subtotal</p>
