@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { orderService } from "@/lib/api/order";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D, CheckCircle2, Loader2, LogIn, UserPlus } from "lucide-react";
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,6 +32,7 @@ import { useAuth } from "@/lib/context/auth";
 import { authService } from "@/lib/api/auth";
 import { BDTIcon, LightningIcon, LocationIcon } from "../ui/Icons";
 import { TicketCard } from "../ui/TicketCard";
+import { useNotification } from '@/lib/context/notification';
 
 import Sidebar from "../layout/Sidebar";
 
@@ -59,7 +60,7 @@ export default function Events() {
   const ticketSectionRef = React.useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const router = useRouter();
-
+  const { showNotification } = useNotification();
 
   // Fetch event data
   useEffect(() => {
@@ -168,6 +169,12 @@ export default function Events() {
         return;
       }
 
+      if(!user){
+        showNotification('error', 'Login', 'Please login to book tickets');
+        router.push('/auth?tab=login');
+        return;
+      }
+
       // Prepare order payload
       const orderTickets = event.tickets
         .filter((ticket: any) => {
@@ -237,14 +244,23 @@ export default function Events() {
             <h1 className="text-2xl font-[400] tracking-normal text-slate-900">Event Details</h1>
             <p className="text-sm text-slate-500 font-[300]">Comprehensive details about this event</p>
           </div>
-          <div className="hidden lg:flex items-center gap-3">
-            <button className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Wallet size={18}/></button>
-            <button className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Calendar size={18}/></button>
-            <button className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
-            <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
-              <img src="https://picsum.photos/seed/user1/100/100" alt="Avatar" className="w-full h-full object-cover" />
+          {user ? (
+            <div className="hidden lg:flex items-center gap-3">
+                <button onClick={() => user?.role === 'host' ? router.push('/host/wallet') : router.push('/wallet')} title="Wallet" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Wallet size={18}/></button>
+                {user?.role === 'host' && (
+                  <button onClick={() => router.push('/host/events')} title="My Events" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Calendar size={18}/></button>
+                )}
+                <button onClick={() => router.push('/help')} title="Help" className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
+                <div title={user?.email} className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover" />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="hidden lg:flex items-center gap-3">
+              <button onClick={() => router.push('/auth?tab=login')} title="Login" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><LogIn size={18}/></button>
+              <button onClick={() => router.push('/onboarding')} title="Register" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><UserPlus size={18}/></button>
+            </div>
+          )}
         </header>
         
         {loading ? (

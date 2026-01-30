@@ -126,10 +126,10 @@ export const DateInput = ({
                     <Calendar size={18} />
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">{label}</span>
+                    <span className="text-[10px] uppercase font-[500] text-slate-500 tracking-wider mb-0.5">{label}</span>
                     <span className={cn(
-                        'text-sm font-semibold',
-                        value ? 'text-slate-900' : 'text-slate-400'
+                        'text-sm font-[500] text-slate-700',
+                        value ? 'text-slate-900' : 'text-slate-500'
                     )}>
                         {value ? new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Select Date'}
                     </span>

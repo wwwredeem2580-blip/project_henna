@@ -158,11 +158,11 @@ export const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({ sessions, onCh
   };
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-slate-200">
+    <div className="bg-white rounded-tr-xl rounded-bl-xl overflow-hidden">
       <div className="flex border-b border-slate-100">
         <button 
           onClick={() => setActiveTab('calendar')}
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${
+          className={`flex-1 py-3 text-xs font-[400] transition-colors ${
             activeTab === 'calendar' 
               ? 'text-brand-600 bg-brand-50/50' 
               : 'text-slate-500 hover:text-slate-700'
@@ -173,7 +173,7 @@ export const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({ sessions, onCh
         <button 
           onClick={() => setActiveTab('config')}
           disabled={sessions.length === 0}
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${
+          className={`flex-1 py-3 text-xs font-[400] transition-colors ${
             activeTab === 'config' 
               ? 'text-brand-600 bg-brand-50/50' 
               : 'text-slate-500 hover:text-slate-700 disabled:opacity-50'
@@ -193,7 +193,7 @@ export const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({ sessions, onCh
                     >
                         <ChevronLeft size={20} />
                     </button>
-                    <span className="font-medium text-lg text-slate-900">
+                    <span className="font-[400] text-md text-slate-900">
                         {viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                     </span>
                     <button 
@@ -217,11 +217,11 @@ export const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({ sessions, onCh
                 </div>
             </div>
         ) : (
-            <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 mx-auto animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-6 mx-auto animate-in fade-in slide-in-from-right-4 duration-300">
                 {sessions.map((session, idx) => (
                     <div key={session.date} className="bg-slate-50 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h4 className="font-medium text-sm text-slate-900">
+                            <h4 className="font-[400] text-sm text-slate-900">
                                 {new Date(session.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                             </h4>
                             {idx === 0 && sessions.length > 1 && (

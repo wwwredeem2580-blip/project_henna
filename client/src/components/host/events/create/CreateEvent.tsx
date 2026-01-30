@@ -606,16 +606,16 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('details')}
-                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
                 >
-                  Next: Event Details
+                  Details
                   <ArrowRight size={20} />
                 </button>
               </div>
@@ -674,16 +674,16 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('venue')}
-                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
                 >
-                  Next: Venue Setup
+                  Venue Setup
                   <ArrowRight size={20} />
                 </button>
               </div>
@@ -775,16 +775,16 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('schedule')}
-                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
                 >
-                  Next: Event Schedule
+                  Schedule
                   <ArrowRight size={20} />
                 </button>
               </div>
@@ -808,7 +808,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   type="button"
                   onClick={() => updateScheduleField('type', 'single')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-lg text-sm font-[400] transition-all duration-200 ${
                     (formData.schedule?.type || 'single') === 'single'
                       ? 'bg-white text-brand-600 shadow-sm'
                       : 'text-slate-500 hover:text-slate-700'
@@ -819,7 +819,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   type="button"
                   onClick={() => updateScheduleField('type', 'multiple')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-lg text-sm font-[400] transition-all duration-200 ${
                     formData.schedule?.type === 'multiple'
                       ? 'bg-white text-brand-600 shadow-sm'
                       : 'text-slate-500 hover:text-slate-700'
@@ -916,16 +916,16 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('verification')}
-                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
                 >
-                  Next: Verification
+                  Verification
                   <ArrowRight size={20} />
                 </button>
               </div>
@@ -1000,14 +1000,23 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   </div>
                 </div>
               )}
-
-              <button
-                onClick={() => handleNext('tickets')}
-                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
-              >
-                Next: Setup Tickets
-                <ArrowRight size={20} />
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={loading}
+                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={18} />
+                  {loading ? 'Saving...' : 'Save Draft'}
+                </button>
+                <button
+                  onClick={() => handleNext('tickets')}
+                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                >
+                  Setup Tickets
+                  <ArrowRight size={20} />
+                </button>
+              </div>
             </motion.div>
           )}
 
@@ -1145,15 +1154,23 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   </AnimatePresence>
                 )}
               </section>
-              
-              <button
-                onClick={() => handleNext('platform')}
-                disabled={formData.tickets.length === 0}
-                className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next: Platform Policy
-                <ArrowRight size={20} />
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={loading}
+                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={18} />
+                  {loading ? 'Saving...' : 'Save Draft'}
+                </button>
+                <button
+                  onClick={() => handleNext('platform')}
+                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                >
+                  Review
+                  <ArrowRight size={20} />
+                </button>
+              </div>
             </motion.div>
           )}
 
@@ -1222,7 +1239,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-brand-600 border-2 border-brand-200 font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
@@ -1245,9 +1262,9 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     }
                   }}
                   disabled={loading || !draftId}
-                  className="flex-1 bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
                 >
-                  {loading ? 'Submitting...' : 'Submit Event'}
+                  {loading ? 'Submitting...' : 'Submit'}
                   <CheckCircle2 size={20} />
                 </button>
               </div>

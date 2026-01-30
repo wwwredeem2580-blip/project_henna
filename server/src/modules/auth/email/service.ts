@@ -190,6 +190,7 @@ export const sendVerificationEmail = async (userId: string, email: string): Prom
         expiresAt
       });
 
+
       // Send email via email worker
       const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
 

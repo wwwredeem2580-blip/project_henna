@@ -100,10 +100,10 @@ class EventsService {
   }
 
   /**
-   * Get all host events
+   * Delete an event
    */
-  async getHostEvents(): Promise<any[]> {
-    return await apiClient.get('/api/event/host');
+  async deleteEvent(eventId: string): Promise<void> {
+    return await apiClient.delete(`/api/event/host/${eventId}`);
   }
 }
 

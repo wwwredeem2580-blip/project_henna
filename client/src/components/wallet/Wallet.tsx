@@ -2,36 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { publicService } from "@/lib/api/public";
 import { ticketService, Ticket } from "@/lib/api/ticket";
 import { pdfService } from "@/lib/api/pdf";
-import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, QrCode, Rotate3D, Minus, ArrowDown, DownloadIcon, FileText, Eye, Loader2, LogIn, UserPlus } from "lucide-react";
+import { ChevronDown, DownloadIcon, FileText, Eye, Loader2 } from "lucide-react";
 
 
-import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard,
-  MessageSquare,
   Calendar,
-  ShoppingBag,
-  BarChart3,
-  Settings,
-  LogOut,
-  Bell,
-  Star,
-  Trash2,
-  UserCircle,
   HelpCircle,
-  Plus,
-  ArrowUpRight,
-  MoreHorizontal,
-  Menu,
 } from 'lucide-react';
 import { useAuth } from "@/lib/context/auth";
 import { authService } from "@/lib/api/auth";
-import { BDTIcon, LightningIcon, LocationIcon } from "../ui/Icons";
 
 import { TicketCard } from "../ui/TicketCard";
 import { QRModal } from "./QRModal";
@@ -85,11 +67,6 @@ export default function WalletPage() {
   }, {} as Record<string, { eventId: string; eventTitle: string; eventDate: string; eventVenue: string; venueAddress: string; tickets: Ticket[] }>);
 
   const eventGroups = Object.values(groupedTickets);
-
-  const handleSignOut = async () => {
-    await authService.logout()
-    router.push('/auth?tab=login')
-  }
 
   // Handle QR code download
   const handleDownloadQR = async (qrCodeUrl: string, ticketNumber: string) => {
@@ -204,7 +181,7 @@ export default function WalletPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                {eventGroups.map((eventGroup) => {
+                {eventGroups.map((eventGroup: any) => {
                   const eventDate = new Date(eventGroup.eventDate);
                   const formattedDate = eventDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
                   const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -242,7 +219,7 @@ export default function WalletPage() {
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const ticketIds = eventGroup.tickets.map(t => t._id);
+                                const ticketIds = eventGroup.tickets.map((t: any) => t._id);
                                 handleDownloadAllPDFs(ticketIds);
                               }}
                               disabled={downloadingBulk === eventGroup.tickets[0]._id}
@@ -279,7 +256,7 @@ export default function WalletPage() {
                           >
                             <div className="px-4 max-w-full pb-6 overflow-x-auto">
                               <div className="flex gap-4">
-                                {eventGroup.tickets.map((ticket) => {
+                                {eventGroup.tickets.map((ticket: any) => {
                                   const ticketEventDate = new Date(ticket.eventDate);
                                   const ticketEndDate = new Date(ticket.validUntil);
                                   
