@@ -207,7 +207,7 @@ export const updatePublishedEventService = async (hostId: string, eventId: strin
   }
 
   const validatedData = publishedEventEditSchema.parse(data);
-  const sanitizedData = buildEventForPublishedEdit(validatedData);
+  const sanitizedData = buildEventForPublishedEdit(validatedData, event);
   const updatedTickets = [];
   const warnings: string[] = [];
   const refundsRequired: any[] = [];
@@ -405,7 +405,7 @@ export const updatePublishedEventService = async (hostId: string, eventId: strin
       }
     }
 
-    sanitizedData.tickets = updatedTickets;
+    (sanitizedData as any).tickets = updatedTickets;
   }
   
 
@@ -440,7 +440,10 @@ export const updateLiveEventService = async (hostId: string, eventId: string, da
   }
 
   const validatedData = liveEventEditSchema.parse(data);
-  let sanitizedData = validatedData;
+  
+  // Only include tickets if explicitly provided (same fix as published events)
+  const { tickets: _, ...dataWithoutTickets } = validatedData;
+  let sanitizedData: any = dataWithoutTickets;
 
   // Ticket operational controls
   if (data.tickets && Array.isArray(data.tickets)) {
