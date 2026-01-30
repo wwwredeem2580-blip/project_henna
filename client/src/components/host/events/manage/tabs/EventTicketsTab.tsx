@@ -192,9 +192,8 @@ export const EventTicketsTab = ({ data, onUpdate }: EventTicketsTabProps) => {
         return;
       }
       
-      // Add new ticket
+      // Add new ticket (no _id for new tickets - backend will generate)
       const newTicket = {
-        _id: `temp-${Date.now()}`, // Temporary ID for new tickets
         name: ticketData.name,
         tier: ticketData.tier,
         price: { amount: ticketData.price, currency: 'BDT' },

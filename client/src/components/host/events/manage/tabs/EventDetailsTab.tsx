@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music, Calendar, Clock10, Building2, User, Save, Upload, X, Trash } from 'lucide-react';
+import { Music, Calendar, Clock10, Building2, User, Save, Upload, X, Trash, Loader2 } from 'lucide-react';
 import Switch from '@/components/ui/Switch';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
 import { DocumentUploader } from '@/components/ui/DocumentUploader';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { useNotification } from '@/lib/context/notification';
+import { eventsService } from '@/lib/api/events';
 
 interface EventDetailsTabProps {
   data: HostEventDetailsResponse | null;
@@ -21,9 +22,12 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
   const [scheduleStart, setScheduleStart] = useState(data?.event?.schedule?.startDate || '');
   const [scheduleEnd, setScheduleEnd] = useState(data?.event?.schedule?.endDate || '');
   const { showNotification } = useNotification();
+  
+  // Save functionality state
+  const [saving, setSaving] = useState(false);
 
   // Sync state with data when data loads
-  useState(() => {
+  useEffect(() => {
     if (data?.event) {
         setDescription(data.event.description || '');
         setTagline(data.event.tagline || '');
@@ -32,7 +36,7 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
         setScheduleStart(data.event.schedule?.startDate || '');
         setScheduleEnd(data.event.schedule?.endDate || '');
     }
-  });
+  }, [data?.event?._id]);
 
   // Check if schedule can be modified
   const canModifySchedule = () => {
@@ -60,67 +64,106 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
     return startDiff <= TWO_HOURS_MS && endDiff <= TWO_HOURS_MS;
   };
 
-  const handleSave = () => {
-    if (!data) return;
+  const handleSave = async () => {
+    if (!data?.event) return;
     
-    // Validate schedule changes for approved events
-    if (canModifySchedule() && (scheduleStart !== data.event.schedule?.startDate || scheduleEnd !== data.event.schedule?.endDate)) {
-      if (!validateScheduleChange(scheduleStart, scheduleEnd)) {
-        showNotification(
-          'error',
-          'Invalid Schedule Change',
-          'Schedule can only be modified by ±2 hours from the original time.'
+    try {
+      setSaving(true);
+      
+      // Validate schedule changes for approved events
+      if (canModifySchedule() && (scheduleStart !== data.event.schedule?.startDate || scheduleEnd !== data.event.schedule?.endDate)) {
+        if (!validateScheduleChange(scheduleStart, scheduleEnd)) {
+          showNotification(
+            'error',
+            'Invalid Schedule Change',
+            'Schedule can only be modified by ±2 hours from the original time.'
+          );
+          setSaving(false);
+          return;
+        }
+        
+        // Show warning for schedule modification
+        const confirmed = window.confirm(
+          `⚠️ Schedule Modification Warning\n\n` +
+          `You are about to modify the event schedule. This can only be done ONCE.\n` +
+          `All attendees will be notified of this change.\n\n` +
+          `Original: ${new Date(data.event.schedule!.startDate).toLocaleString()}\n` +
+          `New: ${new Date(scheduleStart).toLocaleString()}\n\n` +
+          `Continue?`
         );
-        return;
+        
+        if (!confirmed) {
+          setSaving(false);
+          return;
+        }
       }
       
-      // Show warning for schedule modification
-      const confirmed = window.confirm(
-        `⚠️ Schedule Modification Warning\n\n` +
-        `You are about to modify the event schedule. This can only be done ONCE.\n` +
-        `All attendees will be notified of this change.\n\n` +
-        `Original: ${new Date(data.event.schedule!.startDate).toLocaleString()}\n` +
-        `New: ${new Date(scheduleStart).toLocaleString()}\n\n` +
-        `Continue?`
-      );
-      
-      if (!confirmed) return;
-    }
-    
-    // Update the data with new values
-    const updatedData: HostEventDetailsResponse = {
-      ...data,
-      event: {
-        ...data.event,
+      // Prepare update data
+      const updateData: any = {
         description,
         tagline,
-        schedule: canModifySchedule() && (scheduleStart !== data.event.schedule?.startDate || scheduleEnd !== data.event.schedule?.endDate)
-          ? {
-              ...data.event.schedule!,
-              startDate: scheduleStart,
-              endDate: scheduleEnd,
-              scheduleModified: true
-            }
-          : data.event.schedule,
         media: {
-          ...data.event.media,
           coverImage: {
             url: coverImage,
-            alt: data.event.media?.coverImage?.alt || data.event.title
+            alt: data.event.media?.coverImage?.alt || data.event.title,
+            thumbnailUrl: data.event.media?.coverImage?.url
           },
           gallery
         }
+      };
+
+      // Add schedule if modified
+      if (canModifySchedule() && (scheduleStart !== data.event.schedule?.startDate || scheduleEnd !== data.event.schedule?.endDate)) {
+        updateData.schedule = {
+          ...data.event.schedule,
+          startDate: scheduleStart,
+          endDate: scheduleEnd,
+          scheduleModified: true
+        };
       }
-    };
-    
-    // Call the parent's update handler
-    onUpdate(updatedData);
-    showNotification('success', 'Changes Saved', 'Event details have been updated.');
-    setMode('preview');
+      
+      // Call backend API
+      const result = await eventsService.updateEventByStatus(
+        data.event._id,
+        data.event.status,
+        updateData
+      );
+
+      // Handle warnings
+      if (result.warnings && result.warnings.length > 0) {
+        result.warnings.forEach(warning => {
+          showNotification('info', 'Notice', warning);
+        });
+      }
+
+      showNotification('success', 'Changes Saved', result.message || 'Event details have been updated.');
+      
+      // Update local state with new data
+      const updatedData: HostEventDetailsResponse = {
+        ...data,
+        event: {
+          ...data.event,
+          description,
+          tagline,
+          schedule: updateData.schedule || data.event.schedule,
+          media: updateData.media
+        }
+      };
+      
+      onUpdate(updatedData);
+      setMode('preview');
+      
+    } catch (error: any) {
+      console.error('Save error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save changes';
+      showNotification('error', 'Save Failed', errorMessage);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleGalleryUpload = (url: string) => {
-      setGallery(prev => [...prev, { url, caption: '' }]);
+      setGallery(prev => [...prev, { url, caption: '', thumbnailUrl: url, order: prev.length + 1 }]);
   };
 
   const handleRemoveGalleryImage = (index: number) => {
@@ -140,10 +183,20 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
          {mode === 'edit' && (
              <button 
                 onClick={handleSave}
-                className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors shadow-lg shadow-brand-100"
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors shadow-lg shadow-brand-100 disabled:opacity-50 disabled:cursor-not-allowed"
              >
-                 <Save size={18} />
-                 <span className="text-sm font-medium">Save Changes</span>
+                 {saving ? (
+                   <>
+                     <Loader2 size={18} className="animate-spin" />
+                     <span className="text-sm font-medium">Saving...</span>
+                   </>
+                 ) : (
+                   <>
+                     <Save size={18} />
+                     <span className="text-sm font-medium">Save Changes</span>
+                   </>
+                 )}
              </button>
          )}
       </div>
@@ -199,7 +252,7 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
 
                     {/* Gallery */}
                     <div className="flex flex-col gap-2 overflow-y-auto h-full pr-1">
-                      {([1, 1, 1]).map(
+                      {gallery.map(
                         (img: any, idx: number) => (
                           <div
                             key={img?.id || idx}
@@ -382,28 +435,31 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
               </motion.div>
         </div>
 
-        {/* Right Column: Verification Documents */}
-        <div className="max-w-[400px] mx-auto space-y-6">
-            <div className="bg-white p-6 rounded-[2rem] flex flex-col h-full">
-               <div className="mb-6">
-                    <h3 className="text-lg font-[300] text-slate-800 mb-2">Additional Verification Documents</h3>
-                    <p className="text-xs text-slate-500 font-[300]">Upload additional necessary documents for event verification. NOTE: These are for internal review only.</p>
-               </div>
-               
-               <div className="flex-1">
-                   <DocumentUploader 
-                        onUploadComplete={(files) => {
-                            showNotification('success', 'Documents Uploaded', `${files.length} documents uploaded successfully.`);
-                        }}
-                        onUploadError={(err) => {
-                            showNotification('error', 'Upload Failed', err);
-                        }}
-                        maxFiles={5}
-                        maxSizeMB={5}
-                   />
-               </div>
-            </div>
-        </div>
+
+        {/* Right Column: Verification Documents (Only for Pending Approval) */}
+        {data?.event?.status === 'pending_approval' && (
+          <div className="max-w-[400px] mx-auto space-y-6">
+              <div className="bg-white p-6 rounded-[2rem] flex flex-col h-full">
+                 <div className="mb-6">
+                      <h3 className="text-lg font-[300] text-slate-800 mb-2">Additional Verification Documents</h3>
+                      <p className="text-xs text-slate-500 font-[300]">Upload additional necessary documents for event verification. NOTE: These are for internal review only.</p>
+                 </div>
+                 
+                 <div className="flex-1">
+                    <DocumentUploader 
+                         onUploadComplete={(files) => {
+                             showNotification('success', 'Documents Uploaded', `${files.length} documents uploaded successfully.`);
+                         }}
+                         onUploadError={(err) => {
+                             showNotification('error', 'Upload Failed', err);
+                         }}
+                         maxFiles={5}
+                         maxSizeMB={5}
+                    />
+                 </div>
+              </div>
+          </div>
+        )}
       </div>
     </section>
   );
