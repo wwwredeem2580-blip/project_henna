@@ -11,10 +11,11 @@ import { eventsService } from '@/lib/api/events';
 
 interface EventTicketsTabProps {
   data: HostEventDetailsResponse | null;
-  onUpdate: (data: any) => void;
+  onUpdate: (newData: HostEventDetailsResponse) => void;
+  onRefetch?: () => Promise<void>;
 }
 
-export const EventTicketsTab = ({ data, onUpdate }: EventTicketsTabProps) => {
+export const EventTicketsTab = ({ data, onUpdate, onRefetch }: EventTicketsTabProps) => {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [editingTicketIndex, setEditingTicketIndex] = useState<number | null>(null);
   const ticketSectionRef = useRef<HTMLDivElement>(null);
@@ -34,8 +35,15 @@ export const EventTicketsTab = ({ data, onUpdate }: EventTicketsTabProps) => {
 
   // Detect changes by comparing current tickets with initial state
   useEffect(() => {
-    if (!data?.event?.tickets || initialTickets.length === 0) {
+    if (!data?.event?.tickets) {
       setHasChanges(false);
+      return;
+    }
+
+    // If we have tickets but no initial state yet, don't mark as changed
+    // (this happens on first load)
+    if (initialTickets.length === 0 && data.event.tickets.length > 0) {
+      // This is the initial load, not a change
       return;
     }
 
@@ -78,8 +86,13 @@ export const EventTicketsTab = ({ data, onUpdate }: EventTicketsTabProps) => {
 
       showNotification('success', 'Saved', result.message || 'Tickets updated successfully');
 
-      // Update initial state to new saved state
-      setInitialTickets(JSON.parse(JSON.stringify(data.event.tickets)));
+      // Refetch data from backend to ensure state is in sync
+      if (onRefetch) {
+        await onRefetch();
+      } else {
+        // Fallback: Update initial state to new saved state
+        setInitialTickets(JSON.parse(JSON.stringify(data.event.tickets)));
+      }
       setHasChanges(false);
 
     } catch (error: any) {

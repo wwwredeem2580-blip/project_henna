@@ -11,7 +11,12 @@ import ActivityRow from '@/components/ui/ActivityRow';
 import { eventsService } from '@/lib/api/events';
 import { useNotification } from '@/lib/context/notification';
 
-export const EventOverview = ({ data }: { data: HostEventDetailsResponse | null }) => {
+interface EventOverviewProps {
+  data: HostEventDetailsResponse | null;
+  onUpdate?: (newData: HostEventDetailsResponse) => void;
+}
+
+export const EventOverview = ({ data, onUpdate }: EventOverviewProps) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const [isTogglingPause, setIsTogglingPause] = useState(false);
@@ -43,17 +48,23 @@ export const EventOverview = ({ data }: { data: HostEventDetailsResponse | null 
       const result = await eventsService.toggleSalesPause(event._id);
       showNotification('success', 'Sales Updated', result.message);
 
-      // Update the local data to reflect the change
-      if (data?.event) {
-        // Update both the deprecated field and the new structure
-        data.event.salesPaused = result.salesPaused;
-        if (data.event.moderation) {
-          if (!data.event.moderation.sales) {
-            data.event.moderation.sales = { paused: result.salesPaused };
-          } else {
-            data.event.moderation.sales.paused = result.salesPaused;
+      // Update the local data to reflect the change using onUpdate
+      if (data?.event && onUpdate) {
+        const updatedData: HostEventDetailsResponse = {
+          ...data,
+          event: {
+            ...data.event,
+            salesPaused: result.salesPaused,
+            moderation: {
+              ...data.event.moderation,
+              sales: {
+                ...data.event.moderation?.sales,
+                paused: result.salesPaused
+              }
+            }
           }
-        }
+        };
+        onUpdate(updatedData);
       }
     } catch (error: any) {
       console.error('Toggle sales pause error:', error);

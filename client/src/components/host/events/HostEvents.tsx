@@ -45,12 +45,12 @@ export default function HostEvents() {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const params: any = { page: currentPage, limit: 100 };
         
-        if (filters.status) params.status = filters.status;
-        if (filters.search) params.search = filters.search;
-
-        const hostEventsData = await hostEventsService.getHostEvents(params);
+        const hostEventsData = await hostEventsService.getHostEvents({
+          page: currentPage,
+          limit: 100,
+          filters: filters
+        });
         setHostEventsData(hostEventsData);
       } catch (err: any) {
         console.error('Failed to fetch events:', err);

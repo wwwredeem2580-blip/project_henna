@@ -35,32 +35,32 @@ export default function ManageEvent() {
   const { showNotification } = useNotification();
 
   // Fetch host event analytics/details
-  useEffect(() => {
-    const fetchEventData = async () => {
-      try {
-        setLoading(true);
-        // Using the analytics service which returns the combined structure we designed
-        const eventData = await hostAnalyticsService.getEventAnalytics(id as string);
-        setData(eventData);
-        
-        // Redirect draft events to host events page
-        if (eventData.event.status === 'draft') {
-          showNotification('info', 'Event Not Submitted', 'Event management is only available after submitting your event for approval.');
-          router.push('/host/events');
-          return;
-        }
-      } catch (err: any) {
-        console.error('Failed to fetch event:', err);
-        setError(err.message || 'Failed to load event data');
-      } finally {
-        setLoading(false);
+  const fetchEventData = async () => {
+    try {
+      setLoading(true);
+      // Using the analytics service which returns the combined structure we designed
+      const eventData = await hostAnalyticsService.getEventAnalytics(id as string);
+      setData(eventData);
+      
+      // Redirect draft events to host events page
+      if (eventData.event.status === 'draft') {
+        showNotification('info', 'Event Not Submitted', 'Event management is only available after submitting your event for approval.');
+        router.push('/host/events');
+        return;
       }
-    };
+    } catch (err: any) {
+      console.error('Failed to fetch event:', err);
+      setError(err.message || 'Failed to load event data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (id) {
         fetchEventData();
     }
-  }, [id, router, showNotification]);
+  }, [id]);
 
   const handleUpdateData = (newData: HostEventDetailsResponse) => {
     setData(newData);
@@ -73,12 +73,12 @@ export default function ManageEvent() {
     const allTabs = [
       {
         label: 'Overview',
-        content: <EventOverview data={data} />,
+        content: <EventOverview data={data} onUpdate={handleUpdateData} />,
         icon: <Layout size={16} />,
       },
       {
         label: 'Tickets',
-        content: <EventTicketsTab data={data} onUpdate={handleUpdateData} />,
+        content: <EventTicketsTab data={data} onUpdate={handleUpdateData} onRefetch={fetchEventData} />,
         icon: <Ticket size={16} />
       },
       {
