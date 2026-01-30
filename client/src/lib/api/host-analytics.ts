@@ -94,6 +94,47 @@ export interface HostEventDetailsResponse {
   };
 }
 
+export interface DashboardMetrics {
+  overview: {
+    totalRevenue: number;
+    totalOrders: number;
+    totalTicketsSold: number;
+    upcomingEvents: number;
+    currency: string;
+    totalPayout: number;
+  };
+  revenueByPeriod: {
+    thisMonth: number;
+    lastMonth: number;
+    growth: number;
+  };
+  recentActivity: {
+    ordersToday: number;
+    ordersThisWeek: number;
+    revenueToday: number;
+  };
+}
+
+export interface HostOrder {
+  orderNumber: string;
+  eventTitle: string;
+  buyerEmail: string;
+  ticketCount: number;
+  total: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface HostOrdersResponse {
+  orders: HostOrder[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 export const hostAnalyticsService = {
   getEventAnalytics: async (eventId: string): Promise<HostEventDetailsResponse> => {
     try {
@@ -103,6 +144,14 @@ export const hostAnalyticsService = {
         // Return structured mock data for development
         return mockHostEventAnalytics(eventId);
     }
+  },
+
+  getDashboardMetrics: async (): Promise<DashboardMetrics> => {
+    return await apiClient.get<DashboardMetrics>('/api/host/analytics/metrics');
+  },
+
+  getHostOrders: async (page: number = 1, limit: number = 10): Promise<HostOrdersResponse> => {
+    return await apiClient.get<HostOrdersResponse>(`/api/host/analytics/orders?page=${page}&limit=${limit}`);
   }
 };
 

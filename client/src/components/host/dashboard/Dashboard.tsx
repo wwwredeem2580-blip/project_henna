@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Calendar,
@@ -18,9 +18,12 @@ import {
   DollarSign,
   CreditCard,
   MoreHorizontal,
+  Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { useRouter } from 'next/navigation';
+import { hostAnalyticsService, DashboardMetrics, HostOrder } from '@/lib/api/host-analytics';
+import { hostEventsService } from '@/lib/api/host';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -35,6 +38,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
   const { user } = useAuth();
   const router = useRouter();
+  
+  // State management
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [events, setEvents] = useState<any[]>([]);
+  const [recentOrders, setRecentOrders] = useState<HostOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch metrics, events, and recent orders in parallel
+        const [metricsData, eventsData, ordersData] = await Promise.all([
+          hostAnalyticsService.getDashboardMetrics(),
+          hostEventsService.getHostEvents({ limit: 5, page: 1, filters: { status: 'published,live' } }),
+          hostAnalyticsService.getHostOrders(1, 3)
+        ]);
+
+        setMetrics(metricsData);
+        setEvents(eventsData.events || []);
+        setRecentOrders(ordersData.orders || []);
+      } catch (err: any) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError(err.message || 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-white font-sans text-slate-950">
@@ -60,32 +98,47 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         </header>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {[
-            { label: 'Today Revenue', value: '148.94', icon: <DollarSign size={18}/>, prefix: 'BDT' },
-            { label: 'This Month Revenue', value: '385.00', icon: <CreditCard size={18}/>, prefix: 'BDT' },
-            { label: 'Total Orders', value: '5', icon: <ShoppingBag size={18}/> },
-            { label: 'Tickets Sold', value: '11', icon: <Ticket size={18}/> },
-          ].map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 relative group overflow-hidden"
-            >
-              <div className="flex items-center gap-3 text-slate-400 mb-4 font-[500] text-[10px] uppercase tracking-widest">
-                {stat.icon}
-                {stat.label}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 animate-pulse">
+                <div className="h-4 bg-slate-200 rounded w-1/2 mb-4"></div>
+                <div className="h-8 bg-slate-200 rounded w-3/4"></div>
               </div>
-              <div className="text-2xl font-[500] tracking-tight text-neutral-700"> 
-                <span className="text-sm font-[400] text-slate-400">{stat.prefix} </span>
-                {stat.value}
-              </div>
-              <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-            </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="p-6 bg-red-50 border border-red-200 rounded-lg mb-10">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        ) : metrics ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            {[
+              { label: 'Today Revenue', value: metrics.recentActivity.revenueToday.toFixed(2), icon: <DollarSign size={18}/>, prefix: 'BDT' },
+              { label: 'This Month Revenue', value: metrics.revenueByPeriod.thisMonth.toFixed(2), icon: <CreditCard size={18}/>, prefix: 'BDT' },
+              { label: 'Total Orders', value: metrics.overview.totalOrders.toString(), icon: <ShoppingBag size={18}/> },
+              { label: 'Tickets Sold', value: metrics.overview.totalTicketsSold.toString(), icon: <Ticket size={18}/> },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 relative group overflow-hidden"
+              >
+                <div className="flex items-center gap-3 text-slate-400 mb-4 font-[500] text-[10px] uppercase tracking-widest">
+                  {stat.icon}
+                  {stat.label}
+                </div>
+                <div className="text-2xl font-[500] tracking-tight text-neutral-700"> 
+                  <span className="text-sm font-[400] text-slate-400">{stat.prefix} </span>
+                  {stat.value}
+                </div>
+                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+              </motion.div>
+            ))}
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Left Column: Usage */}
@@ -106,11 +159,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {[{eventId: '1', title: 'Event 1', status: 'live', startDate: '2022-01-01', ticketsSoldPercentage: 50, revenue: 100, coverImage: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZXZlbnR8ZW58MHx8MHx8fDA%3D'}].map((event: any) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                      <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                    </td>
+                  </tr>
+                ) : events.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                      No upcoming events found
+                    </td>
+                  </tr>
+                ) : (
+                  events.map((event: any) => (
                   <tr key={event.eventId} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <img src={event.coverImage} className="w-10 h-10 rounded-tr-sm rounded-bl-sm object-cover" alt="" />
+                        <img src={event.coverImage || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=500&auto=format&fit=crop&q=60'} className="w-10 h-10 rounded-tr-sm rounded-bl-sm object-cover" alt="" />
                         <div>
                           <p className="text-sm font-[500] text-neutral-700 truncate max-w-[150px]">{event.title}</p>
                           <p className="text-[10px] whitespace-nowrap text-slate-400">{new Date(event.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
@@ -119,7 +185,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 whitespace-nowrap rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        event.status === 'live' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'
+                        event.status === 'live' ? 'bg-green-100 text-green-600' : event.status === 'published' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'
                       }`}>
                         {event.status}
                       </span>
@@ -136,12 +202,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                       <BDTIcon /> {event.revenue}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 text-gray-400 hover:text-brand-600 transition-colors">
+                      <button onClick={() => router.push(`/host/events/${event.eventId}`)} className="p-2 text-gray-400 hover:text-brand-600 transition-colors">
                         <MoreHorizontal size={18} />
                       </button>
                     </td>
                   </tr>
-                ))}
+                ))
+                )}
               </tbody>
             </table>
           </section>
@@ -157,20 +224,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             </div>
 
             <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                </div>
+              ) : recentOrders.length === 0 ? (
+                <div className="p-4 text-center text-sm text-slate-500">
+                  No recent sales
+                </div>
+              ) : (
+                recentOrders.map((order, i) => (
                 <div key={i} className="p-4 bg-white border border-slate-50 rounded-xl flex items-center justify-between hover:bg-slate-50 transition-colors group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center text-brand-500">
                       <ShoppingBag size={18} />
                     </div>
                     <div>
-                      <p className="text-[12px] font-[300] text-slate-900 uppercase tracking-wider">BESTCOOKIECO.COM</p>
-                      <p className="text-[10px] font-[300] text-slate-400">Order #ZEN-982{i}</p>
+                      <p className="text-[12px] font-[300] text-slate-900 uppercase tracking-wider">{order.eventTitle}</p>
+                      <p className="text-[10px] font-[300] text-slate-400">{order.orderNumber}</p>
                     </div>
                   </div>
-                  <div className="text-[12px] font-[500] text-slate-900">$77.00</div>
+                  <div className="text-[12px] font-[500] text-slate-900"><BDTIcon className="text-xs inline"/>{order.total}</div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </section>
         </div>
