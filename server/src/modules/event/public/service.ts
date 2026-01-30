@@ -63,10 +63,10 @@ export const getEventsService = async (filters: {
 
 // --- Get Event Details ---
 export const getEventDetailsService = async (identifier: string, userId?: string) => {
-  let event = await Event.findOne({ slug: identifier }).select('_id slug title type categories description tagline highlights media status venue organizer schedule tickets features');
+  let event = await Event.findOne({ slug: identifier }).select('_id slug title type moderation.sales categories description tagline highlights media status venue organizer schedule tickets features');
 
   if (!event) {
-    event = await Event.findById(identifier).select('_id slug title type categories description tagline highlights media status venue organizer schedule tickets features');
+    event = await Event.findById(identifier).select('_id slug title type moderation.sales.paused categories description tagline highlights media status venue organizer schedule tickets features');
   }
 
   if (!event || (event.status !== 'published' && event.status !== 'live' && event.status !== 'ended')) {

@@ -396,6 +396,9 @@ export default function Events() {
 
           {/* Tickets Grid */}
           <div className="flex flex-col gap-6 mb-10">
+            {event?.moderation?.sales?.paused && <div className="w-full max-w-[350px] p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-xs text-red-600 font-[400]">Event sales are paused. Please come back later</p>
+            </div>}
             {(event?.tickets || []).map((ticket: any, i: number) => {
               // Calculate available quantity: total - sold - reserved
               const sold = ticket.sold || 0;
@@ -404,7 +407,7 @@ export default function Events() {
               const availableQuantity = Math.max(0, totalQuantity - sold - reserved);
               
               return (
-              <TicketCard ticket={{
+              (ticket.isVisible && ticket.isActive) && <TicketCard ticket={{
                 _id: ticket._id || i.toString(),
                 tier: ticket.tier || ticket.name,
                 name: event?.title || 'Event Name',

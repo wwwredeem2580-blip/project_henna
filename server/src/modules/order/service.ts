@@ -34,9 +34,9 @@ export const createOrderService = async (data: any) => {
   if (event.schedule && event.schedule.endDate < new Date()) {
     throw new CustomError('Event has already ended', 400);
   }
-
-  if (event.salesPaused) {
-    throw new CustomError('Event sales are paused', 400);
+  
+  if (event.moderation.sales.paused) {
+    throw new CustomError('Event sales are paused. Please come back later', 400);
   }
 
   // Validate ticket variants and check availability
@@ -48,7 +48,7 @@ export const createOrderService = async (data: any) => {
 
     // Check if ticket variant is active
     if (!ticketVariant.isActive) {
-      throw new CustomError(`Ticket variant "${ticketReq.variantName}" is not available`, 400);
+      throw new CustomError(`Ticket variant "${ticketReq.variantName}" is not for sale`, 400);
     }
 
     // Check available quantity

@@ -34,7 +34,7 @@ export const getHostMetricesService = async (hostId: string) => {
     {
       $group: {
         _id: null,
-        totalRevenue: { $sum: "$pricing.subtotal" },
+        totalRevenue: { $sum: "$pricing.total" },
         totalPayout: { $sum: "$pricing.hostPayout" },
         totalOrders: { $sum: 1 },
         totalTicketsSold: {
@@ -77,7 +77,7 @@ export const getHostMetricesService = async (hostId: string) => {
         confirmedAt: { $gte: startOfMonth }
       }
     },
-    { $group: { _id: null, total: { $sum: "$pricing.subtotal" } } }
+    { $group: { _id: null, total: { $sum: "$pricing.total" } } }
   ]);
   
   const lastMonthRevenue = await Order.aggregate([
@@ -88,7 +88,7 @@ export const getHostMetricesService = async (hostId: string) => {
         confirmedAt: { $gte: startOfLastMonth, $lt: startOfMonth }
       }
     },
-    { $group: { _id: null, total: { $sum: "$pricing.subtotal" } } }
+    { $group: { _id: null, total: { $sum: "$pricing.total" } } }
   ]);
   
   const thisMonth = thisMonthRevenue[0]?.total || 0;
@@ -115,7 +115,7 @@ export const getHostMetricesService = async (hostId: string) => {
             $group: {
               _id: null,
               orders: { $sum: 1 },
-              revenue: { $sum: "$pricing.subtotal" }
+              revenue: { $sum: "$pricing.total" }
             }
           }
         ],
@@ -174,7 +174,7 @@ export const getRevenueChartService = async (hostId: string, period: string = "3
         _id: {
           $dateToString: { format: "%Y-%m-%d", date: "$confirmedAt" }
         },
-        revenue: { $sum: "$pricing.subtotal" },
+        revenue: { $sum: "$pricing.total" },
         orders: { $sum: 1 }
       }
     },
@@ -255,7 +255,7 @@ export const getHostOrdersService = async (
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
-    .select("orderNumber eventId buyerEmail tickets pricing.subtotal status createdAt")
+    .select("orderNumber eventId buyerEmail tickets pricing.total status createdAt")
     .lean();
   
   // Format response
@@ -274,7 +274,7 @@ export const getHostOrdersService = async (
       eventTitle: event?.title || "Unknown Event",
       buyerEmail: maskEmail(order.buyerEmail),
       ticketCount,
-      total: order.pricing?.subtotal,
+      total: order.pricing?.total,
       status: order.status,
       createdAt: order.createdAt
     };
@@ -322,7 +322,7 @@ export const getEventsAnalytics = async (eventIds: string[]) => {
     {
       $group: {
         _id: "$eventId",
-        totalRevenue: { $sum: "$pricing.subtotal" },
+        totalRevenue: { $sum: "$pricing.total" },
         totalTicketsSold: {
           $sum: {
             $reduce: {
@@ -333,7 +333,7 @@ export const getEventsAnalytics = async (eventIds: string[]) => {
           }
         },
         totalOrders: { $sum: 1 },
-        avgOrderValue: { $avg: "$pricing.subtotal" },
+        avgOrderValue: { $avg: "$pricing.total" },
         firstOrderDate: { $min: "$createdAt" },
         lastOrderDate: { $max: "$createdAt" }
       }
@@ -445,7 +445,7 @@ export const getEventAnalytics = async (eventId: string) => {
       $group: {
         _id: "$tickets.variantName",
         ticketsSold: { $sum: "$tickets.quantity" },
-        revenue: { $sum: "$tickets.subtotal" },
+        revenue: { $sum: "$tickets.total" },
         orders: { $sum: 1 }
       }
     },
@@ -469,7 +469,7 @@ export const getEventAnalytics = async (eventId: string) => {
         _id: {
           $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
         },
-        revenue: { $sum: "$pricing.subtotal" },
+        revenue: { $sum: "$pricing.total" },
         orders: { $sum: 1 },
         tickets: {
           $sum: {
