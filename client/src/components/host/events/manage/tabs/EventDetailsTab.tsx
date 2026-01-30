@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music, Calendar, Clock10, Building2, User, Save, Upload, X, Trash, Loader2, AlertCircle } from 'lucide-react';
+import { Music, Calendar, Clock10, Building2, User, Save, Upload, X, Trash, Loader2, AlertCircle, Bell } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import Switch from '@/components/ui/Switch';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
 import { DocumentUploader } from '@/components/ui/DocumentUploader';
 import { ImageUploader } from '@/components/ui/ImageUploader';
+import { DateInput } from '@/components/ui/DateInput';
+import { TimeInput } from '@/components/ui/TimeInput';
 import { useNotification } from '@/lib/context/notification';
 import { eventsService } from '@/lib/api/events';
 
@@ -26,6 +29,16 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
   // Save functionality state
   const [saving, setSaving] = useState(false);
   const [galleryUploaderKey, setGalleryUploaderKey] = useState(0);
+  
+  // Schedule date/time picker state
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [startTimeOpen, setStartTimeOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+  const [endTimeOpen, setEndTimeOpen] = useState(false);
+  
+  // Schedule confirmation modal state
+  const [showScheduleConfirm, setShowScheduleConfirm] = useState(false);
+  const [pendingScheduleChange, setPendingScheduleChange] = useState<{start: string, end: string} | null>(null);
 
   // Sync state with data when data loads
   useEffect(() => {
@@ -84,19 +97,10 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
         }
         
         // Show warning for schedule modification
-        const confirmed = window.confirm(
-          `⚠️ Schedule Modification Warning\n\n` +
-          `You are about to modify the event schedule. This can only be done ONCE.\n` +
-          `All attendees will be notified of this change.\n\n` +
-          `Original: ${new Date(data.event.schedule!.startDate).toLocaleString()}\n` +
-          `New: ${new Date(scheduleStart).toLocaleString()}\n\n` +
-          `Continue?`
-        );
-        
-        if (!confirmed) {
-          setSaving(false);
-          return;
-        }
+        setPendingScheduleChange({ start: scheduleStart, end: scheduleEnd });
+        setShowScheduleConfirm(true);
+        setSaving(false);
+        return;
       }
       
       // Prepare update data
@@ -162,6 +166,74 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
       setSaving(false);
     }
   };
+  
+  const handleScheduleConfirm = async () => {
+    if (!data?.event || !pendingScheduleChange) return;
+    
+    try {
+      setSaving(true);
+      setShowScheduleConfirm(false);
+      
+      // Prepare update data
+      const updateData: any = {
+        description,
+        tagline,
+        media: {
+          coverImage: {
+            url: coverImage,
+            alt: data.event.media?.coverImage?.alt || data.event.title,
+            thumbnailUrl: data.event.media?.coverImage?.url
+          },
+          gallery
+        },
+        schedule: {
+          ...data.event.schedule,
+          startDate: pendingScheduleChange.start,
+          endDate: pendingScheduleChange.end,
+          scheduleModified: true
+        }
+      };
+      
+      // Call backend API
+      const result = await eventsService.updateEventByStatus(
+        data.event._id,
+        data.event.status,
+        updateData
+      );
+
+      // Handle warnings
+      if (result.warnings && result.warnings.length > 0) {
+        result.warnings.forEach(warning => {
+          showNotification('info', 'Notice', warning);
+        });
+      }
+
+      showNotification('success', 'Changes Saved', result.message || 'Event schedule has been updated.');
+      
+      // Update local state with new data
+      const updatedData: HostEventDetailsResponse = {
+        ...data,
+        event: {
+          ...data.event,
+          description,
+          tagline,
+          schedule: updateData.schedule,
+          media: updateData.media
+        }
+      };
+      
+      onUpdate(updatedData);
+      setMode('preview');
+      setPendingScheduleChange(null);
+      
+    } catch (error: any) {
+      console.error('Save error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save changes';
+      showNotification('error', 'Save Failed', errorMessage);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleGalleryUpload = (url: string) => {
       setGallery(prev => [...prev, { url, caption: '', thumbnailUrl: url, order: prev.length + 1 }]);
@@ -175,6 +247,7 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
 
 
   return (
+    <>
     <section className="space-y-6 animate-slide-up mb-24">
       <div className="flex items-center justify-between">
         <Switch
@@ -329,31 +402,57 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
                   <div className={`flex flex-col gap-2 mt-4 font-[300] text-slate-700 ${mode === 'edit' && !canModifySchedule() ? 'opacity-50' : ''}`}>
                     {mode === 'edit' && canModifySchedule() ? (
                       <>
-                        <div className="mb-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
                           <p className="text-xs text-amber-800 font-medium">⚠️ Schedule can be modified by ±2 hours only once</p>
                         </div>
-                        <div className="space-y-3">
+                        
+                        <div className="space-y-4">
                           <div>
-                            <label className="flex items-center gap-2 text-xs font-medium text-neutral-600 mb-1">
-                              <Calendar size={12} /> Start Date & Time
-                            </label>
-                            <input
-                              type="datetime-local"
-                              value={scheduleStart ? new Date(scheduleStart).toISOString().slice(0, 16) : ''}
-                              onChange={(e) => setScheduleStart(new Date(e.target.value).toISOString())}
-                              className="w-full text-sm px-3 py-2 border border-brand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400"
-                            />
+                            <p className="text-xs font-medium text-neutral-600 mb-2">Start Date & Time</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <DateInput
+                                label="Start Date"
+                                value={scheduleStart}
+                                isOpen={startDateOpen}
+                                onOpen={() => setStartDateOpen(true)}
+                                onClose={() => setStartDateOpen(false)}
+                                onChange={(date) => setScheduleStart(date)}
+                                onNext={() => setStartTimeOpen(true)}
+                              />
+                              <TimeInput
+                                label="Start Time"
+                                value={scheduleStart}
+                                isOpen={startTimeOpen}
+                                onOpen={() => setStartTimeOpen(true)}
+                                onClose={() => setStartTimeOpen(false)}
+                                onChange={(date) => setScheduleStart(date)}
+                              />
+                            </div>
                           </div>
+                          
                           <div>
-                            <label className="flex items-center gap-2 text-xs font-medium text-neutral-600 mb-1">
-                              <Clock10 size={12} /> End Date & Time
-                            </label>
-                            <input
-                              type="datetime-local"
-                              value={scheduleEnd ? new Date(scheduleEnd).toISOString().slice(0, 16) : ''}
-                              onChange={(e) => setScheduleEnd(new Date(e.target.value).toISOString())}
-                              className="w-full text-sm px-3 py-2 border border-brand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400"
-                            />
+                            <p className="text-xs font-medium text-neutral-600 mb-2">End Date & Time</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <DateInput
+                                label="End Date"
+                                value={scheduleEnd}
+                                isOpen={endDateOpen}
+                                onOpen={() => setEndDateOpen(true)}
+                                onClose={() => setEndDateOpen(false)}
+                                onChange={(date) => setScheduleEnd(date)}
+                                onNext={() => setEndTimeOpen(true)}
+                                minDate={scheduleStart ? new Date(scheduleStart) : undefined}
+                              />
+                              <TimeInput
+                                label="End Time"
+                                value={scheduleEnd}
+                                isOpen={endTimeOpen}
+                                onOpen={() => setEndTimeOpen(true)}
+                                onClose={() => setEndTimeOpen(false)}
+                                onChange={(date) => setScheduleEnd(date)}
+                                minTime={scheduleStart}
+                              />
+                            </div>
                           </div>
                         </div>
                       </>
@@ -470,5 +569,127 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
           </div>
       </div>
     </section>
+    
+    {/* Schedule Change Confirmation Modal */}
+    {showScheduleConfirm && data?.event && pendingScheduleChange && createPortal(
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+        <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          exit={{ opacity: 0 }} 
+          className="absolute inset-0 bg-slate-950/40 backdrop-blur-md" 
+          onClick={() => {
+            setShowScheduleConfirm(false);
+            setPendingScheduleChange(null);
+          }}
+        />
+        
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="relative w-full max-w-[500px] bg-white rounded-[2rem] shadow-4xl overflow-hidden border border-slate-100"
+        >
+          {/* Header */}
+          <div className="p-8 pb-4 flex justify-between items-start">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+                <Bell className="text-amber-600" size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-[500] text-slate-900 tracking-tight">Schedule Modification</h3>
+                <p className="text-xs text-slate-500 font-[300]">This action requires confirmation</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                setShowScheduleConfirm(false);
+                setPendingScheduleChange(null);
+              }} 
+              className="p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-full hover:bg-slate-100"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Warning Message */}
+          <div className="px-8 mb-6">
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <p className="text-sm text-amber-900 font-[400] leading-relaxed">
+                ⚠️ You are about to modify the event schedule. <strong>This can only be done ONCE.</strong> All attendees will be notified of this change.
+              </p>
+            </div>
+          </div>
+
+          {/* Schedule Comparison */}
+          <div className="px-8 mb-8 space-y-4">
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Original Schedule</p>
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <Calendar size={14} className="text-slate-400" />
+                <span>{new Date(data.event.schedule!.startDate).toLocaleString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit'
+                })}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center">
+                <svg className="w-4 h-4 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="p-4 bg-brand-50 rounded-xl border border-brand-200">
+              <p className="text-[10px] font-bold text-brand-600 uppercase tracking-wider mb-2">New Schedule</p>
+              <div className="flex items-center gap-2 text-sm text-brand-900 font-[500]">
+                <Calendar size={14} className="text-brand-500" />
+                <span>{new Date(pendingScheduleChange.start).toLocaleString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit'
+                })}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="px-8 pb-8 flex gap-3">
+            <button 
+              onClick={() => {
+                setShowScheduleConfirm(false);
+                setPendingScheduleChange(null);
+              }}
+              className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-[500] hover:bg-slate-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleScheduleConfirm}
+              disabled={saving}
+              className="flex-1 px-6 py-3 bg-brand-600 text-white rounded-xl font-[500] hover:bg-brand-700 transition-colors shadow-lg shadow-brand-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Confirming...</span>
+                </>
+              ) : (
+                'Confirm Change'
+              )}
+            </button>
+          </div>
+        </motion.div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 };
