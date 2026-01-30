@@ -14,9 +14,10 @@ import { useNotification } from '@/lib/context/notification';
 interface EventOverviewProps {
   data: HostEventDetailsResponse | null;
   onUpdate?: (newData: HostEventDetailsResponse) => void;
+  onRefetch?: () => Promise<void>;
 }
 
-export const EventOverview = ({ data, onUpdate }: EventOverviewProps) => {
+export const EventOverview = ({ data, onUpdate, onRefetch }: EventOverviewProps) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const [isTogglingPause, setIsTogglingPause] = useState(false);
@@ -48,27 +49,9 @@ export const EventOverview = ({ data, onUpdate }: EventOverviewProps) => {
       const result = await eventsService.toggleSalesPause(event._id);
       showNotification('success', 'Sales Updated', result.message);
 
-      // Update the local data to reflect the change using onUpdate
-      if (data?.event && onUpdate) {
-        // Create new moderation object with sales paused state
-        const currentModeration = data.event.moderation || {};
-        const updatedModeration = {
-          ...currentModeration,
-          sales: {
-            ...(currentModeration.sales || {}),
-            paused: result.salesPaused
-          }
-        };
-
-        const updatedData: HostEventDetailsResponse = {
-          ...data,
-          event: {
-            ...data.event,
-            salesPaused: result.salesPaused,
-            moderation: updatedModeration
-          }
-        };
-        onUpdate(updatedData);
+      // Refetch data from backend to ensure state is in sync
+      if (onRefetch) {
+        await onRefetch();
       }
     } catch (error: any) {
       console.error('Toggle sales pause error:', error);

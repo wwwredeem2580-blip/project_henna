@@ -73,7 +73,7 @@ export default function ManageEvent() {
     const allTabs = [
       {
         label: 'Overview',
-        content: <EventOverview data={data} onUpdate={handleUpdateData} />,
+        content: <EventOverview data={data} onUpdate={handleUpdateData} onRefetch={fetchEventData} />,
         icon: <Layout size={16} />,
       },
       {
