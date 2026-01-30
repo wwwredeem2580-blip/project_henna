@@ -12,6 +12,8 @@ interface TicketData {
   quantity: number;
   wristbandColor: string;
   benefits: string[];
+  isVisible?: boolean;
+  isActive?: boolean;
 }
 
 interface TicketConfiguratorModalProps {
@@ -73,6 +75,8 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
       quantity: 0,
       wristbandColor: WRISTBAND_COLORS[0].value,
       benefits: [],
+      isVisible: true,
+      isActive: true,
     }
   );
 
@@ -90,6 +94,8 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
         quantity: 0,
         wristbandColor: WRISTBAND_COLORS[0].value,
         benefits: [],
+        isVisible: true,
+        isActive: true,
       });
       setStep('details');
     }
@@ -330,6 +336,51 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                                 />
                               </button>
                             ))}
+                          </div>
+                        </div>
+
+                        {/* Ticket Visibility and Sales Status Controls */}
+                        <div className="space-y-3 pt-4 border-t border-slate-200">
+                          <p className="text-xs text-neutral-500 font-[500] uppercase tracking-wider">Ticket Controls</p>
+                          
+                          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                            <div>
+                              <label className="text-sm font-[500] text-neutral-700">Visible on Event Page</label>
+                              <p className="text-xs text-neutral-500 mt-0.5">Customers can see this ticket</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => updateField('isVisible', !ticketData.isVisible)}
+                              className={`relative w-11 h-6 rounded-full transition-colors ${
+                                ticketData.isVisible !== false ? 'bg-emerald-500' : 'bg-slate-300'
+                              }`}
+                            >
+                              <div
+                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                                  ticketData.isVisible !== false ? 'translate-x-5' : 'translate-x-0'
+                                }`}
+                              />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                            <div>
+                              <label className="text-sm font-[500] text-neutral-700">Sales Active</label>
+                              <p className="text-xs text-neutral-500 mt-0.5">Customers can purchase this ticket</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => updateField('isActive', !ticketData.isActive)}
+                              className={`relative w-11 h-6 rounded-full transition-colors ${
+                                ticketData.isActive !== false ? 'bg-emerald-500' : 'bg-slate-300'
+                              }`}
+                            >
+                              <div
+                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                                  ticketData.isActive !== false ? 'translate-x-5' : 'translate-x-0'
+                                }`}
+                              />
+                            </button>
                           </div>
                         </div>
                       </motion.div>

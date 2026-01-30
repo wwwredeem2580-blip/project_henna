@@ -23,27 +23,21 @@ export const EventTicketsTab = ({ data, onUpdate, onRefetch }: EventTicketsTabPr
   
   // Save functionality state
   const [saving, setSaving] = useState(false);
-  const [initialTickets, setInitialTickets] = useState<any[]>([]);
+  const [initialTickets, setInitialTickets] = useState<any[] | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Track initial state when data loads
+  // Track initial state when data loads (using null to track if already initialized)
   useEffect(() => {
-    if (data?.event?.tickets && initialTickets.length === 0) {
+    if (data?.event?.tickets !== undefined && initialTickets === null) {
+      // Set initial state only once when data first loads
       setInitialTickets(JSON.parse(JSON.stringify(data.event.tickets)));
     }
-  }, [data?.event?.tickets]);
+  }, [data?.event?.tickets, initialTickets]);
 
   // Detect changes by comparing current tickets with initial state
   useEffect(() => {
-    if (!data?.event?.tickets) {
+    if (!data?.event?.tickets || initialTickets === null) {
       setHasChanges(false);
-      return;
-    }
-
-    // If we have tickets but no initial state yet, don't mark as changed
-    // (this happens on first load)
-    if (initialTickets.length === 0 && data.event.tickets.length > 0) {
-      // This is the initial load, not a change
       return;
     }
 
@@ -88,6 +82,8 @@ export const EventTicketsTab = ({ data, onUpdate, onRefetch }: EventTicketsTabPr
 
       // Refetch data from backend to ensure state is in sync
       if (onRefetch) {
+        // Reset initialTickets to null so it re-initializes after refetch
+        setInitialTickets(null);
         await onRefetch();
       } else {
         // Fallback: Update initial state to new saved state
@@ -178,6 +174,8 @@ export const EventTicketsTab = ({ data, onUpdate, onRefetch }: EventTicketsTabPr
             quantity: ticketData.quantity,
             wristbandColor: ticketData.wristbandColor,
             benefits: ticketData.benefits,
+            isVisible: ticketData.isVisible,
+            isActive: ticketData.isActive,
           }
           : t
       );

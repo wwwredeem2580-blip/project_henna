@@ -50,18 +50,22 @@ export const EventOverview = ({ data, onUpdate }: EventOverviewProps) => {
 
       // Update the local data to reflect the change using onUpdate
       if (data?.event && onUpdate) {
+        // Create new moderation object with sales paused state
+        const currentModeration = data.event.moderation || {};
+        const updatedModeration = {
+          ...currentModeration,
+          sales: {
+            ...(currentModeration.sales || {}),
+            paused: result.salesPaused
+          }
+        };
+
         const updatedData: HostEventDetailsResponse = {
           ...data,
           event: {
             ...data.event,
             salesPaused: result.salesPaused,
-            moderation: {
-              ...data.event.moderation,
-              sales: {
-                ...data.event.moderation?.sales,
-                paused: result.salesPaused
-              }
-            }
+            moderation: updatedModeration
           }
         };
         onUpdate(updatedData);
