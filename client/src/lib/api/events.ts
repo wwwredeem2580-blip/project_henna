@@ -112,6 +112,32 @@ class EventsService {
   async toggleSalesPause(eventId: string, reason?: string): Promise<{ message: string; salesPaused: boolean }> {
     return await apiClient.post(`/api/event/host/toggle-sales/${eventId}`, { reason });
   }
+
+  /**
+   * Update event based on its current status (routes to correct endpoint)
+   */
+  async updateEventByStatus(
+    eventId: string,
+    status: string,
+    data: any
+  ): Promise<{ eventId: string; message: string; warnings?: string[]; refundsRequired?: any[] }> {
+    const endpoint = this.getUpdateEndpoint(status, eventId);
+    return await apiClient.put(endpoint, data);
+  }
+
+  /**
+   * Get the correct update endpoint based on event status
+   */
+  private getUpdateEndpoint(status: string, eventId: string): string {
+    const statusMap: Record<string, string> = {
+      draft: `/api/event/host/draft/${eventId}`,
+      pending_approval: `/api/event/host/pending/${eventId}`,
+      approved: `/api/event/host/approved/${eventId}`,
+      published: `/api/event/host/published/${eventId}`,
+      live: `/api/event/host/live/${eventId}`,
+    };
+    return statusMap[status] || statusMap.draft;
+  }
 }
 
 export const eventsService = new EventsService();
