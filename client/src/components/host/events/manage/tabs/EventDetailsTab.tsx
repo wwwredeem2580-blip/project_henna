@@ -25,6 +25,7 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
   
   // Save functionality state
   const [saving, setSaving] = useState(false);
+  const [galleryUploaderKey, setGalleryUploaderKey] = useState(0);
 
   // Sync state with data when data loads
   useEffect(() => {
@@ -164,6 +165,8 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
 
   const handleGalleryUpload = (url: string) => {
       setGallery(prev => [...prev, { url, caption: '', thumbnailUrl: url, order: prev.length + 1 }]);
+      // Reset the uploader by changing its key
+      setGalleryUploaderKey(prev => prev + 1);
   };
 
   const handleRemoveGalleryImage = (index: number) => {
@@ -283,6 +286,7 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
                       {mode === 'edit' && (
                           <div className="h-20 w-full flex-shrink-0">
                               <ImageUploader 
+                                   key={galleryUploaderKey}
                                    type="gallery"
                                    onUploadComplete={(url) => handleGalleryUpload(url)}
                                    maxSizeMB={5}

@@ -198,9 +198,19 @@ export const EventTicketsTab = ({ data, onUpdate }: EventTicketsTabProps) => {
         tier: ticketData.tier,
         price: { amount: ticketData.price, currency: 'BDT' },
         quantity: ticketData.quantity,
+        limits: {
+          minPerOrder: 1,
+          maxPerOrder: 5
+        },
         sold: 0,
+        reserved: 0,
         wristbandColor: ticketData.wristbandColor,
-        benefits: ticketData.benefits,
+        accentColor: ticketData.wristbandColor || '#4f46e5',
+        isDark: false,
+        glassMode: false,
+        cornerRadius: 32,
+        perforationStyle: 'dotted' as const,
+        benefits: ticketData.benefits || [],
         isVisible: true,
         isActive: true,
       };
