@@ -193,8 +193,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 alt="Preview"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+              <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                <div className="md:opacity-0 md:group-hover:opacity-100 transition-opacity flex gap-2">
                   <button
                     onClick={handleClick}
                     className="px-4 py-2 bg-white text-slate-700 rounded-lg text-sm font-[500] hover:bg-slate-100 transition-all"

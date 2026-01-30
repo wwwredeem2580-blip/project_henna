@@ -346,7 +346,7 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
                             {mode === 'edit' && (
                                 <button 
                                     onClick={() => handleRemoveGalleryImage(idx)}
-                                    className="absolute top-1 right-1 p-1 bg-red-500/80 text-white rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                    className="absolute top-1 right-1 p-1 bg-red-500/80 text-white rounded-full md:opacity-0 md:group-hover/item:opacity-100 transition-opacity"
                                 >
                                     <X size={12} />
                                 </button>
@@ -357,14 +357,59 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
                       
                       {/* Add Gallery Image Button (Edit Mode) */}
                       {mode === 'edit' && (
-                          <div className="h-20 w-full flex-shrink-0">
-                              <ImageUploader 
-                                   key={galleryUploaderKey}
-                                   type="gallery"
-                                   onUploadComplete={(url) => handleGalleryUpload(url)}
-                                   maxSizeMB={5}
-                                   acceptedFormats={['image/jpeg', 'image/png']}
-                              />
+                          <div className="h-20 w-full flex-shrink-0 rounded-tr-sm rounded-bl-sm border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-brand-400 transition-all cursor-pointer flex items-center justify-center group/upload" onClick={() => document.getElementById('gallery-uploader-input')?.click()}>
+                            <input
+                              id="gallery-uploader-input"
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  try {
+                                    const { mediaService } = await import('@/lib/api/media');
+                                    const ImageKit = (await import('imagekit-javascript')).default;
+                                    
+                                    const auth = await mediaService.getImageKitAuth();
+                                    const imagekit = new ImageKit({
+                                      publicKey: auth.publicKey,
+                                      urlEndpoint: auth.urlEndpoint,
+                                    });
+                                    
+                                    const uploadResponse: any = await new Promise((resolve, reject) => {
+                                      imagekit.upload({
+                                        file: file,
+                                        fileName: `event_gallery_${Date.now()}_${file.name}`,
+                                        folder: `/zenvy/event_gallery`,
+                                        useUniqueFileName: true,
+                                        tags: ['event_gallery'],
+                                        signature: auth.signature,
+                                        expire: auth.expire,
+                                        token: auth.token,
+                                      }, (err: any, result: any) => {
+                                        if (err) reject(new Error(err.message));
+                                        else resolve(result);
+                                      });
+                                    });
+                                    
+                                    await mediaService.trackImageKitUpload({
+                                      fileId: uploadResponse.fileId,
+                                      url: uploadResponse.url,
+                                      filename: uploadResponse.name,
+                                      type: 'event_gallery',
+                                      status: 'permanent',
+                                    });
+                                    
+                                    handleGalleryUpload(uploadResponse.url);
+                                    // Reset input
+                                    e.target.value = '';
+                                  } catch (error) {
+                                    console.error('Gallery upload error:', error);
+                                  }
+                                }
+                              }}
+                              className="hidden"
+                            />
+                            <Upload className="w-6 h-6 text-slate-400 group-hover/upload:text-brand-500 transition-colors" />
                           </div>
                       )}
                     </div>
