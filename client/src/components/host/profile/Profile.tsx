@@ -48,6 +48,8 @@ import Sidebar from '@/components/layout/Sidebar';
 import { BDTIcon } from '@/components/ui/Icons';
 
 
+import { PhoneVerification } from './PhoneVerification';
+
 export interface PayoutConfig {
   type: 'bank' | 'bkash' | 'nagad' | null;
   details: {
@@ -65,12 +67,30 @@ export default function Profile() {
   const router = useRouter();
   
   // State management
+  // State management
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [editingPayoutType, setEditingPayoutType] = useState<'bank_transfer' | 'bkash' | 'nagad' | 'rocket' | null>(null);
   const [activeSettingsSection, setActiveSettingsSection] = useState('Phone Verification');
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Payment form state
+  const [paymentFormData, setPaymentFormData] = useState({
+    method: '',
+    mobileNumber: '',
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    branchName: '',
+    routingNumber: '',
+    swiftCode: ''
+  });
+
+  // Phone verification state
+  const [verifyPhone, setVerifyPhone] = useState('');
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
 
   // Fetch profile data
   useEffect(() => {
@@ -79,6 +99,25 @@ export default function Profile() {
         setLoading(true);
         const data = await hostEventsService.getProfile();
         setProfile(data);
+        
+        // Initialize phone number
+        if (data.user?.phoneNumber) {
+          setVerifyPhone(data.user.phoneNumber);
+        }
+
+        // Pre-fill form if payment details exist
+        if (data.paymentDetails) {
+          setPaymentFormData({
+            method: data.paymentDetails.method || '',
+            mobileNumber: data.paymentDetails.mobileNumber || '',
+            accountHolderName: data.paymentDetails.accountHolderName || '',
+            bankName: data.paymentDetails.bankName || '',
+            accountNumber: data.paymentDetails.accountNumber || '',
+            branchName: data.paymentDetails.branchName || '',
+            routingNumber: data.paymentDetails.routingNumber || '',
+            swiftCode: data.paymentDetails.swiftCode || ''
+          });
+        }
       } catch (error: any) {
         console.error('Failed to fetch profile:', error);
         setError(error.message || 'Failed to load profile');
@@ -90,9 +129,40 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
-  const handleSavePayout = async (details: any) => {
+  const handleVerificationComplete = async () => {
+    // Refresh profile to update verified status
+    const updatedProfile = await hostEventsService.getProfile();
+    setProfile(updatedProfile);
+    setIsEditingPhone(false);
+  };
+
+  const handlePhoneEdit = () => {
+    setIsEditingPhone(true);
+  };
+
+  // Handle form input changes
+  const handleFormChange = (field: string, value: string) => {
+    setPaymentFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Reset form when changing payment type
+  useEffect(() => {
+    if (editingPayoutType) {
+      setPaymentFormData(prev => ({
+        ...prev,
+        method: editingPayoutType
+      }));
+    }
+  }, [editingPayoutType]);
+
+  const handleSavePayout = async () => {
     try {
-      await hostEventsService.updatePaymentDetails(details);
+      setIsSaving(true);
+      await hostEventsService.updatePaymentDetails(paymentFormData);
+      
       // Refresh profile data
       const updatedProfile = await hostEventsService.getProfile();
       setProfile(updatedProfile);
@@ -100,6 +170,8 @@ export default function Profile() {
     } catch (error: any) {
       console.error('Failed to save payment details:', error);
       setError(error.message || 'Failed to save payment details');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -211,22 +283,66 @@ export default function Profile() {
                         <Smartphone size={16}/>
                       </div>
                       <div className="space-y-1">
-                        <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Phone Verification Required</h2>
+                        <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Phone Verification</h2>
                         <p className="text-[12px] text-neutral-500 font-[300]">To complete your host profile, we need to verify your phone number.</p>
                       </div>
                     </div>
-                    <div className="bg-white px-2 rounded-[2rem] space-y-8">
-                      <div className="space-y-4">
-                        <label className="text-sm font-[300] text-neutral-750 block ml-1">Phone Number</label>
-                        <div className="flex flex-row gap-4">
-                          <div className="bg-slate-50 border-2 border-transparent px-4 py-2 rounded-tr-lg rounded-bl-lg text-neutral-500 font-[300] flex items-center justify-center text-sm">+880</div>
-                          <div className="flex-1">
-                            <input type="tel" placeholder="171 234 5678" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent focus:border-brand-500/30 focus:bg-white rounded-tr-lg rounded-bl-lg text-sm font-[300] outline-none transition-all placeholder:text-neutral-300"/>
-                          </div>
+                    
+                    <div className="bg-white px-2 rounded-[2rem]">
+                      {profile?.phoneVerified ? (
+                         <div className="space-y-6">
+                           <div className="p-4 bg-green-50 border border-green-100 rounded-xl flex items-center gap-3">
+                             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 shadow-sm">
+                               <ShieldCheck size={20} />
+                             </div>
+                             <div>
+                               <p className="text-sm font-medium text-green-800">Phone Verified</p>
+                               <p className="text-xs text-green-600">Your number {profile.phoneVerificationDetails?.phoneNumber || profile.user.phoneNumber} is verified.</p>
+                             </div>
+                           </div>
+                           
+                           <button 
+                             onClick={() => {
+                               // To change number, we just need to render the verification component again
+                               // By default, if they follow the flow, it will verify the new number
+                               // However, since we show this block when profile.phoneVerified is true,
+                               // we might need a local state to toggle "edit mode"
+                               // For now, let's just use a simple alert or reuse the verify component conditionally?
+                               // Better approach: Add a state 'isEditingPhone'
+                               handlePhoneEdit();
+                             }}
+                             className="text-sm text-brand-600 hover:text-brand-700 font-medium underline"
+                           >
+                             Change Verified Number
+                           </button>
+                         </div>
+                      ) : (
+                        <PhoneVerification 
+                          phoneNumber={verifyPhone}
+                          onPhoneUpdate={setVerifyPhone}
+                          onVerificationComplete={handleVerificationComplete}
+                        />
+                      )}
+                      
+                      {isEditingPhone && profile?.phoneVerified && (
+                        <div className="mt-8 pt-8 border-t border-slate-100">
+                          <h3 className="text-sm font-medium text-slate-900 mb-4">Update Phone Number</h3>
+                          <PhoneVerification 
+                            phoneNumber={verifyPhone}
+                            onPhoneUpdate={setVerifyPhone}
+                            onVerificationComplete={() => {
+                              handleVerificationComplete();
+                              setIsEditingPhone(false);
+                            }}
+                          />
+                          <button 
+                            onClick={() => setIsEditingPhone(false)}
+                            className="mt-4 text-xs text-slate-400 hover:text-slate-600"
+                          >
+                            Cancel
+                          </button>
                         </div>
-                        <p className="text-[10px] text-neutral-500 font-[300]">Enter your 10-digit number</p>
-                      </div>
-                      <button className="w-full bg-brand-500 text-white py-2 rounded-tr-lg rounded-bl-lg font-[500] text-sm hover:bg-brand-600 transition-all shadow-xl shadow-brand-100 flex items-center justify-center gap-3">Send Verification Code <ArrowUpRight size={20}/></button>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -319,37 +435,67 @@ export default function Profile() {
                             <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-2 flex flex-col gap-1">
                                 <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Bank Name</label>
-                                <input placeholder="e.g. City Bank" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                                <input 
+                                  value={paymentFormData.bankName}
+                                  onChange={(e) => handleFormChange('bankName', e.target.value)}
+                                  placeholder="e.g. City Bank" 
+                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
+                                />
                               </div>
                               <div className="space-y-2 flex flex-col gap-1">
                                 <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Account Name</label>
-                                <input placeholder="Full Name" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                                <input 
+                                  value={paymentFormData.accountHolderName}
+                                  onChange={(e) => handleFormChange('accountHolderName', e.target.value)}
+                                  placeholder="Full Name" 
+                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
+                                />
                               </div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-4">
                               <div className="space-y-2 flex flex-col gap-1">
                                 <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Account Number</label>
-                                <input placeholder="0000 0000 0000" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                                <input 
+                                  value={paymentFormData.accountNumber}
+                                  onChange={(e) => handleFormChange('accountNumber', e.target.value)}
+                                  placeholder="0000 0000 0000" 
+                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
+                                />
                               </div>
                               <div className="space-y-2 flex flex-col gap-1">
                                 <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Branch Name</label>
-                                <input placeholder="Dhaka Main Branch" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
-                            </div>
+                                <input 
+                                  value={paymentFormData.branchName}
+                                  onChange={(e) => handleFormChange('branchName', e.target.value)}
+                                  placeholder="Dhaka Main Branch" 
+                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
+                                />
+                              </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-2 flex flex-col gap-1">
                                 <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Routing Number</label>
-                                <input placeholder="Routing Number" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                                <input 
+                                  value={paymentFormData.routingNumber}
+                                  onChange={(e) => handleFormChange('routingNumber', e.target.value)}
+                                  placeholder="Routing Number" 
+                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
+                                />
                               </div>
                               <div className="space-y-2 flex flex-col gap-1">
                                 <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Swift Code</label>
-                                <input placeholder="Swift Code" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                                <input 
+                                  value={paymentFormData.swiftCode}
+                                  onChange={(e) => handleFormChange('swiftCode', e.target.value)}
+                                  placeholder="Swift Code" 
+                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
+                                />
                               </div>
                             </div>
                           </div>
                         )}
 
-                        {(editingPayoutType === 'bkash' || editingPayoutType === 'nagad') && (
+                        {(editingPayoutType === 'bkash' || editingPayoutType === 'nagad' || editingPayoutType === 'rocket') && (
                           <div className="space-y-6">
                             <div className="p-4 bg-brand-50 rounded-tr-xl rounded-bl-xl flex items-center gap-4 border border-brand-100 mb-4">
                               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-500"><Smartphone size={20}/></div>
@@ -359,17 +505,39 @@ export default function Profile() {
                               <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Wallet Number</label>
                               <div className="flex gap-4">
                                 <div className="px-4 py-2 text-sm bg-slate-50 rounded-tr-lg rounded-bl-lg font-[400] text-slate-900 border-2 border-transparent">+880</div>
-                                <input placeholder="171 234 5678" className="flex-1 px-6 py-2 text-sm bg-slate-50 rounded-tr-lg rounded-bl-lg font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                                <input 
+                                  value={paymentFormData.mobileNumber}
+                                  onChange={(e) => handleFormChange('mobileNumber', e.target.value)}
+                                  placeholder="171 234 5678" 
+                                  className="flex-1 px-6 py-2 text-sm bg-slate-50 rounded-tr-lg rounded-bl-lg font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
+                                />
                               </div>
                             </div>
+                            <div className="space-y-2 flex flex-col gap-1">
+                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Account Holder Name</label>
+                                <input 
+                                  value={paymentFormData.accountHolderName}
+                                  onChange={(e) => handleFormChange('accountHolderName', e.target.value)}
+                                  placeholder="Full Name" 
+                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
+                                />
+                              </div>
                           </div>
                         )}
 
                         <button 
-                          onClick={() => handleSavePayout({})}
-                          className="w-full bg-brand-500 text-white py-2 rounded-tr-lg rounded-bl-lg font-[500] text-sm hover:bg-brand-600 transition-all shadow-xl shadow-brand-100 flex items-center justify-center gap-3"
+                          onClick={handleSavePayout}
+                          disabled={isSaving}
+                          className="w-full bg-brand-500 text-white py-2 rounded-tr-lg rounded-bl-lg font-[500] text-sm hover:bg-brand-600 transition-all shadow-xl shadow-brand-100 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Save & Set as Primary
+                          {isSaving ? (
+                            <>
+                              <Loader2 size={18} className="animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            'Save & Set as Primary'
+                          )}
                         </button>
                       </motion.div>
                     )}

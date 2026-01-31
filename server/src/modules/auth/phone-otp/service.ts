@@ -23,24 +23,21 @@ export const sendOTPService = async (req: Request, res: Response) => {
       throw new CustomError('User not found', 404);
     }
 
-    // Check if phone is already verified for this user
-    if (user.phoneVerified && user.phoneNumber === phoneNumber) {
+    const phoneVerification = await PhoneVerification.findOne({
+      userId,
+      verified: true,
+    }).sort({ createdAt: -1 });
+
+    if (phoneVerification && phoneVerification.phoneNumber === phoneNumber) {
       throw new CustomError('Phone number already verified', 400);
     }
 
     // Phone Number Change Policy: Prevent frequent changes
-    if (user.phoneVerified && user.phoneNumber && user.phoneNumber !== phoneNumber) {
-    
-      // Find when the phone was last verified
-      const lastVerification = await PhoneVerification.findOne({
-        userId,
-        phoneNumber: user.phoneNumber,
-        verified: true
-      }).sort({ verifiedAt: -1 });
+    if (phoneVerification && phoneVerification.phoneNumber !== phoneNumber) {
 
-      if (lastVerification && lastVerification.verifiedAt) {
+      if (phoneVerification.verifiedAt) {
         const daysSinceVerification = Math.floor(
-          (Date.now() - lastVerification.verifiedAt.getTime()) / (1000 * 60 * 60 * 24)
+          (Date.now() - phoneVerification.verifiedAt.getTime()) / (1000 * 60 * 60 * 24)
         );
 
         if (daysSinceVerification < PHONE_CHANGE_COOLDOWN_DAYS) {
@@ -58,10 +55,10 @@ export const sendOTPService = async (req: Request, res: Response) => {
     }
 
     // Check if phone number is already verified by another user
-    const existingUser = await User.findOne({
+    const existingUser = await PhoneVerification.findOne({
       phoneNumber,
-      phoneVerified: true,
-      _id: { $ne: userId } // Exclude current user
+      verified: true,
+      userId: { $ne: userId } // Exclude current user
     });
 
     if (existingUser) {
@@ -177,12 +174,6 @@ export const verifyOTPService = async (req: Request, res: Response) => {
     verification.verified = true;
     verification.verifiedAt = new Date();
     await verification.save();
-
-    // Update user with the verified phone number
-    await User.findByIdAndUpdate(userId, {
-      phoneNumber: verification.phoneNumber,
-      phoneVerified: true
-    });
 
     res.json({
       success: true,
