@@ -84,7 +84,6 @@ export const logisticsSchema = z.object({
 
 // Step 4: Verification
 export const verificationSchema = z.object({
-  hostType: z.enum(['individual', 'organization', 'venue']),
   documents: z.array(z.object({
     type: z.string(),
     url: z.string(),

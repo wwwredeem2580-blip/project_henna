@@ -351,12 +351,6 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
         result = verificationSchema.safeParse({
           verification: formData.verification,
         });
-        if (!result.success) {
-          const errorMap = result.error.flatten().fieldErrors;
-          const errorMessages = Object.values(errorMap).join(', ');
-          showNotification('error', 'Verification', 'Verification document is required');
-          return false;
-        }
       } else if (currentStep === 'tickets') {
         // Validate tickets
         result = ticketsStepSchema.safeParse({

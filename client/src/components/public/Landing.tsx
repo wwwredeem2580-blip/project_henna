@@ -212,7 +212,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
             </Button>
             {user.role === 'host' && (
               <Button 
-                onClick={onGetStarted}
+                onClick={() => router.push('/host/events/create')}
                 variant="brand-outline" 
                 size="lg" 
                 className="text-base h-14 px-8 rounded-xl"
