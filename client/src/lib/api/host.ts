@@ -33,6 +33,38 @@ export interface HostEventsResponse {
   };
 }
 
+export interface PaymentDetails {
+  method: 'bkash' | 'nagad' | 'rocket' | 'bank_transfer';
+  mobileNumber?: string;
+  accountHolderName: string;
+  bankName?: string;
+  accountNumber?: string;
+  branchName?: string;
+  verified: boolean;
+  verifiedAt?: string;
+}
+
+export interface HostProfile {
+  user: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    businessName: string;
+    businessEmail: string;
+    role: string;
+    emailVerified: boolean;
+  };
+  phoneVerified: boolean;
+  phoneVerificationDetails: {
+    verifiedAt: string;
+    phoneNumber: string;
+  } | null;
+  paymentDetails: PaymentDetails | null;
+  profileComplete: boolean;
+}
+
 
 class HostEventsService {
   /**
@@ -49,17 +81,38 @@ class HostEventsService {
 
 
   /**
-   * Get event by ID
+   * Get host event by ID
    */
-  async getEventById(eventId: string): Promise<any> {
+  async getHostEventById(eventId: string): Promise<any> {
     return await apiClient.get(`/api/host/event/${eventId}`);
   }
 
   /**
-   * Publish an event
+   * Publish event
    */
-  async publishEvent(eventId: string): Promise<void> {
+  async publishEvent(eventId: string): Promise<any> {
     return await apiClient.put(`/api/host/event/${eventId}/publish`);
+  }
+
+  /**
+   * Get host profile with verification status
+   */
+  async getProfile(): Promise<HostProfile> {
+    return await apiClient.get('/api/host/profile');
+  }
+
+  /**
+   * Update payment details
+   */
+  async updatePaymentDetails(details: Partial<PaymentDetails>): Promise<{ success: boolean; paymentDetails: PaymentDetails }> {
+    return await apiClient.post('/api/host/profile/payment', details);
+  }
+
+  /**
+   * Delete payment details
+   */
+  async deletePaymentDetails(): Promise<{ success: boolean }> {
+    return await apiClient.delete('/api/host/profile/payment');
   }
 }
 

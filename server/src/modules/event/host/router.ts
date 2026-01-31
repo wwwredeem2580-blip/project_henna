@@ -14,6 +14,7 @@ import {
 } from './service';
 import { handleError } from '../../../utils/handleError';
 import { isValidObjectId } from '../../../utils/isValidObjectId';
+import { requireProfileComplete } from '../../../middlewares/profileComplete';
 
 const router = Router();
 
@@ -38,7 +39,8 @@ router.get('/draft/:eventId', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+// Apply profile completion check to event creation
+router.post('/', requireProfileComplete, async (req, res) => {
   try {
     const hostId = req.user?.sub;
     
@@ -54,12 +56,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.post('/submit/:eventId', async (req, res) => {
+// Apply profile completion check to event submission
+router.post('/submit/:eventId', requireProfileComplete, async (req, res) => {
   try {
     const hostId = req.user?.sub;
     const eventId = req.params.eventId;
 
-    if (!isValidObjectId(eventId)) {
+    if (!isValidObjectId(eventId as string)) {
       return res.status(400).json({ message: "Invalid event ID" });
     }
     
@@ -67,7 +70,7 @@ router.post('/submit/:eventId', async (req, res) => {
       return res.status(401).json({ message: "Host not found" });
     }
 
-    const result = await submitEventService(hostId, eventId, req.body);
+    const result = await submitEventService(hostId, eventId as string, req.body);
     res.status(200).json(result);
   } catch (error) {
     console.error('Error creating event:', error);

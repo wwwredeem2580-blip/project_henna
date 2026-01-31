@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useNotification } from '@/lib/context/notification';
 import { CreateEvent } from '@/components/host/events/create/CreateEvent';
+import { ProfileCompletionGuard } from '@/components/guards/ProfileCompletionGuard';
 
 function CreateEventContent() {
   const searchParams = useSearchParams();
@@ -24,8 +25,10 @@ function CreateEventContent() {
 
 export default function CreateEventPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-brand-600">Loading...</div></div>}>
-      <CreateEventContent />
-    </Suspense>
+    <ProfileCompletionGuard>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-brand-600">Loading...</div></div>}>
+        <CreateEventContent />
+      </Suspense>
+    </ProfileCompletionGuard>
   );
 }
