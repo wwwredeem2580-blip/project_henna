@@ -52,7 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onGetStarted }) => {
               onClick={onLogin}
               variant="ghost" 
               size="sm"
-              className='hover:scale-103'
+              className='hover:translate-y-[-2px]'
             >
               Sign In
             </Button>

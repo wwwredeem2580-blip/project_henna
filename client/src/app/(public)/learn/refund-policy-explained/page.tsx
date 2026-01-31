@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { LearnHero } from '@/components/learn/LearnHero';
-import { LearnSection } from '@/components/learn/LearnSection';
+import { LearnHero } from '@/components/public/learn/LearnHero';
+import { LearnSection } from '@/components/public/learn/LearnSection';
 import { RefreshCw, CheckCircle2, XCircle, Scale } from 'lucide-react';
 
 export default function RefundPolicyPage() {

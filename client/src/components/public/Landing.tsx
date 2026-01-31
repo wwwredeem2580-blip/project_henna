@@ -213,19 +213,19 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
           >
             <Button 
               onClick={onGetStarted}
-              variant="brand" 
-              size="lg" 
-              className="text-base h-14 px-8 rounded-xl shadow-xl shadow-brand-200/50 hover:-translate-y-1 active:translate-y-0"
-            >
-              Get started
-            </Button>
-            <Button 
-              onClick={onLogin}
               variant="brand-outline" 
               size="lg" 
               className="text-base h-14 px-8 rounded-xl"
             >
-              Sign In
+              Get started
+            </Button>
+            <Button 
+              onClick={onExploreEvents}
+              variant="brand" 
+              size="lg" 
+              className="text-base h-14 px-8 rounded-xl shadow-xl shadow-brand-200/50 hover:-translate-y-1 active:translate-y-0"
+            >
+              Explore Events
             </Button>
           </motion.div>
           )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Landing } from "@/components/landing/Landing";
+import { Landing } from "@/components/public/Landing";
 import { useRouter } from "next/navigation";
 
 export default function Home() {

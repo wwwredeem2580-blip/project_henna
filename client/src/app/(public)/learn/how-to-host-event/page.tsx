@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { LearnHero } from '@/components/learn/LearnHero';
-import { LearnSection } from '@/components/learn/LearnSection';
+import { LearnHero } from '@/components/public/learn/LearnHero';
+import { LearnSection } from '@/components/public/learn/LearnSection';
 import { PenTool, CheckSquare, BarChart, Settings, UploadCloud } from 'lucide-react';
 
 export default function HowToHostPage() {
