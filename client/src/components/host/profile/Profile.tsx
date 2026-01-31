@@ -7,7 +7,7 @@ import {
   Upload, FileText, AlertCircle
 } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
-import { PhoneVerification } from '@/components/host/settings/PhoneVerification';
+import { PhoneVerification } from '@/components/host/profile/PhoneVerification';
 import { useAuth } from '@/lib/context/auth';
 import { apiClient } from '@/lib/api/client';
 
@@ -23,7 +23,7 @@ interface HostProfile {
   }>;
 }
 
-const SettingsPage: React.FC = () => {
+const ProfilePage: React.FC = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<HostProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -236,4 +236,4 @@ const SettingsPage: React.FC = () => {
   );
 };
 
-export default SettingsPage;
+export default ProfilePage;

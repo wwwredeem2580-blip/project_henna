@@ -130,8 +130,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   {stat.icon}
                   {stat.label}
                 </div>
-                <div className="text-2xl font-[500] tracking-tight text-neutral-700"> 
-                  <span className="text-sm font-[400] text-slate-400">{stat.prefix} </span>
+                <div className="text-lg font-[500] tracking-tight text-neutral-700"> 
+                  <span className="text-xs font-[400] text-slate-400">{stat.prefix} </span>
                   {stat.value}
                 </div>
                 <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />

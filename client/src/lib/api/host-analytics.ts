@@ -164,6 +164,14 @@ export const hostAnalyticsService = {
     if (filters?.search) params.append('search', filters.search);
     
     return await apiClient.get<HostOrdersResponse>(`/api/host/analytics/orders?${params.toString()}`);
+  },
+
+  getAnalyticsMetrics: async (): Promise<any> => {
+    return await apiClient.get('/api/host/analytics/metrics');
+  },
+
+  getAnalyticsRevenueChart: async (period: string): Promise<any> => {
+    return await apiClient.get(`/api/host/analytics/revenue-chart?period=${period}`);
   }
 };
 

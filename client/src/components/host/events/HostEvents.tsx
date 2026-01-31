@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { ticketService, Ticket } from "@/lib/api/ticket";
 import {
   AlertCircle,
+  BarChart3,
   Calendar,
   ChevronDown,
   Clock10,
@@ -12,6 +13,7 @@ import {
   GitGraph,
   Globe,
   HelpCircle,
+  Plus,
   Search,
   Trash,
   X,
@@ -97,6 +99,14 @@ export default function HostEvents() {
       setLoading(true);
       await eventsService.deleteEvent(eventId);
       showNotification('success', 'Event deletion', 'Event deleted successfully');
+      
+      // Refresh the events list after successful deletion
+      const hostEventsData = await hostEventsService.getHostEvents({
+        page: currentPage,
+        limit: 100,
+        filters: filters
+      });
+      setHostEventsData(hostEventsData);
     } catch (err: any) {
       showNotification('error', 'Event deletion', 'Failed to delete event');
     } finally {
@@ -109,6 +119,14 @@ export default function HostEvents() {
       setLoading(true);
       await hostEventsService.publishEvent(eventId);
       showNotification('success', 'Event publish', 'Event published successfully');
+      
+      // Refresh the events list after successful publication
+      const hostEventsData = await hostEventsService.getHostEvents({
+        page: currentPage,
+        limit: 100,
+        filters: filters
+      });
+      setHostEventsData(hostEventsData);
     } catch (err: any) {
       showNotification('error', 'Event publish', 'Failed to publish event');
     } finally {
@@ -154,14 +172,15 @@ export default function HostEvents() {
             <p className="text-sm text-slate-500 font-[300]">Manage and track all your hosted events.</p>
           </div>
           <div className="hidden lg:flex items-center gap-3">
-              <button onClick={() => router.push('/events')} title="Explore Events" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Calendar size={18}/></button>
-              <button onClick={() => router.push('/help')} title="Help" className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
-              <div title={user?.email} className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
+            <button title='Create Event' onClick={() => router.push('/host/events/create')} className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Plus size={18}/></button>
+            <button title='Analytics' onClick={() => router.push('/host/analytics')} className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><BarChart3 size={18}/></button>
+            <button title='Help' onClick={() => router.push('/host/help')} className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
+            <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
           </div>
         </header>
-
+        
         <div className="rounded-[24px] mb-0">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
             {/* Search */}
@@ -228,13 +247,6 @@ export default function HostEvents() {
 
         {/* Events */}
         <section className="space-y-6">
-            <div className="flex items-center justify-between">
-              {/* <div>
-                <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Tickets</h2>
-                <p className="text-xs text-slate-500 font-[300]">All your tickets are at one place</p>
-              </div> */}
-            </div>
-
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center space-y-4">
@@ -267,105 +279,6 @@ export default function HostEvents() {
                 </div>
               </div>
             ) : (
-              // <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-              //   {hostEventsData?.events.map((event) => {
-              //     const eventDate = event?.startDate ? new Date(event.startDate) : 'TBD';
-              //     const formattedDate = eventDate !== 'TBD' ? eventDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Event Date';
-              //     const formattedTime = eventDate !== 'TBD' ? eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Event Time';
-              //     const daysUntilEvent = eventDate !== 'TBD' ? Math.ceil((eventDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 'TBD';
-                  
-              //     return (
-              //       <div key={event.eventId}>
-              //         <div
-              //           className='max-w-[90vw] bg-brand-50 rounded-tr-2xl rounded-bl-2xl group cursor-pointer transition-all duration-300 p-4 gap-0 overflow-hidden relative select-none'
-              //         >
-              //           <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-              //             <img
-              //               src={event.coverImage?.trim() || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-              //               alt={event.title}
-              //               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              //             />
-              //             {event.status === 'live' && (
-              //               <div className="absolute top-4 gap-2 left-4 flex items-center ">
-              //                 <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-              //                   <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-              //                   Live
-              //                 </div>
-              //               </div>
-              //             )}
-              //           </div>
-
-              //           <div className="px-6 py-4 w-full h-full flex flex-col gap-1 relative">
-              //             <div className="text-md font-[400] line-clamp-2 tracking-wide text-neutral-700">
-              //               {event.title || "Untitled Event"}
-              //             </div>
-              //             <div className="text-neutral-400 line-clamp-2 font-[500] text-[10px] uppercase tracking-widest">
-              //               {event.venueName || "Unknown Venue"}
-              //             </div>
-              //             <div className="mt-2">
-              //               <div className="text-neutral-400 font-[500] line-clamp-2 text-[10px] uppercase tracking-widest">
-              //                 {formattedDate}
-              //               </div>
-              //               <div className="text-neutral-400 font-[500] line-clamp-2 text-[10px] uppercase tracking-widest">
-              //                 {formattedTime}
-              //               </div>
-              //             </div>
-              //             <span className="text-xs text-slate-500 line-clamp-1 font-[300]">
-              //               {daysUntilEvent !== 'TBD' && daysUntilEvent > 0 ? `${daysUntilEvent} Days Left` : daysUntilEvent === 0 ? 'Today' : 'Event Passed'}
-              //             </span>
-              //             <div className="mt-2 flex flex-wrap items-center gap-2">
-              //               {event.status === 'draft' && (
-              //                 <button 
-              //                   onClick={(e) => {
-              //                     e.stopPropagation();
-              //                     router.push(`/host/events/create?draftId=${event.eventId}`);
-              //                   }}
-              //                   className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              //                 >
-              //                   <Edit size={12} strokeWidth={1}/> Edit
-              //                 </button>
-              //               )}
-              //               <button 
-              //                 onClick={(e) => {
-              //                   e.stopPropagation();
-              //                 }}
-              //                 className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              //               >
-              //                 <GitGraph size={12} strokeWidth={1}/> Manage
-              //               </button>
-              //               {event.status === 'draft' && (
-              //                 <button 
-              //                   onClick={(e) => {
-              //                     e.stopPropagation();
-              //                     handleDeleteEvent(event.eventId);
-              //                   }}
-              //                   className="border text-[10px] sm:text-xs font-[300] hover:text-rose-500 hover:scale-103 transition-all duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              //                 >
-              //                   <Trash size={12} strokeWidth={1}/> Delete
-              //                 </button>
-              //               )}
-              //               {event.status === 'approved' && event?.startDate > new Date().toISOString() && (
-              //                 <button 
-              //                   onClick={(e) => {
-              //                     e.stopPropagation();
-              //                     handlePublishEvent(event.eventId);
-              //                   }}
-              //                   className="border text-[10px] sm:text-xs font-[300] hover:text-brand-500 hover:scale-103 transition-all duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              //                 >
-              //                   <Globe size={12} strokeWidth={1}/> Publish
-              //                 </button>
-              //               )}
-              //             </div>
-              //             <div className="absolute bottom-18 text-xs right-2 transition-transform pointer-events-none">
-              //               {getStatusBadge(event.status)}
-              //             </div>
-              //           </div>
-              //           <div className="absolute bottom-0 right-0 w-28 h-28 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-              //         </div>
-              //       </div>
-              //     );
-              //   })}
-              // </div>
               <div className="grid p-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mb-10">
                 {hostEventsData?.events?.map((event: any, i: number) => {
                   const startDate = new Date(event.startDate);
@@ -436,15 +349,6 @@ export default function HostEvents() {
                             </span>
                           )}
                         </div>
-                        {/* Price */}
-                        {/* <div className="flex justify-between items-center gap-2 mt-2">
-                          <span className="text-xs text-slate-500 font-[300]">
-                            {event.venueName || 'Location TBA'}
-                          </span>
-                          <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                            <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{minPrice}
-                          </span>
-                        </div> */}
                         <div className="mt-4 flex flex-wrap items-center gap-2">
                           {event.status === 'draft' && (
                               <button 

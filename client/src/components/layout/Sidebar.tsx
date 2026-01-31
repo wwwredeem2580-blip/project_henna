@@ -39,7 +39,6 @@ export default function Sidebar() {
     { icon: <CreditCard size={18} strokeWidth={1} />, label: 'Payout', path: '/host/payout', active: pathname === '/host/payout', requireRole: 'host' },
     { icon: <BarChart3 size={18} strokeWidth={1} />, label: 'Analytics', path: '/host/analytics', active: pathname === '/host/analytics', requireRole: 'host' },
     { icon: <User size={18} strokeWidth={1} />, label: 'Profile', path: '/host/profile', active: pathname === '/host/profile', requireRole: 'host' },
-    { icon: <Settings size={18} strokeWidth={1} />, label: 'Settings', path: '/host/settings', active: pathname === '/host/settings', requireRole: 'host' },
   ];
 
   const filteredMenuItems = menuItems.filter((item) => !item.requireRole || item.requireRole === user?.role);

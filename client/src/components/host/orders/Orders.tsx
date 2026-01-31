@@ -121,11 +121,11 @@ export default function Orders({ onLogout }: OrdersProps) {
   const getStatusBadge = (status: string) => {
     const option = statusOptions.find(opt => opt.value === status);
     return option ? (
-      <span className={`px-2 py-1 whitespace-nowrap rounded-full text-[10px] font-bold uppercase tracking-wider ${option.color}`}>
+      <span className={`px-2 py-1 whitespace-nowrap rounded-full text-[9px] font-[400] uppercase tracking-wider ${option.color}`}>
         {option.label}
       </span>
     ) : (
-      <span className="px-2 py-1 whitespace-nowrap rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600">
+      <span className="px-2 py-1 whitespace-nowrap rounded-full text-[9px] font-[400] uppercase tracking-wider bg-slate-100 text-slate-600">
         {status}
       </span>
     );
@@ -155,54 +155,37 @@ export default function Orders({ onLogout }: OrdersProps) {
           </div>
         </header>
 
-        {/* Filters */}
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+
+        <div className="rounded-[24px] mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
             {/* Search */}
-            <div className="flex-1 min-w-0 flex gap-2">
-              <input
-                type="text"
-                placeholder="Search by order number or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleSearchKeyPress}
-                className="w-full text-sm px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 outline-none"
-              />
-              <button 
-                onClick={handleSearch} 
-                className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-slate-900 transition-colors"
-              >
-                <Search size={18} />
+            <div className="flex-1 min-w-full md:min-w-[350px] flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Search by order number or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleSearchKeyPress}
+                  className="w-full font-[300] text-[14px] pl-4 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 outline-none"
+                />
+              {/* Search Button */}
+              <button onClick={handleSearch} className="p-2 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-gray-900 transition-colors">
+                <Search size={18} strokeWidth={1.5} />
               </button>
             </div>
 
-            {/* Filters */}
-            <div className="flex gap-2">
-              {/* Status Filter */}
+            {/* Status Filter */}
+            <div className="flex gap-2 ">
+              {/* Location Filter */}
               <div className="relative">
                 <select
                   value={filters.status || ''}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
-                  className="appearance-none bg-white border border-slate-200 text-slate-600 text-sm font-[300] py-2 pl-4 pr-10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500"
+                  className="appearance-none bg-white border border-gray-100 text-gray-600 text-xs sm:text-sm font-normal py-1 sm:py-2 pl-4 pr-8 sm:pr-10 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/10"
                 >
-                  <option value="">All Statuses</option>
+                  <option value="">All Status</option>
                   {statusOptions.map(option => (
                     <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-
-              {/* Event Filter */}
-              <div className="relative">
-                <select
-                  value={filters.eventId || ''}
-                  onChange={(e) => handleFilterChange('eventId', e.target.value)}
-                  className="appearance-none bg-white border border-slate-200 text-slate-600 text-sm font-[300] py-2 pl-4 pr-10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500"
-                >
-                  <option value="">All Events</option>
-                  {events.map(event => (
-                    <option key={event.eventId} value={event.eventId}>{event.title}</option>
                   ))}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -210,26 +193,23 @@ export default function Orders({ onLogout }: OrdersProps) {
             </div>
           </div>
 
-          {/* Active Filter Chips */}
+          {/* Active Filters Chips */}
           {activeFilters.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
               {activeFilters.map(([key, value]) => {
                 let label = value;
                 if (key === 'status') {
-                  label = statusOptions.find(opt => opt.value === value)?.label || value;
-                } else if (key === 'eventId') {
-                  const event = events.find(e => e.eventId === value);
-                  label = event?.title || value;
+                  label = `Status: ${value}`;
                 } else if (key === 'search') {
                   label = `Search: ${value}`;
                 }
 
                 return (
-                  <div key={key} className="flex items-center gap-1 px-3 py-1 bg-brand-50 text-brand-600 rounded-full text-sm font-[300]">
-                    <span>{label}</span>
+                  <div key={key} className="flex items-center gap-1 px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-sm">
+                    <span>{label as string}</span>
                     <button
                       onClick={() => clearFilter(key as keyof OrderFilters)}
-                      className="hover:bg-brand-100 rounded-full p-0.5 transition-colors"
+                      className="hover:bg-brand-100 rounded-full p-0.5"
                     >
                       <X size={12} />
                     </button>
@@ -251,36 +231,36 @@ export default function Orders({ onLogout }: OrdersProps) {
           </div>
         ) : (
           <>
-            <div className="bg-white overflow-x-auto rounded-[1.5rem] border border-slate-100 overflow-hidden mb-6">
+            <div className="bg-white overflow-x-auto rounded-[1.5rem] whitespace-nowrap  overflow-hidden mb-6">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-50 bg-slate-50/50">
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-widest">Order</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-widest">Event</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-widest">Buyer</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-widest">Tickets</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-widest">Total</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Order</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Event</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Buyer</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Tickets</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Total</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Date</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-slate-100">
                   {orders.map((order) => (
                     <tr key={order.orderNumber} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4">
-                        <span className="text-sm font-[400] text-slate-700">{order.orderNumber}</span>
+                        <span className="text-xs font-[400] text-slate-700">{order.orderNumber}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-[300] text-slate-700">{order.eventTitle}</span>
+                        <span className="text-xs font-[300] text-slate-700">{order.eventTitle}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-[300] text-slate-500">{order.buyerEmail}</span>
+                        <span className="text-xs font-[300] text-slate-500">{order.buyerEmail}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-[400] text-slate-900">{order.ticketCount}</span>
+                        <span className="text-xs font-[400] text-slate-900">{order.ticketCount}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-[400] text-slate-900">
+                        <span className="text-xs font-[400] text-slate-900">
                           <BDTIcon className="inline text-xs" /> {order.total}
                         </span>
                       </td>
@@ -288,7 +268,7 @@ export default function Orders({ onLogout }: OrdersProps) {
                         {getStatusBadge(order.status)}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-[300] text-slate-500">
+                        <span className="text-xs font-[300] text-slate-500">
                           {new Date(order.createdAt).toLocaleDateString('en-US', { 
                             day: 'numeric', 
                             month: 'short', 
@@ -306,7 +286,7 @@ export default function Orders({ onLogout }: OrdersProps) {
             {totalPages > 1 && (
               <div className="flex items-center justify-between">
                 <div className="text-sm text-slate-600 font-[300]">
-                  Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalOrders)} of {totalOrders} orders
+                  {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalOrders)} of {totalOrders} orders
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -314,14 +294,14 @@ export default function Orders({ onLogout }: OrdersProps) {
                     disabled={currentPage === 1}
                     className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <ChevronsLeft size={16} />
+                    <ChevronsLeft size={14} />
                   </button>
                   <button
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
                     className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <ChevronLeft size={16} />
+                    <ChevronLeft size={14} />
                   </button>
 
                   <div className="flex items-center gap-1">
@@ -332,7 +312,7 @@ export default function Orders({ onLogout }: OrdersProps) {
                         <button
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`px-3 py-2 rounded-lg text-sm font-[400] transition-colors ${
+                          className={`px-2 py-1 rounded-lg text-sm font-[400] transition-colors ${
                             pageNum === currentPage
                               ? 'bg-brand-500 text-white'
                               : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
@@ -349,14 +329,14 @@ export default function Orders({ onLogout }: OrdersProps) {
                     disabled={currentPage === totalPages}
                     className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <ChevronRight size={16} />
+                    <ChevronRight size={14} />
                   </button>
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
                     className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <ChevronsRight size={16} />
+                    <ChevronsRight size={14} />
                   </button>
                 </div>
               </div>
