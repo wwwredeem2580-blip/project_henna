@@ -22,6 +22,7 @@ import {
   Search,
   MessageSquare,
   Send,
+  ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { useRouter } from 'next/navigation';
@@ -77,6 +78,7 @@ export default function Conversation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedChat, setSelectedChat] = useState<ChatThread | null>(mockChats[0]);
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
 
   useEffect(() => {
     setTimeout(() => {
@@ -124,7 +126,7 @@ export default function Conversation() {
         ) : 
           <div className="flex h-[calc(100vh-180px)] flex-col sm:flex-row">
             {/* Sidebar Inbox */}
-            <div className="w-60 md:w-80 border-r border-slate-100 pr-4 flex flex-col">
+            <div className={`w-full sm:w-60 md:w-80 border-r border-slate-100 pr-4 flex flex-col ${isMobileChatOpen ? 'hidden sm:flex' : ''}`}>
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
                 {/* Search */}
                 <div className="flex-1 min-w-full flex gap-2">
@@ -143,8 +145,11 @@ export default function Conversation() {
                 {mockChats.map((chat) => (
                   <button 
                     key={chat.id} 
-                    onClick={() => setSelectedChat(chat)}
-                    className={`w-full p-2 text-left border-b border-slate-50 transition-colors hover:bg-slate-50 flex gap-4 ${selectedChat?.id === chat.id ? 'bg-brand-50/30' : ''}`}
+                    onClick={() => {
+                      setSelectedChat(chat);
+                      setIsMobileChatOpen(true);
+                    }}
+                    className={`w-full p-2 text-left border-b border-slate-50 transition-colors hover:bg-slate-50 flex gap-4 ${selectedChat?.id === chat.id ? 'bg-slate-100' : ''}`}
                   >
                     <img src={chat.user.avatar} className="w-10 h-10 rounded-full bg-slate-200" alt={chat.user.name} />
                     <div className="flex-1 min-w-0">
@@ -160,11 +165,18 @@ export default function Conversation() {
               </div>
             </div>
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col">
+            <div className={`flex-1 flex flex-col ${isMobileChatOpen ? 'sm:flex' : 'hidden'}`}>
               {selectedChat ? (
                 <>
                   <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-4">
+                      {/* Back Button for Mobile */}
+                      <button 
+                        onClick={() => setIsMobileChatOpen(false)}
+                        className="sm:hidden p-2 text-slate-600 hover:translate-x-[-2px] rounded-lg transition-all"
+                      >
+                        <ArrowLeft size={16} strokeWidth={1.5}/>
+                      </button>
                       <img src={selectedChat.user.avatar} className="w-10 h-10 rounded-full bg-slate-200" alt="" />
                       <div>
                         <h3 className="text-sm font-[500] text-slate-900">{selectedChat.user.name}</h3>
