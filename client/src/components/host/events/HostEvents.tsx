@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ticketService, Ticket } from "@/lib/api/ticket";
 import {
+  AlertCircle,
   Calendar,
   ChevronDown,
   Clock10,
@@ -116,12 +117,12 @@ export default function HostEvents() {
   }
 
   const statusOptions = [
-    { value: 'draft', label: 'Draft', color: 'bg-slate-100/50 text-slate-500 border-slate-200' },
-    { value: 'pending_approval', label: 'Pending', color: 'bg-orange-100/50 text-orange-500 border-orange-200' },
-    { value: 'approved', label: 'Approved', color: 'bg-green-100/50 text-green-500 border-green-200' },
-    { value: 'published', label: 'Published', color: 'bg-brand-100/50 text-brand-500 border-brand-200' },
-    { value: 'live', label: 'Live', color: 'bg-brand-100/50 text-brand-500 border-brand-200' },
-    { value: 'ended', label: 'Ended', color: 'bg-rose-100/50 text-rose-500 border-rose-200' },
+    { value: 'draft', label: 'Draft', color: 'bg-slate-500' },
+    { value: 'pending_approval', label: 'Pending', color: 'bg-orange-500' },
+    { value: 'approved', label: 'Approved', color: 'bg-green-500' },
+    { value: 'published', label: 'Published', color: 'bg-brand-500' },
+    { value: 'live', label: 'Live', color: 'bg-brand-500' },
+    { value: 'ended', label: 'Ended', color: 'bg-rose-500' },
     { value: 'rejected', label: 'Rejected', color: 'bg-red-100/50 text-red-500 border-red-200' },
   ];
   
@@ -129,7 +130,10 @@ export default function HostEvents() {
   const getStatusBadge = (status: string) => {
     const option = statusOptions.find((option) => option.value === status);
     if (option) {
-      return <span className={`px-2 py-1 text-[10px] rounded-sm ${option.color}`}>{option.label}</span>;
+      return <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
+                <div className={`w-1.5 h-1.5 animate-pulse ${option.color} rounded-full mr-2`}></div>
+                {option.label}
+              </div>
     }
     return <span className="px-2 py-1 text-[10px] rounded-sm bg-slate-100 text-slate-500">Unknown</span>;
   };
@@ -386,6 +390,11 @@ export default function HostEvents() {
                             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                           />
                         </div>
+                        {(
+                          <div className="absolute top-4 gap-2 left-2 flex items-center ">
+                            {getStatusBadge(event.status)}
+                          </div>
+                        )}
 
                         {/* Vertical Gallery */}
                         <div className="flex flex-col gap-2 overflow-hidden">
@@ -417,9 +426,15 @@ export default function HostEvents() {
                             <Clock10 size={12} strokeWidth={1}/>
                             {formatTime(startDate)} - {formatTime(endDate)}
                           </span>
-                          <span className="text-xs text-slate-500 line-clamp-1 font-[300]">
-                            {daysUntilEvent !== 'TBD' && daysUntilEvent > 0 ? `${daysUntilEvent} Days Left` : daysUntilEvent === 0 ? 'Today' : 'Event Passed'}
-                          </span>
+                          {event.status === 'approved' && (daysUntilEvent as number < 7) ? (
+                            <span className="text-xs text-slate-500 line-clamp-1 font-[300] flex items-center gap-1">
+                              <AlertCircle className="text-red-500" size={12} strokeWidth={1}/> Less than {daysUntilEvent} days left to publish
+                            </span>
+                          ): (
+                            <span className="text-xs text-slate-500 line-clamp-1 font-[300]">
+                              {daysUntilEvent !== 'TBD' && daysUntilEvent > 0 ? `${daysUntilEvent} Days Left` : daysUntilEvent === 0 ? 'Today' : 'Event Passed'}
+                            </span>
+                          )}
                         </div>
                         {/* Price */}
                         {/* <div className="flex justify-between items-center gap-2 mt-2">
@@ -442,15 +457,17 @@ export default function HostEvents() {
                                 <Edit size={12} strokeWidth={1}/> Edit
                               </button>
                             )}
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(`/host/events/manage/${event.eventId}`);
-                              }}
-                              className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <GitGraph size={12} strokeWidth={1}/> Manage
-                            </button>
+                            {event.status !== 'draft' && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(`/host/events/manage/${event.eventId}`);
+                                }}
+                                className="border text-[10px] sm:text-xs font-[300] hover:scale-103 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <GitGraph size={12} strokeWidth={1}/> Manage
+                              </button>
+                            )}
                             {event.status === 'draft' && (
                               <button 
                                 onClick={(e) => {
@@ -473,7 +490,7 @@ export default function HostEvents() {
                                 <Globe size={12} strokeWidth={1}/> Publish
                               </button>
                             )}
-                          </div>
+                        </div>
                       </div>
                       <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
                     </motion.div>

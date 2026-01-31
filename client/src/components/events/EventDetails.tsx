@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { orderService } from "@/lib/api/order";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D, CheckCircle2, Loader2, LogIn, UserPlus } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D, CheckCircle2, Loader2, LogIn, UserPlus, ArrowLeft } from "lucide-react";
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -237,9 +237,13 @@ export default function Events() {
 
       {/* Main Content */}
       <main className="flex-1 min-w-0 lg:ml-64 p-4 lg:p-8 ">
-
+        <button onClick={() => router.back()} className="text-sm mb-6 font-[300] text-neutral-400 hover:text-brand-500 transition-colors flex items-center gap-1 group">
+          <ArrowLeft size={16} strokeWidth={1} className="group-hover:-translate-x-1 transition-transform" />
+          Back
+        </button>
         {/* Header */}
         <header className="flex items-center justify-between mb-10">
+          
           <div>
             <h1 className="text-2xl font-[400] tracking-normal text-slate-900">Event Details</h1>
             <p className="text-sm text-slate-500 font-[300]">Comprehensive details about this event</p>

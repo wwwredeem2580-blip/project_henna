@@ -12,7 +12,7 @@ function CreateEventContent() {
   const { showNotification } = useNotification();
 
   const handleGoBack = () => {
-    router.push('/dashboard');
+    router.back();
   };
 
   const onSuccess = () => {

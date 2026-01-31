@@ -606,7 +606,8 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
               <div className="bg-white p-6 rounded-[2rem] flex flex-col h-full">
                  <div className="mb-6">
                       <h3 className="text-lg font-[300] text-slate-800 mb-2">Additional Verification Documents</h3>
-                      <p className="text-xs text-slate-500 font-[300]">Upload additional necessary documents for event verification. NOTE: These are for internal review only.</p>
+                      <p className="text-xs text-slate-500 font-[300]">Upload additional necessary documents for event verification.</p>
+                      <p className="text-xs text-slate-500 font-[300] flex items-start mt-2 gap-2"><AlertCircle className="w-3 h-3 mt-1 text-rose-500" />NOTE: These are for internal review only. Avoid Uploading unnecessary documents. This might delay the approval process.</p>
                  </div>
                  {data?.event?.status === 'pending_approval' ? (
                  <div className="flex-1">

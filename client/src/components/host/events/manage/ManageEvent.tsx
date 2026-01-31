@@ -118,12 +118,10 @@ export default function ManageEvent() {
 
         {/* Header */}
         <header className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-4">
-            <button 
-                onClick={() => router.back()}
-                className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors"
-            >
-                <ArrowLeft className="text-slate-400" size={24} />
+          <div className="flex flex-col items-start gap-4">
+            <button onClick={() => router.back()} className="text-sm mb-6 font-[300] text-neutral-400 hover:text-brand-500 transition-colors flex items-center gap-1 group">
+              <ArrowLeft size={16} strokeWidth={1} className="group-hover:-translate-x-1 transition-transform" />
+              Back
             </button>
             <div>
                 <h1 className="text-xl font-[400] tracking-normal text-neutral-800">Manage Event</h1>

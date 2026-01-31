@@ -144,7 +144,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           {/* Left Column: Events */}
           <section className="space-y-6">
             <div>
-              <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Upcoming Events</h2>
+              <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Recent Events</h2>
               <p className="text-xs text-slate-500 font-[300]">Your current plan metrics and limits</p>
             </div>
 
