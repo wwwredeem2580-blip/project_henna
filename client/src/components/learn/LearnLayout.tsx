@@ -40,12 +40,12 @@ export const LearnLayout: React.FC<LearnLayoutProps> = ({ children }) => {
   const handleGetStarted = () => router.push('/onboarding');
 
   return (
-    <div className="min-h-screen bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
+    <div className="min-h-screen max-w-[1280px] mx-auto bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
       <Navbar onLogin={handleLogin} onGetStarted={handleGetStarted} />
       
-      <div className="mx-auto px-6 py-12 flex flex-col lg:flex-row gap-12 relative">
+      <div className="w-full px-6 py-6 flex flex-col lg:flex-row gap-2 relative">
         {/* Mobile Sidebar Toggle */}
-        <div className="lg:hidden flex items-center justify-between bg-white p-4 rounded-2xl border border-neutral-100 shadow-sm mb-6 sticky top-24 z-20">
+        <div className="lg:hidden flex items-center justify-between bg-white p-4 rounded-2xl border border-neutral-100 mb-6 sticky top-24 z-20">
              <span className="text-sm font-medium text-neutral-600">Documentation Menu</span>
              <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 text-neutral-600 hover:text-brand-600 transition-colors">
                 {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
@@ -54,7 +54,7 @@ export const LearnLayout: React.FC<LearnLayoutProps> = ({ children }) => {
 
         {/* Sidebar Navigation */}
         <aside className={`
-            fixed inset-0 z-30 lg:z-0 lg:static bg-white/95 backdrop-blur-xl lg:bg-transparent
+            fixed inset-0 z-30 mt-16 lg:z-0 lg:static bg-white/95 backdrop-blur-xl lg:bg-transparent
             lg:w-64 flex-shrink-0 transition-all duration-300 ease-in-out
             ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
@@ -75,7 +75,7 @@ export const LearnLayout: React.FC<LearnLayoutProps> = ({ children }) => {
                         onClick={() => setIsSidebarOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${
                             isActive 
-                            ? 'bg-brand-50 text-brand-600 shadow-sm border border-brand-100' 
+                            ? 'bg-brand-50 text-brand-600 border border-brand-100' 
                             : 'text-neutral-600 hover:bg-neutral-50 hover:text-brand-600'
                         }`}
                       >
@@ -87,7 +87,6 @@ export const LearnLayout: React.FC<LearnLayoutProps> = ({ children }) => {
                   })}
                 </nav>
              </div>
-
              <div className="p-6 bg-brand-50/50 rounded-2xl border border-brand-100/50 space-y-3">
                  <p className="text-xs font-semibold text-brand-900">Need more help?</p>
                  <p className="text-[11px] text-neutral-500 leading-relaxed">Contact our support team for specialized assistance with your events.</p>
@@ -97,12 +96,10 @@ export const LearnLayout: React.FC<LearnLayoutProps> = ({ children }) => {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <main className="flex-1 md:px-10 min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-700">
            {children}
         </main>
       </div>
-
-      <Footer />
     </div>
   );
 };

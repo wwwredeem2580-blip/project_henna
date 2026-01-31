@@ -64,7 +64,7 @@ export default function Sidebar() {
         >
           <Menu size={24} />
         </button>
-        <div className="flex items-center gap-2">
+        <div onClick={() => window.location.href = '/events'} className="flex cursor-pointer items-center gap-2">
           <Logo variant='full' />
         </div>
         {user ? (
@@ -92,7 +92,7 @@ export default function Sidebar() {
       <aside className={`w-64 overflow-y-auto border-r border-slate-100 flex flex-col fixed h-full bg-white z-40 transition-transform duration-300 lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="p-6 flex items-center gap-3">
+        <div onClick={() => window.location.href = '/events'} className="p-6 flex cursor-pointer items-center gap-3">
           <Logo variant='full' />
         </div>
 

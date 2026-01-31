@@ -17,39 +17,36 @@ export default function HowToHostPage() {
 
       <LearnSection title="1. Create & Draft">
         <div className="flex gap-4 mb-6">
-             <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0 text-neutral-500 font-bold">1</div>
-             <div>
-                <h3 className="text-lg font-medium text-neutral-900 mb-2">Build your Event</h3>
-                <p className="text-neutral-600 mb-2">Use the "Create Event" wizard to set up your basic details: Title, Schedule, and Venue.</p>
-                <div className="text-sm p-3 bg-neutral-50 rounded-lg border border-neutral-100 flex items-center gap-2">
-                    <PenTool size={16} className="text-brand-600"/>
-                    <span>You can save as <strong>Draft</strong> at any stage and come back later.</span>
-                </div>
-             </div>
+          <div>
+            <h3 className="text-lg font-[400] text-neutral-900 mb-2">Build your Event</h3>
+            <p className="text-neutral-600 mb-2">Use the "Create Event" wizard to set up your basic details: Title, Schedule, and Venue.</p>
+            <div className="text-sm p-3 bg-neutral-50 rounded-lg border border-neutral-100 flex items-center gap-2">
+                <PenTool size={16} className="text-brand-600"/>
+                <span>You can save as <strong>Draft</strong> at any stage and come back later.</span>
+            </div>
+          </div>
         </div>
       </LearnSection>
 
       <LearnSection title="2. Verification & Submission">
            <div className="flex gap-4 mb-6">
-             <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0 text-neutral-500 font-bold">2</div>
              <div>
-                <h3 className="text-lg font-medium text-neutral-900 mb-2">Required Documents</h3>
+                <h3 className="text-lg font-[400] text-neutral-900 mb-2">Required Documents</h3>
                 <p className="text-neutral-600 mb-4">Before publishing, you must upload verification proofs:</p>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                     <li className="flex items-center gap-2 text-sm text-neutral-700 bg-white p-2 border rounded-md"><CheckSquare size={14} className="text-green-500"/> IDENTITY PROOF (NID)</li>
                     <li className="flex items-center gap-2 text-sm text-neutral-700 bg-white p-2 border rounded-md"><CheckSquare size={14} className="text-green-500"/> VENUE BOOKING</li>
                     <li className="flex items-center gap-2 text-sm text-neutral-700 bg-white p-2 border rounded-md"><CheckSquare size={14} className="text-green-500"/> SAFETY PLAN</li>
                 </ul>
-                <p className="text-sm text-neutral-500 italic">Documents are stored in our secure private vault and used only for verification.</p>
+                <p className="text-xs text-neutral-500 italic">*Documents are stored in our secure private vault and used only for verification.</p>
              </div>
         </div>
       </LearnSection>
 
       <LearnSection title="3. Publishing & Management">
            <div className="flex gap-4 mb-6">
-             <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0 text-neutral-500 font-bold">3</div>
              <div>
-                <h3 className="text-lg font-medium text-neutral-900 mb-2">The Dashboard</h3>
+                <h3 className="text-lg font-[400] text-neutral-900 mb-2">The Dashboard</h3>
                 <p className="text-neutral-600 mb-4">Once approved and published, the full power of the dashboard unlocks:</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

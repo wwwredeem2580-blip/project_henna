@@ -21,19 +21,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onGetStarted }) => {
   return (
     <nav className="sticky top-0 z-10 bg-neutral-0/80 backdrop-blur-xl border-b border-brand-100">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div onClick={() => window.location.href = '/'} className="flex items-center cursor-pointer gap-2">
           <Logo variant="full" className="h-6 text-brand-600" strokeWidth="2" />
         </div>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-sm font-medium text-neutral-600 hover:text-brand-600 transition-colors">
-            Features
+          <a href="/events" className="text-sm font-medium text-neutral-600 hover:text-brand-600 transition-colors">
+            Events
           </a>
-          <a href="#pricing" className="text-sm font-medium text-neutral-600 hover:text-brand-600 transition-colors">
-            Pricing
+          <a href="/learn" className="text-sm font-medium text-neutral-600 hover:text-brand-600 transition-colors">
+            Learn
           </a>
-          <a href="#about" className="text-sm font-medium text-neutral-600 hover:text-brand-600 transition-colors">
+          <a href="/about" className="text-sm font-medium text-neutral-600 hover:text-brand-600 transition-colors">
             About
           </a>
         </div>

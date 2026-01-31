@@ -7,7 +7,7 @@ import { QrCode, CreditCard, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export default function SafeBookingPage() {
   return (
-    <div className="max-w-4xl">
+    <div className="w-full">
       <LearnHero
         title="Safe Ticket Booking"
         subtitle="From click to check-in, your ticket journey is encrypted, reserved, and guaranteed."
@@ -60,13 +60,13 @@ export default function SafeBookingPage() {
       <LearnSection title="Avoiding Scams">
         <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6">
             <div className="flex items-center gap-3 text-amber-800 font-medium mb-4">
-                <AlertTriangle size={20} />
+                <AlertTriangle size={18} />
                 <span>Critical Safety Warnings</span>
             </div>
              <ul className="space-y-3 list-disc pl-5 text-sm text-amber-900/80">
                 <li><strong>Never buy resale tickets on social media.</strong> Scalpers often sell the same PDF to multiple people. Since our scanners only admit the first scan, you will be denied entry.</li>
-                <li><strong>Only trust Zenvy.com.</strong> We are the primary issuer. We do not currently support third-party resale.</li>
-                <li><strong>Verify the URL.</strong> Ensure you are on <code>https://zenvy.com</code> (or our official local domain) before entering payment details.</li>
+                <li><strong>Only trust Zenvy.com.bd.</strong> We are the primary issuer. We do not currently support third-party resale.</li>
+                <li><strong>Verify the URL.</strong> Ensure you are on <code>https://zenvy.com.bd</code> (or our official local domain) before entering payment details.</li>
             </ul>
         </div>
       </LearnSection>

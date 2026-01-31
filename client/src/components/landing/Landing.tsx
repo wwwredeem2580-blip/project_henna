@@ -433,9 +433,6 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
           )}
         </motion.button>
       </div>
-
-      {/* Actual Footer */}
-      <Footer />
     </div>
   );
 };

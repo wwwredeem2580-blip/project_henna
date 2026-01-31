@@ -7,7 +7,7 @@ import { RefreshCw, CheckCircle2, XCircle, Scale } from 'lucide-react';
 
 export default function RefundPolicyPage() {
   return (
-    <div className="max-w-4xl">
+    <div className="w-full">
       <LearnHero
         title="Refund Policy Explained"
         subtitle="Our consumer trust backbone. Clear rules on when and how you get your money back."
@@ -39,10 +39,11 @@ export default function RefundPolicyPage() {
                 'Event is denied approval after initial ticket sales (rare).',
                 'Organizer is declared fraudulent by platform admin.',
                 'Venue becomes unavailable or unsafe.',
-                'Confirmed safety risks.'
+                'Confirmed safety risks.',
+                'Price drop of more than 5% after purchase.'
              ].map((item, i) => (
                  <div key={i} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl border border-neutral-100">
-                     <CheckCircle2 size={18} className="text-emerald-500" />
+                     <CheckCircle2 size={18} className="text-emerald-500 min-w-4 h-4" />
                      <span className="text-sm text-neutral-700">{item}</span>
                  </div>
              ))}

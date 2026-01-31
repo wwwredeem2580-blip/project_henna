@@ -1,11 +1,17 @@
+'use client'
+
 import React from 'react';
 import { Logo } from '../shared/Logo';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { usePathname } from 'next/navigation';
+
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+
   return (
-    <footer className="pt-24 pb-12 px-6 bg-white border-t border-brand-200">
+    <footer className={`pt-24 pb-12 px-6 bg-white border-t border-brand-200 ${pathname.startsWith('/landing') || pathname.startsWith('/learn') ? '' : 'ml-36'}`}>
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
         <div className="space-y-6">
           <div className="flex items-center gap-2.5">

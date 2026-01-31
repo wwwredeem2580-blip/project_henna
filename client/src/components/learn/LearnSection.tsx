@@ -18,12 +18,12 @@ export const LearnSection: React.FC<LearnSectionProps> = ({ title, children, cla
       className={`mb-16 ${className}`}
     >
       {title && (
-        <h2 className="text-2xl font-light text-neutral-900 mb-6 tracking-tight flex items-center gap-3">
-            <span className="w-1.5 h-6 bg-brand-500 rounded-full" />
+        <h2 className="text-lg font-light text-neutral-700 mb-6 tracking-tight flex items-center gap-3">
+            <span className="w-1 h-6 bg-brand-500 rounded-full" />
             {title}
         </h2>
       )}
-      <div className="prose prose-neutral prose-p:font-light prose-p:text-neutral-600 prose-headings:font-light prose-strong:font-medium prose-strong:text-neutral-900">
+      <div className="prose max-w-none text-neutral-600 text-sm prose-neutral prose-p:font-light prose-p:text-neutral-600 prose-headings:font-light prose-strong:font-medium prose-strong:text-neutral-600">
         {children}
       </div>
     </motion.section>

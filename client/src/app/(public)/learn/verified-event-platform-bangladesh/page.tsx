@@ -8,9 +8,9 @@ import Link from 'next/link';
 
 export default function VerifiedPlatformPage() {
   return (
-    <div className="max-w-4xl">
+    <div className="w-full">
       <LearnHero
-        title="verified event platform in bangladesh"
+        title="Verified event platform in bangladesh"
         subtitle="Why the local event industry needed a rethink. Moving away from chaos towards a standardized, verified, and scalable infrastructure."
         category="Our Mission"
         lastUpdated="January 2026"
@@ -35,14 +35,14 @@ export default function VerifiedPlatformPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 my-8">
             <div className="space-y-2">
                 <div className="flex items-center gap-2 font-medium text-neutral-900">
-                    <Globe size={20} className="text-brand-600"/>
+                    <Globe size={18} className="text-brand-600"/>
                     <span>Open Access</span>
                 </div>
                 <p className="text-sm">Sign up, draft events, and access the dashboard immediately. No business meetings required to start.</p>
             </div>
             <div className="space-y-2">
                 <div className="flex items-center gap-2 font-medium text-neutral-900">
-                    <Users size={20} className="text-brand-600"/>
+                    <Users size={18} className="text-brand-600"/>
                     <span>Crowd Safety</span>
                 </div>
                 <p className="text-sm">Events go live only after document verification. Our admin team reviews every submission for safety and compliance.</p>
@@ -64,9 +64,9 @@ export default function VerifiedPlatformPage() {
       <div className="mt-12 p-8 bg-neutral-900 rounded-3xl text-center text-neutral-300 space-y-4">
          <TrendingUp className="w-12 h-12 text-brand-500 mx-auto" />
          <h3 className="text-xl text-white font-light">Ready to experience the new standard?</h3>
-         <p className="max-w-xl mx-auto">Join the platform that is defining the future of event management in Bangladesh.</p>
+         <p className="mx-auto text-sm">Join the platform that is defining the future of event management in Bangladesh.</p>
          <div className="pt-4 flex justify-center gap-4">
-            <Link href="/events" className="px-6 py-3 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-700 transition-colors">Browse Events</Link>
+            <Link href="/events" className="px-6 py-2 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-700 transition-colors">Browse Events</Link>
          </div>
       </div>
     </div>

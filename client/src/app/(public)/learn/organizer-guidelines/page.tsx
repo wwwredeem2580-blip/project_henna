@@ -7,7 +7,7 @@ import { CheckCircle, AlertOctagon, Scale, ShieldAlert } from 'lucide-react';
 
 export default function OrganizerGuidelinesPage() {
   return (
-    <div className="max-w-4xl">
+    <div className="w-full">
       <LearnHero
         title="Organizer Guidelines"
         subtitle="The policy framework for hosting on Zenvy. We empower hosts while protecting attendees."
