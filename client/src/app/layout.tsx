@@ -21,6 +21,8 @@ export const metadata: Metadata = {
   description: "",
   icons: {
     icon: '/logo/logo.png',
+    shortcut: '/logo/logo.png',
+    apple: '/logo/logo.png',
   },
 };
 

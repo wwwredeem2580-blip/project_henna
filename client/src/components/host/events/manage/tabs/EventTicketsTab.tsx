@@ -333,7 +333,7 @@ export const EventTicketsTab = ({ data, onUpdate, onRefetch }: EventTicketsTabPr
                     return (
                       <div key={index} className="min-w-[300px] w-[300px]">
                         <TicketCard ticket={{
-                          _id: ticket._id,
+                          _id: ticket._id || '',
                           tier: ticket.tier,
                           name: ticket.name,
                           controls: true,

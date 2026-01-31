@@ -46,7 +46,7 @@ export interface HostEventDetailsResponse {
       companyEmail: string;
     };
     tickets: Array<{
-      _id: string;
+      _id?: string;
       name: string;
       tier: string;
       price: {
@@ -59,6 +59,7 @@ export interface HostEventDetailsResponse {
       benefits?: string[];
       isVisible: boolean;
       isActive: boolean;
+      reserved: number;
     }>;
     metrics?: {
       views: number;
@@ -194,8 +195,8 @@ const mockHostEventAnalytics = (eventId: string): HostEventDetailsResponse => ({
         },
         category: "music",
         tickets: [
-            { _id: "t1", name: "General Admission", tier: "General", price: { amount: 500, currency: "BDT" }, quantity: 300, sold: 150, isVisible: true, isActive: true },
-            { _id: "t2", name: "VIP", tier: "VIP", price: { amount: 1200, currency: "BDT" }, quantity: 100, sold: 80, isVisible: true, isActive: true }
+            { _id: "t1", name: "General Admission", tier: "General", price: { amount: 500, currency: "BDT" }, quantity: 300, sold: 150, isVisible: true, isActive: true, reserved: 10 },
+            { _id: "t2", name: "VIP", tier: "VIP", price: { amount: 1200, currency: "BDT" }, quantity: 100, sold: 80, isVisible: true, isActive: true, reserved: 5 }
         ]
     },
     analytics: {

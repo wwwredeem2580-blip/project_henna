@@ -39,7 +39,7 @@ export default function Sidebar() {
     // { icon: <CreditCard size={18} strokeWidth={1} />, label: 'Payout', path: '/host/payout', active: pathname === '/host/payout', requireRole: 'host' },
     { icon: <BarChart3 size={18} strokeWidth={1} />, label: 'Analytics', path: '/host/analytics', active: pathname === '/host/analytics', requireRole: 'host' },
     { icon: <User size={18} strokeWidth={1} />, label: 'Profile', path: '/host/profile', active: pathname === '/host/profile', requireRole: 'host' },
-    { icon: <Logo variant='icon' className="w-6 h-6 -ml-1" strokeWidth={1} />, label: 'Zenvy', path: '/about', active: pathname === '/about', },
+    { icon: <Logo variant='icon' className="w-6 h-6 -ml-1" strokeWidth={"1"} />, label: 'Zenvy', path: '/about', active: pathname === '/about', },
     { icon: <BookOpen size={18} strokeWidth={1} />, label: 'Learn More', path: '/learn', active: pathname === '/learn' },
   ];
 
