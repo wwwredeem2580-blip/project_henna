@@ -32,6 +32,8 @@ import {
   ArrowUpRight,
   Upload,
   ArrowLeft,
+  Pencil,
+  Edit,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { useRouter } from 'next/navigation';
@@ -218,7 +220,7 @@ export default function Profile() {
               <div className="p-4 md:p-6 border-b border-slate-50">
                 <h3 className="text-md font-[500] text-neutral-750 uppercase tracking-widest"></h3>
               </div>
-              <div className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden shadow-sm">
+              <div className="bg-white overflow-hidden">
                 {[
                   { 
                     label: 'Phone Verification', 
@@ -291,30 +293,22 @@ export default function Profile() {
                     <div className="bg-white px-2 rounded-[2rem]">
                       {profile?.phoneVerified ? (
                          <div className="space-y-6">
-                           <div className="p-4 bg-green-50 border border-green-100 rounded-xl flex items-center gap-3">
-                             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 shadow-sm">
-                               <ShieldCheck size={20} />
-                             </div>
-                             <div>
-                               <p className="text-sm font-medium text-green-800">Phone Verified</p>
-                               <p className="text-xs text-green-600">Your number {profile.phoneVerificationDetails?.phoneNumber || profile.user.phoneNumber} is verified.</p>
-                             </div>
-                           </div>
-                           
-                           <button 
-                             onClick={() => {
-                               // To change number, we just need to render the verification component again
-                               // By default, if they follow the flow, it will verify the new number
-                               // However, since we show this block when profile.phoneVerified is true,
-                               // we might need a local state to toggle "edit mode"
-                               // For now, let's just use a simple alert or reuse the verify component conditionally?
-                               // Better approach: Add a state 'isEditingPhone'
-                               handlePhoneEdit();
-                             }}
-                             className="text-sm text-brand-600 hover:text-brand-700 font-medium underline"
-                           >
-                             Change Verified Number
-                           </button>
+                            <div className="bg-brand-900 rounded-tr-lg rounded-bl-lg p-6 text-white overflow-hidden relative group">
+                              <div className="relative z-10">
+                                <div className='flex gap-3'>
+                                  <ShieldCheck size={20} className="text-brand-500 mt-1" />
+                                  <h3 className="text-md text-neutral-800 font-[400] mb-2">
+                                    Phone Verified
+                                  </h3>
+                                </div>
+                                <p className="text-slate-400 text-xs mb-6 font-[300] leading-relaxed">Your number {profile.phoneVerificationDetails?.phoneNumber || profile.user.phoneNumber} is verified.</p>
+                                <button onClick={() => handlePhoneEdit()} className="w-full py-2 bg-brand-500 text-brand-50 font-[500] rounded-xl text-xs max-w-[100px] flex items-center justify-center gap-2 hover:translate-y-[-2px] transition-all">
+                                  Edit <ArrowUpRight size={16} />
+                                </button>
+                              </div>
+                              <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+                              <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+                            </div>
                          </div>
                       ) : (
                         <PhoneVerification 
@@ -326,7 +320,7 @@ export default function Profile() {
                       
                       {isEditingPhone && profile?.phoneVerified && (
                         <div className="mt-8 pt-8 border-t border-slate-100">
-                          <h3 className="text-sm font-medium text-slate-900 mb-4">Update Phone Number</h3>
+                          <h3 className="text-sm font-[400] text-neutral-750 mb-4">Update Phone Number</h3>
                           <PhoneVerification 
                             phoneNumber={verifyPhone}
                             onPhoneUpdate={setVerifyPhone}
@@ -337,7 +331,7 @@ export default function Profile() {
                           />
                           <button 
                             onClick={() => setIsEditingPhone(false)}
-                            className="mt-4 text-xs text-slate-400 hover:text-slate-600"
+                            className="mt-4 text-xs text-neutral-500 hover:text-neutral-600"
                           >
                             Cancel
                           </button>

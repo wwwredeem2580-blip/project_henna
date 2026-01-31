@@ -129,10 +129,10 @@ export function PhoneVerification({
         <div className="mx-auto w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
           <Phone className="w-6 h-6 text-indigo-600" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <h3 className="text-lg font-[300] text-neutral-750 mb-2">
           Phone Verification Required
         </h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-neutral-500">
           To complete your host profile, we need to verify your phone number.
         </p>
       </div>
@@ -154,14 +154,14 @@ export function PhoneVerification({
       {step === 'input' ? (
         <div className="space-y-4">
           <div>
-            <p className='text-sm font-medium text-gray-900'>Phone Number</p>
+            <p className='text-sm font-[300] text-neutral-750'>Phone Number</p>
             <PhoneInput
               value={phoneNumber}
               onChange={handlePhoneChange}
               className="mt-1"
               placeholder="171 234 5678"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-neutral-500 mt-1">
               Enter your 10-digit phone number (without country code)
             </p>
           </div>
@@ -177,17 +177,17 @@ export function PhoneVerification({
                 Sending OTP...
               </>
             ) : (
-              <>
+              <span className="flex items-center bg-brand-600 text-white rounded-tr-md rounded-bl-md hover:translate-y-[-2px] transition-all px-4 py-2 gap-2">
                 <Phone className="w-4 h-4 mr-2" />
                 Send Verification Code
-              </>
+              </span>
             )}
           </Button>
         </div>
       ) : (
         <div className="space-y-4">
           <div>
-            <p className='text-sm font-medium text-gray-900'>Verification Code</p>
+            <p className='text-sm font-[300] text-neutral-750'>Verification Code</p>
             <Input
               id="otp"
               type="text"
@@ -201,7 +201,7 @@ export function PhoneVerification({
               className="mt-1 text-center text-lg tracking-widest"
               maxLength={6}
             />
-            <p className="text-xs text-gray-500 mt-1 text-center">
+            <p className="text-xs text-neutral-500 mt-1 text-center">
               Enter the 6-digit code sent to {phoneNumber}
             </p>
           </div>
