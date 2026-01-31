@@ -6,7 +6,10 @@ node_modules/
 # Testing
 /coverage
 
-*env*
+.env
+.env.local
+.env.production
+.env.development
 
 # Production
 /build
