@@ -17,6 +17,50 @@ const FREE_TICKET_LIMITS = {
   maxPerUserTotal: 5,
 };
 
+const GENERAL_TICKET_LIMITS = {
+  maxPerEvent: 10,
+  maxPerTier: 5
+};
+
+async function validateTicketLimits(userId: string, eventId: string, requestedTickets: any[]) {
+  // Get all active orders for this user and event
+  const existingOrders = await Order.find({
+    userId,
+    eventId,
+    status: { $in: ['confirmed', 'pending'] }
+  });
+
+  // Calculate total tickets bought for this event
+  const currentTotalTickets = existingOrders.reduce((sum, order) => {
+    return sum + order.tickets.reduce((tSum: number, t: any) => tSum + t.quantity, 0);
+  }, 0);
+
+  const requestedTotal = requestedTickets.reduce((sum: number, t: any) => sum + t.quantity, 0);
+
+  if (currentTotalTickets + requestedTotal > GENERAL_TICKET_LIMITS.maxPerEvent) {
+    throw new CustomError(
+      `You can only purchase a maximum of ${GENERAL_TICKET_LIMITS.maxPerEvent} tickets per event. You have already booked ${currentTotalTickets}.`,
+      400
+    );
+  }
+
+  // Calculate limits per tier
+  for (const requestedTicket of requestedTickets) {
+    const currentTierCount = existingOrders.reduce((sum, order) => {
+      const tierTickets = order.tickets.filter((t: any) => t.ticketVariantId.toString() === requestedTicket.ticketVariantId);
+      return sum + tierTickets.reduce((tSum: number, t: any) => tSum + t.quantity, 0);
+    }, 0);
+
+    if (currentTierCount + requestedTicket.quantity > GENERAL_TICKET_LIMITS.maxPerTier) {
+      throw new CustomError(
+        `You can only purchase a maximum of ${GENERAL_TICKET_LIMITS.maxPerTier} tickets for "${requestedTicket.variantName}". You have already booked ${currentTierCount}.`,
+        400
+      );
+    }
+  }
+}
+
+
 
 // Create new order
 export const createOrderService = async (data: any) => {
@@ -38,6 +82,9 @@ export const createOrderService = async (data: any) => {
   if (event.moderation.sales.paused) {
     throw new CustomError('Event sales are paused. Please come back later', 400);
   }
+
+  // Validate aggregate ticket limits
+  await validateTicketLimits(data.userId, data.eventId, data.tickets);
 
   // Validate ticket variants and check availability
   for (const ticketReq of data.tickets) {
