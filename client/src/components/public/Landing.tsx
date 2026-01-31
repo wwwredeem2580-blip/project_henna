@@ -7,13 +7,16 @@ import {
   Wallet, ShieldCheck, Zap, Activity, MessageCircle, ArrowRight,
   Globe, Fingerprint, Lock, Layers, BarChart3, Ticket,
   ShieldAlert, RefreshCcw, Bell, Star, X, Send, Palette, FileText,
-  CreditCard
+  CreditCard, Clock10
 } from 'lucide-react';
 import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
 import { Logo } from '../shared/Logo';
 import { Button } from '../ui/button';
 import { useAuth } from '@/lib/context/auth';
+import { useRouter } from 'next/navigation';
+import { publicService } from '@/lib/api/public';
+import { BDTIcon } from '../ui/Icons';
 
 interface LandingProps {
   onGetStarted: () => void;
@@ -138,6 +141,20 @@ const BrandPromotionVideo: React.FC = () => {
 export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExploreEvents }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { user } = useAuth();
+  const router = useRouter();
+  const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const events = await publicService.getFeaturedEvents(8);
+        setFeaturedEvents(events);
+      } catch (error) {
+        console.error('Failed to fetch featured events', error);
+      }
+    };
+    fetchFeatured();
+  }, []);
   
   return (
     <div className="min-h-screen bg-neutral-0 selection:bg-brand-100 selection:text-brand-700">
@@ -236,6 +253,109 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
       {/* <section className="py-16 px-6">
         <BrandPromotionVideo />
       </section> */}
+
+      {/* Trending Events Showcase */}
+      {featuredEvents.length > 0 && (
+        <section className="py-24 px-6 bg-neutral-0 border-t border-neutral-100">
+          <div className="max-w-[1080px] mx-auto space-y-12">
+             <div className="flex items-end justify-between">
+                <div className="space-y-4 max-w-[700px]">
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-brand-50 border border-brand-100 rounded-full text-brand-600 text-[10px] font-bold uppercase tracking-widest"
+                    >
+                        <Zap size={12} />
+                        Live Now
+                    </motion.div>
+                    <h2 className="text-3xl md:text-4xl font-light text-neutral-950 tracking-tight">
+                      Featured on Zenvy
+                    </h2>
+                    <p className="text-neutral-500 font-light text-lg">Curated experiences happening across the country.</p>
+                </div>
+                <Button onClick={onExploreEvents} variant="outline" className="hidden md:flex rounded-xl border-neutral-200 text-neutral-600 hover:text-brand-600 hover:border-brand-200">
+                    View All Events
+                </Button>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredEvents.map((event, i) => {
+                    const minPrice = event.tickets?.length > 0 
+                      ? Math.min(...event.tickets.map((t: any) => t.price?.amount))
+                      : 0;
+                    const startDate = new Date(event.schedule?.startDate);
+                    const endDate = new Date(event.schedule?.endDate);
+                    const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+                    const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+                    return (
+                        <motion.div
+                            key={event._id}
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: i * 0.1 }}
+                            onClick={() => router.push(`/events/${event.slug || event._id}`)}
+                            className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
+                        >
+                            <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
+                                <img
+                                  src={event.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
+                                  alt={event.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                                {event.status === 'live' && (
+                                    <div className="absolute top-4 gap-2 left-4 flex items-center ">
+                                        <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
+                                            <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
+                                            Live
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="p-6">
+                                <div className="flex items-center gap-2 ml-[-12px] mb-2">
+                                  <div className="flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
+                                    <Logo className="w-4 text-brand-500" /> Featured
+                                  </div>
+                                </div>
+                                <h2 className="text-lg font-[300] text-slate-900 tracking-tight truncate">{event.title}</h2>
+                                <p className="text-xs text-slate-500 font-[300] line-clamp-2">{event.tagline || event.description}</p>
+                                <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
+                                    <span className="flex items-center gap-1 text-xs ">
+                                        <Calendar size={12} strokeWidth={1} />
+                                        {formatDate(startDate)}
+                                    </span>
+                                    <span className="flex items-center gap-1 text-xs">
+                                        <Clock10 size={12} strokeWidth={1} />
+                                        {formatTime(startDate)} - {formatTime(endDate)}
+                                    </span>
+                                </div>
+                                {/* Price */}
+                                <div className="flex justify-between items-center gap-2 mt-2">
+                                    <span className="text-xs text-slate-500 font-[300]">
+                                        {event.venue?.address?.city || 'Location TBA'}
+                                    </span>
+                                    <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
+                                        <span className="text-xs">From</span> <BDTIcon className="text-xs" />{minPrice}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                        </motion.div>
+                    );
+                })}
+             </div>
+             
+             <div className="md:hidden flex justify-center pt-8">
+                <Button onClick={onExploreEvents} variant="outline" className="rounded-xl border-neutral-200 text-neutral-600 w-full">
+                    View All Events
+                </Button>
+             </div>
+          </div>
+        </section>
+      )}
 
       {/* Feature Walkthrough - 'Idea to Hosted' Style Section */}
       <section className="py-24 px-6 overflow-hidden">
