@@ -55,28 +55,28 @@ export const trackImageKitUpload = async (req: Request, res: Response) => {
       );
     } else {
       // Check for existing uploads of the same type and user (to replace old images)
-      const oldUploads = await Media.find({
-        userId: req.user?.sub,
-        type,
-        provider: 'imagekit',
-        status: { $ne: 'deleted' }
-      });
+      // const oldUploads = await Media.find({
+      //   userId: req.user?.sub,
+      //   type,
+      //   provider: 'imagekit',
+      //   status: { $ne: 'deleted' }
+      // });
 
-      // Delete old images from ImageKit and mark as deleted in DB
-      for (const oldUpload of oldUploads) {
-        try {
-          if (oldUpload.fileId) {
-            await imagekit.deleteFile(oldUpload.fileId);
-            console.log(`Deleted old image from ImageKit: ${oldUpload.fileId}`);
-          }
-          await Media.updateOne(
-            { _id: oldUpload._id },
-            { status: 'deleted', deletedAt: new Date() }
-          );
-        } catch (error) {
-          console.error(`Failed to delete old image ${oldUpload.fileId}:`, error);
-        }
-      }
+      // // Delete old images from ImageKit and mark as deleted in DB
+      // for (const oldUpload of oldUploads) {
+      //   try {
+      //     if (oldUpload.fileId) {
+      //       await imagekit.deleteFile(oldUpload.fileId);
+      //       console.log(`Deleted old image from ImageKit: ${oldUpload.fileId}`);
+      //     }
+      //     await Media.updateOne(
+      //       { _id: oldUpload._id },
+      //       { status: 'deleted', deletedAt: new Date() }
+      //     );
+      //   } catch (error) {
+      //     console.error(`Failed to delete old image ${oldUpload.fileId}:`, error);
+      //   }
+      // }
 
       // Create new record
       await Media.create({

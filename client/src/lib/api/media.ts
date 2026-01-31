@@ -22,6 +22,11 @@ interface UploadResponse {
   urls?: string[];
 }
 
+const BACKBLAZE_BASE_API_URL = 
+  process.env.NEXT_PUBLIC_APP_ENV === "development" 
+    ? `${process.env.NEXT_PUBLIC_API_URL}/media/backblaze` || 'http://localhost:3001/media/backblaze'
+    : `${process.env.NEXT_PUBLIC_API_URL}/api/media/backblaze` || 'http://localhost:3001/api/media/backblaze';
+
 class MediaService {
   /**
    * Get ImageKit authentication parameters
@@ -60,7 +65,7 @@ class MediaService {
     formData.append('documentType', documentType);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/media/backblaze/upload`, {
+      const response = await fetch(`${BACKBLAZE_BASE_API_URL}/upload`, {
         method: 'POST',
         credentials: 'include',
         body: formData,
@@ -96,7 +101,7 @@ class MediaService {
    * Delete document from Backblaze
    */
   async deleteDocument(objectKey: string): Promise<{ success: boolean }> {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/media/backblaze/delete`, {
+    const response = await fetch(`${BACKBLAZE_BASE_API_URL}/delete`, {
       method: 'DELETE',
       credentials: 'include',
       headers: {
