@@ -122,9 +122,9 @@ export default function Conversation() {
             <p className="text-sm text-red-600">{error}</p>
           </div>
         ) : 
-          <div className="flex h-[calc(100vh-180px)] overflow-hidden">
+          <div className="flex h-[calc(100vh-180px)] flex-col sm:flex-row">
             {/* Sidebar Inbox */}
-            <div className="w-80 border-r border-slate-100 pr-4 flex flex-col">
+            <div className="w-60 md:w-80 border-r border-slate-100 pr-4 flex flex-col">
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
                 {/* Search */}
                 <div className="flex-1 min-w-full flex gap-2">

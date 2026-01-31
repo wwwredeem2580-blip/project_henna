@@ -1,239 +1,307 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Phone, Shield, CreditCard, CheckCircle, XCircle, Clock,
-  Upload, FileText, AlertCircle
+  Calendar,
+  ShoppingBag,
+  Star,
+  Trash2,
+  UserCircle,
+  HelpCircle,
+  Plus,
+  LogIn,
+  UserPlus,
+  PlusCircle,
+  BarChart3,
+  Ticket,
+  DollarSign,
+  CreditCard,
+  MoreHorizontal,
+  Loader2,
+  Search,
+  MessageSquare,
+  Send,
+  ChevronRight,
+  Phone,
+  ShieldCheck,
+  Wallet,
+  ChevronLeft,
+  Smartphone,
+  Landmark,
+  ArrowUpRight,
+  Upload,
+  ArrowLeft,
 } from 'lucide-react';
-import Sidebar from '@/components/layout/Sidebar';
-import { PhoneVerification } from '@/components/host/profile/PhoneVerification';
 import { useAuth } from '@/lib/context/auth';
-import { apiClient } from '@/lib/api/client';
+import { useRouter } from 'next/navigation';
+import { hostAnalyticsService, DashboardMetrics, HostOrder } from '@/lib/api/host-analytics';
+import { hostEventsService } from '@/lib/api/host';
 
-interface HostProfile {
-  phoneNumber?: string;
-  phoneVerified: boolean;
-  kycStatus?: 'pending' | 'approved' | 'rejected' | 'not_submitted';
-  payoutMethods?: Array<{
-    _id: string;
-    type: 'bkash' | 'nagad' | 'bank';
-    accountNumber: string;
-    isDefault: boolean;
-  }>;
+interface DashboardProps {
+  onLogout: () => void;
 }
 
-const ProfilePage: React.FC = () => {
+import { Logo } from '@/components/shared/Logo';
+
+import Sidebar from '@/components/layout/Sidebar';
+import { BDTIcon } from '@/components/ui/Icons';
+
+
+export interface PayoutConfig {
+  type: 'bank' | 'bkash' | 'nagad' | null;
+  details: {
+    accountNumber?: string;
+    accountName?: string;
+    bankName?: string;
+    branchName?: string;
+    phoneNumber?: string;
+  };
+}
+
+export default function Profile() {
+
   const { user } = useAuth();
-  const [profile, setProfile] = useState<HostProfile | null>(null);
+  const router = useRouter();
+  
+  // State management
   const [loading, setLoading] = useState(true);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [payoutConfig, setPayoutConfig] = useState<PayoutConfig>({
+    type: null,
+    details: {}
+  });
+  const [editingPayoutType, setEditingPayoutType] = useState<'bank' | 'bkash' | 'nagad' | null>(null);
+  const [activeSettingsSection, setActiveSettingsSection] = useState('Phone Verification');
 
   useEffect(() => {
-    fetchHostProfile();
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
   }, []);
 
-  const fetchHostProfile = async () => {
-    try {
-      setLoading(true);
-      const data = await apiClient.get('/api/host/profile') as HostProfile;
-      setProfile(data);
-      setPhoneNumber(data.phoneNumber || '');
-    } catch (error) {
-      console.error('Failed to fetch host profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerificationComplete = () => {
-    setShowPhoneVerification(false);
-    fetchHostProfile(); // Refresh profile
-  };
-
-  const getStatusBadge = (status: string, verified?: boolean) => {
-    if (verified) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
-          <CheckCircle size={12} />
-          Verified
-        </span>
-      );
-    }
-
-    switch (status) {
-      case 'approved':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
-            <CheckCircle size={12} />
-            Approved
-          </span>
-        );
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-50 text-yellow-700 text-xs font-medium rounded-full">
-            <Clock size={12} />
-            Pending Review
-          </span>
-        );
-      case 'rejected':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full">
-            <XCircle size={12} />
-            Rejected
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-50 text-gray-700 text-xs font-medium rounded-full">
-            <AlertCircle size={12} />
-            Not Submitted
-          </span>
-        );
-    }
+  const handleSavePayout = (details: any) => {
+    setPayoutConfig({
+      type: editingPayoutType,
+      details: details
+    });
+    setEditingPayoutType(null);
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50/30">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-white font-sans text-slate-950">
       <Sidebar />
-      
-      <main className="flex-1 lg:ml-64 pb-32">
-        <div className="max-w-[1080px] mx-auto px-4 lg:px-8 pt-8 lg:pt-12">
-          
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-[400] tracking-normal text-slate-900">Settings</h1>
-            <p className="text-sm text-slate-500 font-[300]">Manage your account settings and preferences</p>
+
+      {/* Main Content */}
+      <main className="flex-1 lg:ml-64 p-4 lg:p-8">
+
+        {/* Header */}
+        <header className="flex items-center justify-between mb-10">
+          <div>
+            <h1 className="text-2xl font-[400] tracking-normal text-slate-900">Profile</h1>
+            <p className="text-sm text-slate-500 font-[300]">Manage your profile details like contact, payout methods, etc.</p>
           </div>
+          <div className="hidden lg:flex items-center gap-3">
+              <button title='Create Event' onClick={() => {router.push('/host/events/create')}} className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Plus size={18}/></button>
+              <button title='Analytics' onClick={() => {router.push('/host/analytics')}} className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><BarChart3 size={18}/></button>
+              <button title='Help' onClick={() => {router.push('/host/help')}} className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
+              <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
+              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover" />
+            </div>
+          </div>
+        </header>
 
-          {/* Settings Sections */}
-          <div className="space-y-6">
-            
-            {/* Phone Verification Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-3xl shadow-[0_1px_4px_0px_rgba(0,0,0,0.1)] overflow-hidden"
-            >
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-indigo-50 rounded-2xl">
-                      <Phone className="w-5 h-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Phone Verification</h3>
-                      <p className="text-sm text-gray-500">Verify your phone number for account security</p>
-                    </div>
-                  </div>
-                  {profile && getStatusBadge('', profile.phoneVerified)}
-                </div>
+        {/* Stats Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 animate-pulse">
+                <div className="h-4 bg-slate-200 rounded w-1/2 mb-4"></div>
+                <div className="h-8 bg-slate-200 rounded w-3/4"></div>
               </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="p-6 bg-red-50 border border-red-200 rounded-lg mb-10">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        ) : 
+          <div className="flex h-[calc(100vh-180px)] bg-white overflow-hidden flex-col md:flex-row">
+            <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col bg-white">
+              <div className="p-4 md:p-6 border-b border-slate-50">
+                <h3 className="text-md font-[500] text-neutral-750 uppercase tracking-widest"></h3>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {[
+                  { label: 'Phone Verification', icon: <Phone size={18}/>, desc: 'Verify your phone for account security' },
+                  { label: 'KYC Documents', icon: <ShieldCheck size={18}/>, desc: 'Upload identity for verification' },
+                  { label: 'Payout Methods', icon: <Wallet size={18}/>, desc: 'Manage how you receive payments' },
+                ].map((section) => (
+                  <button key={section.label} onClick={() => setActiveSettingsSection(section.label)} className={`w-full p-4 md:p-6 text-left border-b border-slate-50 transition-all flex gap-4 hover:bg-slate-50 group ${activeSettingsSection === section.label ? 'bg-brand-50/30' : ''}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${activeSettingsSection === section.label ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-brand-100 group-hover:text-brand-500'}`}>{section.icon}</div>
+                    <div className="flex-1"><h4 className="text-sm font-[400] text-neutral-750 mb-0.5">{section.label}</h4><p className="text-[10px] text-neutral-500 font-[300]">{section.desc}</p></div>
+                    <ChevronRight size={16} className={`mt-1 transition-transform hidden md:block ${activeSettingsSection === section.label ? 'text-brand-500 translate-x-1' : 'text-slate-200'}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              <div className="p-6">
-                {profile?.phoneVerified ? (
-                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <div>
-                        <p className="text-sm font-medium text-green-900">Phone Verified</p>
-                        <p className="text-xs text-green-700">+880 {phoneNumber}</p>
+            <div className="flex-1 overflow-y-auto bg-slate-50/30">
+              <AnimatePresence mode="wait">
+                {activeSettingsSection === 'Phone Verification' && (
+                  <motion.div key="phone" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 md:p-10 max-w-[600px] space-y-10">
+                    <div className="space-y-4 flex gap-4">
+                      <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
+                        <Smartphone size={16}/>
+                      </div>
+                      <div className="space-y-1">
+                        <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Phone Verification Required</h2>
+                        <p className="text-[12px] text-neutral-500 font-[300]">To complete your host profile, we need to verify your phone number.</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setShowPhoneVerification(true)}
-                      className="text-xs text-green-700 hover:text-green-800 font-medium"
-                    >
-                      Change Number
-                    </button>
-                  </div>
-                ) : showPhoneVerification ? (
-                  <PhoneVerification
-                    phoneNumber={phoneNumber}
-                    onVerificationComplete={handleVerificationComplete}
-                    onPhoneUpdate={setPhoneNumber}
-                  />
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-gray-600 mb-4">Your phone number is not verified</p>
-                    <button
-                      onClick={() => setShowPhoneVerification(true)}
-                      className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors text-sm font-medium"
-                    >
-                      Verify Phone Number
-                    </button>
-                  </div>
+                    <div className="bg-white px-2 rounded-[2rem] space-y-8">
+                      <div className="space-y-4">
+                        <label className="text-sm font-[300] text-neutral-750 block ml-1">Phone Number</label>
+                        <div className="flex flex-row gap-4">
+                          <div className="bg-slate-50 border-2 border-transparent px-4 py-2 rounded-tr-lg rounded-bl-lg text-neutral-500 font-[300] flex items-center justify-center text-sm">+880</div>
+                          <div className="flex-1">
+                            <input type="tel" placeholder="171 234 5678" className="w-full px-4 py-2 bg-slate-50 border-2 border-transparent focus:border-brand-500/30 focus:bg-white rounded-tr-lg rounded-bl-lg text-sm font-[300] outline-none transition-all placeholder:text-neutral-300"/>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-neutral-500 font-[300]">Enter your 10-digit number</p>
+                      </div>
+                      <button className="w-full bg-brand-500 text-white py-2 rounded-tr-lg rounded-bl-lg font-[500] text-sm hover:bg-brand-600 transition-all shadow-xl shadow-brand-100 flex items-center justify-center gap-3">Send Verification Code <ArrowUpRight size={20}/></button>
+                    </div>
+                  </motion.div>
                 )}
-              </div>
-            </motion.div>
 
-            {/* KYC Documents Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-3xl shadow-[0_1px_4px_0px_rgba(0,0,0,0.1)] overflow-hidden"
-            >
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-purple-50 rounded-2xl">
-                      <Shield className="w-5 h-5 text-purple-600" />
+                {activeSettingsSection === 'KYC Documents' && (
+                  <motion.div key="kyc" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 md:p-10 max-w-[600px] space-y-10">
+                    <div className="space-y-4 flex gap-4">
+                      <div className="w-10 h-10 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-500">
+                        <ShieldCheck size={20}/>
+                      </div>
+                      <div className="space-y-1">
+                        <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">KYC coming soon</h2>
+                        <p className="text-[12px] text-neutral-500 font-[300]">Soon you'll be able to upload NID and Passport documents.</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">KYC Documents</h3>
-                      <p className="text-sm text-gray-500">Upload identity documents for verification</p>
+                    <div className="border-2 border-dashed border-slate-100 rounded-[2rem] p-10 md:p-16 flex flex-col items-center justify-center text-center space-y-4 bg-white/50">
+                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-neutral-500">
+                        <Upload size={20}/>
+                      </div>
+                      <div>
+                        <h4 className="text-md font-[400] text-neutral-500">Section Locked</h4>
+                        <p className="text-[10px] text-neutral-500 font-[300]">Verify your phone first.</p>
+                      </div>
                     </div>
-                  </div>
-                  {profile && getStatusBadge(profile.kycStatus || 'not_submitted')}
-                </div>
-              </div>
+                  </motion.div>
+                )}
 
-              <div className="p-6">
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                  <p className="text-sm mb-4">KYC document upload coming soon</p>
-                  <p className="text-xs text-gray-400">You'll be able to upload NID, Passport, and other documents</p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Payout Methods Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-3xl shadow-[0_1px_4px_0px_rgba(0,0,0,0.1)] overflow-hidden"
-            >
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-emerald-50 rounded-2xl">
-                      <CreditCard className="w-5 h-5 text-emerald-600" />
+                {activeSettingsSection === 'Payout Methods' && (
+                  <motion.div key="payout" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 md:p-10 max-w-[600px] space-y-10">
+                    <div className="space-y-4">
+                      <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
+                        <Landmark size={20} strokeWidth={1.5}/>
+                      </div>
+                      <div className="space-y-1">
+                        <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Payout Management</h2>
+                        <p className="text-[12px] text-neutral-500 font-[300]">Manage how you receive your earnings. Select one primary method.</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Payout Methods</h3>
-                      <p className="text-sm text-gray-500">Manage how you receive payments</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="p-6">
-                <div className="text-center py-8 text-gray-500">
-                  <CreditCard className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                  <p className="text-sm mb-4">Payout methods coming soon</p>
-                  <p className="text-xs text-gray-400">You'll be able to add bKash, Nagad, and Bank accounts</p>
-                </div>
-              </div>
-            </motion.div>
+                    {!editingPayoutType ? (
+                      <div className="grid grid-cols-1 gap-4">
+                        {[
+                          { id: 'bank', label: 'Bank Account', icon: <Landmark size={18}/> },
+                          { id: 'bkash', label: 'bKash Wallet', icon: <Smartphone size={18}/> },
+                          { id: 'nagad', label: 'Nagad Wallet', icon: <CreditCard size={18}/> },
+                        ].map(method => (
+                          <button 
+                            key={method.id} 
+                            onClick={() => setEditingPayoutType(method.id as any)}
+                            className={`bg-white border-2 rounded-[2rem] flex items-center justify-between group transition-all border-none hover:translate-y-[-2px]`}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${payoutConfig.type === method.id ? 'bg-brand-500 text-white' : 'bg-slate-50 text-slate-400'}`}>{method.icon}</div>
+                              <div className="text-left">
+                                <span className="font-[300] text-sm text-slate-900 block">{method.label}</span>
+                                {payoutConfig.type === method.id ? (
+                                  <span className="text-[9px] font-[300] text-brand-500 uppercase tracking-widest">Active & Configured</span>
+                                ) : (
+                                  <span className="text-[9px] font-[300] text-slate-400 uppercase tracking-widest">Available</span>
+                                )}
+                              </div>
+                            </div>
+                            <ChevronRight size={18} className={`${payoutConfig.type === method.id ? 'text-brand-500' : 'text-slate-200'}`} />
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="bg-white p-0 space-y-8">
+                        <div className="flex items-center justify-between mb-4">
+                          <button onClick={() => setEditingPayoutType(null)} className="flex items-center gap-2 text-slate-400 hover:text-brand-600 hover:translate-x-[-2px] transition-all font-[300] text-xs uppercase tracking-widest">
+                            <ArrowLeft size={16} strokeWidth={1.5}/>
+                          </button>
+                          <span className="text-[10px] font-[300] uppercase tracking-widest text-brand-500">Configure {editingPayoutType}</span>
+                        </div>
+                        
+                        {editingPayoutType === 'bank' && (
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2 flex flex-col gap-1">
+                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Bank Name</label>
+                                <input placeholder="e.g. City Bank" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                              </div>
+                              <div className="space-y-2 flex flex-col gap-1">
+                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Account Name</label>
+                                <input placeholder="Full Name" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                              </div>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4">
+                              <div className="space-y-2 flex flex-col gap-1">
+                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Account Number</label>
+                                <input placeholder="0000 0000 0000" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                              </div>
+                              <div className="space-y-2 flex flex-col gap-1">
+                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Branch Name</label>
+                                <input placeholder="Dhaka Main Branch" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                            </div>
+                            </div>
+                          </div>
+                        )}
 
+                        {(editingPayoutType === 'bkash' || editingPayoutType === 'nagad') && (
+                          <div className="space-y-6">
+                            <div className="p-4 bg-brand-50 rounded-tr-xl rounded-bl-xl flex items-center gap-4 border border-brand-100 mb-4">
+                              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-500"><Smartphone size={20}/></div>
+                              <p className="text-xs font-[300] text-brand-800">Ensure the wallet number is personal and verified.</p>
+                            </div>
+                            <div className="space-y-2 flex flex-col gap-1">
+                              <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Wallet Number</label>
+                              <div className="flex gap-4">
+                                <div className="px-4 py-2 text-sm bg-slate-50 rounded-tr-lg rounded-bl-lg font-[400] text-slate-900 border-2 border-transparent">+880</div>
+                                <input placeholder="171 234 5678" className="flex-1 px-6 py-2 text-sm bg-slate-50 rounded-tr-lg rounded-bl-lg font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={() => handleSavePayout({})}
+                          className="w-full bg-brand-500 text-white py-2 rounded-tr-lg rounded-bl-lg font-[500] text-sm hover:bg-brand-600 transition-all shadow-xl shadow-brand-100 flex items-center justify-center gap-3"
+                        >
+                          Save & Set as Primary
+                        </button>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
-        </div>
+      }
       </main>
     </div>
   );
 };
-
-export default ProfilePage;
