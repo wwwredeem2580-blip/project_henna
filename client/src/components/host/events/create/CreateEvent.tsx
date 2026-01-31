@@ -132,8 +132,8 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
     },
     description: '',
     schedule: {
-      startDate: new Date().toISOString(),
-      endDate: new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      endDate: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
       isMultiDay: false,
       timezone: 'Asia/Dhaka',
       doors: '10:00 AM',
@@ -665,7 +665,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   value={formData.description || ''}
                   onChange={(e) => updateField('description', e.target.value)}
                   placeholder="Event description"
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                  className="w-full min-h-[150px] px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                 />
                 {errors.description && <p className="text-xs text-red-500">{errors.description}</p>}
               </div>
@@ -1253,7 +1253,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                         showNotification('success', 'Event submission!', 'Event submitted successfully!');
                         onSuccess();
                       } else {
-                        showNotification('error', 'Event submission!', 'Please wait for draft to save');
+                        showNotification('error', 'Event submission!', 'Please save draft first');
                       }
                     } catch (error: any) {
                       showNotification('error', 'Event submission!', error.message || 'Failed to submit event');
@@ -1261,7 +1261,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                       setLoading(false);
                     }
                   }}
-                  disabled={loading || !draftId}
+                  disabled={loading}
                   className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
                 >
                   {loading ? 'Submitting...' : 'Submit'}

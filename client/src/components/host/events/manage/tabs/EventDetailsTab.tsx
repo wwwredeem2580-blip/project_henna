@@ -166,6 +166,23 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
       setSaving(false);
     }
   };
+
+  const handleAdditionalDocumentsSave = async (documents: any) => {
+    if(!data?.event) return;
+    
+    try {
+      await eventsService.updateEventByStatus(
+        data?.event?._id,
+        data?.event?.status,
+        { additionalDocuments: documents }
+      );
+      showNotification('success', 'Changes Saved', 'Event additional documents have been updated.');
+    } catch (error: any) {
+      console.error('Save error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save changes';
+      showNotification('error', 'Save Failed', errorMessage);
+    }
+  };
   
   const handleScheduleConfirm = async () => {
     if (!data?.event || !pendingScheduleChange) return;
@@ -595,7 +612,8 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
                  <div className="flex-1">
                     <DocumentUploader 
                          onUploadComplete={(files) => {
-                             showNotification('success', 'Documents Uploaded', `${files.length} documents uploaded successfully.`);
+                             console.log(files);
+                             handleAdditionalDocumentsSave(files);
                          }}
                          onUploadError={(err) => {
                              showNotification('error', 'Upload Failed', err);

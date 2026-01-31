@@ -340,7 +340,7 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                         </div>
 
                         {/* Ticket Visibility and Sales Status Controls */}
-                        <div className="space-y-3 pt-4 border-t max-h-[100px] overflow-y-auto border-slate-200">
+                        <div className="space-y-3 pt-4 border-t max-h-[100px] lg:max-h-[350px] overflow-y-auto border-slate-200">
                           <p className="text-xs text-neutral-500 font-[500] uppercase tracking-wider">Ticket Controls</p>
                           
                           <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
