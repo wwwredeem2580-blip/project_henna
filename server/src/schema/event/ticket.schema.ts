@@ -16,7 +16,10 @@ export const ticketSchema = z.object({
   limits: z.object({
     minPerOrder: z.number({ error: () => ({ message: 'Min per order must be a number' }) }).int('Min per order must be an integer').min(1, 'Min per order must be at least 1').default(1),
     maxPerOrder: z.number({ error: () => ({ message: 'Max per order must be a number' }) }).int('Max per order must be an integer').min(1, 'Max per order must be at least 1').default(5),
-  }),
+  }).default({
+    minPerOrder: 1,
+    maxPerOrder: 5,
+  }).optional(),
   sold: z.number().default(0).optional(),
   reserved: z.number().default(0).optional(),
   
