@@ -65,6 +65,7 @@ export default function Profile() {
   const router = useRouter();
   
   // State management
+  // State management
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [payoutConfig, setPayoutConfig] = useState<PayoutConfig>({
@@ -73,6 +74,7 @@ export default function Profile() {
   });
   const [editingPayoutType, setEditingPayoutType] = useState<'bank' | 'bkash' | 'nagad' | null>(null);
   const [activeSettingsSection, setActiveSettingsSection] = useState('Phone Verification');
+  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
 
   useEffect(() => {
     setTimeout(() => {
@@ -127,7 +129,7 @@ export default function Profile() {
           </div>
         ) : 
           <div className="flex h-[calc(100vh-180px)] bg-white overflow-hidden flex-col md:flex-row">
-            <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col bg-white">
+            <div className={`w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-100 flex-col bg-white ${isMobileDetailOpen ? 'hidden md:flex' : 'flex'}`}>
               <div className="p-4 md:p-6 border-b border-slate-50">
                 <h3 className="text-md font-[500] text-neutral-750 uppercase tracking-widest"></h3>
               </div>
@@ -137,7 +139,10 @@ export default function Profile() {
                   { label: 'KYC Documents', icon: <ShieldCheck size={18}/>, desc: 'Upload identity for verification' },
                   { label: 'Payout Methods', icon: <Wallet size={18}/>, desc: 'Manage how you receive payments' },
                 ].map((section) => (
-                  <button key={section.label} onClick={() => setActiveSettingsSection(section.label)} className={`w-full p-4 md:p-6 text-left border-b border-slate-50 transition-all flex gap-4 hover:bg-slate-50 group ${activeSettingsSection === section.label ? 'bg-brand-50/30' : ''}`}>
+                  <button key={section.label} onClick={() => {
+                    setActiveSettingsSection(section.label);
+                    setIsMobileDetailOpen(true);
+                  }} className={`w-full p-4 md:p-6 text-left border-b border-slate-50 transition-all flex gap-4 hover:bg-slate-50 group ${activeSettingsSection === section.label ? 'bg-brand-50/30' : ''}`}>
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${activeSettingsSection === section.label ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-brand-100 group-hover:text-brand-500'}`}>{section.icon}</div>
                     <div className="flex-1"><h4 className="text-sm font-[400] text-neutral-750 mb-0.5">{section.label}</h4><p className="text-[10px] text-neutral-500 font-[300]">{section.desc}</p></div>
                     <ChevronRight size={16} className={`mt-1 transition-transform hidden md:block ${activeSettingsSection === section.label ? 'text-brand-500 translate-x-1' : 'text-slate-200'}`} />
@@ -146,12 +151,18 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-slate-50/30">
+            <div className={`flex-1 overflow-y-auto bg-slate-50/30 ${isMobileDetailOpen ? 'flex flex-col' : 'hidden md:flex flex-col'}`}>
               <AnimatePresence mode="wait">
                 {activeSettingsSection === 'Phone Verification' && (
                   <motion.div key="phone" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 md:p-10 max-w-[600px] space-y-10">
                     <div className="space-y-4 flex gap-4">
-                      <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
+                      <button 
+                        onClick={() => setIsMobileDetailOpen(false)}
+                        className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all h-fit"
+                      >
+                        <ArrowLeft size={18} strokeWidth={1.5}/>
+                      </button>
+                      <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 flex-shrink-0">
                         <Smartphone size={16}/>
                       </div>
                       <div className="space-y-1">
@@ -178,7 +189,13 @@ export default function Profile() {
                 {activeSettingsSection === 'KYC Documents' && (
                   <motion.div key="kyc" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 md:p-10 max-w-[600px] space-y-10">
                     <div className="space-y-4 flex gap-4">
-                      <div className="w-10 h-10 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-500">
+                      <button 
+                        onClick={() => setIsMobileDetailOpen(false)}
+                        className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all h-fit"
+                      >
+                        <ArrowLeft size={18} strokeWidth={1.5}/>
+                      </button>
+                      <div className="w-10 h-10 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-500 flex-shrink-0">
                         <ShieldCheck size={20}/>
                       </div>
                       <div className="space-y-1">
@@ -200,8 +217,14 @@ export default function Profile() {
 
                 {activeSettingsSection === 'Payout Methods' && (
                   <motion.div key="payout" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 md:p-10 max-w-[600px] space-y-10">
-                    <div className="space-y-4">
-                      <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
+                    <div className="space-y-4 flex gap-4">
+                      <button 
+                         onClick={() => setIsMobileDetailOpen(false)}
+                         className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all h-fit"
+                      >
+                        <ArrowLeft size={18} strokeWidth={1.5}/>
+                      </button>
+                      <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 flex-shrink-0">
                         <Landmark size={20} strokeWidth={1.5}/>
                       </div>
                       <div className="space-y-1">
