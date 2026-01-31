@@ -36,7 +36,7 @@ export default function Sidebar() {
     { icon: <Calendar size={18} strokeWidth={1} />, label: 'My Events', path: '/host/events', active: pathname === '/host/events', requireRole: 'host' },
     { icon: <Plus size={18} strokeWidth={1} />, label: 'Create Event', path: '/host/events/create', active: pathname === '/host/events/create', requireRole: 'host' },
     { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Orders', path: '/host/orders', active: pathname === '/host/orders', requireRole: 'host' },
-    { icon: <CreditCard size={18} strokeWidth={1} />, label: 'Payout', path: '/host/payout', active: pathname === '/host/payout', requireRole: 'host' },
+    // { icon: <CreditCard size={18} strokeWidth={1} />, label: 'Payout', path: '/host/payout', active: pathname === '/host/payout', requireRole: 'host' },
     { icon: <BarChart3 size={18} strokeWidth={1} />, label: 'Analytics', path: '/host/analytics', active: pathname === '/host/analytics', requireRole: 'host' },
     { icon: <User size={18} strokeWidth={1} />, label: 'Profile', path: '/host/profile', active: pathname === '/host/profile', requireRole: 'host' },
   ];
