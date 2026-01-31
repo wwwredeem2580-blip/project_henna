@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { Loader2, Phone, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import { phoneOTPAPI } from '@/lib/api/auth';
+import { phoneOTPAPI } from '@/lib/api/phone';
 import { useNotification } from '@/lib/context/notification';
 
 interface PhoneVerificationProps {

@@ -43,6 +43,11 @@ const userSchema = new mongoose.Schema({
         required: function(this: any) { return this.role === 'host'; },
         trim: true
     },
+    phoneVerified: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
     website: {
         type: String,
         trim: true

@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
-import { Event } from '../../../database/event/event';
-import { EventViews } from '../../../database/auth/event';
+import { Event, EventViews } from '../../../database/event/event';
 import CustomError from '../../../utils/CustomError';
 import { calculateTrendingScore } from '../../../utils/event/trending/engine';
 import { getRecommendedEventsService } from '../../../utils/event/recommendation/engine';
