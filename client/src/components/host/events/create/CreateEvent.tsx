@@ -348,8 +348,15 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
           },
         });
       } else if (currentStep === 'verification') {
-        // Verification is optional, so we don't validate it strictly
-        return true;
+        result = verificationSchema.safeParse({
+          verification: formData.verification,
+        });
+        if (!result.success) {
+          const errorMap = result.error.flatten().fieldErrors;
+          const errorMessages = Object.values(errorMap).join(', ');
+          showNotification('error', 'Verification', 'Verification document is required');
+          return false;
+        }
       } else if (currentStep === 'tickets') {
         // Validate tickets
         result = ticketsStepSchema.safeParse({
