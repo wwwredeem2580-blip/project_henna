@@ -33,17 +33,6 @@ export interface HostEventsResponse {
   };
 }
 
-export interface PaymentDetails {
-  method: 'bkash' | 'nagad' | 'rocket' | 'bank_transfer';
-  mobileNumber?: string;
-  accountHolderName: string;
-  bankName?: string;
-  accountNumber?: string;
-  branchName?: string;
-  verified: boolean;
-  verifiedAt?: string;
-}
-
 export interface HostProfile {
   user: {
     _id: string;
@@ -61,8 +50,19 @@ export interface HostProfile {
     verifiedAt: string;
     phoneNumber: string;
   } | null;
-  paymentDetails: PaymentDetails | null;
+  paymentDetails: any | null;
   profileComplete: boolean;
+}
+
+export interface PaymentDetails {
+  method : string,
+  mobileNumber : string,
+  accountHolderName : string,
+  bankName : string,
+  accountNumber : string,
+  branchName : string,
+  routingNumber : string,
+  swiftCode : string
 }
 
 

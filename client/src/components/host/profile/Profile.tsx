@@ -284,7 +284,6 @@ export default function Profile() {
                           { id: 'bank_transfer', label: 'Bank Account', icon: <Landmark size={18}/> },
                           { id: 'bkash', label: 'bKash Wallet', icon: <Smartphone size={18}/> },
                           { id: 'nagad', label: 'Nagad Wallet', icon: <CreditCard size={18}/> },
-                          { id: 'rocket', label: 'Rocket Wallet', icon: <Wallet size={18}/> },
                         ].map(method => (
                           <button 
                             key={method.id} 
@@ -336,6 +335,16 @@ export default function Profile() {
                                 <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Branch Name</label>
                                 <input placeholder="Dhaka Main Branch" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
                             </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2 flex flex-col gap-1">
+                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Routing Number</label>
+                                <input placeholder="Routing Number" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                              </div>
+                              <div className="space-y-2 flex flex-col gap-1">
+                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Swift Code</label>
+                                <input placeholder="Swift Code" className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"/>
+                              </div>
                             </div>
                           </div>
                         )}
