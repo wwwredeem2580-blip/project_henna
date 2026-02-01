@@ -16,7 +16,9 @@ export async function getHostProfileService(hostId: string) {
   const trustScore = await calculateTrustScore(hostId);
 
   // Get host profile data
-  const hostProfile = await User.findOne({ _id: hostId }, { firstName: 1, lastName: 1, profilePicture: 1 });
+  const hostProfile = await User.findOne({ _id: hostId })
+    .select('firstName lastName email businessName businessEmail website photo')
+    .lean();
 
   // Get aggregated review data
   // const reviewStats = await calculateAttendedReviewRating(hostId);

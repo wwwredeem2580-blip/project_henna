@@ -70,7 +70,7 @@ export default function Sidebar() {
           <Logo variant='full' />
         </div>
         {user ? (
-          <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+          <div onClick={() => user?.role === 'host' ? router.push('/host/profile') : ''} className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover" />
           </div>
         ) : (

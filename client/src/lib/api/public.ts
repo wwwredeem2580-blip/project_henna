@@ -58,4 +58,12 @@ export const publicService = {
     const response = await apiClient.get(`/api/event/public/recommended?${queryParams}`);
     return response;
   },
+
+  getHostProfile: async (hostId: string): Promise<any> => {
+    return await apiClient.get(`/api/public/host/${hostId}`);
+  },
+
+  getHostTrustScore: async (hostId: string): Promise<any> => {
+    return await apiClient.get(`/api/public/host/${hostId}/trust-score`);
+  },
 };
