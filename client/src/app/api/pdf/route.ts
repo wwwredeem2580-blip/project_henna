@@ -4,10 +4,11 @@ import { generateTicketPDF, generateBulkTicketPDFs, BulkTicketData } from '@/lib
 
 // Backend API base URL
 
-const TICKET_BASE_API_URL = 
-  process.env.NEXT_PUBLIC_APP_ENV === "development" 
-    ? `${process.env.NEXT_PUBLIC_API_URL}/ticket` || 'http://localhost:3001/ticket'
-    : `${process.env.NEXT_PUBLIC_API_URL}/api/ticket` || 'http://localhost:3001/api/ticket';
+// Use internal Docker networking for server-side requests in production
+// 'http://server:3001' refers to the backend container
+const TICKET_BASE_API_URL = process.env.NODE_ENV === 'production' 
+  ? 'http://server:3001/ticket' 
+  : 'http://localhost:3001/ticket';
 
 /**
  * Fetch user tickets from backend API
