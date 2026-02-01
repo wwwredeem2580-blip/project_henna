@@ -28,6 +28,7 @@ import {
   validateTicketCapacity,
   validateUniqueTicketNames
 } from '@/schema/event.schema';
+import { generateDescription } from '@/lib/generators/description';
 
 interface RegisterProps {
   onSuccess: () => void;
@@ -117,6 +118,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
   const [editingTicketIndex, setEditingTicketIndex] = useState<number | null>(null);
   const [scheduleModalState, setScheduleModalState] = useState<'date' | 'start-time' | 'end-time' | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [isSparkling, setIsSparkling] = useState(false);
   const companyType = ['organizer', 'venue_owner', 'representative', 'artist'];
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -165,6 +167,25 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
       }
     },
   });
+
+  // Animation styles for the sparkle button
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes sparkle {
+        0% { transform: scale(0) rotate(0deg); opacity: 0; }
+        50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+        100% { transform: scale(1) rotate(360deg); opacity: 0; }
+      }
+      .animate-sparkle {
+        animation: sparkle 0.8s ease-out forwards;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -239,6 +260,29 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
     }
 
     return obj;
+  };
+
+
+
+  const handleAutoFillDescription = () => {
+    setIsSparkling(true);
+    
+    // Generate description after a small delay for animation
+    setTimeout(() => {
+      const description = generateDescription(
+        formData.category,
+        formData.title,
+        formData.tagline
+      );
+      
+      setFormData(prev => ({ ...prev, description }));
+      if (errors.description) {
+        setErrors(prev => ({ ...prev, description: '' }));
+      }
+      
+      // Stop animation
+      setTimeout(() => setIsSparkling(false), 800);
+    }, 400);
   };
 
   // Manual save draft handler
@@ -661,7 +705,21 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
 
 
               <div className="space-y-2">
-                <label className="text-sm font-[500] text-neutral-700 ml-1">Description *</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-[500] text-neutral-700 ml-1">Description *</label>
+                  <button
+                    onClick={handleAutoFillDescription}
+                    type="button"
+                    disabled={isSparkling || !formData.title || !formData.category}
+                    className="text-xs flex items-center gap-1.5 text-brand-600 hover:text-brand-700 font-medium px-3 py-1.5 rounded-full hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                  >
+                    <Sparkles 
+                      size={14} 
+                      className={`transition-all ${isSparkling ? "animate-sparkle text-yellow-500 fill-yellow-500" : "group-hover:text-brand-500"}`} 
+                    />
+                    {isSparkling ? "Magic..." : "Auto-fill"}
+                  </button>
+                </div>
                 <textarea
                   value={formData.description || ''}
                   onChange={(e) => updateField('description', e.target.value)}
