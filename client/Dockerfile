@@ -61,6 +61,19 @@ COPY --from=builder /src/next.config.* ./
 # Install only production dependencies
 RUN npm install --omit=dev
 
+# Install Chromium and dependencies for Puppeteer
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Tell Puppeteer to skip installing Chrome v. and use the installed package
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
 EXPOSE 3000
 
 # Run as non-root user

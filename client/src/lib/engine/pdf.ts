@@ -12,6 +12,7 @@ import { PassThrough } from 'stream';
  */
 const BROWSER_CONFIG = {
   headless: true,
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
   args: [
     '--no-sandbox',
     '--disable-setuid-sandbox',
