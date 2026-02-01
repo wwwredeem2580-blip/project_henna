@@ -18,6 +18,8 @@ services:
       - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
       - NEXT_TELEMETRY_DISABLED=1
+    env_file:
+      - ./client/.env.production
     networks:
       - app-network
     restart: unless-stopped
