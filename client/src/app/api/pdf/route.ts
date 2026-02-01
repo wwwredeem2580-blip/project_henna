@@ -4,7 +4,7 @@ import { generateTicketPDF, generateBulkTicketPDFs, BulkTicketData } from '@/lib
 
 // Backend API base URL
 
-const API_BASE_URL = 'https://www.zenvy.com.bd/api';
+const API_BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : `${process.env.NEXT_PUBLIC_API_URL}`;
 
 /**
  * Fetch user tickets from backend API
