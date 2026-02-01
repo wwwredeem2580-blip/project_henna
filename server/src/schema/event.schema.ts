@@ -19,17 +19,6 @@ export const objectIdSchema = z
   .string()
   .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId');
 
-export const categorySchema = z.enum([
-  'concert',
-  'sports',
-  'conference',
-  'festival',
-  'theater',
-  'comedy',
-  'networking',
-  'workshop',
-  'other',
-]);
 
 // Steps
 
@@ -42,7 +31,7 @@ export const stepBasicsSchema = z.object({
     .min(5, 'Event tagline must be at least 5 characters')
     .max(MAX_TAGLINE_LENGTH, `Tagline must be less than ${MAX_TAGLINE_LENGTH} characters`),
 
-  category: categorySchema,
+  category: z.string({message: 'Category is required'}).min(1, 'Category is required'),
 
   subCategory: z
     .array(z.string({ error: 'Sub-category is required' }).min(2, 'Sub-category must be at least 2 characters').max(50, 'Sub-category must be less than 50 characters'))

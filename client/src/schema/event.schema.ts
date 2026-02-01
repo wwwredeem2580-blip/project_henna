@@ -8,7 +8,7 @@ export const basicInfoSchema = z.object({
   tagline: z.string()
     .min(5, 'Tagline must be at least 5 characters')
     .max(200, 'Tagline must not exceed 200 characters'),
-  category: z.enum(['concert', 'sports', 'conference', 'festival', 'theater', 'comedy', 'networking', 'workshop', 'other']),
+  category: z.string({message: 'Category is required'}).min(1, 'Category is required'),
 });
 
 // Step 2: Event Details

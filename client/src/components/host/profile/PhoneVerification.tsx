@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PhoneInput } from '@/components/ui/phone-input';
-import { Loader2, Phone, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, Phone, CheckCircle, AlertCircle, RefreshCw, Edit } from 'lucide-react';
 import { phoneOTPAPI } from '@/lib/api/phone';
 import { useNotification } from '@/lib/context/notification';
 
@@ -210,7 +210,7 @@ export function PhoneVerification({
             <Button
               onClick={handleVerifyOTP}
               disabled={isLoading || otp.length !== 6}
-              className="flex-1"
+              className="flex-1 bg-brand-500 text-white rounded-tr-md rounded-bl-md hover:translate-y-[-2px] transition-all px-4 py-2 gap-2"
             >
               {isLoading ? (
                 <>
@@ -229,7 +229,7 @@ export function PhoneVerification({
               variant="outline"
               onClick={handleResendOTP}
               disabled={isLoading || resendTimer > 0}
-              className="flex-1"
+              className="flex-1 hover:scale-103 transition-all"
             >
               {resendTimer > 0 ? (
                 <>
@@ -248,8 +248,9 @@ export function PhoneVerification({
           <Button
             variant="outline"
             onClick={() => setStep('input')}
-            className="w-full text-sm"
+            className="w-full bg-brand-500 text-white text-sm rounded-tr-md rounded-bl-md hover:translate-y-[-2px] transition-all px-4 py-2 gap-2"
           >
+            <Edit />
             Change Phone Number
           </Button>
         </div>

@@ -356,7 +356,7 @@ export default function Events() {
                         </div>
                       </div>
                     </div>
-                    <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all">
+                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${event?.venue?.coordinates?.coordinates[1]},${event?.venue?.coordinates?.coordinates[0]}`, '_blank')} className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all">
                       Get Directions
                     </button>
                   </section>
@@ -382,7 +382,7 @@ export default function Events() {
                         </div>
                       </div>
                     </div>
-                    <button className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all">
+                    <button onClick={() => window.open(`/profile/host/${event?.hostId}`, '_blank')} className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all">
                       Profile
                     </button>
                   </section>

@@ -41,9 +41,7 @@ export const businessInfoSchema = z.object({
 
 // Step 2: Company Details
 export const companyDetailsSchema = z.object({
-  companyType: z.enum(['organizer', 'venue_owner', 'representative', 'artist'], {
-    message: 'Please select your company type'
-  }),
+  companyType: z.string({message: 'Please select or type your company type'}).min(1, 'Company type is required'),
   website: z.string().url({message: 'Please enter a valid website URL'}).optional().or(z.literal('')),
 });
 

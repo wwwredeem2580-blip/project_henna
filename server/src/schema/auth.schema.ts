@@ -43,9 +43,7 @@ export const hostRegisterSchema = z.object({
   // companySize: z.enum(['1-10', '11-50', '51-200', '201-500', '500+'], {
   //   message: 'Please select your company size'
   // }),
-  companyType: z.enum(['organizer', 'venue_owner', 'representative', 'artist'], {
-    message: 'Please select your company type'
-  }),
+  companyType: z.string({message: 'Please select or type your company type'}).min(1, 'Company type is required'),
   
   // Personal Information (Primary Contact)
   firstName: z.string({message: 'First name is required'})

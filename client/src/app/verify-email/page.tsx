@@ -15,7 +15,6 @@ function VerifyEmailContent() {
   const { user, isHost } = useAuth();
   const token = searchParams.get('token');
 
-  console.log(token);
   
   const [verifying, setVerifying] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -77,7 +76,7 @@ function VerifyEmailContent() {
   const handleVerificationSuccess = () => {
     // Redirect based on role
     if (isHost) {
-      router.push('/host/dashboard');
+      router.push('/dashboard');
     } else {
       router.push('/');
     }

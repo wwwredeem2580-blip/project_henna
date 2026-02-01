@@ -36,7 +36,7 @@ interface RegisterProps {
 }
 
 type Step = 'basic' | 'details' | 'venue' | 'schedule' | 'verification' | 'tickets' | 'platform';
-const eventCategory = ['concert', 'sports', 'conference', 'festival', 'theater', 'comedy', 'networking', 'workshop', 'other'];
+const eventCategory = ['concert', 'sports', 'conference', 'festival', 'theater', 'comedy', 'networking'];
 const venueType = ['indoor', 'outdoor', 'hybrid'];
 interface document {
   type: string;
@@ -119,6 +119,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
   const [scheduleModalState, setScheduleModalState] = useState<'date' | 'start-time' | 'end-time' | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [isSparkling, setIsSparkling] = useState(false);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const companyType = ['organizer', 'venue_owner', 'representative', 'artist'];
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -615,24 +616,65 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Event Category *</label>
+                <label className="text-sm font-medium text-slate-700">
+                  Event Category *
+                </label>
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {eventCategory.map((category) => (
+                  {eventCategory.map((category) => {
+                    const isActive = formData.category === category;
+
+                    return (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => {
+                          setIsCustomCategory(false);
+                          updateField('category', category);
+                        }}
+                        className={`px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 transition-all ${
+                          isActive
+                            ? 'border-brand-500 bg-brand-50 text-brand-700'
+                            : 'border-slate-200 hover:border-brand-300'
+                        }`}
+                      >
+                        {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </button>
+                    );
+                  })}
+
+                  {/* Custom Category */}
+                  {!isCustomCategory ? (
                     <button
-                      key={category}
                       type="button"
-                      onClick={() => updateField('category', category)}
-                      className={`px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 transition-all ${
-                        formData.category === category
-                          ? 'border-brand-500 bg-brand-50 text-brand-700'
-                          : 'border-slate-200 hover:border-brand-300'
-                      }`}
+                      onClick={() => {
+                        setIsCustomCategory(true);
+                        updateField('category', '');
+                      }}
+                      className="px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 border-dashed border-slate-300 text-slate-500 hover:border-brand-300 hover:text-brand-600 transition-all"
                     >
-                      {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      + Add custom
                     </button>
-                  ))}
+                  ) : (
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Custom category"
+                      value={formData.category || ''}
+                      onChange={(e) => updateField('category', e.target.value)}
+                      onBlur={() => {
+                        if (!formData.category?.trim()) {
+                          setIsCustomCategory(false);
+                        }
+                      }}
+                      className="px-3 text-center py-2 text-sm sm:text-base rounded-lg border-2 border-brand-500 bg-white outline-none transition-all"
+                    />
+                  )}
                 </div>
-                {errors.companySize && <p className="text-xs text-red-500 ml-1">{errors.companySize}</p>}
+
+                {errors.category && (
+                  <p className="text-xs text-red-500 ml-1">{errors.category}</p>
+                )}
               </div>
 
               <div className="space-y-2">

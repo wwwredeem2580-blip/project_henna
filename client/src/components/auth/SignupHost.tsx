@@ -38,6 +38,7 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const companyType = ['organizer', 'venue_owner', 'representative', 'artist'];
+  const [isCustomType, setIsCustomType] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     businessName: '',
     businessEmail: '',
@@ -274,25 +275,67 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Business Type *</label>
+                <label className="text-sm font-medium text-slate-700">
+                  Business Type *
+                </label>
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {companyType.map((type) => (
+                  {companyType.map((type) => {
+                    const isActive = formData.companyType === type;
+
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          setIsCustomType(false);
+                          updateField('companyType', type);
+                        }}
+                        className={`px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 transition-all ${
+                          isActive
+                            ? 'border-brand-500 bg-brand-50 text-brand-700'
+                            : 'border-slate-200 hover:border-brand-300'
+                        }`}
+                      >
+                        {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </button>
+                    );
+                  })}
+
+                  {/* Custom Type Button / Input */}
+                  {!isCustomType ? (
                     <button
-                      key={type}
                       type="button"
-                      onClick={() => updateField('companyType', type)}
-                      className={`px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 transition-all ${
-                        formData.companyType === type
-                          ? 'border-brand-500 bg-brand-50 text-brand-700'
-                          : 'border-slate-200 hover:border-brand-300'
-                      }`}
+                      onClick={() => {
+                        setIsCustomType(true);
+                        updateField('companyType', '');
+                      }}
+                      className="px-3 py-2 whitespace-nowrap text-xs sm:text-xs rounded-lg border-1 sm:border-2 border-dashed border-slate-300 text-slate-500 hover:border-brand-300 hover:text-brand-600 transition-all"
                     >
-                      {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      + Add custom
                     </button>
-                  ))}
+                  ) : (
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Your business type"
+                      value={formData.companyType}
+                      onChange={(e) => updateField('companyType', e.target.value)}
+                      onBlur={() => {
+                        if (!formData.companyType.trim()) {
+                          setIsCustomType(false);
+                        }
+                      }}
+                      className="px-3 py-2 text-sm sm:text-base rounded-lg border-2 border-brand-500 bg-white outline-none transition-all"
+                    />
+                  )}
                 </div>
-                {errors.companySize && <p className="text-xs text-red-500 ml-1">{errors.companySize}</p>}
+
+                {errors.companyType && (
+                  <p className="text-xs text-red-500 ml-1">{errors.companyType}</p>
+                )}
               </div>
+
 
               <div className="space-y-2">
                 <label className="text-sm font-[500] text-neutral-700 ml-1">Website (Optional)</label>
