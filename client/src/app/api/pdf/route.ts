@@ -4,7 +4,10 @@ import { generateTicketPDF, generateBulkTicketPDFs, BulkTicketData } from '@/lib
 
 // Backend API base URL
 
-const API_BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : `${process.env.NEXT_PUBLIC_API_URL}`;
+const TICKET_BASE_API_URL = 
+  process.env.NEXT_PUBLIC_APP_ENV === "development" 
+    ? `${process.env.NEXT_PUBLIC_API_URL}/ticket` || 'http://localhost:3001/ticket'
+    : `${process.env.NEXT_PUBLIC_API_URL}/api/ticket` || 'http://localhost:3001/api/ticket';
 
 /**
  * Fetch user tickets from backend API
@@ -14,7 +17,7 @@ async function fetchUserTickets(request: NextRequest): Promise<any[]> {
     // Get cookies from the request
     const cookieHeader = request.headers.get('cookie') || '';
     
-    const response = await fetch(`${API_BASE_URL}/ticket`, {
+    const response = await fetch(`${TICKET_BASE_API_URL}`, {
       method: 'GET',
       headers: {
         'Cookie': cookieHeader,
