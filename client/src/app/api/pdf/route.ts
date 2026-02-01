@@ -16,7 +16,7 @@ async function fetchUserTickets(request: NextRequest): Promise<any[]> {
   try {
     // Get cookies from the request
     const cookieHeader = request.headers.get('cookie') || '';
-    
+    console.log(TICKET_BASE_API_URL);
     const response = await fetch(`${TICKET_BASE_API_URL}`, {
       method: 'GET',
       headers: {
@@ -48,7 +48,7 @@ async function fetchUserTickets(request: NextRequest): Promise<any[]> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
+    console.log(body);
     // Determine if this is a bulk request
     const isBulkRequest = 'ticketIds' in body && Array.isArray(body.ticketIds);
 
