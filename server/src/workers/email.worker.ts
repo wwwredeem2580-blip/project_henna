@@ -1,116 +1,144 @@
 import { Worker } from 'bullmq';
 import nodemailer from 'nodemailer';
 import {
-    emailVerificationTemplate,
-  } from '../utils/email/emailVerification';
+  emailVerificationTemplate,
+} from '../utils/email/emailVerification';
 import { orderConfirmationTemplate } from '../utils/email/orderConfirmation';
+const SibApiV3Sdk = require('sib-api-v3-sdk');
 
+// Redis
 const redisOptions = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   maxRetriesPerRequest: null,
 };
 
-// Create a test account if no real credentials provided
+// Brevo Setup
+const brevoClient = SibApiV3Sdk.ApiClient.instance;
+brevoClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+const brevoTransactional = new SibApiV3Sdk.TransactionalEmailsApi();
+
+// SMTP (Fallback)
 let transporter: nodemailer.Transporter;
 
 const initTransporter = async () => {
-    if (process.env.SMTP_HOST) {
-        transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: parseInt(process.env.SMTP_PORT || '587'),
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
-            }
-        });
-    } else {
-        // Use Ethereal for testing
-        const testAccount = await nodemailer.createTestAccount();
-        console.log('📧 Email Worker: Using Ethereal Test Account');
-        console.log(`📧 User: ${testAccount.user}`);
-        console.log(`📧 Pass: ${testAccount.pass}`);
-        
-        transporter = nodemailer.createTransport({
-            host: 'smtp.ethereal.email',
-            port: 587,
-            secure: false,
-            auth: {
-                user: testAccount.user,
-                pass: testAccount.pass
-            }
-        });
-    }
+  if (process.env.SMTP_HOST) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  } else {
+    const testAccount = await nodemailer.createTestAccount();
+    console.log('📧 Using Ethereal SMTP fallback');
+
+    transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+  }
 };
 
-export const initEmailWorker = () => {
-  initTransporter();
+// Email Sender
+const sendTransactionalEmail = async ({
+  to,
+  subject,
+  html,
+  attachments = [],
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  attachments?: any[];
+}) => {
+  // 1️⃣ Try Brevo first
+  try {
+    await brevoTransactional.sendTransacEmail({
+      subject,
+      htmlContent: html,
+      sender: {
+        name: 'Zenvy',
+        email: 'no-reply@zenvy.com.bd',
+      },
+      to: [{ email: to }],
+    });
 
-  const worker = new Worker('email-queue', async (job) => {
-    console.log(`Processing email job ${job.id} of type ${job.name}`);
-    const type = job.name;
-    const payload = job.data;
+    console.log(`📧 Email sent via Brevo → ${to}`);
+    return;
+  } catch (brevoError) {
+    console.error('❌ Brevo failed, falling back to SMTP', brevoError);
+  }
 
-    try {
-        let html = '';
-        let subject = '';
-        let to = '';
-        let attachments: any[] = [];
-
-        switch (type) {
-            case 'EMAIL_VERIFICATION':
-                to = payload.email;
-                subject = `Verify Your Email - Zenvy`;
-                html = emailVerificationTemplate(payload);
-                break;
-            case 'ORDER_CONFIRMATION':
-                to = payload.buyerEmail;
-                subject = `Order Confirmed - ${payload.eventTitle}`;
-                html = orderConfirmationTemplate(payload);
-                break;
-            default:
-                console.warn(`Unknown email job type: ${type}`);
-                return;
-        }
-
-        if (!to) {
-            throw new Error('No recipient email provided');
-        }
-
-        const mailOptions: any = {
-            from: '"Project Pinecone" <no-reply@pinecone.events>',
-            to,
-            subject,
-            html,
-        };
-
-        if (attachments.length > 0) {
-            mailOptions.attachments = attachments;
-        }
-
-        const info = await transporter.sendMail(mailOptions);
-
-        console.log(`📧 Email sent: ${info.messageId}`);
-        // Preview only available when using Ethereal code
-        if (!process.env.SMTP_HOST) {
-            console.log(`📧 Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
-        }
-
-    } catch (error) {
-        console.error(`Failed to process email job ${job.id}:`, error);
-        throw error;
-    }
-  }, {
-    connection: redisOptions
+  // 2️⃣ SMTP fallback
+  const info = await transporter.sendMail({
+    from: '"Zenvy" <no-reply@zenvy.com.bd>',
+    to,
+    subject,
+    html,
+    attachments,
   });
 
-  worker.on('completed', job => {
-    console.log(`Job ${job.id} has completed!`);
+  console.log(`📧 Email sent via SMTP → ${info.messageId}`);
+
+  if (!process.env.SMTP_HOST) {
+    console.log(`📧 Preview: ${nodemailer.getTestMessageUrl(info)}`);
+  }
+};
+
+// Worker
+export const initEmailWorker = async () => {
+  await initTransporter();
+
+  const worker = new Worker(
+    'email-queue',
+    async (job) => {
+      console.log(`Processing email job ${job.id} (${job.name})`);
+
+      let to = '';
+      let subject = '';
+      let html = '';
+
+      switch (job.name) {
+        case 'EMAIL_VERIFICATION':
+          to = job.data.email;
+          subject = 'Verify Your Email - Zenvy';
+          html = emailVerificationTemplate(job.data);
+          break;
+
+        case 'ORDER_CONFIRMATION':
+          to = job.data.buyerEmail;
+          subject = `Order Confirmed - ${job.data.eventTitle}`;
+          html = orderConfirmationTemplate(job.data);
+          break;
+
+        default:
+          throw new Error(`Unknown email job type: ${job.name}`);
+      }
+
+      if (!to) {
+        throw new Error('Recipient email missing');
+      }
+
+      await sendTransactionalEmail({ to, subject, html });
+    },
+    { connection: redisOptions }
+  );
+
+  worker.on('completed', (job) => {
+    console.log(`✅ Job ${job.id} completed`);
   });
 
   worker.on('failed', (job, err) => {
-    console.log(`Job ${job?.id} has failed with ${err.message}`);
+    console.error(`❌ Job ${job?.id} failed`, err.message);
   });
-  
+
   console.log('📧 Email Worker started');
 };
