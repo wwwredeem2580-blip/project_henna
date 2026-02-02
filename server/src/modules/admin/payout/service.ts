@@ -68,36 +68,58 @@ export const getPayoutsService = async (
 };
 
 
-export const getPayoutDetailsService = async (payoutId: string) => {
+export const getPayoutDetailsService = async (payoutId: string, page = 1, limit = 10) => {
   
   if(!isValidObjectId(payoutId)){
     throw new CustomError('Invalid payout ID', 400);
   }
 
   const payout = await Payout.findById(payoutId)
-    .populate('hostId')
-    .populate('eventId');
+    .populate('hostId', 'firstName lastName email')
+    .populate('eventId', 'title schedule');
   
   if (!payout) {
     throw new CustomError('Payout not found', 404);
   }
   
-  // Get orders for this payout
-  const orders = await Order.find({
-    eventId: payout.eventId,
+  // Get paginated orders for this payout
+  const query = {
+    eventId: payout.eventId?._id,
     status: { $in: ['confirmed', 'refunded'] }
-  }).select('orderNumber status pricing createdAt');
+  };
+
+  const orders = await Order.find(query)
+    .select('orderNumber status pricing createdAt buyerEmail ticketCount')
+    .sort({ createdAt: -1 })
+    .skip((Number(page) - 1) * Number(limit))
+    .limit(Number(limit));
+
+  const totalOrders = await Order.countDocuments(query);
   
   return {
     success: true,
     payout: {
       ...payout.toObject(),
+      hostId: {
+        _id: payout.hostId?._id,
+        name: payout.hostId ? `${payout.hostId.firstName} ${payout.hostId.lastName}` : 'Unknown',
+        email: payout.hostId?.email
+      },
       orders: orders.map(o => ({
+        id: o._id,
         orderNumber: o.orderNumber,
         status: o.status,
         amount: o.pricing.total,
+        buyerEmail: o.buyerEmail,
+        ticketCount: o.ticketCount,
         createdAt: o.createdAt
-      }))
+      })),
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: totalOrders,
+        pages: Math.ceil(totalOrders / Number(limit))
+      }
     }
   };
 };

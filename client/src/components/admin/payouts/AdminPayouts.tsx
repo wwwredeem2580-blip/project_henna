@@ -342,6 +342,7 @@ export default function AdminPayouts() {
                     <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest text-center">Amount</th>
                     <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Status</th>
                     <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Date</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">View Details</th>
                     <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest text-right">Action</th>
                   </tr>
                 </thead>
@@ -382,6 +383,10 @@ export default function AdminPayouts() {
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-xs font-[400] text-slate-700">{new Date(payout.createdAt).toLocaleDateString()}</span>
+                        </td>
+
+                        <td className="px-6 py-4 pl-10">
+                          <button onClick={() => router.push(`/admin/payouts/${payout.payoutId}`)} className="text-xs font-[400] hover:text-brand-600 hover:scale-110 transition-all"><Eye size={14} strokeWidth={1.5}/></button>
                         </td>
 
                         <td className="px-6 py-4 text-right relative action-menu-container">

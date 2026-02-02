@@ -26,13 +26,15 @@ router.get('/', async (req, res) => {
 
 router.get('/:payoutId', async (req, res) => {
   try {
-
-    const { payoutId } = req.params;
-
-    const result = await getPayoutDetailsService(payoutId);
-    res.status(200).json(result);
-  } catch (error: any) {
-    return handleError(error, res);
+    const { page, limit } = req.query;
+    const result = await getPayoutDetailsService(
+      req.params.payoutId,
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 10
+    );
+    res.json(result);
+  } catch (error: any) { // Keeping original error type annotation
+    handleError(res, error);
   }
 });
 

@@ -101,7 +101,64 @@ export interface AdminPayoutsResponse {
   };
 }
 
+export interface AdminPayoutOrder {
+  id: string;
+  orderNumber: string;
+  status: string;
+  amount: number;
+  buyerEmail: string;
+  ticketCount: number;
+  createdAt: string;
+}
+
+export interface AdminPayoutDetailsResponse {
+  payout: AdminPayout & {
+    orders: AdminPayoutOrder[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+    hostId: {
+      _id: string;
+      name: string;
+      email: string;
+    }
+  };
+}
+
 class AdminService {
+  /**
+   * Get payout details with paginated orders
+   */
+  async getPayoutDetails(payoutId: string, page = 1, limit = 10): Promise<AdminPayoutDetailsResponse> {
+    const response = await apiClient.get<any>(`/api/admin/payout/${payoutId}?page=${page}&limit=${limit}`);
+    
+    // Map response to frontend interface
+    const p = response.payout;
+    return {
+      payout: {
+        payoutId: p._id,
+        payoutNumber: p.payoutNumber,
+        eventTitle: p.eventId?.title || 'Unknown Event',
+        hostName: p.hostId?.name || 'Unknown Host',
+        hostEmail: p.hostId?.email,
+        amount: Math.floor(p.netPayout || p.amount || 0),
+        currency: p.currency || 'BDT',
+        status: p.status,
+        createdAt: p.createdAt,
+        bankName: p.bankName,
+        accountNumber: p.accountNumber,
+        paymentMethod: p.paymentMethod,
+        // Detailed fields
+        orders: p.orders,
+        pagination: p.pagination,
+        hostId: p.hostId
+      }
+    };
+  }
+
   /**
    * Get all events with filters and pagination
    */
