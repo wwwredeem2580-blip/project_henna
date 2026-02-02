@@ -200,6 +200,7 @@ const eventSchema = new mongoose.Schema(
     flags: {
       isFlagged: { type: Boolean, default: false },
       reports: { type: [EventUtils.flagSchema], default: [] },
+      suspended: { type: Boolean, default: false },
       suspendedUntil: Date,
       suspensionReason: String,
       suspendedAt: Date,

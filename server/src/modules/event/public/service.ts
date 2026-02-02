@@ -17,7 +17,7 @@ export const getEventsService = async (filters: {
   page: number;
   limit: number;
 }) => {
-  const query: any = { status: { $in: ['published', 'live'] }, 'moderation.visibility': 'public' };
+  const query: any = { status: { $in: ['published', 'live'] }, 'moderation.visibility': 'public', 'flags.suspended': false };
   
   if (filters.category) {
     query.category = filters.category;
