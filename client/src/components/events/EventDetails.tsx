@@ -283,7 +283,7 @@ export default function Events() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="p-0 bg-slate-50 border border-slate-100 relative group overflow-hidden"
+                className="p-0 bg-slate-50 max-w-[600px] border border-slate-100 relative group overflow-hidden"
               >
                 <div className="grid grid-cols-[1fr_minmax(14vw,14vw)] md:grid-cols-[1fr_minmax(7vw,7vw)] lg:grid-cols-[1fr_minmax(5vw,5vw)] xl:grid-cols-[1fr_minmax(6vw,6vw)] 2xl:grid-cols-[1fr_minmax(7vw,7vw)] gap-4">
                   {/* Main Image */}
@@ -364,16 +364,13 @@ export default function Events() {
                     <p className="text-md font-[300] text-slate-700">
                       The Experience
                     </p>
-                    <p className="text-xs font-[300] text-neutral-500">
+                    <p className="text-sm font-[300] text-neutral-500">
                       {event?.description || 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis quibusdam inventore quaerat alias commodi dignissimos laborum tenetur esse atque! Obcaecati magnam qui amet neque quia labore non, porro sunt. Dolores.'}
                     </p>
                   </div>
 
                   <section className="p-2 max-w-[400px] bg-brand-card rounded-tr-lg rounded-bl-lg border border-brand-divider flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-2xl bg-white border border-brand-divider overflow-hidden flex items-center justify-center">
-                        <User className="w-5 h-5 text-brand-400" strokeWidth={1}/>
-                      </div>
                       <div>
                         <p className="text-[10px] font-[500] uppercase tracking-widest text-neutral-600 mb-1">Organizer</p>
                         <div className="flex flex-col items-start">

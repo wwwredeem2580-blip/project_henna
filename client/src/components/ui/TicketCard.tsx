@@ -64,7 +64,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <div className="text-md font-[400] tracking-wide text-neutral-700">
                   {ticket.tier}
                 </div>
-                <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
+                <div className="text-neutral-400 line-clamp-2 font-[500] text-[10px] uppercase tracking-widest">
                   {ticket.name}
                 </div>
                 <div className="mt-2">
@@ -90,7 +90,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 </span>
                 </>
               )}
-              <span className="flex items-center gap-1 text-xs text-slate-500 font-[300]">
+              <span className="flex items-center gap-1 text-xs text-slate-500 font-[300] truncate">
                 <LocationIcon className="w-3"/> {ticket.venue}
               </span>
             </div>

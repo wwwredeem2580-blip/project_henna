@@ -1,14 +1,10 @@
-import mongoose from 'mongoose';
 import { Event, EventViews } from '../../../database/event/event';
 import CustomError from '../../../utils/CustomError';
 import { calculateTrendingScore } from '../../../utils/event/trending/engine';
 import { getRecommendedEventsService } from '../../../utils/event/recommendation/engine';
-
-const CANDIDATE_LOOKBACK_DAYS = 30;
-const MIN_VIEWS_FOR_CANDIDATE = 20;
+import { isValidObjectId } from '../../../utils/isValidObjectId';
 
 
-// --- Get Published Events ---
 export const getEventsService = async (filters: {
   category?: string;
   location?: string;
@@ -17,55 +13,86 @@ export const getEventsService = async (filters: {
   page: number;
   limit: number;
 }) => {
-  const query: any = { status: { $in: ['published', 'live'] }, 'moderation.visibility': 'public', 'flags.suspended': false };
-  
-  if (filters.category) {
-    query.category = filters.category;
-  }
-  
+  // Ensure sane defaults
+  const page = Math.max(filters.page, 1);
+  const limit = Math.max(filters.limit, 1);
+  const skip = (page - 1) * limit;
+
+  // Base query
+  const query: any = {
+    status: { $in: ['published', 'live'] },
+    'moderation.visibility': 'public',
+    'flags.suspended': { $ne: true },
+  };
+
+  // Optional filters
+  if (filters.category) query.category = filters.category;
+
   if (filters.location) {
-    query['venue.address.city'] = new RegExp(filters.location, 'i');
+    query['venue.address.city'] = new RegExp(escapeRegExp(filters.location), 'i');
   }
-  
+
   if (filters.date) {
     const searchDate = new Date(filters.date);
-    query['schedule.startDate'] = { $gte: searchDate };
+    if (!isNaN(searchDate.getTime())) {
+      query['schedule.startDate'] = { $gte: searchDate };
+    }
   }
-  
+
   if (filters.search) {
+    const escapedSearch = escapeRegExp(filters.search);
     query.$or = [
-      { title: new RegExp(filters.search, 'i') },
-      { description: new RegExp(filters.search, 'i') },
-      { tagline: new RegExp(filters.search, 'i') },
+      { title: new RegExp(escapedSearch, 'i') },
+      { description: new RegExp(escapedSearch, 'i') },
+      { tagline: new RegExp(escapedSearch, 'i') },
     ];
   }
-  
-  const skip = (filters.page - 1) * filters.limit;
-  const events = await Event.find(query)
-    .select('_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate tickets metrics.views status')
-    .sort({ 'schedule.startDate': 1 })
+
+  // Fetch events
+  const eventsPromise = Event.find(query)
+    .select(
+      '_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate tickets metrics.views status'
+    )
+    .sort({ 'schedule.startDate': 1, _id: 1 })
     .skip(skip)
-    .limit(filters.limit);
-  
-  const total = await Event.countDocuments(query);
-  
+    .limit(limit)
+    .lean(); // Use lean for performance
+
+  // Count total documents
+  const countPromise = Event.countDocuments(query);
+
+  // Run concurrently
+  const [events, total] = await Promise.all([eventsPromise, countPromise]);
+
   return {
     events,
     pagination: {
-      page: filters.page,
-      limit: filters.limit,
+      page,
+      limit,
       total,
-      pages: Math.ceil(total / filters.limit),
+      pages: Math.ceil(total / limit),
     },
   };
 };
+
+// Utility to safely escape user input for RegExp
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 // --- Get Event Details ---
 export const getEventDetailsService = async (identifier: string, userId?: string) => {
   let event = await Event.findOne({ slug: identifier }).select('_id hostId slug title type moderation.sales categories description tagline highlights media status venue organizer schedule tickets features');
 
   if (!event) {
+    if(!isValidObjectId(identifier)){
+      throw new CustomError('Event not found', 404);
+    }
     event = await Event.findById(identifier).select('_id hostId slug title type moderation.sales.paused categories description tagline highlights media status venue organizer schedule tickets features');
+  }
+
+  if (event?.flags?.suspended || event?.moderation?.visibility === 'private') {
+    throw new CustomError('Event not found', 404);
   }
 
   if (!event || (event.status !== 'published' && event.status !== 'live' && event.status !== 'ended')) {

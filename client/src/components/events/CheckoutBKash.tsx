@@ -80,7 +80,7 @@ export const CheckoutBKash: React.FC<CheckoutBKashProps> = ({
         className="relative w-full max-w-[450px] bg-slate-50 rounded-tr-lg rounded-bl-lg shadow-4xl overflow-hidden border border-slate-100"
       >
         {/* Header Section */}
-        <div className="p-8 pb-4 flex justify-between items-center">
+        <div className="p-4 sm:p-8 pb-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#D12053]/10 flex items-center justify-center">
               <img 
@@ -102,21 +102,21 @@ export const CheckoutBKash: React.FC<CheckoutBKashProps> = ({
         </div>
 
         {/* Amount Summary */}
-        <div className="px-8 mb-8">
-          <div className="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex justify-between items-center">
+        <div className="px-4 sm:px-8 mb-8">
+          <div className="p-2 sm:p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex justify-between items-center">
             <div>
               <p className="text-[10px] font-[500] uppercase tracking-widest text-neutral-400 mb-1">{tierName}</p>
               <h4 className="text-sm font-[300] text-neutral-600 truncate max-w-[180px]">{eventName}</h4>
             </div>
             <div className="text-right">
-              <p className="text-xl font-[300] text-neutral-900">৳{amount}</p>
-              <p className="text-[10px] font-[300] text-neutral-400 uppercase tracking-widest">Amount Due</p>
+              <p className="text-md font-[300] text-neutral-900">৳{amount}</p>
+              <p className="text-[8px] font-[300] text-neutral-400 uppercase tracking-widest">Amount Due</p>
             </div>
           </div>
         </div>
 
         {/* Multi-step Flow Content */}
-        <div className="px-10 pb-12">
+        <div className="px-4 sm:px-10 pb-12">
           <AnimatePresence mode="wait">
             {step === 'number' && (
               <motion.div key="number" variants={stepVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
