@@ -16,7 +16,7 @@ const hybridBot = new HybridChatbot(
       apiKey: process.env.GEMINI_API_KEY
     }
   },
-  process.env.CHROMA_HOST,
+  process.env.CHROMA_HOST || 'chromadb', // Use docker-compose service name
   process.env.CHROMA_PORT ? parseInt(process.env.CHROMA_PORT) : 8000
 );
 
