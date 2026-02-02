@@ -336,12 +336,12 @@ class AdminService {
     
     // Transform backend data to frontend interface
     const mappedPayouts = response.payouts.map((payout: any) => ({
-      payoutId: payout._id,
+      payoutId: payout.id || payout._id,
       payoutNumber: payout.payoutNumber,
-      eventTitle: payout.eventId?.title || 'Unknown Event',
-      hostName: payout.hostId ? `${payout.hostId.firstName} ${payout.hostId.lastName}` : 'Unknown Host',
-      hostEmail: payout.hostId?.email,
-      amount: payout.netPayout || payout.amount || 0,
+      eventTitle: payout.event?.title || 'Unknown Event',
+      hostName: payout.host?.name || 'Unknown Host',
+      hostEmail: payout.host?.email,
+      amount: payout.amount || 0,
       currency: payout.currency || 'BDT',
       status: payout.status,
       createdAt: payout.createdAt,

@@ -10,6 +10,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "seed:events": "ts-node src/scripts/seedEvents.ts",
+    "seed:payouts": "ts-node src/scripts/seedPayouts.ts",
     "test": "vitest"
   },
   "keywords": [],

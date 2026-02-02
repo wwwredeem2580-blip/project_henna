@@ -442,8 +442,8 @@ export default function AdminPayouts() {
                                   {payout.status === 'on_hold' && (
                                     <>
                                         <div className="h-px bg-slate-100 my-1" />
-                                        <button onClick={() => handleActionClick('process', payout)} className="w-full text-left px-4 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50 flex items-center gap-2">
-                                            <CheckCircle size={14} /> Process
+                                        <button onClick={() => handleActionClick('approve', payout)} className="w-full text-left px-4 py-2 text-xs font-medium text-emerald-600 hover:bg-emerald-50 flex items-center gap-2">
+                                            <CheckCircle size={14} /> Approve
                                         </button>
                                         <button onClick={() => handleActionClick('reject', payout)} className="w-full text-left px-4 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 flex items-center gap-2">
                                             <XCircle size={14} /> Reject

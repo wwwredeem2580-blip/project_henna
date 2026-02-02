@@ -23,7 +23,7 @@ export const getPayoutsService = async (
   }
   
   const payouts = await Payout.find(query)
-    .populate('hostId', 'name email')
+    .populate('hostId', 'firstName lastName email')
     .populate('eventId', 'title schedule')
     .sort({ createdAt: -1 })
     .skip((Number(page) - 1) * Number(limit))
@@ -37,23 +37,26 @@ export const getPayoutsService = async (
       id: p._id,
       payoutNumber: p.payoutNumber,
       host: {
-        id: p.hostId._id,
-        name: p.hostId.name,
-        email: p.hostId.email
+        id: p.hostId?._id,
+        name: p.hostId ? `${p.hostId.firstName} ${p.hostId.lastName}` : 'Unknown',
+        email: p.hostId?.email
       },
       event: {
-        id: p.eventId._id,
-        title: p.eventId.title,
+        id: p.eventId?._id,
+        title: p.eventId?.title,
         endDate: p.eventId?.schedule?.endDate
       },
-      amount: p.netPayout,
+      amount: Math.floor(p.netPayout),
       currency: p.currency,
       status: p.status,
       requiresReview: p.requiresReview,
       reviewReason: p.reviewReason,
       onHold: p.onHold,
       holdReason: p.holdReason,
-      createdAt: p.createdAt
+      createdAt: p.createdAt,
+      paymentMethod: p.paymentMethod,
+      bankName: p.bankName,
+      accountNumber: p.accountNumber
     })),
     pagination: {
       page: Number(page),
@@ -202,6 +205,7 @@ export const putOnHoldService = async (payoutId: string, reason: string) => {
     throw new CustomError('Reason required', 400);
   }
   
+  payout.status = 'on_hold';
   payout.onHold = true;
   payout.holdReason = reason;
   await payout.save();

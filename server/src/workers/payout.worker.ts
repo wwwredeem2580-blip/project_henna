@@ -140,10 +140,10 @@ async function generatePayoutForEvent(event: any) {
     hostId: event.hostId,
     eventId: event._id,
     
-    grossRevenue,
-    grossPayout,
-    refundAmount,
-    netPayout,
+    grossRevenue: Math.floor(grossRevenue),
+    grossPayout: Math.floor(grossPayout),
+    refundAmount: Math.ceil(refundAmount),
+    netPayout: Math.floor(netPayout),
     currency: 'BDT',
     
     totalOrders: orders.length,
