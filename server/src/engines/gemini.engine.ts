@@ -17,28 +17,6 @@ interface ConversationMessage {
   timestamp: Date;
 }
 
-// async function listGeminiModels(apiKey: string) {
-//   const res = await fetch(
-//     "https://generativelanguage.googleapis.com/v1beta/models",
-//     {
-//       headers: {
-//         "x-goog-api-key": apiKey,
-//       },
-//     }
-//   );
-
-//   if (!res.ok) {
-//     throw new Error(`Failed to list models: ${res.statusText}`);
-//   }
-
-//   return res.json();
-// }
-
-// listGeminiModels(process.env.GEMINI_API_KEY!)
-//   .then((models) => console.log(models))
-//   .catch((error) => console.error(error));
-
-
 class GeminiChatbot {
   private genAI: GoogleGenerativeAI;
   private model: any;

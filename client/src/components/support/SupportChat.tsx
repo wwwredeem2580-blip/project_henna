@@ -9,12 +9,84 @@ import { Logo } from '@/components/shared/Logo';
 export const SupportChat = () => {
   const { isOpen, toggleChat } = useSupport();
   const [message, setMessage] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const messages = [
+  const [messages, setMessages] = useState<any[]>([
     { id: 1, text: "Hi there! I'm Zenny. Welcome to Zenvy! 👋", sender: 'bot', time: 'Just now' },
     { id: 2, text: "I'm here to help you get started or answer any questions you might have.", sender: 'bot', time: 'Just now' },
-  ];
+  ]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<any>(null);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isOpen]);
+
+  // Connect to WebSocket
+  useEffect(() => {
+    if (isOpen && !socketRef.current) {
+        // Dynamic import to avoid SSR issues if any
+        import('socket.io-client').then(({ io }) => {
+            const socketUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+            
+            socketRef.current = io(`${socketUrl}/support`, {
+                withCredentials: true,
+                transports: ['websocket', 'polling'] 
+            });
+
+            socketRef.current.on('connect', () => {
+                console.log('Connected to support chat');
+            });
+
+            socketRef.current.on('message', (data: any) => {
+                setMessages((prev) => [
+                    ...prev, 
+                    { 
+                        id: Date.now(), 
+                        text: data.text, 
+                        sender: 'bot', 
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    }
+                ]);
+            });
+
+             socketRef.current.on('error', (err: any) => {
+                console.error('Socket error:', err);
+            });
+        });
+    }
+
+    return () => {
+        if (socketRef.current) {
+            socketRef.current.disconnect();
+            socketRef.current = null;
+        }
+    };
+  }, [isOpen]);
+
+  const handleSend = () => {
+    if (!message.trim()) return;
+
+    const userMsg = {
+        id: Date.now(), 
+        text: message, 
+        sender: 'user', 
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    // Optimistic UI update
+    setMessages((prev) => [...prev, userMsg]);
+    setMessage('');
+
+    if (socketRef.current) {
+        socketRef.current.emit('message', { text: userMsg.text });
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSend();
+    }
+  };
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-4 font-sans antialiased">
@@ -96,9 +168,11 @@ export const SupportChat = () => {
                   placeholder="Type a message..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   className="flex-1 bg-slate-50 border border-transparent focus:border-brand-500 rounded-xl px-4 py-3 text-[12px] font-[300] outline-none transition-all placeholder:text-slate-400"
                 />
                 <button 
+                  onClick={handleSend}
                   className={`px-4 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-brand-100 ${
                     message.trim() ? 'bg-brand-500 text-white hover:bg-brand-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}

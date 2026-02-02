@@ -207,7 +207,10 @@ class RAGService {
           language: metadata.language || 'en',
           timestamp: new Date().toISOString(),
           usageCount: 0,
-          lastUsed: new Date().toISOString()
+          lastUsed: new Date().toISOString(),
+          helpfulCount: 0,
+          unhelpfulCount: 0,
+          qualityScore: 1.0 // Start with perfect score
         }]
       });
 
@@ -266,14 +269,64 @@ class RAGService {
 
   private isTimeSpecific(question: string): boolean {
     const timePatterns = [
-      /\b(today|tomorrow|yesterday|tonight|this\s+(week|month|year))\b/i,
+      // Temporal references
+      /\b(today|tomorrow|yesterday|tonight|this\s+(week|month|year|weekend))\b/i,
+      /\b(next|last|previous)\s+(week|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
       /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
       /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
-      /\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/, // Dates
-      /\b(event|ticket)\s*id\s*[:\-]?\s*\w+\b/i // Event/Ticket IDs
+      
+      // Date patterns
+      /\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/, // Dates like 12/25/2024
+      /\b(20\d{2})\b/, // Years like 2024, 2025
+      
+      // Event/Ticket specific identifiers
+      /\b(event|ticket|order)\s*id\s*[:\-]?\s*\w+\b/i,
+      /\b(event|ticket|order)\s*#\s*\w+\b/i,
+      
+      // Time-sensitive queries
+      /\b(current|latest|recent|upcoming|ongoing)\s+(event|ticket|offer|promotion)\b/i,
+      /\b(now|right\s+now|at\s+the\s+moment|currently)\b/i,
+      /\b(available|happening)\s+(now|today|tonight)\b/i,
+      
+      // Price/availability queries (often time-sensitive)
+      /\b(how\s+much|price|cost).*\b(now|today|currently)\b/i,
+      /\b(is|are)\s+.*\s+(available|sold\s+out)\b/i,
+      
+      // Specific event names with dates (heuristic: contains both event-like words and numbers)
+      /\b(concert|festival|conference|workshop|seminar|meetup).*\d{1,2}\b/i,
     ];
 
     return timePatterns.some(pattern => pattern.test(question));
+  }
+
+  async markAnswerQuality(questionId: string, wasHelpful: boolean): Promise<void> {
+    if (!this.collection) return;
+
+    try {
+      const result = await this.collection.get({ ids: [questionId] });
+      
+      if (result && result.metadatas && result.metadatas[0]) {
+        const metadata = result.metadatas[0];
+        const helpfulCount = (metadata.helpfulCount as number) || 0;
+        const unhelpfulCount = (metadata.unhelpfulCount as number) || 0;
+
+        await this.collection.update({
+          ids: [questionId],
+          metadatas: [{
+            ...metadata,
+            helpfulCount: wasHelpful ? helpfulCount + 1 : helpfulCount,
+            unhelpfulCount: !wasHelpful ? unhelpfulCount + 1 : unhelpfulCount,
+            qualityScore: wasHelpful 
+              ? Math.min(1.0, ((helpfulCount + 1) / (helpfulCount + unhelpfulCount + 1)))
+              : ((helpfulCount) / (helpfulCount + unhelpfulCount + 1))
+          }]
+        });
+
+        console.log(`[RAG] Updated quality for ${questionId}: ${wasHelpful ? '👍' : '👎'}`);
+      }
+    } catch (error) {
+      console.error('[RAG] Failed to mark answer quality:', error);
+    }
   }
 
   async getStats(): Promise<RAGStats> {

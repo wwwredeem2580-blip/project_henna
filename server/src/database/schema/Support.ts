@@ -9,7 +9,7 @@ export interface IMessage {
 }
 
 export interface ISupportConversation extends Document {
-  userId: mongoose.Types.ObjectId;
+  userId?: mongoose.Types.ObjectId; // Optional for anonymous users
   userName: string;
   status: 'bot' | 'escalated' | 'active' | 'closed';
   messages: IMessage[];
@@ -53,7 +53,7 @@ const supportConversationSchema = new Schema<ISupportConversation>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false // Allow anonymous users
   },
   userName: {
     type: String,

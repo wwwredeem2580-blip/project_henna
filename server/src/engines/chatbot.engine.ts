@@ -34,7 +34,7 @@ class ChatbotEngine {
           /\b(good\s*(morning|evening|afternoon))\b/i
         ],
         responses: [
-          "Hello! 👋 Welcome to Project Pinecone. How can I help you today?",
+          "Hello! 👋 Welcome to Zenvy. How can I help you today?",
           "Hi there! I'm your virtual assistant. Ask me anything about events, tickets, or hosting!",
           "Assalamualaikum! How may I assist you with our platform today?"
         ]
@@ -278,3 +278,4 @@ class ChatbotEngine {
 }
 
 export default ChatbotEngine;
+export { BotResponse, ConversationMessage };
