@@ -88,6 +88,60 @@ export const SupportChat = () => {
     }
   };
 
+  // Helper to parse Markdown links
+  const renderMessageWithLinks = (text: string) => {
+    // Regex to match [text](url)
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    
+    // Split text by regex
+    const parts = text.split(linkRegex);
+    const matches = text.match(linkRegex);
+
+    if (!matches) return text;
+
+    const result = [];
+    let lastIndex = 0;
+
+    // We need to re-construct the array with text and links
+    // The split approach above with capturing groups in JS split adds the groups to the array, 
+    // but it can be tricky to map correctly if multiple links exist.
+    // Let's use a simpler match/exec loop or just standard split with grouping.
+    
+    // Better approach:
+    const elements = [];
+    let match;
+    const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before the link
+      if (match.index > lastIndex) {
+        elements.push(text.substring(lastIndex, match.index));
+      }
+      
+      // Add the link
+      elements.push(
+        <a 
+          key={match.index} 
+          href={match[2]} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="underline decoration-current text-brand-600 font-medium hover:opacity-80 transition-opacity"
+        >
+          {match[1]}
+        </a>
+      );
+      
+      lastIndex = regex.lastIndex;
+    }
+    
+    // Add remaining text
+    if (lastIndex < text.length) {
+      elements.push(text.substring(lastIndex));
+    }
+    
+    return <>{elements}</>;
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-4 font-sans antialiased">
       <AnimatePresence>
@@ -152,7 +206,7 @@ export const SupportChat = () => {
                         : 'bg-white border border-slate-100 text-slate-600 rounded-tl-none'
                     }`}
                   >
-                    {msg.text}
+                    {renderMessageWithLinks(msg.text)}
                     <p className={`text-[9px] mt-2 font-[500] ${msg.sender === 'user' ? 'text-white/60' : 'text-slate-400'}`}>{msg.time}</p>
                   </div>
                 </div>
