@@ -10,7 +10,7 @@ export async function updateEventMetrics(orderId: string) {
     { _id: order.eventId },
     {
       $inc: {
-        'metrics.revenue': order.pricing.subtotal,
+        'metrics.revenue': order.pricing.total,
         'metrics.ticketsSold': ticketsSold,
         'metrics.orders': 1
       },

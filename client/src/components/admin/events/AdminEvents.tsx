@@ -134,11 +134,11 @@ export default function AdminEvents() {
   const getStatusBadge = (status: string) => {
     const option = statusOptions.find(opt => opt.value === status);
     return option ? (
-      <span className={`px-2 py-1 text-xs font-[400] rounded-tr-lg rounded-bl-lg ${option.color}`}>
+      <span className={`px-2 py-1 text-[10px] font-[400] rounded-tr-sm rounded-bl-sm ${option.color}`}>
         {option.label}
       </span>
     ) : (
-      <span className="px-2 py-1 text-xs font-[400] rounded-tr-lg rounded-bl-lg border bg-slate-50 text-slate-700 border-slate-200">
+      <span className="px-2 py-1 text-[10px] font-[400] rounded-tr-sm rounded-bl-sm border bg-slate-50 text-slate-700 border-slate-200">
         {status}
       </span>
     );
@@ -322,19 +322,19 @@ export default function AdminEvents() {
 
         <div className="grid grid-cols-1 gap-10">
           <section className="space-y-6">
-            <div className="w-full overflow-visible">
-              <table className="w-full min-w-[640px] text-left border-collapse">
+            <div className="bg-white overflow-x-auto overflow-y-auto rounded-[1.5rem] whitespace-nowrap  overflow-hidden mb-6">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-50 bg-gray-50/50">
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Event</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Sold</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Revenue</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
+                  <tr className="border-b border-slate-50 bg-slate-50/50">
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Event</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Sold</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Revenue</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest text-right">Action</th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-slate-100">
                   {loading ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
@@ -349,7 +349,7 @@ export default function AdminEvents() {
                     </tr>
                   ) : (
                     events.map((event: any) => (
-                      <tr key={event.eventId} className="hover:bg-gray-50/50 transition-colors group">
+                      <tr key={event.eventId} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <img
@@ -358,7 +358,7 @@ export default function AdminEvents() {
                               alt=""
                             />
                             <div>
-                              <p className="text-sm font-[500] text-neutral-700 truncate max-w-[150px]">
+                              <p className="text-sm font-[400] text-neutral-700 truncate max-w-[150px]">
                                 {event.title}
                               </p>
                               <p className="text-[10px] whitespace-nowrap text-slate-400">
@@ -378,10 +378,10 @@ export default function AdminEvents() {
 
                         <td className="px-6 py-4">
                           <div className="flex flex-col gap-1">
-                            <span className="text-sm font-[400] text-gray-700">
+                            <span className="text-xs font-[400] text-slate-700">
                               {event.ticketsSoldPercentage}%
                             </span>
-                            <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-brand-500 rounded-full"
                                 style={{ width: `${event.ticketsSoldPercentage}%` }}
@@ -390,8 +390,8 @@ export default function AdminEvents() {
                           </div>
                         </td>
 
-                        <td className="px-6 py-4 text-sm font-[400] text-gray-900">
-                          <BDTIcon /> {event.revenue}
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-[400] text-slate-700"><BDTIcon /> {event.revenue}</span>
                         </td>
 
                         <td className="px-6 py-4 text-right relative action-menu-container">

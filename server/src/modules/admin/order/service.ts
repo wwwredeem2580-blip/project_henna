@@ -51,7 +51,7 @@ export const getOrdersService = async (
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
-    .select("orderNumber eventId buyerEmail tickets pricing.subtotal status createdAt")
+    .select("orderNumber eventId buyerEmail tickets pricing.total status createdAt")
     .lean();
 
   // Fetch missing events
@@ -80,7 +80,7 @@ export const getOrdersService = async (
     eventTitle: eventMap.get(order.eventId.toString())?.title ?? "Unknown Event",
     buyerEmail: maskEmail(order.buyerEmail),
     ticketCount: order.tickets.reduce((sum: number, t: any) => sum + t.quantity, 0),
-    total: order.pricing?.subtotal,
+    total: order.pricing?.total,
     status: order.status,
     createdAt: order.createdAt
   }));
@@ -110,18 +110,18 @@ export const refundOrderService = async (orderId: string, amount: number, reason
   if (order.status !== 'confirmed') {
     throw new CustomError('Only confirmed orders can be refunded', 400);
   }
-
-  console.log(amount);
   
   // Determine refund amount
-  let refundAmount = amount || order.pricing.subtotal;
+  let refundAmount = amount || order.pricing.total;
+
+  console.log(refundAmount);
   
   if (refundType === 'partial') {
-    if (!amount || amount <= 0 || amount > order.pricing.subtotal) {
+    if (!amount || amount <= 0 || amount > order.pricing.total) {
       throw new CustomError('Invalid refund amount', 400);
     }
   } else {
-    refundAmount = order.pricing.subtotal; // Full refund
+    refundAmount = order.pricing.total; // Full refund
   }
   
   try {
@@ -158,7 +158,7 @@ export const refundOrderService = async (orderId: string, amount: number, reason
       { _id: order.eventId },
       {
         $inc: {
-          'metrics.totalRevenue': -order.pricing.subtotal,
+          'metrics.totalRevenue': -order.pricing.total,
           'metrics.totalOrders': -1,
           'metrics.totalTicketsSold': -ticketCount
         }

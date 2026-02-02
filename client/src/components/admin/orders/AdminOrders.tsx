@@ -123,11 +123,11 @@ export default function AdminOrders() {
   const getStatusBadge = (status: string) => {
     const option = statusOptions.find(opt => opt.value === status);
     return option ? (
-      <span className={`px-2 py-1 text-xs font-[400] rounded-tr-lg rounded-bl-lg ${option.color}`}>
+      <span className={`px-2 py-1 text-[10px] font-[400] rounded-tr-sm rounded-bl-sm ${option.color}`}>
         {option.label}
       </span>
     ) : (
-      <span className="px-2 py-1 text-xs font-[400] rounded-tr-lg rounded-bl-lg border bg-slate-50 text-slate-700 border-slate-200">
+      <span className="px-2 py-1 text-[10px] font-[400] rounded-tr-sm rounded-bl-sm border bg-slate-50 text-slate-700 border-slate-200">
         {status}
       </span>
     );
@@ -280,22 +280,22 @@ export default function AdminOrders() {
 
         <div className="grid grid-cols-1 gap-10">
           <section className="space-y-6">
-            <div className="w-full overflow-visible">
-              <table className="w-full min-w-[640px] text-left border-collapse">
+            <div className="bg-white overflow-x-auto overflow-y-auto rounded-[1.5rem] whitespace-nowrap  overflow-hidden mb-6">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-50 bg-gray-50/50">
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Order #</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Event</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Buyer</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center">Tickets</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Total</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
-                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
+                  <tr className="border-b border-slate-50 bg-slate-50/50">
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Order #</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Event</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Buyer</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest text-center">Tickets</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Total</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Date</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest text-right">Action</th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-slate-100">
                   {loading ? (
                     <tr>
                       <td colSpan={8} className="px-6 py-8 text-center text-sm text-slate-500">
@@ -310,31 +310,31 @@ export default function AdminOrders() {
                     </tr>
                   ) : (
                     orders.map((order) => (
-                      <tr key={order.orderId} className="hover:bg-gray-50/50 transition-colors group">
-                        <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                          {order.orderNumber}
+                      <tr key={order.orderId} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-[400] text-slate-700">{order.orderNumber}</span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-slate-600 max-w-[200px] truncate" title={order.eventTitle}>
-                          {order.eventTitle}
+                        <td className="px-6 py-4" title={order.eventTitle}>
+                          <span className="text-xs font-[400] text-slate-700">{order.eventTitle}</span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {order.buyerEmail}
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-[400] text-slate-700">{order.buyerEmail}</span>
                         </td>
-                         <td className="px-6 py-4 text-sm text-slate-600 text-center">
-                          {order.ticketCount}
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-[400] text-slate-700">{order.ticketCount}</span>
                         </td>
-                        <td className="px-6 py-4 text-sm font-[400] text-gray-900">
-                          <BDTIcon /> {order.total}
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-[400] text-slate-700"><BDTIcon /> {order.total}</span>
                         </td>
                         <td className="px-6 py-4">
                           {getStatusBadge(order.status)}
                         </td>
-                        <td className="px-6 py-4 text-[11px] whitespace-nowrap text-slate-400">
-                          {new Date(order.createdAt).toLocaleDateString('en-US', {
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-[400] text-slate-700">{new Date(order.createdAt).toLocaleDateString('en-US', {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric',
-                          })}
+                          })}</span>
                         </td>
 
                         <td className="px-6 py-4 text-right relative action-menu-container">
@@ -500,7 +500,7 @@ export default function AdminOrders() {
                   />
                 </div>
                 {Number(refundAmount) > (activeAction.order?.total || 0) && (
-                   <p className="text-xs text-rose-500 mt-1">Amount cannot exceed total order value</p>
+                   <p className="text-xs text-rose-500 mt-1">Amount cannot exceed order subtotal</p>
                 )}
              </motion.div>
             )}
