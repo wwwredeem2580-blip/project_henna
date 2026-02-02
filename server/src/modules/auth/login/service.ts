@@ -19,15 +19,15 @@ export const loginService = async (req: Request, res: Response) => {
       throw new CustomError('User not found', 404);
     }
     if (user.provider !== 'local') {
-      throw new CustomError('User not found', 404);
+      throw new CustomError('Invalid Credentials', 401);
     }
     if (!user.password) {
-      throw new CustomError('User not found', 404);
+      throw new CustomError('Invalid Credentials', 401);
     }
     
     const isMatch = await bcrypt.compare(data.password, user.password);
     if (!isMatch) {
-      throw new CustomError('Invalid password', 401);
+      throw new CustomError('Invalid Credentials', 401);
     }
     const accessToken = generateAccessToken({ 
       sub: user._id.toString(), 

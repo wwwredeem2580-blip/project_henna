@@ -12,15 +12,10 @@ import axios from "axios";
 export const getEventsService = async (filters: {
   search?: string;
   status?: string;
-  hostId?: string;
   page: number;
   limit: number;
 }) => {
   const query: any = {};
-
-  if(filters?.hostId && !isValidObjectId(filters.hostId)){
-    throw new CustomError('Invalid host ID', 400);
-  }
 
   if (filters.search) {
     query.$or = [
@@ -30,10 +25,6 @@ export const getEventsService = async (filters: {
 
   if (filters.status) {
     query.status = filters.status;
-  }
-
-  if (filters.hostId) {
-    query.hostId = filters.hostId;
   }
 
   const skip = (filters.page - 1) * filters.limit;
@@ -405,7 +396,7 @@ export const toggleEventVisibilityService = async (eventId: string) => {
     throw new CustomError('Event not found', 404);
   }
 
-  const newVisibility = event?.visibility === 'public' ? 'unlisted' : 'public';
+  const newVisibility = event?.moderation?.visibility === 'public' ? 'unlisted' : 'public';
   event.set({ 
     'moderation.visibility': newVisibility,
   });

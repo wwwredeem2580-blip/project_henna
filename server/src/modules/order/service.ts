@@ -18,8 +18,8 @@ const FREE_TICKET_LIMITS = {
 };
 
 const GENERAL_TICKET_LIMITS = {
-  maxPerEvent: 10,
-  maxPerTier: 5
+  maxPerEvent: 100,
+  maxPerTier: 50
 };
 
 async function validateTicketLimits(userId: string, eventId: string, requestedTickets: any[]) {
@@ -81,6 +81,10 @@ export const createOrderService = async (data: any) => {
   
   if (event.moderation.sales.paused) {
     throw new CustomError('Event sales are paused. Please come back later', 400);
+  }
+
+  if(event.moderation.visibility === 'unlisted') {
+    throw new CustomError('Event is unlisted from our platform as we are ensuring its validity, please wait for it to be listed', 400);
   }
 
   // Validate aggregate ticket limits

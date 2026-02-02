@@ -37,14 +37,16 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
       // Validate with schema
       loginSchema.parse(formData);
       setErrors({});
-      
       setLoading(true);
       await authService.login(formData);
       
       showNotification('success', 'Welcome back!', 'Successfully logged in');
       onLogin(); // This will redirect to dashboard
     } catch (error: any) {
-      if (error.errors) {
+      if(error.message === 'Token refresh failed') {
+        showNotification('error', 'Invalid Credentials', 'Invalid Credentials');
+        setErrors({ submit: 'Invalid Credentials' });
+      } else if (error.errors) {
         // Zod validation errors
         const newErrors: Record<string, string> = {};
         error.errors.forEach((err: any) => {

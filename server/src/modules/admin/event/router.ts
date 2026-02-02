@@ -123,10 +123,9 @@ router.delete('/:eventId', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const { status, hostId, search, page, limit } = req.query;
+    const { status, search, page, limit } = req.query;
     const result = await getEventsService({
       status: status as string,
-      hostId: hostId as string,
       search: search as string,
       page: page ? parseInt(page as string) : 1,
       limit: limit ? parseInt(limit as string) : 20,

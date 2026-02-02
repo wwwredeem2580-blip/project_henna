@@ -8,6 +8,7 @@ import ticketRoutes from './modules/ticket/router';
 import orderRoutes from './modules/order/router';
 import reviewRoutes from './modules/review/router';
 import publicRoutes from './modules/public/router';
+import adminRoutes from './modules/admin/router'
 
 
 const router = Router();
@@ -21,5 +22,6 @@ router.use('/ticket', ticketRoutes);
 router.use('/order', orderRoutes);
 router.use('/review', reviewRoutes);
 router.use('/public', publicRoutes);
+router.use('/admin', adminRoutes);
 
 export default router;
