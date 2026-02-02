@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import { 
   ArrowLeft, 
@@ -85,7 +86,7 @@ export default function AdminPayoutDetails() {
       <Sidebar />
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-64 p-4 lg:p-8 bg-slate-50/30 min-h-screen">
+      <main className="flex-1 lg:ml-64 p-4 lg:p-8 bg-white min-h-screen">
         
         {/* Navigation & Header */}
         <div className="mb-8">
@@ -130,78 +131,89 @@ export default function AdminPayoutDetails() {
         ) : (
           <div className="space-y-6">
             {/* Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
                 {/* 1. Financial Overview */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
-                    <div>
-                        <h3 className="text-sm font-[500] text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <CreditCard size={14} /> Payout Amount
-                        </h3>
-                        <div className="flex items-baseline gap-1 mb-2">
-                             <BDTIcon className="w-6 h-6 text-slate-900" />
-                             <span className="text-4xl font-[300] text-slate-900">{payoutData.amount.toLocaleString()}</span>
-                             <span className="text-sm text-slate-400 font-[300] ml-1">{payoutData.currency}</span>
-                        </div>
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0 }}
+                    className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 relative group overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                    
+                    <div className="flex items-center gap-3 text-slate-400 mb-4 font-[500] text-[10px] uppercase tracking-widest relative z-10">
+                        <CreditCard size={14} /> 
+                        Payout Amount
                     </div>
-                    <div className="mt-4 pt-4 border-t border-slate-50">
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="text-slate-500 font-[300]">Status</span>
-                            <span className={`font-medium ${payoutData.status === 'approved' ? 'text-emerald-600' : 'text-slate-700'}`}>
+                    
+                    <div className="relative z-10">
+                        <div className="text-lg font-[500] tracking-tight text-neutral-700 flex items-center gap-1.5 mb-1"> 
+                             <span className="text-xs font-[400] text-slate-400">{payoutData.currency}</span>
+                             {payoutData.amount.toLocaleString()}
+                        </div>
+                         <div className="flex items-center gap-2 mt-2">
+                            <span className="text-[10px] text-slate-400 font-[400] uppercase tracking-wider">Status:</span>
+                            <span className={`text-xs font-medium ${payoutData.status === 'approved' ? 'text-emerald-600' : 'text-slate-700'}`}>
                                 {payoutData.status.charAt(0).toUpperCase() + payoutData.status.slice(1).replace('_', ' ')}
                             </span>
-                        </div>
+                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* 2. Host Info */}
-                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
-                    <div>
-                        <h3 className="text-sm font-[500] text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <User size={14} /> Host Information
-                        </h3>
-                        <div className="flex items-start gap-3">
-                             <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-500">
-                                 <span className="text-sm font-semibold">{payoutData.hostName.charAt(0)}</span>
-                             </div>
-                             <div>
-                                 <p className="font-[400] text-slate-900 text-base">{payoutData.hostName}</p>
-                                 <p className="text-sm text-slate-500 font-[300] flex items-center gap-1 mt-0.5">
-                                     <Mail size={12} /> {payoutData.hostEmail}
-                                 </p>
-                             </div>
-                        </div>
+                 <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 relative group overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+
+                    <div className="flex items-center gap-3 text-slate-400 mb-4 font-[500] text-[10px] uppercase tracking-widest relative z-10">
+                        <User size={14} /> 
+                        Host Information
                     </div>
-                     <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                         <span className="text-xs text-slate-400 font-[300]">Event Host</span>
-                         <button onClick={() => window.open(`/profile/host/${payoutData.hostId._id}`, '_blank')} className="text-xs text-brand-600 hover:underline">View Profile</button>
-                     </div>
-                </div>
+                    
+                    <div className="flex items-start gap-3 relative z-10">
+                         <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-brand-500 shadow-sm">
+                             <span className="text-sm font-semibold">{payoutData.hostName.charAt(0)}</span>
+                         </div>
+                         <div>
+                             <p className="text-sm font-[500] text-slate-900">{payoutData.hostName}</p>
+                             <p className="text-xs text-slate-500 font-[300] flex items-center gap-1 mt-0.5">
+                                 {payoutData.hostEmail}
+                             </p>
+                             <button onClick={() => window.open(`/profile/host/${payoutData.hostId._id}`, '_blank')} className="text-[10px] text-brand-600 hover:underline mt-1.5 font-medium">View Profile</button>
+                         </div>
+                    </div>
+                </motion.div>
 
                 {/* 3. Bank Details */}
-                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
-                    <div>
-                        <h3 className="text-sm font-[500] text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <Building2 size={14} /> Payment Details
-                        </h3>
-                        <div className="space-y-3">
-                             <div>
-                                 <p className="text-xs text-slate-400 font-[300] mb-0.5">Payment Method</p>
-                                 <p className="text-sm text-slate-700 font-[400] capitalize">{payoutData.paymentMethod?.replace('_', ' ') || 'N/A'}</p>
-                             </div>
-                              <div>
-                                 <p className="text-xs text-slate-400 font-[300] mb-0.5">{payoutData.paymentMethod === 'bkash' ? 'Phone Number' : 'Account Number'}</p>
-                                 <p className="text-sm text-slate-700 font-[400] font-mono bg-slate-50 inline-block px-1 rounded">{payoutData.accountNumber || 'N/A'}</p>
-                             </div>
-                              {payoutData.bankName && (
-                                <div>
-                                     <p className="text-xs text-slate-400 font-[300] mb-0.5">Bank Name</p>
-                                     <p className="text-sm text-slate-700 font-[400]">{payoutData.bankName}</p>
-                                </div>
-                              )}
-                        </div>
+                 <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 relative group overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+
+                    <div className="flex items-center gap-3 text-slate-400 mb-4 font-[500] text-[10px] uppercase tracking-widest relative z-10">
+                        <Building2 size={14} /> 
+                        Payment Details
                     </div>
-                </div>
+                    
+                    <div className="space-y-1 relative z-10">
+                         <div className="flex flex-col">
+                             <span className="text-[10px] text-slate-400 font-[400] uppercase tracking-wider mb-0.5">Method</span>
+                             <span className="text-sm font-[500] text-slate-700 capitalize">{payoutData.paymentMethod?.replace('_', ' ') || 'N/A'}</span>
+                         </div>
+                         <div className="flex flex-col pt-2">
+                             <span className="text-[10px] text-slate-400 font-[400] uppercase tracking-wider mb-0.5">{payoutData.paymentMethod === 'bkash' ? 'Number' : 'Account'}</span>
+                             <span className="text-sm font-mono text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-100 inline-block w-fit">{payoutData.accountNumber || 'N/A'}</span>
+                         </div>
+                    </div>
+                </motion.div>
             </div>
 
             {/* Orders Table Section */}
