@@ -9,7 +9,7 @@ const hybridBot = new HybridChatbot(
   'ollama', // Primary provider
   {
     ollama: {
-      baseUrl: process.env.OLLAMA_URL || 'http://localhost:11434',
+      baseUrl: process.env.OLLAMA_BASE_URL || 'http://host.docker.internal:11434',
       model: process.env.OLLAMA_MODEL || 'qwen2.5-coder:7b'
     },
     gemini: {
@@ -17,7 +17,7 @@ const hybridBot = new HybridChatbot(
     }
   },
   process.env.CHROMA_HOST,
-  process.env.CHROMA_PORT ? parseInt(process.env.CHROMA_PORT) : undefined
+  process.env.CHROMA_PORT ? parseInt(process.env.CHROMA_PORT) : 8000
 );
 
 const situationalEngine = new SituationalAwarenessEngine();
