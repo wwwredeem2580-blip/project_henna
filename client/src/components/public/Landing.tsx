@@ -139,7 +139,7 @@ const BrandPromotionVideo: React.FC = () => {
 };
 
 export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExploreEvents }) => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+
   const { user } = useAuth();
   const router = useRouter();
   const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
@@ -498,61 +498,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
         </div>
       </section>
 
-      {/* Floating Zenny Chatbot */}
-      <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-4">
-        <AnimatePresence>
-          {isChatOpen && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="w-96 bg-neutral-0 rounded-[2rem] shadow-4xl border border-brand-200 overflow-hidden flex flex-col h-[500px]"
-            >
-              <div className="bg-brand-600 p-5 text-white flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Logo className="w-6 h-6 text-white" strokeWidth="2.5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-base">Zenny</h4>
-                    <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest">AI Agent</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsChatOpen(false)} className="p-2 hover:bg-neutral-0/10 rounded-full transition-colors">
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-neutral-50/50">
-                <div className="bg-neutral-0 p-4 rounded-2xl border border-brand-200 text-sm text-neutral-600 font-medium max-w-[85%] shadow-sm">
-                  Hi there! I'm Zenny. I can help you find the best plan for your event. What's on your mind?
-                </div>
-              </div>
-              <div className="p-4 border-t border-brand-200 bg-neutral-0 flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Ask Zenny..."
-                  className="flex-1 bg-neutral-50 border border-transparent focus:border-brand-600 rounded-xl px-4 py-3 outline-none text-sm font-medium transition-all"
-                />
-                <button className="w-12 h-12 bg-brand-600 text-white rounded-xl flex items-center justify-center hover:bg-brand-700 transition-all">
-                  <Send size={18} />
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setIsChatOpen(!isChatOpen)}
-          className="w-16 h-16 bg-brand-600 text-white rounded-2xl flex items-center justify-center shadow-3xl shadow-brand-500/40 z-[100] border-4 border-white relative"
-        >
-          {isChatOpen ? <X size={28} /> : <Logo className="w-8 h-8 text-white" strokeWidth="2.5" />}
-          {!isChatOpen && (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
-          )}
-        </motion.button>
-      </div>
     </div>
   );
 };
