@@ -76,6 +76,31 @@ export interface AdminOrdersResponse {
   };
 }
 
+export interface AdminPayout {
+  payoutId: string;
+  payoutNumber: string;
+  eventTitle: string;
+  hostName: string;
+  hostEmail: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'approved' | 'processing' | 'completed' | 'failed' | 'on_hold' | 'rejected';
+  createdAt: string;
+  bankName?: string;
+  accountNumber?: string;
+  paymentMethod: string;
+}
+
+export interface AdminPayoutsResponse {
+  payouts: AdminPayout[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 class AdminService {
   /**
    * Get all events with filters and pagination
@@ -288,6 +313,75 @@ class AdminService {
   async getVerificationDocumentLink(docKey: string): Promise<{ verificationDocumentLink: string }> {
       const response = await apiClient.get<any>(`/api/admin/event/verification-document-link?docKey=${encodeURIComponent(docKey)}`);
       return response; 
+  }
+  /**
+   * Get all payouts with filters and pagination
+   */
+  async getPayouts({
+    page,
+    limit,
+    filters,
+  }: {
+    page: number;
+    limit: number;
+    filters?: AdminEventFilters;
+  }): Promise<AdminPayoutsResponse> {
+    const queryParams = new URLSearchParams();
+    if (page) queryParams.append('page', page.toString());
+    if (limit) queryParams.append('limit', limit.toString());
+    if (filters?.status) queryParams.append('status', filters.status);
+    if (filters?.search) queryParams.append('search', filters.search);
+
+    const response = await apiClient.get<any>(`/api/admin/payout?${queryParams}`);
+    
+    // Transform backend data to frontend interface
+    const mappedPayouts = response.payouts.map((payout: any) => ({
+      payoutId: payout._id,
+      payoutNumber: payout.payoutNumber,
+      eventTitle: payout.eventId?.title || 'Unknown Event',
+      hostName: payout.hostId ? `${payout.hostId.firstName} ${payout.hostId.lastName}` : 'Unknown Host',
+      hostEmail: payout.hostId?.email,
+      amount: payout.netPayout || payout.amount || 0,
+      currency: payout.currency || 'BDT',
+      status: payout.status,
+      createdAt: payout.createdAt,
+      bankName: payout.bankName,
+      accountNumber: payout.accountNumber,
+      paymentMethod: payout.paymentMethod
+    }));
+
+    return {
+      payouts: mappedPayouts,
+      pagination: response.pagination,
+    };
+  }
+
+  /**
+   * Approve payout
+   */
+  async approvePayout(payoutId: string, notes?: string): Promise<any> {
+    return await apiClient.put(`/api/admin/payout/${payoutId}/approve`, { notes });
+  }
+
+  /**
+   * Reject payout
+   */
+  async rejectPayout(payoutId: string, reason: string): Promise<any> {
+    return await apiClient.put(`/api/admin/payout/${payoutId}/reject`, { reason });
+  }
+
+  /**
+   * Hold payout
+   */
+  async holdPayout(payoutId: string, reason: string): Promise<any> {
+    return await apiClient.put(`/api/admin/payout/${payoutId}/hold`, { reason });
+  }
+
+  /**
+   * Process payout
+   */
+  async processPayout(payoutId: string): Promise<any> {
+    return await apiClient.put(`/api/admin/payout/${payoutId}/process`);
   }
 }
 
