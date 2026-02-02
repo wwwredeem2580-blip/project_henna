@@ -110,6 +110,8 @@ export const refundOrderService = async (orderId: string, amount: number, reason
   if (order.status !== 'confirmed') {
     throw new CustomError('Only confirmed orders can be refunded', 400);
   }
+
+  console.log(amount);
   
   // Determine refund amount
   let refundAmount = amount || order.pricing.subtotal;

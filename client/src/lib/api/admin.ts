@@ -34,6 +34,28 @@ export interface AdminEventsResponse {
   };
 }
 
+
+export interface AdminOrder {
+  orderId: string;
+  orderNumber: string;
+  eventTitle: string;
+  buyerEmail: string;
+  ticketCount: number;
+  total: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface AdminOrdersResponse {
+  orders: AdminOrder[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 class AdminService {
   /**
    * Get all events with filters and pagination
@@ -62,6 +84,55 @@ class AdminService {
       events: mappedEvents,
       pagination: response.pagination,
     };
+  }
+
+  /**
+   * Get all orders with filters and pagination
+   */
+  async getOrders({
+    page,
+    limit,
+    filters,
+  }: {
+    page: number;
+    limit: number;
+    filters?: AdminEventFilters; // Reusing simplified filters for now as they are similar (status, search)
+  }): Promise<AdminOrdersResponse> {
+    const queryParams = new URLSearchParams();
+    if (page) queryParams.append('page', page.toString());
+    if (limit) queryParams.append('limit', limit.toString());
+    if (filters?.status) queryParams.append('status', filters.status);
+    if (filters?.search) queryParams.append('search', filters.search);
+
+    const response = await apiClient.get<any>(`/api/admin/order?${queryParams}`);
+    
+    // Transform backend data to frontend interface
+    const mappedOrders = response.orders.map((order: any) => ({
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      eventTitle: order.eventTitle,
+      buyerEmail: order.buyerEmail,
+      ticketCount: order.ticketCount,
+      total: order.total,
+      status: order.status,
+      createdAt: order.createdAt,
+    }));
+
+    return {
+      orders: mappedOrders,
+      pagination: response.pagination,
+    };
+  }
+
+  /**
+   * Refund order
+   */
+  async refundOrder(orderId: string, amount?: number, reason?: string, refundType: 'full' | 'partial' = 'full'): Promise<any> {
+    return await apiClient.put(`/api/admin/order/${orderId}/refund`, { 
+      amount, 
+      reason,
+      refundType
+    });
   }
 
   /**

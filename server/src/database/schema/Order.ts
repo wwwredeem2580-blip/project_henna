@@ -66,7 +66,6 @@ const refundSchema = new mongoose.Schema({
   reason: {
     type: String,
     required: true,
-    enum: ['event_cancelled', 'user_request', 'fraud', 'price_reduction']
   },
   amount: {
     type: Number,

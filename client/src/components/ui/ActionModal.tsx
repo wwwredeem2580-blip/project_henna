@@ -2,17 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
+
 interface ActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (reason?: string) => void;
   title: string;
   description?: string;
-  type: 'input' | 'confirm';
+  type: 'input' | 'confirm' | 'custom';
   inputPlaceholder?: string;
   confirmText?: string;
   intent?: 'danger' | 'primary' | 'neutral';
   loading?: boolean;
+  children?: React.ReactNode;
+  disabled?: boolean;
 }
 
 export const ActionModal: React.FC<ActionModalProps> = ({
@@ -26,6 +29,8 @@ export const ActionModal: React.FC<ActionModalProps> = ({
   confirmText = 'Confirm',
   intent = 'primary',
   loading = false,
+  children,
+  disabled = false,
 }) => {
   const [inputValue, setInputValue] = useState('');
 
@@ -121,6 +126,8 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                   </p>
                 </div>
               )}
+
+              {type === 'custom' && children}
             </div>
 
             {/* Footer */}
@@ -134,7 +141,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               </button>
               <button
                 onClick={handleConfirm}
-                disabled={loading || (type === 'input' && !inputValue.trim())}
+                disabled={loading || disabled || (type === 'input' && !inputValue.trim())}
                 className={`flex-1 py-2.5 rounded-xl font-medium transition-colors text-sm shadow-sm ${getButtonColor()} ${loading ? 'opacity-70 cursor-wait' : ''}`}
               >
                 {loading ? 'Processing...' : confirmText}

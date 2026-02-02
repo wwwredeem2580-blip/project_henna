@@ -41,7 +41,7 @@ import { useRouter } from 'next/navigation';
 import { adminService } from '@/lib/api/admin';
 import Sidebar from '@/components/layout/Sidebar';
 import { BDTIcon } from '@/components/ui/Icons';
-import { ActionModal } from './ActionModal';
+import { ActionModal } from '@/components/ui/ActionModal';
 
 interface EventFilters {
   status?: string;
