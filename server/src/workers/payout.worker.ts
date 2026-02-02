@@ -60,7 +60,7 @@ async function generatePayoutForEvent(event: any) {
   
   for (const order of orders) {
     if (order.status === 'confirmed') {
-      grossRevenue += order.pricing.subtotal;
+      grossRevenue += order.pricing.total;
       grossPayout += order.pricing.hostPayout;
       confirmedOrders++;
       
@@ -69,7 +69,7 @@ async function generatePayoutForEvent(event: any) {
     }
     
     if (order.status === 'refunded') {
-      refundAmount += order.refund?.amount || order.pricing.subtotal;
+      refundAmount += order.refund?.amount || order.pricing.total;
       refundedOrders++;
     }
   }

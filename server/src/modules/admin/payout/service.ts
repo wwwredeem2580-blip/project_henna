@@ -92,7 +92,7 @@ export const getPayoutDetailsService = async (payoutId: string) => {
       orders: orders.map(o => ({
         orderNumber: o.orderNumber,
         status: o.status,
-        amount: o.pricing.subtotal,
+        amount: o.pricing.total,
         createdAt: o.createdAt
       }))
     }

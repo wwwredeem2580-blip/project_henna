@@ -136,20 +136,20 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:eventId', async (req, res) => {
+router.get('/verification-document-link', async (req, res) => {
   try {
-    const { eventId } = req.params;
-    const result = await getEventService(eventId);
+    const { docKey } = req.query;
+    const result = await getVerificationDocumentLinkService(docKey as string);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);
   }
 });
 
-router.get('/verification-document-link/:docKey', async (req, res) => {
+router.get('/:eventId', async (req, res) => {
   try {
-    const { docKey } = req.params;
-    const result = await getVerificationDocumentLinkService(docKey);
+    const { eventId } = req.params;
+    const result = await getEventService(eventId);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);

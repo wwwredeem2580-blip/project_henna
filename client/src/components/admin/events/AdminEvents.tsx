@@ -328,8 +328,10 @@ export default function AdminEvents() {
                   <tr className="border-b border-slate-50 bg-slate-50/50">
                     <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Event</th>
                     <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Host</th>
                     <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Sold</th>
                     <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Revenue</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest">Details</th>
                     <th className="px-6 py-4 whitespace-nowrap text-[11px] font-[500] text-neutral-400 uppercase tracking-widest text-right">Action</th>
                   </tr>
                 </thead>
@@ -377,8 +379,12 @@ export default function AdminEvents() {
                         </td>
 
                         <td className="px-6 py-4">
+                          <span className="text-xs font-[400] text-neutral-700">{event.hostId || 'N/A'}</span>
+                        </td>
+
+                        <td className="px-6 py-4">
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs font-[400] text-slate-700">
+                            <span className="text-xs font-[400] text-neutral-700">
                               {event.ticketsSoldPercentage}%
                             </span>
                             <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
@@ -392,6 +398,10 @@ export default function AdminEvents() {
 
                         <td className="px-6 py-4">
                           <span className="text-xs font-[400] text-slate-700"><BDTIcon /> {event.revenue}</span>
+                        </td>
+
+                        <td className="px-6 py-4 pl-10">
+                          <button onClick={() => router.push(`/admin/events/${event.eventId}`)} className="text-xs font-[400] hover:text-brand-600 hover:scale-110 transition-all"><Eye size={14} strokeWidth={1.5}/></button>
                         </td>
 
                         <td className="px-6 py-4 text-right relative action-menu-container">

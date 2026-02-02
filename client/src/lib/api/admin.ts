@@ -16,12 +16,32 @@ export interface AdminEvent {
   revenue: number;
   totalTickets: number;
   ticketsSold: number;
+  hostId?: string;
   hostName?: string; // Optional, if populated
   hostEmail?: string; // Optional
   isFeatured: boolean;
   isSuspended: boolean;
   isSalesPaused: boolean;
   visibility: 'public' | 'private' | 'unlisted';
+  verification?: {
+    status: string;
+    documents: Array<{
+      type: string;
+      url?: string;
+      filename: string;
+      objectKey?: string;
+      uploadedAt: string;
+      status: 'pending' | 'approved' | 'rejected';
+      rejectionReason?: string;
+    }>;
+  };
+  description?: string;
+  tagline?: string;
+  category?: string;
+  venue?: any;
+  organizer?: any;
+  tickets?: any[];
+  media?: any;
 }
 
 export interface AdminEventsResponse {
@@ -233,13 +253,41 @@ class AdminService {
       revenue: event.metrics?.revenue || 0,
       ticketsSold: ticketsSold,
       totalTickets: totalTickets,
+      hostId: event.hostId?._id || event.hostId, // Ensure we get the ID string
       hostName: event.hostId ? `${event.hostId.firstName} ${event.hostId.lastName}` : undefined,
       hostEmail: event.hostId?.email,
       isFeatured: event.moderation?.features?.isFeatured || false,
       isSuspended: event.flags?.suspended || false,
       isSalesPaused: event.moderation?.sales?.paused || false,
       visibility: event.moderation?.visibility || 'public',
+  verification: event.verification ? {
+        status: event.verification.status,
+        documents: event.verification.documents?.map((doc: any) => ({
+          type: doc.type,
+          url: doc.url,
+          filename: doc.filename,
+          objectKey: doc.objectKey, // Important for secure link fetching
+          uploadedAt: doc.uploadedAt,
+          status: doc.status,
+          rejectionReason: doc.rejectionReason
+        })) || []
+      } : undefined,
+      description: event.description,
+      tagline: event.tagline,
+      category: event.category,
+      venue: event.venue,
+      organizer: event.organizer,
+      tickets: event.tickets,
+      media: event.media
     };
+  }
+
+  /**
+   * Get verification document link
+   */
+  async getVerificationDocumentLink(docKey: string): Promise<{ verificationDocumentLink: string }> {
+      const response = await apiClient.get<any>(`/api/admin/event/verification-document-link?docKey=${encodeURIComponent(docKey)}`);
+      return response; 
   }
 }
 
