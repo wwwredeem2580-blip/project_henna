@@ -4,6 +4,7 @@ import {
   emailVerificationTemplate,
 } from '../utils/email/emailVerification';
 import { orderConfirmationTemplate } from '../utils/email/orderConfirmation';
+import { getAdminNotificationTemplate } from '../utils/email/adminNotifications';
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 
 // Redis
@@ -118,13 +119,31 @@ export const initEmailWorker = async () => {
           subject = `Order Confirmed - ${job.data.eventTitle}`;
           html = orderConfirmationTemplate(job.data);
           break;
+        
+        case 'email-notification':
+            const { type, payload } = job.data;
+            
+            // Determine recipient based on payload structure
+            to = payload.email || 
+                 payload.hostEmail || 
+                 payload.host?.email || 
+                 payload.user?.email || 
+                 payload.buyerEmail;
+
+            // Generate HTML using generic admin template
+            html = getAdminNotificationTemplate(type, payload);
+            
+            // Extract title from generated HTML for subject (simple regex) or use default
+            const titleMatch = html.match(/<title>(.*?)<\/title>/);
+            subject = titleMatch ? `${titleMatch[1]} - Zenvy` : 'Notification - Zenvy';
+            break;
 
         default:
           throw new Error(`Unknown email job type: ${job.name}`);
       }
 
       if (!to) {
-        throw new Error('Recipient email missing');
+        throw new Error(`Recipient email missing for job ${job.name}`);
       }
 
       await sendTransactionalEmail({ to, subject, html });
