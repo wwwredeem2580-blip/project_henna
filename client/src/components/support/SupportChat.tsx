@@ -146,7 +146,7 @@ export const SupportChat = () => {
                      </div>
                   )}
                   <div 
-                    className={`max-w-[70%] p-4 rounded-2xl text-[12px] font-[300] ${
+                    className={`max-w-[70%] p-4 rounded-2xl text-[12px] font-[300] whitespace-pre-wrap ${
                       msg.sender === 'user' 
                         ? 'bg-brand-500 text-white rounded-tr-none' 
                         : 'bg-white border border-slate-100 text-slate-600 rounded-tl-none'
