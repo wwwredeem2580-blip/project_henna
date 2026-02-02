@@ -164,7 +164,7 @@ class AdminService {
       totalTickets: totalTickets,
       hostName: event.hostId ? `${event.hostId.firstName} ${event.hostId.lastName}` : undefined,
       hostEmail: event.hostId?.email,
-      isFeatured: event.moderation?.featured?.isFeatured || false,
+      isFeatured: event.moderation?.features?.isFeatured || false,
       isSuspended: event.flags?.suspended || false,
       isSalesPaused: event.moderation?.sales?.paused || false,
       visibility: event.moderation?.visibility || 'public',

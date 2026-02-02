@@ -174,9 +174,9 @@ export const featureEventService = async (eventId: string, priority?: number) =>
   // Introduce host kyc verification check in future
 
   event.set({
-    'moderation.featured.isFeatured': true,
-    'moderation.featured.featuredAt': new Date(),
-    'moderation.featured.featuredPriority': priority || 0,
+    'moderation.features.isFeatured': true,
+    'moderation.features.featuredAt': new Date(),
+    'moderation.features.featuredPriority': priority || 0,
   });
   await event.save();
 
@@ -212,9 +212,9 @@ export const unfeatureEventService = async (eventId: string) => {
   }
 
   event.set({
-    'moderation.featured.isFeatured': false,
-    'moderation.featured.featuredAt': undefined,
-    'moderation.featured.featuredPriority': 0,
+    'moderation.features.isFeatured': false,
+    'moderation.features.featuredAt': undefined,
+    'moderation.features.featuredPriority': 0,
   });
 
   await event.save();
