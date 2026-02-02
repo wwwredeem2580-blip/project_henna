@@ -41,6 +41,10 @@ export default function Sidebar() {
     { icon: <User size={18} strokeWidth={1} />, label: 'Profile', path: '/host/profile', active: pathname === '/host/profile', requireRole: 'host' },
     { icon: <Logo variant='icon' className="w-6 h-6 -ml-1" strokeWidth={"1"} />, label: 'Zenvy', path: '/about', active: pathname === '/about', },
     { icon: <BookOpen size={18} strokeWidth={1} />, label: 'Learn More', path: '/learn', active: pathname === '/learn' },
+    { icon: <Calendar size={18} strokeWidth={1} />, label: 'Events', path: '/admin/events', active: pathname === '/admin/events', requireRole: 'admin' },
+    { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Orders', path: '/admin/orders', active: pathname === '/admin/orders', requireRole: 'admin' },
+    { icon: <CreditCard size={18} strokeWidth={1} />, label: 'Payouts', path: '/admin/payouts', active: pathname === '/admin/payouts', requireRole: 'admin' },
+
   ];
 
   const filteredMenuItems = menuItems.filter((item) => !item.requireRole || item.requireRole === user?.role);

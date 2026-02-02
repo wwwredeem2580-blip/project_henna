@@ -21,13 +21,10 @@ const payoutSchema = new mongoose.Schema({
   // Financial Breakdown
   grossRevenue: {
     type: Number,
-  },         // Total sales
-  platformFee: {
+  },         // Total Revenue
+  grossPayout: {
     type: Number,
-  },          // Your 5%
-  paymentProcessingFee: {
-    type: Number,
-  }, // bKash/Stripe fees
+  },
   refundAmount: {
     type: Number,
   },         // Total refunded
@@ -88,9 +85,9 @@ const payoutSchema = new mongoose.Schema({
   accountNumber: {
     type: String,
   },        // Host's bKash number or bank account number
-  accountName: {
+  accountHolderName: {
     type: String,
-  },          // Host's name
+  },
   
   // Bank Transfer Details (when paymentMethod = 'bank_transfer')
   bankName: {
