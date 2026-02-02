@@ -189,7 +189,13 @@ class HybridChatbot {
   }
 
   private isSimpleFAQ(message: string): boolean {
-    // Check if message matches any simple FAQ pattern
+    // Check if message matches any simple FAQ pattern AND is short (<= 3 words)
+    // Long queries with keywords should go to LLM/RAG
+    const wordCount = message.trim().split(/\s+/).length;
+    if (wordCount > 3) {
+      return false;
+    }
+    
     return this.simpleFAQPatterns.some(pattern => pattern.test(message));
   }
 

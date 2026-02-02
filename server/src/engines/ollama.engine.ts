@@ -61,6 +61,17 @@ class OllamaChatbot {
         };
       }
 
+      // Check for policy violations detection
+      const policyCheck = this.detectPolicyViolation(userMessage);
+      if (policyCheck.isViolation && policyCheck.response) {
+        return {
+          response: policyCheck.response,
+          escalate: false,
+          urgent: false,
+          usedAI: false
+        };
+      }
+
       // Check if question is about model/creator/provider
       if (this.isModelQuestion(userMessage)) {
         return {
@@ -150,6 +161,13 @@ class OllamaChatbot {
   }
 
   private checkEscalation(message: string): boolean {
+    // Lighten regex layer: Only catch extremely short phrases (<= 3 words)
+    // Anything longer goes to LLM for full context understanding
+    const wordCount = message.trim().split(/\s+/).length;
+    if (wordCount > 3) {
+      return false;
+    }
+
     const lower = message.toLowerCase();
     return this.escalationKeywords.some(keyword => lower.includes(keyword));
   }
@@ -248,6 +266,13 @@ class OllamaChatbot {
   }
 
   private detectPolicyViolation(message: string): { isViolation: boolean; response?: string } {
+    // Lighten regex layer: Only catch extremely short questions (<= 3 words)
+    // Complex questions go to LLM/RAG for nuance
+    const wordCount = message.trim().split(/\s+/).length;
+    if (wordCount > 3) {
+      return { isViolation: false };
+    }
+
     const lower = message.toLowerCase();
 
     // VIP upgrade without payment

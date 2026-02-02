@@ -64,6 +64,17 @@ class GeminiChatbot {
         };
       }
 
+      // Check for policy violations detection
+      const policyCheck = this.detectPolicyViolation(userMessage);
+      if (policyCheck.isViolation && policyCheck.response) {
+        return {
+          response: policyCheck.response,
+          escalate: false,
+          urgent: false,
+          usedAI: false
+        };
+      }
+
       // Check if question is about model/creator/provider
       if (this.isModelQuestion(userMessage)) {
         return {
@@ -157,6 +168,13 @@ Your response:`;
   }
 
   private checkEscalation(message: string): boolean {
+    // Lighten regex layer: Only catch extremely short phrases (<= 3 words)
+    // Anything longer goes to LLM for full context understanding
+    const wordCount = message.trim().split(/\s+/).length;
+    if (wordCount > 3) {
+      return false;
+    }
+
     const lower = message.toLowerCase();
     return this.escalationKeywords.some(keyword => lower.includes(keyword));
   }
@@ -252,6 +270,62 @@ Your response:`;
     const isSelfQuestion = selfKeywords.some(keyword => lower.includes(keyword));
 
     return hasPlatformKeyword || isGreeting || isSelfQuestion;
+  }
+
+  private detectPolicyViolation(message: string): { isViolation: boolean; response?: string } {
+    // Lighten regex layer: Only catch short, simple questions (approx 2-3 words)
+    // Complex questions go to LLM/RAG for nuance
+    const wordCount = message.trim().split(/\s+/).length;
+    if (wordCount > 3) {
+      return { isViolation: false };
+    }
+
+    const lower = message.toLowerCase();
+
+    // VIP upgrade without payment
+    if ((lower.includes('upgrade') || lower.includes('vip')) && 
+        (lower.includes('free') || lower.includes('without pay') || lower.includes('no pay'))) {
+      return {
+        isViolation: true,
+        response: "❌ Sorry, ticket tiers are immutable after purchase. This ensures fairness to other attendees who paid for VIP.\n\n✅ What you CAN do: Purchase a new VIP ticket if still available.\n\nNeed anything else? 🐾"
+      };
+    }
+
+    // Partial refund request
+    if ((lower.includes('partial') || lower.includes('one ticket') || lower.includes('1 ticket')) && 
+        lower.includes('refund')) {
+      return {
+        isViolation: true,
+        response: "❌ Partial refunds aren't supported. Our policy is full refund only - it's all or nothing.\n\n✅ What you CAN do: Request a full refund for ALL tickets if:\n• Within 7 days of purchase\n• Event is 7+ days away\n• Ticket hasn't been scanned\n\nProcessing takes 3-10 business days. Does this help? ✨"
+      };
+    }
+
+    // Cancel free ticket
+    if (lower.includes('cancel') && (lower.includes('free ticket') || lower.includes('free'))) {
+      return {
+        isViolation: true,
+        response: "❌ Free tickets cannot be cancelled once claimed. They count toward your monthly limit of 10 free tickets.\n\n✅ Tip: Claim free tickets wisely! Your quota resets on the 1st of each month.\n\nAnything else I can help with? 🐾"
+      };
+    }
+
+    // Exceed ticket limits
+    if ((lower.includes('more than') || lower.includes('exceed') || lower.includes('buy 6') || lower.includes('buy 10')) && 
+        lower.includes('ticket')) {
+      return {
+        isViolation: true,
+        response: "❌ Ticket limits are in place for anti-scalping protection:\n• Max 5 paid tickets per event\n• Max 2 free tickets per event\n• Max 10 free tickets per month\n\n✅ What happens: Excess tickets are automatically refunded.\n\nThis ensures fair distribution for everyone! 🎫"
+      };
+    }
+
+    // Transfer tickets (not yet available)
+    if (lower.includes('transfer') && lower.includes('ticket')) {
+      return {
+        isViolation: true,
+        response: "❌ Ticket transfers are not yet implemented.\n\n✅ Coming soon: We're working on this feature!\n\nFor now, tickets are locked to the purchaser's account. Need help with something else? 🐾"
+      };
+    }
+
+    return { isViolation: false };
   }
 
   private fallbackResponse(): BotResponse {
