@@ -1,6 +1,6 @@
 'use client';
 
-import Conversations from '@/components/host/conversations/Conversations';
+import Conversations from '@/components/admin/conversations/Conversations';
 
 export default function ConversationsPage() {
   return (

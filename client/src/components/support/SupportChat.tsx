@@ -16,6 +16,9 @@ export const SupportChat = () => {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [showTimeout, setShowTimeout] = useState(false);
+  const [queuePos, setQueuePos] = useState<number | null>(null);
+  const [isClosed, setIsClosed] = useState(false);
+  const [isAdminActive, setIsAdminActive] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const longWaitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -61,7 +64,34 @@ export const SupportChat = () => {
                 ]);
             });
 
-             socketRef.current.on('error', (err: any) => {
+            socketRef.current.on('queue_update', (data: { position: number, total: number }) => {
+                setQueuePos(data.position);
+            });
+            
+             socketRef.current.on('admin_joined', (data: any) => {
+                 setQueuePos(null); // Clear queue when admin joins
+                 setIsAdminActive(true); 
+                 // Also stop any typing indicators from bot
+                 setIsTyping(false);
+                 setShowTimeout(false);
+                 if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                 if (longWaitTimeoutRef.current) clearTimeout(longWaitTimeoutRef.current);
+             });
+
+            socketRef.current.on('conversation_closed', (data: any) => {
+                setIsClosed(true);
+                setQueuePos(null);
+                setIsTyping(false);
+                setShowTimeout(false);
+                setMessages(prev => [...prev, {
+                    id: Date.now(),
+                    text: data.message || "Conversation ended.",
+                    sender: 'bot',
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }]);
+            });
+
+            socketRef.current.on('error', (err: any) => {
                 console.error('Socket error:', err);
             });
         });
@@ -76,7 +106,7 @@ export const SupportChat = () => {
   }, [isOpen]);
 
   const handleSend = () => {
-    if (!message.trim()) return;
+    if (!message.trim() || isClosed) return;
 
     const userMsg = {
         id: Date.now(), 
@@ -95,19 +125,46 @@ export const SupportChat = () => {
     setShowTimeout(false);
 
     // Initial 500ms delay before showing typing indicator
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(true);
-      
-      // Start 20s timeout for "taking longer than usual" message
-      // This runs 20s AFTER typing starts (so 20.5s total from send)
-      longWaitTimeoutRef.current = setTimeout(() => {
-        setShowTimeout(true);
-      }, 20000);
-    }, 500);
+    // ONLY if admin is not active (otherwise we expect real replies or no indicator)
+    if (!isAdminActive) {
+        typingTimeoutRef.current = setTimeout(() => {
+          setIsTyping(true);
+          
+          // Start 20s timeout for "taking longer than usual" message
+          // This runs 20s AFTER typing starts (so 20.5s total from send)
+          longWaitTimeoutRef.current = setTimeout(() => {
+            setShowTimeout(true);
+          }, 20000);
+        }, 500);
+    }
 
     if (socketRef.current) {
         socketRef.current.emit('message', { text: userMsg.text });
     }
+  };
+
+  const handleRestart = () => {
+    // Disconnect and reconnect to get a new session or clear current
+    if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+    }
+    setMessages([
+      { id: Date.now(), text: "Starting a new conversation... 👋", sender: 'bot', time: 'Just now' }
+    ]);
+    setIsClosed(false);
+    setIsAdminActive(false);
+    setMessage('');
+    
+    // Slight delay to allow re-connection logic in useEffect to trigger if needed
+    // or manually trigger a re-connect by toggling a key or just letting existing useEffect handle isOpen
+    // Since isOpen is true, useEffect will re-run if we nullify socketRef
+    // But useEffect depends on [isOpen], so it won't re-run unless we toggle isOpen or force it.
+    // Better way: emit 'start_new' or just refresh page. 
+    // Let's try force re-run by toggling a key or just calling connect function if we extracted it.
+    // For now, toggling isOpen quickly is a hack, but let's just use the effect dependency.
+    // Actually, we can just reload the window for a full clear, simpler for "Start New".
+    window.location.reload(); 
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -214,8 +271,26 @@ export const SupportChat = () => {
               </div>
             </div>
 
+            {/* Queue Banner - Always Visible */}
+            {queuePos !== null && (
+                 <div className="bg-blue-50/50 backdrop-blur-sm border-b border-blue-100 p-2 flex justify-center sticky top-0 z-10">
+                    <motion.div 
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-blue-600 text-[10px] font-medium flex items-center gap-2 uppercase tracking-wide"
+                    >
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                        Waiting for agent • Position {queuePos}
+                    </motion.div>
+                 </div>
+            )}
+
             {/* Chat Area */}
             <div className="flex-1 p-8 overflow-y-auto space-y-6 bg-slate-50/30">
+               <div className="flex justify-center">
+                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest bg-slate-100/80 px-3 py-1 rounded-full">Today</span>
+               </div>
+
                <div className="flex justify-center">
                   <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest bg-slate-100/80 px-3 py-1 rounded-full">Today</span>
                </div>
@@ -251,28 +326,42 @@ export const SupportChat = () => {
 
             {/* Input Area */}
             <div className="p-6 border-t border-slate-100 bg-white">
-              <div className="flex gap-4">
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="flex-1 bg-slate-50 border border-transparent focus:border-brand-500 rounded-xl px-4 py-3 text-[12px] font-[300] outline-none transition-all placeholder:text-slate-400"
-                />
-                <button 
-                  onClick={handleSend}
-                  className={`px-4 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-brand-100 ${
-                    message.trim() ? 'bg-brand-500 text-white hover:bg-brand-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  }`}
-                  disabled={!message.trim()}
-                >
-                  <Send size={16} />
-                </button>
-              </div>
-              <div className="flex justify-center mt-3">
-                 <p className="text-[10px] text-slate-300 font-[300]">Powered by Zenvy AI</p>
-              </div>
+              {isClosed ? (
+                 <div className="flex flex-col items-center gap-3 py-2">
+                     <p className="text-xs text-slate-500">This conversation has ended.</p>
+                     <button 
+                        onClick={handleRestart}
+                        className="px-6 py-2 bg-brand-600 text-white text-xs font-medium rounded-xl hover:bg-brand-700 transition-colors shadow-lg shadow-brand-100"
+                     >
+                        Start New Chat
+                     </button>
+                 </div>
+              ) : (
+                  <>
+                  <div className="flex gap-4">
+                    <input
+                      type="text"
+                      placeholder="Type a message..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      className="flex-1 bg-slate-50 border border-transparent focus:border-brand-500 rounded-xl px-4 py-3 text-[12px] font-[300] outline-none transition-all placeholder:text-slate-400"
+                    />
+                    <button 
+                      onClick={handleSend}
+                      className={`px-4 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-brand-100 ${
+                        message.trim() ? 'bg-brand-500 text-white hover:bg-brand-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
+                      disabled={!message.trim()}
+                    >
+                      <Send size={16} />
+                    </button>
+                  </div>
+                  <div className="flex justify-center mt-3">
+                     <p className="text-[10px] text-slate-300 font-[300]">Powered by Zenvy AI</p>
+                  </div>
+                  </>
+              )}
             </div>
           </motion.div>
         )}

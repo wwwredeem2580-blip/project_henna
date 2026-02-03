@@ -26,6 +26,34 @@ const situationalEngine = new SituationalAwarenessEngine();
 const adminSockets = new Map<string, Socket>(); // conversationId -> admin socket
 const userSockets = new Map<string, Socket>(); // conversationId -> user socket
 
+// Helper to broadcast queue positions
+const notifyQueuePositions = async (io: Server) => {
+  try {
+    const escalatedConversations = await Support.find({ 
+      status: 'escalated' 
+    }).sort({ urgent: -1, escalatedAt: 1 });
+
+    escalatedConversations.forEach((conv, index) => {
+      const convId = conv._id.toString();
+      const userSocket = userSockets.get(convId);
+      if (userSocket) {
+        userSocket.emit('queue_update', {
+          position: index + 1,
+          total: escalatedConversations.length
+        });
+      }
+    });
+
+    // Also notify admins about valid queue count
+    io.of('/support/admin').to('admin_room').emit('queue_stats', {
+      count: escalatedConversations.length
+    });
+
+  } catch (error) {
+    console.error('Error notifying queue positions:', error);
+  }
+};
+
 export const initChatbotSocket = (io: Server) => {
   const supportNamespace = io.of('/support');
 
@@ -95,35 +123,54 @@ export const initChatbotSocket = (io: Server) => {
     }
 
     // Handle user messages
-    socket.on('message', async (data: { text: string }) => {
-      if (!conversationId || !conversation) {
-        socket.emit('error', { message: 'Conversation not initialized' });
-        return;
-      }
-
-      try {
-        const userMessage = data.text.trim();
-        if (!userMessage) return;
-
-        // Add user message to conversation
-        const userMsgObj: ConversationMessage = {
-          role: 'user',
-          text: userMessage,
-          timestamp: new Date()
-        };
-
-        conversation.messages.push(userMsgObj);
-        await conversation.save();
-
-        // If admin is active, forward message to admin and skip bot
-        if (conversation.status === 'active' && adminSockets.has(conversationId)) {
-          const adminSocket = adminSockets.get(conversationId);
-          adminSocket?.emit('user_message', {
-            conversationId,
-            message: userMsgObj
-          });
-          return; // Admin will respond, not bot
+      socket.on('message', async (data: { text: string }) => {
+        if (!conversationId) {
+          socket.emit('error', { message: 'Conversation not initialized' });
+          return;
         }
+
+        try {
+          // Refetch conversation to get latest status
+          conversation = await Support.findById(conversationId);
+          if (!conversation) {
+             socket.emit('error', { message: 'Conversation not found' });
+             return;
+          }
+
+          const userMessage = data.text.trim();
+          if (!userMessage) return;
+
+          // Add user message to conversation
+          const userMsgObj: ConversationMessage = {
+            role: 'user',
+            text: userMessage,
+            timestamp: new Date()
+          };
+
+          conversation.messages.push(userMsgObj);
+          await conversation.save();
+
+          // If admin is active, forward message to admin and skip bot
+          // Check BOTH status and socket presence for robustness
+          if ((conversation.status === 'active' || conversation.status === 'escalated') && adminSockets.has(conversationId)) {
+             // Ensure status is active properly if admin is connected
+             if (conversation.status !== 'active') {
+                 conversation.status = 'active';
+                 await conversation.save();
+             }
+             
+            const adminSocket = adminSockets.get(conversationId);
+            adminSocket?.emit('user_message', {
+              conversationId,
+              message: userMsgObj
+            });
+            return; // Admin will respond, not bot
+          }
+
+          // If conversation is escalated (waiting for agent), do not trigger bot
+          if (conversation.status === 'escalated') {
+              return;
+          }
 
         // Analyze conversation with situational awareness
         const userIdForContext = userId || conversationId; // Use conversationId for anonymous users
@@ -145,7 +192,7 @@ export const initChatbotSocket = (io: Server) => {
 
           // Notify user
           socket.emit('escalated', {
-            message: analysis.suggestedResponse || "I'm connecting you with our support team now...",
+            message: "I've placed you in our support queue. Please wait calmly, an agent will join you shortly. 🧘‍♂️",
             urgency: analysis.urgency
           });
 
@@ -157,6 +204,8 @@ export const initChatbotSocket = (io: Server) => {
             urgency: analysis.urgency,
             preview: userMessage.substring(0, 100)
           });
+          
+          notifyQueuePositions(io);
 
           return;
         }
@@ -171,6 +220,13 @@ export const initChatbotSocket = (io: Server) => {
         const typingDelay = Math.min(2000, 500 + botResponse.response.length * 15);
         
         setTimeout(async () => {
+          // Double check status before responding to ensure admin didn't join during delay
+          const currentConv = await Support.findById(conversationId);
+          if (currentConv && (currentConv.status === 'active' || currentConv.status === 'escalated')) {
+               socket.emit('typing', { isTyping: false });
+               return; // Abort bot response
+          }
+
           // Add bot response to conversation
           const botMsgObj: ConversationMessage = {
             role: 'bot',
@@ -201,7 +257,7 @@ export const initChatbotSocket = (io: Server) => {
             await conversation.save();
 
             socket.emit('escalated', {
-              message: "Connecting you with our support team...",
+              message: "I've placed you in our support queue. Please wait calmly, an agent will join you shortly. 🧘‍♂️",
               urgency: botResponse.urgent ? 'high' : 'medium'
             });
 
@@ -212,6 +268,8 @@ export const initChatbotSocket = (io: Server) => {
               urgency: botResponse.urgent ? 'high' : 'medium',
               preview: userMessage.substring(0, 100)
             });
+
+            notifyQueuePositions(io);
           }
         }, typingDelay);
 
@@ -281,6 +339,15 @@ export const initChatbotSocket = (io: Server) => {
           conversationId: data.conversationId,
           conversation
         });
+        
+        // Notify other admins to avoid collision
+        socket.to('admin_room').emit('conversation_updated', {
+          conversationId: data.conversationId,
+          action: 'joined',
+          agentName: data.adminName
+        });
+
+        notifyQueuePositions(io);
 
         console.log(`[Support] Admin ${data.adminName} joined conversation ${data.conversationId}`);
 
@@ -358,6 +425,15 @@ export const initChatbotSocket = (io: Server) => {
         }
 
         socket.emit('conversation_closed', { success: true });
+        
+        // Update other admins
+        socket.to('admin_room').emit('conversation_updated', {
+          conversationId: data.conversationId,
+          action: 'closed'
+        });
+
+        notifyQueuePositions(io);
+        
         console.log(`[Support] Conversation ${data.conversationId} closed`);
 
       } catch (error) {

@@ -32,7 +32,6 @@ export default function Sidebar() {
     { icon: <Globe size={18} strokeWidth={1} />, label: 'Explore', path: '/events', active: pathname === '/events' },
     { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Wallet', path: '/wallet', active: pathname === '/wallet', requireRole: 'user' },
     { icon: <LayoutDashboard size={18} strokeWidth={1} />, label: 'Dashboard', path: '/dashboard', active: pathname === '/dashboard', requireRole: 'host' },
-    { icon: <MessageSquare size={18} strokeWidth={1} />, label: 'Conversations', path: '/host/conversations', active: pathname === '/host/conversations', requireRole: 'host' },
     { icon: <Calendar size={18} strokeWidth={1} />, label: 'My Events', path: '/host/events', active: pathname === '/host/events', requireRole: 'host' },
     { icon: <Plus size={18} strokeWidth={1} />, label: 'Create Event', path: '/host/events/create', active: pathname === '/host/events/create', requireRole: 'host' },
     { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Orders', path: '/host/orders', active: pathname === '/host/orders', requireRole: 'host' },
@@ -44,7 +43,7 @@ export default function Sidebar() {
     { icon: <Calendar size={18} strokeWidth={1} />, label: 'Events', path: '/admin/events', active: pathname === '/admin/events', requireRole: 'admin' },
     { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Orders', path: '/admin/orders', active: pathname === '/admin/orders', requireRole: 'admin' },
     { icon: <CreditCard size={18} strokeWidth={1} />, label: 'Payouts', path: '/admin/payouts', active: pathname === '/admin/payouts', requireRole: 'admin' },
-
+    { icon: <MessageSquare size={18} strokeWidth={1} />, label: 'Conversations', path: '/admin/conversations', active: pathname === '/admin/conversations', requireRole: 'admin' },
   ];
 
   const filteredMenuItems = menuItems.filter((item) => !item.requireRole || item.requireRole === user?.role);
