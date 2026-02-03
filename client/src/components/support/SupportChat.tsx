@@ -26,7 +26,7 @@ export const SupportChat = () => {
     if (isOpen && !socketRef.current) {
         // Dynamic import to avoid SSR issues if any
         import('socket.io-client').then(({ io }) => {
-            const socketUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+            const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
             
             socketRef.current = io(`${socketUrl}/support`, {
                 withCredentials: true,
