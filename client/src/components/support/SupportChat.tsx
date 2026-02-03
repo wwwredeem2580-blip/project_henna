@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, MessageSquare, MoreHorizontal, ArrowLeft } from 'lucide-react';
 import { useSupport } from '@/lib/context/support';
 import { Logo } from '@/components/shared/Logo';
+import { TypingIndicator } from './TypingIndicator';
 
 export const SupportChat = () => {
   const { isOpen, toggleChat } = useSupport();
@@ -13,13 +14,18 @@ export const SupportChat = () => {
     { id: 1, text: "Hi there! I'm Zenny. Welcome to Zenvy! 👋", sender: 'bot', time: 'Just now' },
     { id: 2, text: "I'm here to help you get started or answer any questions you might have.", sender: 'bot', time: 'Just now' },
   ]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [showTimeout, setShowTimeout] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const longWaitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<any>(null);
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isTyping, showTimeout]);
 
   // Connect to WebSocket
   useEffect(() => {
@@ -38,6 +44,12 @@ export const SupportChat = () => {
             });
 
             socketRef.current.on('message', (data: any) => {
+                // Clear typing state on response
+                setIsTyping(false);
+                setShowTimeout(false);
+                if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                if (longWaitTimeoutRef.current) clearTimeout(longWaitTimeoutRef.current);
+
                 setMessages((prev) => [
                     ...prev, 
                     { 
@@ -76,6 +88,22 @@ export const SupportChat = () => {
     // Optimistic UI update
     setMessages((prev) => [...prev, userMsg]);
     setMessage('');
+
+    // Clear existing timeouts
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    if (longWaitTimeoutRef.current) clearTimeout(longWaitTimeoutRef.current);
+    setShowTimeout(false);
+
+    // Initial 500ms delay before showing typing indicator
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(true);
+      
+      // Start 20s timeout for "taking longer than usual" message
+      // This runs 20s AFTER typing starts (so 20.5s total from send)
+      longWaitTimeoutRef.current = setTimeout(() => {
+        setShowTimeout(true);
+      }, 20000);
+    }, 500);
 
     if (socketRef.current) {
         socketRef.current.emit('message', { text: userMsg.text });
@@ -211,6 +239,13 @@ export const SupportChat = () => {
                   </div>
                 </div>
               ))}
+              
+              {isTyping && (
+                <div className="mb-4">
+                  <TypingIndicator showTimeout={showTimeout} />
+                </div>
+              )}
+              
               <div ref={messagesEndRef} />
             </div>
 
