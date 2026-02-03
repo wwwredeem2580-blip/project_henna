@@ -9,6 +9,9 @@ const router = Router();
 
 router.post('/verify/:eventId', async (req: Request, res: Response) => {
   try {
+    if(!req.body || !req.body.qrData){
+      throw new CustomError('Invalid request body', 400);
+    }
     const { qrData } = req.body;
     const { eventId } = req.params;
 
