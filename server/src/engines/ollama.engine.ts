@@ -76,7 +76,7 @@ class EnhancedOllamaChatbot {
 
   constructor(config: OllamaConfig = {}) {
     this.baseUrl = config.baseUrl || 'http://localhost:11434';
-    this.model = config.model || 'qwen2.5-coder:7b';
+    this.model = config.model || 'llama3.1:8b-instruct-q4_K_M';
     this.systemContext = ZENNY_SYSTEM_PROMPT;
     this.conversationCache = new Map();
     
@@ -487,23 +487,180 @@ Tailor your response accordingly. If information is missing, politely ask for it
   }
 
   private getContextualDocuments(intent: string): string[] {
-    // Placeholder for RAG document retrieval
+    // Comprehensive Q&A library for professional support
     const contextMap: Record<string, string[]> = {
+      // ═══════════════════════════════════════════════════════════
+      // TICKETING & REFUNDS
+      // ═══════════════════════════════════════════════════════════
       payment_issue: [
         'Payment processing takes 24-48 hours. Refunds are processed within 3-10 business days.',
-        'Supported payment methods: bKash, Nagad, Card payments through SSLCommerz.'
+        'Supported payment methods: bKash (most popular). Nagad, Cards, Bank Transfer coming soon.',
+        'If bKash shows "pending": Wait 30 minutes. Check bKash app history. If still pending after 1 hour, contact bKash support first, then Zenvy.',
+        'Double charges: This is rare. Check your bKash history for multiple deductions. Contact support with transaction IDs.'
       ],
       refund_request: [
-        'Refund eligibility: Within 7 days of purchase, event is 7+ days away, ticket not scanned.',
-        'Refunds are processed to the original payment method within 3-10 business days.'
+        'REFUND POLICY: Full refund within 7 days of purchase IF event is 7+ days away AND ticket not scanned.',
+        '❌ PARTIAL REFUNDS NOT SUPPORTED. If you bought 4 tickets but only need 2, you must request a FULL refund for all 4 (if eligible) or keep all 4.',
+        'Processing time: 3-10 business days to original payment method.',
+        'Auto-refund triggers: Event cancelled, organizer fraud, venue unsafe, price drop >5%.',
+        'NOT eligible: Minor schedule changes (<1 hour), supporting act changes, personal inability to attend.'
+      ],
+      ticket_transfer: [
+        '🚧 TICKET TRANSFERS - COMING SOON! This feature is under development.',
+        'Currently, tickets are linked to the purchaser account and cannot be transferred to another person.',
+        'Workaround: The ticket holder can share the PDF/QR code, but entry is still tied to the original purchaser for verification.'
+      ],
+      ticket_limits: [
+        'PURCHASE LIMITS: Max 5 paid tickets per event, Max 2 free tickets per event, Max 10 free tickets per month.',
+        'These limits prevent scalping and ensure fair distribution.',
+        'Excess purchases are automatically refunded.',
+        'Your monthly free ticket quota resets on the 1st of each month.'
+      ],
+      lost_ticket: [
+        'LOST PDF TICKET? Go to Your Wallet → Find the event → Click "Download PDF" to re-download.',
+        'Email not received? Check spam/junk folder. Wait 5-10 minutes. If still missing, contact support with your order details.',
+        '⚠️ Do NOT use "Claim Free Ticket" to recover a lost PAID ticket. That is for NEW free tickets only.'
+      ],
+      free_tickets: [
+        'FREE TICKETS: Require Google login + email verification. Max 2 per event, 10 per month.',
+        '❌ Free tickets CANNOT be cancelled once claimed. They count toward your monthly limit.',
+        'Quota resets on the 1st of each month. Claim wisely!',
+        'To claim: Go to Event Page → Click "Claim Free Ticket" → Verify email if prompted.'
+      ],
+      price_drop: [
+        'PRICE DROP PROTECTION: If event price drops >5% after your purchase, you are eligible for a partial refund of the difference.',
+        'This is automatic - Zenvy will notify you and process the refund to your original payment method.',
+        'Funded by deduction from organizer payout.'
       ],
       ticket_access: [
-        'Tickets are delivered via email as PDF with QR code. Check spam folder if not received.',
-        'QR code must be scanned at venue entry. One-time use only.'
+        'Tickets are delivered via email as PDF with QR code. Also available in your Wallet.',
+        'QR code must be scanned at venue entry. One-time use only.',
+        'Each ticket PDF works independently - you can forward individual PDFs to friends.'
+      ],
+
+      // ═══════════════════════════════════════════════════════════
+      // EVENT VERIFICATION & SAFETY
+      // ═══════════════════════════════════════════════════════════
+      event_verification: [
+        'HOW TO VERIFY AN EVENT: Look for the ✅ Verified badge on the event listing.',
+        'All events on Zenvy go through multi-stage verification: Organizer identity, venue permits, safety documentation.',
+        'If you see VIP seating but no verified badge, the event is still pending verification. Wait for approval before purchasing.',
+        'Zenvy acts as an escrow for trust - events only go live after admin approval.'
+      ],
+      organizer_verification: [
+        'ORGANIZER VERIFICATION PROCESS:',
+        '1. Submit valid identity (NID/Passport/Business License)',
+        '2. Upload event documents (venue booking, permits, capacity certificate)',
+        '3. Provide safety plan documentation',
+        '4. Admin reviews within 24-48 hours',
+        'Documents are stored in encrypted vault with restricted access.'
+      ],
+      safety_concerns: [
+        'SAFETY FIRST: All venues must have valid permits and safety documentation.',
+        'In Bangladesh: Fire safety clearance required for venues >500 capacity, Police NOC for large gatherings.',
+        'If organizer has not uploaded venue permit, the event is NOT verified. Wait for verification badge.',
+        'Report suspicious events or organizers to support immediately.'
+      ],
+
+      // ═══════════════════════════════════════════════════════════
+      // LOGIN & ACCOUNT MANAGEMENT
+      // ═══════════════════════════════════════════════════════════
+      login_issue: [
+        'GOOGLE LOGIN: Primary method. Auto-fetches your profile info.',
+        'Email not registered? Your account is created automatically on first login. Just sign in with Google.',
+        'Logged out unexpectedly? This usually means you logged in on another device. Re-login to continue.',
+        'Enable Google MFA for account protection.'
+      ],
+      email_verification: [
+        'EMAIL VERIFICATION: Required for claiming free tickets.',
+        'Steps: Click "Claim Free Ticket" → Check your email → Click verification link → Return to claim.',
+        'Verification email not received? Check spam. Wait 5 minutes. Try "Resend" button.'
+      ],
+      multiple_accounts: [
+        '⚠️ MULTIPLE GOOGLE ACCOUNTS: Each account has its own ticket limits.',
+        'You CANNOT merge multiple Zenvy accounts. Keep track of which account you use for purchases.',
+        'Using multiple accounts to bypass free ticket limits is prohibited and may result in a ban.'
+      ],
+      password_reset: [
+        'PASSWORD RESET: Zenvy uses Google Login - there is no separate password.',
+        'To reset your Google password, go to accounts.google.com → Security → Password.',
+        'Zenvy does not store your password. Authentication is handled by Google.'
+      ],
+
+      // ═══════════════════════════════════════════════════════════
+      // EVENT HOSTING & MANAGEMENT
+      // ═══════════════════════════════════════════════════════════
+      hosting: [
+        'HOW TO HOST AN EVENT:',
+        '1. Sign up as a host and complete verification',
+        '2. Upload required documents',
+        '3. Create your event with details, tickets, and gallery',
+        '4. Submit for admin review (24-48 hours)',
+        '5. Once approved, your event goes live!'
+      ],
+      event_editing: [
+        'EDITING AFTER PUBLISHING:',
+        '• 0 sales: Edit almost anything',
+        '• 1+ sales: Critical fields locked (time, prices, benefits)',
+        '• Schedule changes: ±2 hours max (one time only)',
+        '• Larger changes require admin approval'
+      ],
+      venue_change: [
+        'VENUE CHANGE AFTER SALES:',
+        'Minor changes (within same city): Allowed with admin approval. Attendees are notified.',
+        'Major changes (different city): Triggers refund eligibility for all purchased tickets.',
+        '❌ Cannot delete sold ticket tiers or reduce quantity below sold count.'
+      ],
+      pricing_changes: [
+        'PRICING AFTER SALES:',
+        'Price increases: Not allowed for sold tiers.',
+        'Price decreases >5%: Triggers partial refunds to early buyers (from your payout).',
+        'Cannot delete ticket tiers with active sales.'
+      ],
+      payouts: [
+        'PAYOUT SCHEDULE:',
+        '• Generated 7 days after event completion',
+        '• Released 24-48 hours post-event',
+        '• May be held during: Dispute window, fraud investigation, pending refund adjustments'
+      ],
+      analytics: [
+        'HOST ANALYTICS AVAILABLE:',
+        '• Revenue by ticket tier and date',
+        '• Page views and conversion rates',
+        '• Sales trends and patterns',
+        '• Attendee demographics (coming soon)',
+        'Access analytics after publishing your event.'
+      ],
+
+      // ═══════════════════════════════════════════════════════════
+      // POLICIES & RULES
+      // ═══════════════════════════════════════════════════════════
+      general_policy: [
+        'ZENVY POLICIES SUMMARY:',
+        '• Max 5 paid + 2 free tickets per event',
+        '• 7-day refund window (if event 7+ days away)',
+        '• No partial refunds - full only',
+        '• Tickets cannot be cancelled or transferred (transfer coming soon)',
+        '• Free tickets non-cancellable once claimed'
+      ],
+      organizer_violations: [
+        'ORGANIZER VIOLATIONS:',
+        'Selling fake tickets → Immediate permanent ban',
+        'Intentional overselling → Immediate permanent ban',
+        'Fraudulent activity → Immediate permanent ban + legal action',
+        'Failed verification → Event not published, documents returned'
+      ],
+
+      // ═══════════════════════════════════════════════════════════
+      // DEFAULT / GENERAL
+      // ═══════════════════════════════════════════════════════════
+      general_inquiry: [
+        'Welcome to Zenvy! I can help with: Tickets, Events, Payments, Refunds, Hosting, and Account issues.',
+        'For quick help: Check your Wallet for tickets, Explore Events for browsing, or ask me any question!'
       ]
     };
 
-    return contextMap[intent] || [];
+    return contextMap[intent] || contextMap['general_inquiry'];
   }
 
   private detectEscalationIntent(response: string): boolean {
