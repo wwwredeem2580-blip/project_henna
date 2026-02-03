@@ -13,10 +13,25 @@ interface BotResponse {
   followUp: boolean;
   matchedIntent?: string;
   suggestion?: string;
+  // AI specific optional fields
+  confidence?: 'high' | 'medium' | 'low';
+  usedAI?: boolean;
+  reasoning?: string;
+  contextUsed?: string[];
+  tokensUsed?: number;
+  responseTime?: number;
+  needsClarification?: boolean;
+  suggestedActions?: string[];
+  metadata?: {
+    processingTime?: number;
+    tokensUsed?: number;
+    fallbackUsed?: boolean;
+    [key: string]: any;
+  };
 }
 
 interface ConversationMessage {
-  role: 'user' | 'bot' | 'agent';
+  role: 'user' | 'bot' | 'agent' | 'system';
   text: string;
   timestamp: Date;
 }

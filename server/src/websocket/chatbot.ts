@@ -1,16 +1,16 @@
 import { Server, Socket } from 'socket.io';
-import HybridChatbot from '../engines/hybrid.engine';
+import HybridChatbotImproved from '../engines/hybrid.engine';
 import SituationalAwarenessEngine from '../engines/situational.engine';
 import { Support } from '../database/support/support';
 import { ConversationMessage } from '../engines/chatbot.engine';
 
 // Initialize engines
-const hybridBot = new HybridChatbot(
+const hybridBot = new HybridChatbotImproved(
   'ollama', // Primary provider
   {
     ollama: {
       baseUrl: process.env.OLLAMA_BASE_URL || 'http://host.docker.internal:11434',
-      model: process.env.OLLAMA_MODEL || 'qwen2.5-coder:7b'
+      model: process.env.OLLAMA_MODEL || 'llama3.1:8b-instruct-q4_K_M'
     },
     gemini: {
       apiKey: process.env.GEMINI_API_KEY
@@ -196,6 +196,15 @@ export const initChatbotSocket = (io: Server) => {
             urgency: analysis.urgency
           });
 
+          // ALSO send a standard message to ensure it appears in chat history
+          socket.emit('message', {
+            text: "I've detected that this is urgent. Connecting you to an agent immediately... 🚀",
+            sender: 'bot',
+            timestamp: new Date().toISOString(),
+            confidence: 'high',
+            usedAI: false
+          });
+
           // Notify all connected admins about new escalation
           supportNamespace.to('admin_room').emit('new_escalation', {
             conversationId,
@@ -213,8 +222,12 @@ export const initChatbotSocket = (io: Server) => {
         // Show typing indicator
         socket.emit('typing', { isTyping: true });
 
-        // Process with hybrid bot
-        const botResponse = await hybridBot.processMessage(userMessage, conversation.messages);
+        const botResponse = await hybridBot.processMessage(
+          userMessage,
+          conversation.messages,
+          userIdForContext,
+          conversationId
+        );
 
         // Simulate realistic typing delay
         const typingDelay = Math.min(2000, 500 + botResponse.response.length * 15);
@@ -259,6 +272,15 @@ export const initChatbotSocket = (io: Server) => {
             socket.emit('escalated', {
               message: "I've placed you in our support queue. Please wait calmly, an agent will join you shortly. 🧘‍♂️",
               urgency: botResponse.urgent ? 'high' : 'medium'
+            });
+
+            // ALSO send a standard message to ensure it appears in chat history
+            socket.emit('message', {
+              text: "I'm connecting you with a human agent now. Please wait a moment... ⏳",
+              sender: 'bot',
+              timestamp: new Date().toISOString(),
+              confidence: 'high',
+              usedAI: false
             });
 
             supportNamespace.to('admin_room').emit('new_escalation', {
