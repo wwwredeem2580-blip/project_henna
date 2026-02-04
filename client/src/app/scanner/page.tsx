@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Smartphone, Loader2 } from 'lucide-react';
 import axios from 'axios';
@@ -24,7 +24,7 @@ interface JoinSessionResponse {
   };
 }
 
-export default function ScannerJoinPage() {
+function ScannerJoinContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -173,5 +173,17 @@ export default function ScannerJoinPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ScannerJoinPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    }>
+      <ScannerJoinContent />
+    </Suspense>
   );
 }
