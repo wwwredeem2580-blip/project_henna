@@ -34,6 +34,7 @@ export const verifyTicketService = async (qrData: string, eventId: string) => {
     {
       $set: {
         checkInStatus: "checked_in",
+        status: "used",
         checkedInAt: new Date()
       }
     },

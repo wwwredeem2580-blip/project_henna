@@ -232,6 +232,7 @@ export const manualCheckInService = async (
   ticket.checkInStatus = 'checked_in';
   ticket.checkedInAt = new Date();
   ticket.checkedInBy = new mongoose.Types.ObjectId(adminId);
+  ticket.status = 'used';
   await ticket.save();
 
   // Create audit log
