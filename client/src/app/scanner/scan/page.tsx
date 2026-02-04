@@ -25,6 +25,7 @@ interface ScanResult {
   result: 'success' | 'duplicate' | 'invalid' | 'expired' | 'cancelled';
   message: string;
   offline: boolean;
+  wristbandColor?: string;
 }
 
 interface SessionData {
@@ -238,7 +239,8 @@ export default function ScannerPage() {
                   response.reason === 'TICKET_EXPIRED' ? 'expired' :
                   response.reason?.includes('CANCELLED') ? 'cancelled' : 'invalid',
           message: response.message,
-          offline: false
+          offline: false,
+          wristbandColor: response.ticket?.wristbandColor
         };
 
         // Mark as scanned in local DB for offline duplicate detection (use ticket number as ID)
@@ -606,6 +608,21 @@ export default function ScannerPage() {
                 <p className="text-slate-500 text-sm font-[300] mb-8 leading-relaxed max-w-[260px]">
                   {lastScan.message}
                 </p>
+
+                {lastScan.wristbandColor && lastScan.result === 'success' && (
+                  <div className="mb-6 w-full">
+                    <div className="flex items-center justify-center gap-3 px-4 py-3 bg-white/50 rounded-xl border border-white/50">
+                      <span className="text-xs text-slate-400">Wristband</span>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-8 h-8 rounded-lg border-2 border-white shadow-sm"
+                          style={{ backgroundColor: lastScan.wristbandColor }}
+                        />
+                        <span className="text-sm font-mono text-slate-600">{lastScan.wristbandColor}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {lastScan.ticketNumber && (
                    <div className="mb-8 w-full">

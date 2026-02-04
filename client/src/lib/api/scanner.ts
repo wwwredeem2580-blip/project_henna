@@ -110,6 +110,7 @@ class ScannerService {
       ticketType: string;
       eventTitle: string;
       checkedInAt: Date;
+      wristbandColor: string;
     };
     checkedInAt?: Date;
   }> {

@@ -709,6 +709,23 @@ export const verifyTicketScanService = async (
   ticket.status = 'used';
   await ticket.save();
 
+  // Get wristband color from event's ticket variant
+  let wristbandColor = '#4f46e5'; // Default color
+  try {
+    const event = await Event.findById(session.eventId);
+    if (event && event.tickets) {
+      const ticketVariant = event.tickets.find(
+        (t: any) => t._id.toString() === ticket.ticketVariantId.toString()
+      );
+      if (ticketVariant && ticketVariant.wristbandColor) {
+        wristbandColor = ticketVariant.wristbandColor;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching wristband color:', error);
+    // Continue with default color
+  }
+
   // Log successful scan
   await new ScanLog({
     ticketId: ticket._id,
@@ -731,7 +748,8 @@ export const verifyTicketScanService = async (
       ticketNumber: ticket.ticketNumber,
       ticketType: ticket.ticketType,
       eventTitle: ticket.eventTitle,
-      checkedInAt: ticket.checkedInAt
+      checkedInAt: ticket.checkedInAt,
+      wristbandColor: wristbandColor
     }
   };
 };
