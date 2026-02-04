@@ -852,3 +852,181 @@ export const closeScannerSessionService = async (sessionId: string, hostId: stri
     message: 'Scanner session closed successfully'
   };
 };
+
+/**
+ * EMERGENCY MANUAL VERIFICATION
+ * Lookup ticket by ID for manual verification
+ * Returns minimal data only (no sensitive info)
+ */
+export const lookupTicketByIdService = async (
+  ticketId: string,
+  sessionId: string,
+  hostId: string
+) => {
+  if (!isValidObjectId(sessionId)) {
+    throw new CustomError('Invalid session ID', 400);
+  }
+
+  // Verify session exists and belongs to host
+  const session = await ScannerSession.findById(sessionId);
+  if (!session) {
+    throw new CustomError('Session not found', 404);
+  }
+
+  if (session.hostId.toString() !== hostId) {
+    throw new CustomError('Unauthorized', 403);
+  }
+
+  // Find ticket by ticket number (not MongoDB ID)
+  const ticket = await Ticket.findOne({ ticketNumber: ticketId.toUpperCase() });
+  
+  if (!ticket) {
+    return {
+      found: false,
+      message: 'Ticket not found'
+    };
+  }
+
+  // Verify ticket belongs to this event
+  if (ticket.eventId.toString() !== session.eventId.toString()) {
+    return {
+      found: false,
+      message: 'This ticket is for a different event'
+    };
+  }
+
+  // Get wristband color from event's ticket variant
+  let wristbandColor = '#4f46e5';
+  try {
+    const event = await Event.findById(session.eventId);
+    if (event && event.tickets) {
+      const ticketVariant = event.tickets.find(
+        (t: any) => t._id.toString() === ticket.ticketVariantId.toString()
+      );
+      if (ticketVariant && ticketVariant.wristbandColor) {
+        wristbandColor = ticketVariant.wristbandColor;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching wristband color:', error);
+  }
+
+  // Get check-in history for this ticket
+  const checkInHistory = await ScanLog.find({
+    ticketId: ticket._id,
+    scanResult: 'success'
+  })
+    .sort({ scanTimestamp: -1 })
+    .limit(10)
+    .populate('manualVerifiedBy', 'name email')
+    .lean();
+
+  // Return minimal verification payload
+  return {
+    found: true,
+    ticket: {
+      ticketNumber: ticket.ticketNumber,
+      ticketType: ticket.ticketType,
+      holderName: 'Registered User', // Don't expose actual name for privacy
+      wristbandColor: wristbandColor,
+      status: ticket.status,
+      checkInStatus: ticket.checkInStatus,
+      isCheckedIn: ticket.checkInStatus === 'checked_in',
+      checkedInAt: ticket.checkedInAt,
+      isExpired: new Date() > ticket.validUntil,
+      checkInHistory: checkInHistory.map(log => ({
+        timestamp: log.scanTimestamp,
+        isManual: log.isManualOverride,
+        deviceName: log.deviceName,
+        verifiedBy: log.manualVerifiedBy ? (log.manualVerifiedBy as any).name : null
+      }))
+    }
+  };
+};
+
+/**
+ * Manual check-in with full audit trail
+ */
+export const manualCheckInService = async (
+  ticketId: string,
+  sessionId: string,
+  hostId: string,
+  notes?: string,
+  ipAddress?: string
+) => {
+  if (!isValidObjectId(sessionId)) {
+    throw new CustomError('Invalid session ID', 400);
+  }
+
+  // Verify session
+  const session = await ScannerSession.findById(sessionId);
+  if (!session) {
+    throw new CustomError('Session not found', 404);
+  }
+
+  if (session.hostId.toString() !== hostId) {
+    throw new CustomError('Unauthorized', 403);
+  }
+
+  // Find ticket
+  const ticket = await Ticket.findOne({ ticketNumber: ticketId.toUpperCase() });
+  
+  if (!ticket) {
+    throw new CustomError('Ticket not found', 404);
+  }
+
+  // Verify ticket belongs to this event
+  if (ticket.eventId.toString() !== session.eventId.toString()) {
+    throw new CustomError('This ticket is for a different event', 400);
+  }
+
+  // Check if already checked in
+  if (ticket.checkInStatus === 'checked_in') {
+    throw new CustomError('Ticket already checked in', 400);
+  }
+
+  // Check ticket status
+  if (ticket.status !== 'valid') {
+    const statusMessage = ticket.status === 'cancelled' ? 'Ticket has been cancelled' :
+                         ticket.status === 'refunded' ? 'Ticket has been refunded' :
+                         'Ticket is not valid';
+    throw new CustomError(statusMessage, 400);
+  }
+
+  // Check if expired
+  if (new Date() > ticket.validUntil) {
+    throw new CustomError('Ticket has expired', 400);
+  }
+
+  // Mark ticket as checked in
+  ticket.checkInStatus = 'checked_in';
+  ticket.checkedInAt = new Date();
+  ticket.status = 'used';
+  await ticket.save();
+
+  // Create scan log with manual override flag
+  await new ScanLog({
+    ticketId: ticket._id,
+    eventId: session.eventId,
+    sessionId: session._id,
+    deviceId: session._id, // Use session ID as placeholder for manual check-ins
+    scanResult: 'success',
+    offlineScanned: false,
+    ticketNumber: ticket.ticketNumber,
+    deviceName: 'Manual Override',
+    isManualOverride: true,
+    manualVerifiedBy: new mongoose.Types.ObjectId(hostId),
+    manualVerificationNotes: notes || 'Emergency manual check-in',
+    manualVerificationIP: ipAddress
+  }).save();
+
+  return {
+    success: true,
+    message: 'Ticket checked in successfully',
+    ticket: {
+      ticketNumber: ticket.ticketNumber,
+      ticketType: ticket.ticketType,
+      checkedInAt: ticket.checkedInAt
+    }
+  };
+};

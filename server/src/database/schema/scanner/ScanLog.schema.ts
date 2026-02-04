@@ -62,6 +62,25 @@ const scanLogSchema = new mongoose.Schema({
     type: Date
   }, // When offline scan was synced to server (null if scanned online)
 
+  // MANUAL VERIFICATION (Emergency Override)
+  isManualOverride: {
+    type: Boolean,
+    default: false
+  }, // Was this check-in performed manually by host?
+
+  manualVerifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }, // Host user ID who performed manual check-in
+
+  manualVerificationNotes: {
+    type: String
+  }, // Optional reason/notes for manual override
+
+  manualVerificationIP: {
+    type: String
+  }, // IP address for security audit
+
   // METADATA
   ticketNumber: {
     type: String

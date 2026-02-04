@@ -216,7 +216,48 @@ class ScannerService {
   async closeSession(sessionId: string): Promise<{ success: boolean; message: string }> {
     return await apiClient.post(`/api/scanner/session/${sessionId}/close`, {});
   }
+
+  /**
+   * Emergency manual verification - lookup ticket by ID
+   */
+  async lookupTicket(ticketId: string, sessionId: string): Promise<{
+    found: boolean;
+    message?: string;
+    ticket?: {
+      ticketNumber: string;
+      ticketType: string;
+      holderName: string;
+      wristbandColor: string;
+      status: string;
+      checkInStatus: string;
+      isCheckedIn: boolean;
+      checkedInAt?: Date;
+      isExpired: boolean;
+      checkInHistory: Array<{
+        timestamp: Date;
+        isManual: boolean;
+        deviceName: string;
+        verifiedBy: string | null;
+      }>;
+    };
+  }> {
+    return await apiClient.post(`/api/scanner/session/${sessionId}/lookup-ticket`, { ticketId });
+  }
+
+  /**
+   * Emergency manual check-in with audit trail
+   */
+  async manualCheckIn(ticketId: string, sessionId: string, notes?: string): Promise<{
+    success: boolean;
+    message: string;
+    ticket: {
+      ticketNumber: string;
+      ticketType: string;
+      checkedInAt: Date;
+    };
+  }> {
+    return await apiClient.post(`/api/scanner/session/${sessionId}/manual-checkin`, { ticketId, notes });
+  }
 }
 
 export const scannerService = new ScannerService();
-

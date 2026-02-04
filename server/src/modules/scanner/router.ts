@@ -12,7 +12,9 @@ import {
   disableDeviceService,
   enableDeviceService,
   forceLogoutDeviceService,
-  updateDeviceStatusService
+  updateDeviceStatusService,
+  lookupTicketByIdService,
+  manualCheckInService
 } from './service';
 import { syncOfflineScansService } from './syncService';
 import { handleError } from '../../utils/handleError';
@@ -323,6 +325,60 @@ router.post('/sync', async (req, res) => {
     }
 
     const result = await syncOfflineScansService(accessToken, deviceId, scans);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+
+/**
+ * POST /api/scanner/session/:sessionId/lookup-ticket
+ * Emergency manual verification - lookup ticket by ID
+ * Host only
+ */
+router.post('/session/:sessionId/lookup-ticket', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { ticketId } = req.body;
+    const hostId = (req as any).user?.sub;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!ticketId) {
+      return res.status(400).json({ error: 'ticketId is required' });
+    }
+
+    const result = await lookupTicketByIdService(ticketId, sessionId as string, hostId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * POST /api/scanner/session/:sessionId/manual-checkin
+ * Emergency manual check-in with audit trail
+ * Host only
+ */
+router.post('/session/:sessionId/manual-checkin', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { ticketId, notes } = req.body;
+    const hostId = (req as any).user?.sub;
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!ticketId) {
+      return res.status(400).json({ error: 'ticketId is required' });
+    }
+
+    const result = await manualCheckInService(ticketId, sessionId as string, hostId, notes, ipAddress);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);
