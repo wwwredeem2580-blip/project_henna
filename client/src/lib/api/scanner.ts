@@ -66,6 +66,54 @@ class ScannerService {
   }
 
   /**
+   * Join a scanner session (device registration)
+   */
+  async joinSession(accessToken: string, deviceName: string): Promise<{
+    success: boolean;
+    device: {
+      _id: string;
+      deviceName: string;
+      totalScans: number;
+      createdAt: string;
+    };
+    session: {
+      _id: string;
+      eventId: string;
+      eventTitle: string;
+      eventDate: string;
+      expiresAt: string;
+    };
+  }> {
+    return await apiClient.post('/api/scanner/session/join', {
+      accessToken,
+      deviceName,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'
+    });
+  }
+
+  /**
+   * Verify a ticket scan
+   */
+  async verifyTicket(qrData: string, accessToken: string, deviceId: string): Promise<{
+    valid: boolean;
+    reason?: string;
+    message: string;
+    ticket?: {
+      ticketNumber: string;
+      ticketType: string;
+      eventTitle: string;
+      checkedInAt: Date;
+    };
+    checkedInAt?: Date;
+  }> {
+    return await apiClient.post('/api/scanner/verify', {
+      qrData,
+      accessToken,
+      deviceId
+    });
+  }
+
+  /**
    * Close a scanner session
    */
   async closeSession(sessionId: string): Promise<{ success: boolean; message: string }> {

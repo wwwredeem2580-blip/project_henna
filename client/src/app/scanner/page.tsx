@@ -3,9 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Smartphone, Loader2 } from 'lucide-react';
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { scannerService } from '@/lib/api/scanner';
 
 interface JoinSessionResponse {
   success: boolean;
@@ -58,30 +56,18 @@ function ScannerJoinContent() {
       setLoading(true);
       setError('');
 
-      const response = await axios.post<JoinSessionResponse>(
-        `${API_URL}/scanner/session/join`,
-        {
-          accessToken: token,
-          deviceName: deviceName.trim()
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': navigator.userAgent
-          }
-        }
-      );
+      const response = await scannerService.joinSession(token, deviceName.trim());
 
       // Store session data in localStorage
       localStorage.setItem('scanner_session', JSON.stringify({
         accessToken: token,
-        deviceId: response.data.device._id,
-        deviceName: response.data.device.deviceName,
-        sessionId: response.data.session._id,
-        eventId: response.data.session.eventId,
-        eventTitle: response.data.session.eventTitle,
-        eventDate: response.data.session.eventDate,
-        expiresAt: response.data.session.expiresAt
+        deviceId: response.device._id,
+        deviceName: response.device.deviceName,
+        sessionId: response.session._id,
+        eventId: response.session.eventId,
+        eventTitle: response.session.eventTitle,
+        eventDate: response.session.eventDate,
+        expiresAt: response.session.expiresAt
       }));
 
       // Redirect to scanner

@@ -12,9 +12,7 @@ import {
   History,
   Settings
 } from 'lucide-react';
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { scannerService } from '@/lib/api/scanner';
 
 interface ScanResult {
   id: string;
@@ -131,24 +129,21 @@ export default function ScannerPage() {
     }
 
     try {
-      const response = await axios.post(
-        `${API_URL}/scanner/verify`,
-        {
-          qrData: decodedText,
-          accessToken: session.accessToken,
-          deviceId: session.deviceId
-        }
+      const response = await scannerService.verifyTicket(
+        decodedText,
+        session.accessToken,
+        session.deviceId
       );
 
       const result: ScanResult = {
         id: Date.now().toString(),
         timestamp: new Date(),
-        ticketNumber: response.data.ticket?.ticketNumber,
-        result: response.data.valid ? 'success' : 
-                response.data.reason === 'ALREADY_CHECKED_IN' ? 'duplicate' :
-                response.data.reason === 'TICKET_EXPIRED' ? 'expired' :
-                response.data.reason?.includes('CANCELLED') ? 'cancelled' : 'invalid',
-        message: response.data.message,
+        ticketNumber: response.ticket?.ticketNumber,
+        result: response.valid ? 'success' : 
+                response.reason === 'ALREADY_CHECKED_IN' ? 'duplicate' :
+                response.reason === 'TICKET_EXPIRED' ? 'expired' :
+                response.reason?.includes('CANCELLED') ? 'cancelled' : 'invalid',
+        message: response.message,
         offline: false
       };
 
