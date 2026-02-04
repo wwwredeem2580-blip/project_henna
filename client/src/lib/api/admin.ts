@@ -128,6 +128,44 @@ export interface AdminPayoutDetailsResponse {
   };
 }
 
+// ========================================
+// TICKET INTERFACES
+// ========================================
+
+export interface AdminTicket {
+  _id: string;
+  ticketNumber: string;
+  status: 'valid' | 'used' | 'cancelled' | 'refunded' | 'transferred';
+  checkInStatus: 'not_checked_in' | 'checked_in';
+  eventTitle: string;
+  ticketType: string;
+  price: number;
+  buyerEmail: string;
+  buyerName: string;
+  orderNumber: string;
+  paymentStatus: string;
+  issuedAt: string;
+  validUntil: string;
+  checkedInAt: string | null;
+}
+
+export interface AdminTicketsResponse {
+  tickets: AdminTicket[];
+  pagination: {
+    nextCursor: string | null;
+    hasMore: boolean;
+    limit: number;
+  };
+}
+
+export interface AdminTicketFilters {
+  status?: string;
+  eventId?: string;
+  orderId?: string;
+  email?: string;
+  ticketNumber?: string;
+}
+
 class AdminService {
   /**
    * Get payout details with paginated orders
@@ -439,6 +477,60 @@ class AdminService {
    */
   async processPayout(payoutId: string): Promise<any> {
     return await apiClient.put(`/api/admin/payout/${payoutId}/process`);
+  }
+
+  // ========================================
+  // TICKET MANAGEMENT
+  // ========================================
+
+  /**
+   * Get tickets with cursor-based pagination and filters
+   */
+  async getTickets({
+    cursor,
+    limit,
+    filters,
+  }: {
+    cursor?: string | null;
+    limit?: number;
+    filters?: AdminTicketFilters;
+  }): Promise<AdminTicketsResponse> {
+    const queryParams = new URLSearchParams();
+    if (cursor) queryParams.append('cursor', cursor);
+    if (limit) queryParams.append('limit', limit.toString());
+    if (filters?.status) queryParams.append('status', filters.status);
+    if (filters?.eventId) queryParams.append('eventId', filters.eventId);
+    if (filters?.orderId) queryParams.append('orderId', filters.orderId);
+    if (filters?.email) queryParams.append('email', filters.email);
+    if (filters?.ticketNumber) queryParams.append('ticketNumber', filters.ticketNumber);
+
+    const response = await apiClient.get<any>(`/api/admin/ticket?${queryParams}`);
+    return response;
+  }
+
+  /**
+   * Update ticket status
+   */
+  async updateTicketStatus(
+    ticketId: string,
+    newStatus: string,
+    adminId: string,
+    reason?: string
+  ): Promise<any> {
+    return await apiClient.put(`/api/admin/ticket/${ticketId}/status`, {
+      newStatus,
+      adminId,
+      reason,
+    });
+  }
+
+  /**
+   * Manual check-in
+   */
+  async manualCheckIn(ticketId: string, adminId: string): Promise<any> {
+    return await apiClient.post(`/api/admin/ticket/${ticketId}/checkin`, {
+      adminId,
+    });
   }
 }
 

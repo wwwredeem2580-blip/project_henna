@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { publicService } from "@/lib/api/public";
 import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, LogIn, Globe, CreditCard, Book, BookA, BookOpen } from "lucide-react";
+import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, LogIn, Globe, CreditCard, Book, BookA, BookOpen, Ticket } from "lucide-react";
 
 import {
   LayoutDashboard,
@@ -44,6 +44,7 @@ export default function Sidebar() {
     { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Orders', path: '/admin/orders', active: pathname === '/admin/orders', requireRole: 'admin' },
     { icon: <CreditCard size={18} strokeWidth={1} />, label: 'Payouts', path: '/admin/payouts', active: pathname === '/admin/payouts', requireRole: 'admin' },
     { icon: <MessageSquare size={18} strokeWidth={1} />, label: 'Conversations', path: '/admin/conversations', active: pathname === '/admin/conversations', requireRole: 'admin' },
+    { icon: <Ticket size={18} strokeWidth={1} />, label: 'Tickets', path: '/admin/tickets', active: pathname === '/admin/tickets', requireRole: 'admin' },
   ];
 
   const filteredMenuItems = menuItems.filter((item) => !item.requireRole || item.requireRole === user?.role);
