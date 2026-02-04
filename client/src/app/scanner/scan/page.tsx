@@ -152,8 +152,7 @@ export default function ScannerPage() {
       try {
         const html5QrCode = new Html5Qrcode('qr-reader');
         html5QrCodeRef.current = html5QrCode;
-        scannerInitialized.current = true;
-
+        
         await html5QrCode.start(
           { facingMode: 'environment' },
           {
@@ -165,6 +164,7 @@ export default function ScannerPage() {
           onScanFailure
         );
         
+        scannerInitialized.current = true;
         setScanning(true);
       } catch (error) {
         console.error('Scanner init error:', error);
@@ -176,8 +176,16 @@ export default function ScannerPage() {
 
     return () => {
       if (html5QrCodeRef.current && scannerInitialized.current) {
-        html5QrCodeRef.current.stop().catch(console.error);
-        scannerInitialized.current = false;
+        html5QrCodeRef.current.stop()
+          .then(() => {
+            scannerInitialized.current = false;
+            html5QrCodeRef.current = null;
+          })
+          .catch((err) => {
+            console.log('Scanner already stopped:', err);
+            scannerInitialized.current = false;
+            html5QrCodeRef.current = null;
+          });
       }
     };
   }, [session, onScanSuccess, onScanFailure]);
@@ -195,10 +203,21 @@ export default function ScannerPage() {
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout? You will need to rejoin the session.')) {
       localStorage.removeItem('scanner_session');
-      if (html5QrCodeRef.current) {
-        html5QrCodeRef.current.stop().catch(console.error);
+      if (html5QrCodeRef.current && scannerInitialized.current) {
+        html5QrCodeRef.current.stop()
+          .then(() => {
+            scannerInitialized.current = false;
+            html5QrCodeRef.current = null;
+            router.push('/scanner');
+          })
+          .catch(() => {
+            scannerInitialized.current = false;
+            html5QrCodeRef.current = null;
+            router.push('/scanner');
+          });
+      } else {
+        router.push('/scanner');
       }
-      router.push('/scanner');
     }
   };
 

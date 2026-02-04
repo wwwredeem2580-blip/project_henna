@@ -10,7 +10,8 @@ const scanLogSchema = new mongoose.Schema({
   ticketId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Ticket',
-    required: true,
+    required: false, // Optional since invalid scans won't have a ticket
+    default: null,
     index: true
   },
 
