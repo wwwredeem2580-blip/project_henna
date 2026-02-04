@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Html5Qrcode } from 'html5-qrcode';
 import { 
@@ -78,8 +78,8 @@ export default function ScannerPage() {
     };
   }, []);
 
-  // Define scan callbacks before useEffect
-  const onScanSuccess = async (decodedText: string) => {
+  // Define scan callbacks with useCallback to prevent re-renders
+  const onScanSuccess = useCallback(async (decodedText: string) => {
     if (!session) return;
 
     // Prevent duplicate scans within 2 seconds
@@ -138,10 +138,20 @@ export default function ScannerPage() {
       playErrorSound();
       setTimeout(() => setLastScan(null), 3000);
     }
+  }, [session, lastScan, isOnline]);
+
+  const onScanFailure = useCallback((error: string) => {
+    // Silent - scanning continuously
+  }, []);
+
+  const playSuccessSound = () => {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
+    audio.play().catch(() => {});
   };
 
-  const onScanFailure = (error: string) => {
-    // Silent - scanning continuously
+  const playErrorSound = () => {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
+    audio.play().catch(() => {});
   };
 
   // Initialize QR scanner
@@ -189,16 +199,6 @@ export default function ScannerPage() {
       }
     };
   }, [session, onScanSuccess, onScanFailure]);
-
-  const playSuccessSound = () => {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
-    audio.play().catch(() => {});
-  };
-
-  const playErrorSound = () => {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
-    audio.play().catch(() => {});
-  };
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout? You will need to rejoin the session.')) {
