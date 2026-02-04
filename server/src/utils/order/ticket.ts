@@ -20,7 +20,8 @@ export async function createTicket(order: any, ticketItem: any, index: number) {
     throw new Error('Event not found');
   }
   // Generate unique QR code data
-  const ticketNumber = `TKT-${event.title}-${order.orderNumber}-${uuidv4().substring(0, 6)}`;
+  const ticketNumber = `TKT-${event.title.replace(/\s/g, '-')}-${order.orderNumber}-${uuidv4().substring(0, 6)}`.toUpperCase();
+  console.log(ticketNumber);
   const secretHash = crypto.randomBytes(32).toString('hex');
   const qrData = crypto
     .createHash('sha256')

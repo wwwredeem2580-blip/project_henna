@@ -9,7 +9,7 @@ import path from 'path';
 
 /**
  * Generate PDF ticket sheet for emergency manual verification
- * Returns alphabetically sorted ticket IDs with types
+ * Returns alphabetically sorted ticket numbers with types
  */
 export const generateTicketSheetPDF = async (eventId: string, hostId: string): Promise<string> => {
   if (!isValidObjectId(eventId)) {
@@ -99,7 +99,7 @@ export const generateTicketSheetPDF = async (eventId: string, hostId: string): P
   doc
     .fontSize(10)
     .font('Helvetica-Bold')
-    .text('Ticket ID', 50, doc.y, { width: 250, continued: true })
+    .text('Ticket Number', 50, doc.y, { width: 250, continued: true })
     .text('Type', 300, doc.y, { width: 245 })
     .moveDown(0.5);
 
@@ -161,7 +161,7 @@ export const generateTicketSheetPDF = async (eventId: string, hostId: string): P
         doc
           .fontSize(10)
           .font('Helvetica-Bold')
-          .text('Ticket ID', 50, doc.y, { width: 250, continued: true })
+          .text('Ticket Number', 50, doc.y, { width: 250, continued: true })
           .text('Type', 300, doc.y, { width: 245 })
           .moveDown(0.5);
         

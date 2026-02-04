@@ -43,6 +43,12 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
 
   const eventId = data?.event?._id;
   const eventStatus = data?.event?.status;
+  const eventStartDate = data?.event?.schedule?.startDate;
+
+  // Check if event starts within 24 hours
+  const isWithin24Hours = eventStartDate 
+    ? (new Date(eventStartDate).getTime() - new Date().getTime()) <= 24 * 60 * 60 * 1000
+    : false;
 
   // Check if event is eligible for scanner (published, live, or ended)
   const canUseScanner = ['published', 'live', 'ended'].includes(eventStatus || '');
@@ -203,7 +209,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   const handleDownloadTicketSheet = () => {
     if (!eventId) return;
     
-    const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/scanner/event/${eventId}/ticket-sheet`;
+    const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/scanner/event/${eventId}/ticket-sheet`;
     window.open(downloadUrl, '_blank');
     showNotification('info', 'Downloading', 'Ticket sheet download started');
   };
@@ -511,7 +517,8 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
             </div>
           </div>
 
-          {/* Ticket Sheet Download */}
+          {/* Ticket Sheet Download - Only show if event starts within 24 hours */}
+          {isWithin24Hours && (
           <div className="bg-white/70 rounded-lg p-4 mb-4">
             <div className="flex items-center justify-between">
               <div>
@@ -529,11 +536,12 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
               </button>
             </div>
           </div>
+          )}
 
           {/* Ticket ID Lookup */}
           <div className="bg-white/70 rounded-lg p-4 mb-4">
             <label className="block text-sm font-[500] text-slate-700 mb-2">
-              Ticket ID Lookup
+              Ticket Number Lookup
             </label>
             <div className="flex gap-2">
               <input
@@ -541,7 +549,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
                 value={ticketIdInput}
                 onChange={(e) => setTicketIdInput(e.target.value.toUpperCase())}
                 onKeyDown={(e) => e.key === 'Enter' && handleLookupTicket()}
-                placeholder="Enter Ticket ID (e.g., ZNV-GALA-92XK7)"
+                placeholder="Enter Ticket Number (e.g., ZNV-GALA-92XK7)"
                 className="flex-1 px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono"
               />
               <button

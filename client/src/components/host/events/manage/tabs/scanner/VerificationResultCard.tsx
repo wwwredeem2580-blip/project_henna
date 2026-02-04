@@ -93,7 +93,7 @@ export default function VerificationResultCard({ ticket, onCheckIn, isCheckingIn
       {/* Ticket Details */}
       <div className="space-y-3 mb-6">
         <div className="flex items-center justify-between px-4 py-3 bg-white/70 rounded-lg">
-          <span className="text-sm text-slate-500">Ticket ID</span>
+          <span className="text-sm text-slate-500">Ticket Number</span>
           <span className="text-sm font-mono font-[500] text-slate-800">{ticket.ticketNumber}</span>
         </div>
 

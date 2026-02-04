@@ -878,7 +878,7 @@ export const lookupTicketByIdService = async (
   }
 
   // Find ticket by ticket number (not MongoDB ID)
-  const ticket = await Ticket.findOne({ ticketNumber: ticketId.toUpperCase() });
+  const ticket = await Ticket.findOne({ ticketNumber: ticketId });
   
   if (!ticket) {
     return {
