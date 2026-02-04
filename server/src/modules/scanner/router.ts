@@ -10,6 +10,7 @@ import {
   generatePairingOTPService,
   verifyPairingOTPService,
   disableDeviceService,
+  enableDeviceService,
   forceLogoutDeviceService,
   updateDeviceStatusService
 } from './service';
@@ -226,6 +227,32 @@ router.put('/device/:deviceId/disable', requireAuth, requireHost, async (req, re
     }
 
     const result = await disableDeviceService(deviceId as string, sessionId, hostId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * PUT /api/scanner/device/:deviceId/enable
+ * Re-enable a disabled device (Host only)
+ * Body: { sessionId }
+ */
+router.put('/device/:deviceId/enable', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const { sessionId } = req.body;
+    const hostId = (req as any).user?.sub;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'sessionId is required' });
+    }
+
+    const result = await enableDeviceService(deviceId as string, sessionId, hostId);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);

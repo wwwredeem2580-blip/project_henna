@@ -318,13 +318,13 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
       {/* Active Devices */}
       <div className="bg-white rounded-lg border border-slate-200">
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <h3 className="text-lg font-[400] text-slate-800">Active Devices</h3>
+          <h3 className="text-lg font-[400] text-slate-800">Devices</h3>
           <span className="text-sm text-slate-500">
             {devices.filter(d => d.isOnline && d.status !== 'disabled').length} / {sessionData.maxDevices} online
           </span>
         </div>
 
-        {devices.filter(d => d.status !== 'disabled').length === 0 ? (
+        {devices.length === 0 ? (
           <div className="text-center py-12 text-slate-500">
             <Smartphone className="w-12 h-12 text-slate-300 mx-auto mb-2" />
             <p className="text-sm">No devices connected yet</p>
@@ -332,19 +332,25 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {devices.filter(d => d.status !== 'disabled').map((device) => (
+            {devices.map((device) => {
+              const isDisabled = device.status === 'disabled';
+              return (
               <div
                 key={device._id}
-                className="p-4 hover:bg-slate-50 transition-colors"
+                className={`p-4 hover:bg-slate-50 transition-colors ${isDisabled ? 'opacity-60 bg-slate-50/50' : ''}`}
               >
                 <div className="flex items-start justify-between gap-4">
                   {/* Device Info */}
                   <div className="flex items-start gap-3 flex-1">
-                    <div className={`w-2 h-2 rounded-full mt-1.5 ${device.isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
+                    <div className={`w-2 h-2 rounded-full mt-1.5 ${isDisabled ? 'bg-red-400' : device.isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-slate-800 truncate">{device.deviceName}</p>
-                        {device.isOnline && (
+                        <p className={`text-sm font-medium truncate ${isDisabled ? 'text-slate-500' : 'text-slate-800'}`}>{device.deviceName}</p>
+                        {isDisabled ? (
+                          <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
+                            Disabled
+                          </span>
+                        ) : device.isOnline && (
                           <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
                             Online
                           </span>
@@ -354,29 +360,53 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
                         <span>Last seen {formatTimeAgo(device.lastSeen)}</span>
                         <span>•</span>
                         <span className="font-semibold text-slate-700">{device.totalScans} scans</span>
+                        {device.revokedAt && (
+                          <>
+                            <span>•</span>
+                            <span className="text-red-600">Revoked {formatTimeAgo(device.revokedAt)}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={async () => {
-                        if (confirm(`Disable ${device.deviceName}? This will prevent it from scanning.`)) {
+                    {isDisabled ? (
+                      <button
+                        onClick={async () => {
                           try {
-                            await scannerService.disableDevice(device._id, sessionData._id);
-                            showNotification('success', 'Device Disabled', `${device.deviceName} has been disabled`);
+                            await scannerService.enableDevice(device._id, sessionData._id);
+                            showNotification('success', 'Device Re-enabled', `${device.deviceName} can now scan again`);
                             fetchSessionDetails(sessionData._id);
                           } catch (err: any) {
-                            showNotification('error', 'Failed to Disable', err.message);
+                            showNotification('error', 'Failed to Re-enable', err.message);
                           }
-                        }
-                      }}
-                      className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                      title="Disable device"
-                    >
-                      <PowerOff className="w-4 h-4" />
-                    </button>
+                        }}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Re-enable device"
+                      >
+                        <Power className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Disable ${device.deviceName}? This will prevent it from scanning.`)) {
+                            try {
+                              await scannerService.disableDevice(device._id, sessionData._id);
+                              showNotification('success', 'Device Disabled', `${device.deviceName} has been disabled`);
+                              fetchSessionDetails(sessionData._id);
+                            } catch (err: any) {
+                              showNotification('error', 'Failed to Disable', err.message);
+                            }
+                          }
+                        }}
+                        className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                        title="Disable device"
+                      >
+                        <PowerOff className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={async () => {
                         if (confirm(`Force logout ${device.deviceName}? This will revoke access immediately.`)) {
@@ -397,7 +427,8 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
                   </div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>

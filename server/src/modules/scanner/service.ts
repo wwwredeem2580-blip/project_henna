@@ -266,6 +266,47 @@ export const disableDeviceService = async (deviceId: string, sessionId: string, 
 };
 
 /**
+ * Re-enable a disabled device
+ */
+export const enableDeviceService = async (deviceId: string, sessionId: string, hostId: string) => {
+  if (!isValidObjectId(deviceId) || !isValidObjectId(sessionId)) {
+    throw new CustomError('Invalid device or session ID', 400);
+  }
+
+  const session = await ScannerSession.findById(sessionId);
+  if (!session) {
+    throw new CustomError('Session not found', 404);
+  }
+
+  // Verify ownership
+  if (session.hostId.toString() !== hostId) {
+    throw new CustomError('Unauthorized', 403);
+  }
+
+  const device = await ScannerDevice.findOne({
+    _id: new mongoose.Types.ObjectId(deviceId),
+    sessionId: session._id
+  });
+
+  if (!device) {
+    throw new CustomError('Device not found', 404);
+  }
+
+  device.status = 'active';
+  device.revokedAt = undefined;
+  await device.save();
+
+  // Increment active device count
+  session.activeDeviceCount += 1;
+  await session.save();
+
+  return {
+    success: true,
+    message: 'Device re-enabled successfully'
+  };
+};
+
+/**
  * Force logout a device (revoke access)
  */
 export const forceLogoutDeviceService = async (deviceId: string, sessionId: string, hostId: string) => {

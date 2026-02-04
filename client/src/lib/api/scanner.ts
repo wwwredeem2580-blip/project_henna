@@ -176,6 +176,16 @@ class ScannerService {
   }
 
   /**
+   * Re-enable a disabled device
+   */
+  async enableDevice(deviceId: string, sessionId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    return await apiClient.put(`/api/scanner/device/${deviceId}/enable`, { sessionId });
+  }
+
+  /**
    * Force logout a device
    */
   async forceLogoutDevice(deviceId: string, sessionId: string): Promise<{
