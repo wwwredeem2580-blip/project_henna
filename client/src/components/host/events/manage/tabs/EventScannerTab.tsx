@@ -316,7 +316,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
       </div>
 
       {/* Active Devices */}
-      <div className="bg-white rounded-lg border border-slate-200">
+      <div className="bg-white rounded-lg">
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <h3 className="text-lg font-[400] text-slate-800">Devices</h3>
           <span className="text-sm text-slate-500">
@@ -345,7 +345,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
                     <div className={`w-2 h-2 rounded-full mt-1.5 ${isDisabled ? 'bg-red-400' : device.isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className={`text-sm font-medium truncate ${isDisabled ? 'text-slate-500' : 'text-slate-800'}`}>{device.deviceName}</p>
+                        <p className={`text-sm font-[400] truncate ${isDisabled ? 'text-slate-500' : 'text-slate-800'}`}>{device.deviceName}</p>
                         {isDisabled ? (
                           <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
                             Disabled
@@ -359,7 +359,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                         <span>Last seen {formatTimeAgo(device.lastSeen)}</span>
                         <span>•</span>
-                        <span className="font-semibold text-slate-700">{device.totalScans} scans</span>
+                        <span className="font-[400] text-slate-700">{device.totalScans} scans</span>
                         {device.revokedAt && (
                           <>
                             <span>•</span>
