@@ -137,7 +137,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   if (!canUseScanner) {
     return (
       <div className="max-w-[1080px] mx-auto py-12">
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
+        <div className="bg-slate-50 rounded-lg p-8 text-center">
           <QrCode className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-700 mb-2">Scanner Not Available</h3>
           <p className="text-sm text-slate-500">
@@ -151,7 +151,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   if (!session) {
     return (
       <div className="max-w-[1080px] mx-auto py-12">
-        <div className="bg-white border border-slate-200 rounded-lg p-8">
+        <div className="bg-white rounded-lg p-8">
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <QrCode className="w-10 h-10 text-brand-500" />
@@ -183,7 +183,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
           <button
             onClick={handleCreateSession}
             disabled={creating}
-            className="w-full bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full max-w-[360px] mx-auto bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {creating ? (
               <>
@@ -208,13 +208,13 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Session Status Card */}
-      <div className="bg-white border border-slate-200 rounded-lg p-6">
+      <div className="bg-white rounded-lg p-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
             <div>
-              <h3 className="text-lg font-medium text-slate-800">Scanner Session</h3>
-              <p className="text-sm text-slate-500">
+              <h3 className="sm:text-lg text-md font-[400] text-slate-800">Scanner Session</h3>
+              <p className="text-xs sm:text-sm text-slate-500">
                 {isActive ? 'Active' : 'Closed'} • Expires {formatTime(sessionData.expiresAt)}
               </p>
             </div>
@@ -222,7 +222,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
           <button
             onClick={handleCloseSession}
             disabled={loading || !isActive}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <PowerOff className="w-4 h-4" />
             Close Session
@@ -232,20 +232,20 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
         {/* Scanner URL */}
         {scannerUrl && isActive && (
           <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 mb-6">
-            <label className="text-sm font-medium text-brand-700 mb-2 block">Scanner Link</label>
+            <label className="text-xs sm:text-sm font-medium text-brand-700 mb-2 block">Scanner Link</label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={scannerUrl}
                 readOnly
-                className="flex-1 bg-white border border-brand-300 rounded-lg px-3 py-2 text-sm text-slate-700 font-mono"
+                className="flex-1 bg-white border border-brand-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-700 font-mono"
               />
               <button
                 onClick={() => copyToClipboard(scannerUrl)}
                 className="p-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors"
                 title="Copy to clipboard"
               >
-                <Copy className="w-4 h-4" />
+                <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
               <a
                 href={scannerUrl}
@@ -254,7 +254,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
                 className="p-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors"
                 title="Open scanner"
               >
-                <ExternalLink className="w-4 h-4" />
+                <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
               </a>
             </div>
             <p className="text-xs text-brand-600 mt-2">Share this link with your staff to start scanning tickets</p>
@@ -266,38 +266,38 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
           <div className="bg-slate-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-xs font-medium text-slate-600">Successful</span>
+              <span className="text-xs font-[300] text-slate-600">Successful</span>
             </div>
-            <p className="text-2xl font-semibold text-slate-800">{stats.success}</p>
+            <p className="text-2xl font-[400] text-slate-800">{stats.success}</p>
           </div>
           <div className="bg-slate-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-1">
               <XCircle className="w-4 h-4 text-red-500" />
-              <span className="text-xs font-medium text-slate-600">Duplicates</span>
+              <span className="text-xs font-[300] text-slate-600">Duplicates</span>
             </div>
-            <p className="text-2xl font-semibold text-slate-800">{stats.duplicate}</p>
+            <p className="text-2xl font-[400] text-slate-800">{stats.duplicate}</p>
           </div>
           <div className="bg-slate-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-1">
               <XCircle className="w-4 h-4 text-orange-500" />
-              <span className="text-xs font-medium text-slate-600">Invalid</span>
+              <span className="text-xs font-[300] text-slate-600">Invalid</span>
             </div>
-            <p className="text-2xl font-semibold text-slate-800">{stats.invalid + stats.expired}</p>
+            <p className="text-2xl font-[400] text-slate-800">{stats.invalid + stats.expired}</p>
           </div>
           <div className="bg-slate-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-1">
               <Users className="w-4 h-4 text-brand-500" />
-              <span className="text-xs font-medium text-slate-600">Total Scans</span>
+              <span className="text-xs font-[300] text-slate-600">Total Scans</span>
             </div>
-            <p className="text-2xl font-semibold text-slate-800">{stats.total}</p>
+            <p className="text-2xl font-[400] text-slate-800">{stats.total}</p>
           </div>
         </div>
       </div>
 
       {/* Active Devices */}
-      <div className="bg-white border border-slate-200 rounded-lg p-6">
+      <div className="bg-brand-50 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-slate-800">Active Devices</h3>
+          <h3 className="text-lg font-[400] text-slate-800">Active Devices</h3>
           <span className="text-sm text-slate-500">
             {devices.filter(d => d.isOnline).length} / {sessionData.maxDevices} online
           </span>
@@ -314,7 +314,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
             {devices.map((device) => (
               <div
                 key={device._id}
-                className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200"
+                className="flex items-center justify-between p-4 bg-slate-50 rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-2 h-2 rounded-full ${device.isOnline ? 'bg-green-500' : 'bg-slate-300'}`} />
