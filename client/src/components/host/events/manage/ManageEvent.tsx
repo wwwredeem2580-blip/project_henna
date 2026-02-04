@@ -12,6 +12,7 @@ import {
   Info,
   Ticket,
   Layout,
+  QrCode,
 } from 'lucide-react';
 import { useAuth } from "@/lib/context/auth";
 import Sidebar from "@/components/layout/Sidebar";
@@ -22,6 +23,7 @@ import { EventTicketsTab } from "./tabs/EventTicketsTab";
 import { EventDetailsTab } from "./tabs/EventDetailsTab";
 import { EventCheckInTab } from "./tabs/EventCheckInTab";
 import { EventAnalyticsTab } from "./tabs/EventAnalyticsTab";
+import { EventScannerTab } from "./tabs/EventScannerTab";
 import { useNotification } from "@/lib/context/notification";
 
 
@@ -90,6 +92,11 @@ export default function ManageEvent() {
         label: 'Check-in',
         content: <EventCheckInTab data={data} />,
         icon: <CheckIcon size={16} />
+      },
+      {
+        label: 'Scanner',
+        content: <EventScannerTab data={data} />,
+        icon: <QrCode size={16} />
       },
       {
         label: 'Analytics',

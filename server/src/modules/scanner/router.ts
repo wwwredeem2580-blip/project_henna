@@ -8,6 +8,7 @@ import {
 } from './service';
 import { syncOfflineScansService } from './syncService';
 import { handleError } from '../../utils/handleError';
+import { requireAuth, requireHost } from '../../middlewares/auth';
 
 const router = Router();
 
@@ -16,10 +17,10 @@ const router = Router();
  * Create a new scanner session for an event (Host only)
  * Body: { eventId, maxDevices? }
  */
-router.post('/session/create', async (req, res) => {
+router.post('/session/create', requireAuth, requireHost, async (req, res) => {
   try {
     const { eventId, maxDevices } = req.body;
-    const hostId = (req as any).user?.userId; // Assuming auth middleware sets user
+    const hostId = (req as any).user?.sub; // Assuming auth middleware sets user
 
     if (!hostId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -81,16 +82,16 @@ router.post('/verify', async (req, res) => {
  * GET /api/scanner/session/:sessionId
  * Get session details with devices and stats (Host only)
  */
-router.get('/session/:sessionId', async (req, res) => {
+router.get('/session/:sessionId', requireAuth, requireHost, async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const hostId = (req as any).user?.userId;
+    const hostId = (req as any).user?.sub;
 
     if (!hostId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const result = await getSessionDetailsService(sessionId, hostId);
+    const result = await getSessionDetailsService(sessionId as string, hostId);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);
@@ -101,16 +102,16 @@ router.get('/session/:sessionId', async (req, res) => {
  * POST /api/scanner/session/:sessionId/close
  * Close a scanner session (Host only)
  */
-router.post('/session/:sessionId/close', async (req, res) => {
+router.post('/session/:sessionId/close', requireAuth, requireHost, async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const hostId = (req as any).user?.userId;
+    const hostId = (req as any).user?.sub;
 
     if (!hostId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const result = await closeScannerSessionService(sessionId, hostId);
+    const result = await closeScannerSessionService(sessionId as string, hostId);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);

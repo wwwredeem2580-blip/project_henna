@@ -72,11 +72,6 @@ const scannerSessionSchema = new mongoose.Schema({
   }
 });
 
-// Update timestamp on save
-scannerSessionSchema.pre('save', function(next: any) {
-  this.updatedAt = new Date();
-  next();
-});
 
 // Method to check if session is active
 scannerSessionSchema.methods.isActive = function() {
