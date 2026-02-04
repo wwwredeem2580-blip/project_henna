@@ -424,7 +424,7 @@ export default function ScannerPage() {
           });
       }
     };
-  }, [session, onScanSuccess, onScanFailure]);
+  }, [session]); // Removed onScanSuccess and onScanFailure from dependencies since they're memoized
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout? You will need to rejoin the session.')) {
