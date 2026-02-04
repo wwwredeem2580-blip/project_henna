@@ -78,43 +78,7 @@ export default function ScannerPage() {
     };
   }, []);
 
-  // Initialize QR scanner
-  useEffect(() => {
-    if (!session || scannerInitialized.current) return;
-
-    const initScanner = async () => {
-      try {
-        const html5QrCode = new Html5Qrcode('qr-reader');
-        html5QrCodeRef.current = html5QrCode;
-        scannerInitialized.current = true;
-
-        await html5QrCode.start(
-          { facingMode: 'environment' },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 }
-          },
-          onScanSuccess,
-          onScanFailure
-        );
-        
-        setScanning(true);
-      } catch (error) {
-        console.error('Scanner init error:', error);
-        alert('Failed to start camera. Please allow camera access.');
-      }
-    };
-
-    initScanner();
-
-    return () => {
-      if (html5QrCodeRef.current && scannerInitialized.current) {
-        html5QrCodeRef.current.stop().catch(console.error);
-        scannerInitialized.current = false;
-      }
-    };
-  }, [session]);
-
+  // Define scan callbacks before useEffect
   const onScanSuccess = async (decodedText: string) => {
     if (!session) return;
 
@@ -179,6 +143,44 @@ export default function ScannerPage() {
   const onScanFailure = (error: string) => {
     // Silent - scanning continuously
   };
+
+  // Initialize QR scanner
+  useEffect(() => {
+    if (!session || scannerInitialized.current) return;
+
+    const initScanner = async () => {
+      try {
+        const html5QrCode = new Html5Qrcode('qr-reader');
+        html5QrCodeRef.current = html5QrCode;
+        scannerInitialized.current = true;
+
+        await html5QrCode.start(
+          { facingMode: 'environment' },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          onScanSuccess,
+          onScanFailure
+        );
+        
+        setScanning(true);
+      } catch (error) {
+        console.error('Scanner init error:', error);
+        alert('Failed to start camera. Please allow camera access.');
+      }
+    };
+
+    initScanner();
+
+    return () => {
+      if (html5QrCodeRef.current && scannerInitialized.current) {
+        html5QrCodeRef.current.stop().catch(console.error);
+        scannerInitialized.current = false;
+      }
+    };
+  }, [session, onScanSuccess, onScanFailure]);
 
   const playSuccessSound = () => {
     const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
@@ -259,15 +261,19 @@ export default function ScannerPage() {
       {/* Scanner View */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
         {/* QR Scanner */}
-        <div className="relative w-full max-w-md">
-          <div id="qr-reader" className="rounded-lg overflow-hidden border-4 border-brand-500"></div>
+        <div className="relative w-full max-w-[780px]">
+          <div 
+            id="qr-reader" 
+            className="rounded-lg overflow-hidden border-4 border-brand-500"
+            style={{ minHeight: '400px'}}
+          ></div>
           
           {/* Scan Overlay */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-brand-400"></div>
-            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-brand-400"></div>
-            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-brand-400"></div>
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-brand-400"></div>
+            <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-brand-400"></div>
+            <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-brand-400"></div>
+            <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-brand-400"></div>
+            <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-brand-400"></div>
           </div>
         </div>
 
