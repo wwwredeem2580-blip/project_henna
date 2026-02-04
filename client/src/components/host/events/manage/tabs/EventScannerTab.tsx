@@ -13,12 +13,14 @@ import {
   Power,
   PowerOff,
   RefreshCw,
-  Plus
+  Plus,
+  AlertTriangle
 } from 'lucide-react';
 import { scannerService, SessionDetailsResponse, CreateSessionResponse } from '@/lib/api/scanner';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
 import { useNotification } from '@/lib/context/notification';
 import OTPDialog from './scanner/OTPDialog';
+import VerificationResultCard from './scanner/VerificationResultCard';
 
 interface EventScannerTabProps {
   data: HostEventDetailsResponse | null;
@@ -30,6 +32,13 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   const [creating, setCreating] = useState(false);
   const [scannerUrl, setScannerUrl] = useState<string>('');
   const [showOTPDialog, setShowOTPDialog] = useState(false);
+  
+  // Manual verification state
+  const [ticketIdInput, setTicketIdInput] = useState('');
+  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  
   const { showNotification } = useNotification();
 
   const eventId = data?.event?._id;
@@ -145,6 +154,60 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
     return `${Math.floor(seconds / 3600)}h ago`;
   };
+
+  // Manual verification handlers
+  const handleLookupTicket = async () => {
+    if (!ticketIdInput.trim() || !session?.session?._id) return;
+
+    try {
+      setIsLookingUp(true);
+      setVerificationResult(null);
+      
+      const result = await scannerService.lookupTicket(ticketIdInput.trim().toUpperCase(), session.session._id);
+      
+      if (!result.found) {
+        showNotification('error', 'Ticket Not Found', result.message || 'Ticket not found');
+        return;
+      }
+
+      setVerificationResult(result.ticket);
+    } catch (error: any) {
+      showNotification('error', 'Lookup Failed', error.message);
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
+  const handleManualCheckIn = async (notes?: string) => {
+    if (!ticketIdInput.trim() || !session?.session?._id) return;
+
+    try {
+      setIsCheckingIn(true);
+      
+      await scannerService.manualCheckIn(ticketIdInput.trim().toUpperCase(), session.session._id, notes);
+      
+      showNotification('success', 'Check-in Successful', 'Ticket checked in manually');
+      
+      // Refresh verification result
+      await handleLookupTicket();
+      
+      // Clear input
+      setTicketIdInput('');
+    } catch (error: any) {
+      showNotification('error', 'Check-in Failed', error.message);
+    } finally {
+      setIsCheckingIn(false);
+    }
+  };
+
+  const handleDownloadTicketSheet = () => {
+    if (!eventId) return;
+    
+    const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/scanner/event/${eventId}/ticket-sheet`;
+    window.open(downloadUrl, '_blank');
+    showNotification('info', 'Downloading', 'Ticket sheet download started');
+  };
+
 
   if (!canUseScanner) {
     return (
@@ -432,6 +495,87 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
           </div>
         )}
       </div>
+
+      {/* Emergency Manual Verification */}
+      {session && (
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-6 mt-6">
+          <div className="flex items-start gap-3 mb-4">
+            <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
+            <div>
+              <h3 className="text-lg font-[500] text-amber-900 mb-1">
+                🚨 Emergency Manual Verification
+              </h3>
+              <p className="text-sm text-amber-700">
+                Use this if scanners fail or attendee doesn't have QR code. All manual check-ins are logged with full audit trail.
+              </p>
+            </div>
+          </div>
+
+          {/* Ticket Sheet Download */}
+          <div className="bg-white/70 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-[500] text-slate-800 mb-1">📄 Ticket Sheet (PDF)</h4>
+                <p className="text-xs text-slate-600">
+                  Download alphabetically sorted ticket list for offline verification
+                </p>
+              </div>
+              <button
+                onClick={handleDownloadTicketSheet}
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-[500] transition-colors flex items-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Download Sheet
+              </button>
+            </div>
+          </div>
+
+          {/* Ticket ID Lookup */}
+          <div className="bg-white/70 rounded-lg p-4 mb-4">
+            <label className="block text-sm font-[500] text-slate-700 mb-2">
+              Ticket ID Lookup
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={ticketIdInput}
+                onChange={(e) => setTicketIdInput(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === 'Enter' && handleLookupTicket()}
+                placeholder="Enter Ticket ID (e.g., ZNV-GALA-92XK7)"
+                className="flex-1 px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono"
+              />
+              <button
+                onClick={handleLookupTicket}
+                disabled={isLookingUp || !ticketIdInput.trim()}
+                className="px-6 py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 text-white rounded-lg font-[500] transition-colors flex items-center gap-2"
+              >
+                {isLookingUp ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Looking up...
+                  </>
+                ) : (
+                  <>
+                    <QrCode className="w-4 h-4" />
+                    Verify Ticket
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Verification Result */}
+          {verificationResult && (
+            <div className="mt-4">
+              <VerificationResultCard
+                ticket={verificationResult}
+                onCheckIn={handleManualCheckIn}
+                isCheckingIn={isCheckingIn}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* OTP Dialog */}
       {showOTPDialog && session?.session?._id && (

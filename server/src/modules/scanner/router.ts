@@ -386,3 +386,51 @@ router.post('/session/:sessionId/manual-checkin', requireAuth, requireHost, asyn
 });
 
 export default router;
+import { generateTicketSheetService, getTicketSheetService } from './ticketSheetService';
+/**
+ * GET /api/scanner/event/:eventId/ticket-sheet
+ * Get ticket sheet for download
+ * Host only
+ */
+router.get('/event/:eventId/ticket-sheet', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const hostId = (req as any).user?.sub;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const result = await getTicketSheetService(eventId as string, hostId);
+    
+    if (!result.available) {
+      return res.status(404).json(result);
+    }
+
+    // Send PDF file
+    res.download(result?.sheet?.pdfUrl, `ticket-sheet-${eventId}.pdf`);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * POST /api/scanner/event/:eventId/generate-sheet
+ * Generate ticket sheet PDF
+ * Host only
+ */
+router.post('/event/:eventId/generate-sheet', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const hostId = (req as any).user?.sub;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const result = await generateTicketSheetService(eventId as string, hostId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
