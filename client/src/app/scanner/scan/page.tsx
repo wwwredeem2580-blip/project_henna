@@ -43,6 +43,8 @@ export default function ScannerPage() {
   const [scanHistory, setScanHistory] = useState<ScanResult[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [stats, setStats] = useState({ success: 0, failed: 0, total: 0 });
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerInitialized = useRef(false);
@@ -80,11 +82,16 @@ export default function ScannerPage() {
 
   // Define scan callbacks with useCallback to prevent re-renders
   const onScanSuccess = useCallback(async (decodedText: string) => {
-    if (!session) return;
+    if (!session || isPaused) return;
 
-    // Prevent duplicate scans within 2 seconds
-    if (lastScan && Date.now() - lastScan.timestamp.getTime() < 2000) {
-      return;
+    // Pause scanner immediately to prevent multiple scans
+    setIsPaused(true);
+    if (html5QrCodeRef.current) {
+      try {
+        await html5QrCodeRef.current.pause(true);
+      } catch (err) {
+        console.log('Pause error:', err);
+      }
     }
 
     // Vibrate on scan
@@ -122,8 +129,8 @@ export default function ScannerPage() {
         playErrorSound();
       }
 
-      // Auto-clear after 3 seconds
-      setTimeout(() => setLastScan(null), 3000);
+      // Show modal
+      setShowResultModal(true);
     } catch (error) {
       console.error('Scan error:', error);
       const result: ScanResult = {
@@ -134,11 +141,14 @@ export default function ScannerPage() {
         offline: !isOnline
       };
       setLastScan(result);
+      setScanHistory(prev => [result, ...prev].slice(0, 50));
       setStats(prev => ({ ...prev, failed: prev.failed + 1, total: prev.total + 1 }));
       playErrorSound();
-      setTimeout(() => setLastScan(null), 3000);
+      
+      // Show modal
+      setShowResultModal(true);
     }
-  }, [session, lastScan, isOnline]);
+  }, [session, isPaused, isOnline]);
 
   const onScanFailure = useCallback((error: string) => {
     // Silent - scanning continuously
@@ -152,6 +162,21 @@ export default function ScannerPage() {
   const playErrorSound = () => {
     const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
     audio.play().catch(() => {});
+  };
+
+  const handleScanAgain = async () => {
+    setShowResultModal(false);
+    setLastScan(null);
+    setIsPaused(false);
+    
+    // Resume scanner
+    if (html5QrCodeRef.current) {
+      try {
+        await html5QrCodeRef.current.resume();
+      } catch (err) {
+        console.log('Resume error:', err);
+      }
+    }
   };
 
   // Initialize QR scanner
@@ -297,35 +322,54 @@ export default function ScannerPage() {
         </div>
 
         <p className="text-sm text-slate-400 mt-4 text-center">
-          Point camera at QR code to scan
+          {isPaused ? 'Scan paused - Check result below' : 'Point camera at QR code to scan'}
         </p>
-
-        {/* Last Scan Result */}
-        {lastScan && (
-          <div className={`mt-6 w-full max-w-md p-4 rounded-lg border-2 ${
-            lastScan.result === 'success' 
-              ? 'bg-green-900/50 border-green-500' 
-              : 'bg-red-900/50 border-red-500'
-          }`}>
-            <div className="flex items-center gap-3">
-              {lastScan.result === 'success' ? (
-                <CheckCircle className="w-8 h-8 text-green-400" />
-              ) : (
-                <XCircle className="w-8 h-8 text-red-400" />
-              )}
-              <div className="flex-1">
-                <p className="font-semibold">
-                  {lastScan.result === 'success' ? 'Valid Ticket' : 'Invalid Ticket'}
-                </p>
-                <p className="text-sm opacity-90">{lastScan.message}</p>
-                {lastScan.ticketNumber && (
-                  <p className="text-xs opacity-75 mt-1">{lastScan.ticketNumber}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Result Modal */}
+      {showResultModal && lastScan && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-md rounded-2xl p-8 text-center ${
+            lastScan.result === 'success' 
+              ? 'bg-gradient-to-br from-green-500 to-green-600' 
+              : 'bg-gradient-to-br from-red-500 to-red-600'
+          }`}>
+            {/* Icon */}
+            <div className="mb-6">
+              {lastScan.result === 'success' ? (
+                <CheckCircle className="w-24 h-24 text-white mx-auto drop-shadow-lg" />
+              ) : (
+                <XCircle className="w-24 h-24 text-white mx-auto drop-shadow-lg" />
+              )}
+            </div>
+
+            {/* Title */}
+            <h2 className="text-3xl font-bold text-white mb-3">
+              {lastScan.result === 'success' ? 'Valid Ticket!' : 'Invalid Ticket'}
+            </h2>
+
+            {/* Message */}
+            <p className="text-lg text-white/90 mb-2">
+              {lastScan.message}
+            </p>
+
+            {/* Ticket Number */}
+            {lastScan.ticketNumber && (
+              <p className="text-sm text-white/75 font-mono mb-6">
+                {lastScan.ticketNumber}
+              </p>
+            )}
+
+            {/* Scan Again Button */}
+            <button
+              onClick={handleScanAgain}
+              className="w-full bg-white text-slate-900 font-semibold py-4 px-6 rounded-xl hover:bg-slate-100 transition-colors shadow-lg text-lg"
+            >
+              Scan Again
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* History Sidebar */}
       {showHistory && (
