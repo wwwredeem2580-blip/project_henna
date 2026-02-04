@@ -255,165 +255,221 @@ export default function ScannerPage() {
   }
 
   return (
-    <div className="min-h-screen max-w-[768px] mx-auto text-white flex flex-col">
+    <div className="min-h-screen max-w-[768px] mx-auto bg-white text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <header className="p-4">
-        <div className="flex items-center flex-col items-start sm:flex-row sm:justify-between">
+      <header className="p-6 pb-0">
+        <div className="flex items-center flex-col items-start sm:flex-row sm:justify-between gap-4">
           <div>
-            <h1 className="text-lg text-neutral-800 font-[500]">{session.eventTitle}</h1>
-            <p className="text-sm text-neutral-600">{session.deviceName}</p>
+            <h1 className="text-2xl font-[400] tracking-tight text-slate-900">{session.eventTitle}</h1>
+            <p className="text-sm text-slate-400 font-[300] mt-1 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+              {session.deviceName}
+            </p>
           </div>
           <div className="flex items-center gap-3 self-end sm:self-start">
-            <div className={`flex items-center gap-1 text-sm ${isOnline ? 'text-green-400' : 'text-red-400'}`}>
-              {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-[400] ${
+              isOnline ? 'bg-brand-50 text-brand-700' : 'bg-red-50 text-red-600'
+            }`}>
+              {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
               {isOnline ? 'Online' : 'Offline'}
             </div>
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="p-2 text-neutral-600 rounded-lg transition-colors"
+              className="p-2.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
             >
               <History className="w-5 h-5" />
             </button>
             <button
               onClick={handleLogout}
-              className="p-2 text-rose-600 rounded-lg transition-colors"
+              className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
             >
               <LogOut className="w-5 h-5" />
             </button>
           </div>
         </div>
-      </header>
 
-      {/* Stats Bar */}
-      <div className="px-4 py-3">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-[500] text-green-400">{stats.success}</div>
-            <div className="text-xs text-slate-400">Success</div>
-          </div>
-          <div>
-            <div className="text-2xl font-[500] text-red-400">{stats.failed}</div>
-            <div className="text-xs text-slate-400">Failed</div>
-          </div>
-          <div>
-            <div className="text-2xl font-[500] text-blue-400">{stats.total}</div>
-            <div className="text-xs text-slate-400">Total</div>
+        {/* Stats Bar */}
+        <div className="mt-8 p-1 bg-brand-50 rounded-[24px]">
+          <div className="grid grid-cols-3 gap-1">
+            <div className="text-center py-4 rounded-[20px] bg-white m-1">
+              <div className="text-2xl font-[500] text-emerald-500">{stats.success}</div>
+              <div className="text-xs text-slate-400 font-[400] mt-1">Valid</div>
+            </div>
+            <div className="text-center py-4 rounded-[20px] bg-white m-1">
+              <div className="text-2xl font-[500] text-rose-500">{stats.failed}</div>
+              <div className="text-xs text-slate-400 font-[400] mt-1">Invalid</div>
+            </div>
+            <div className="text-center py-4 rounded-[20px] bg-white m-1">
+              <div className="text-2xl font-[500] text-brand-500">{stats.total}</div>
+              <div className="text-xs text-slate-400 font-[400] mt-1">Total Scans</div>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Scanner View */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
-        {/* QR Scanner */}
-        <div className="relative w-full max-w-[780px]">
+      <div className="flex-1 flex flex-col items-center justify-start p-6 relative">
+        <div className="relative w-full max-w-[600px] overflow-hidden rounded-[32px] bg-slate-100">
           <div 
             id="qr-reader" 
-            className="rounded-lg overflow-hidden border-4 border-brand-500"
+            className="overflow-hidden"
             style={{ minHeight: '400px'}}
           ></div>
           
-          {/* Scan Overlay */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-brand-400"></div>
-            <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-brand-400"></div>
-            <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-brand-400"></div>
-            <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-brand-400"></div>
+          {/* Minimal Overlay */}
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div className="w-64 h-64 border border-white/30 rounded-[32px] relative">
+              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-neutral-600 rounded-tl-[12px]"></div>
+              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-neutral-600 rounded-tr-[12px]"></div>
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-neutral-600 rounded-bl-[12px]"></div>
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-neutral-600 rounded-br-[12px]"></div>
+            </div>
+            
+            {/* Status Pill */}
+            <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+               <div className="bg-white/10 text-neutral-600 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full text-sm font-[400]">
+                  {isPaused ? 'Processing...' : 'Scanning active'}
+               </div>
+            </div>
           </div>
         </div>
 
-        <p className="text-sm text-slate-400 mt-4 text-center">
-          {isPaused ? 'Scan paused - Check result below' : 'Point camera at QR code to scan'}
+        <p className="text-sm text-slate-400 mt-6 font-[300] text-center max-w-[768px] mx-auto">
+          Align the QR code within the frame to verify the ticket instantly.
         </p>
       </div>
 
-      {/* Result Modal */}
+      {/* Result Modal - Themed as requested */}
       {showResultModal && lastScan && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className={`w-full max-w-[480px] rounded-2xl p-8 text-center ${
-            lastScan.result === 'success' 
-              ? 'bg-gradient-to-br from-green-500 to-green-600' 
-              : 'bg-gradient-to-br from-red-500 to-red-600'
-          }`}>
-            {/* Icon */}
-            <div className="mb-6">
-              {lastScan.result === 'success' ? (
-                <CheckCircle className="w-24 h-24 text-white mx-auto drop-shadow-lg" />
-              ) : (
-                <XCircle className="w-24 h-24 text-white mx-auto drop-shadow-lg" />
-              )}
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-white/80 backdrop-blur-lg">
+           <div className={`w-full max-w-[400px] rounded-[32px] p-8 relative overflow-hidden ${
+             lastScan.result === 'success' ? 'bg-brand-50' : 'bg-rose-50'
+           }`}>
+              {/* Background Blobs */}
+              <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none opacity-50 ${
+                lastScan.result === 'success' ? 'bg-indigo-500/20' : 'bg-rose-500/20'
+              }`} />
+              <div className={`absolute bottom-0 left-0 w-48 h-48 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none opacity-50 ${
+                lastScan.result === 'success' ? 'bg-emerald-500/20' : 'bg-orange-500/20'
+              }`} />
 
-            {/* Title */}
-            <h2 className="text-3xl font-bold text-white mb-3">
-              {lastScan.result === 'success' ? 'Valid Ticket!' : 'Invalid Ticket'}
-            </h2>
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 ${
+                  lastScan.result === 'success' 
+                    ? 'bg-white text-brand-600 shadow-sm' 
+                    : 'bg-white text-rose-500 shadow-sm'
+                }`}>
+                  {lastScan.result === 'success' ? (
+                    <CheckCircle className="w-10 h-10" strokeWidth={1.5} />
+                  ) : (
+                    <XCircle className="w-10 h-10" strokeWidth={1.5} />
+                  )}
+                </div>
 
-            {/* Message */}
-            <p className="text-lg text-white/90 mb-2">
-              {lastScan.message}
-            </p>
+                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-wider mb-4 ${
+                   lastScan.result === 'success' 
+                   ? 'bg-brand-100 text-brand-700' 
+                   : 'bg-rose-100 text-rose-700'
+                }`}>
+                  {lastScan.result === 'success' ? 'VERIFIED' : 'ACTION REQUIRED'}
+                </span>
 
-            {/* Ticket Number */}
-            {lastScan.ticketNumber && (
-              <p className="text-sm text-white/75 font-mono mb-6">
-                {lastScan.ticketNumber}
-              </p>
-            )}
+                <h2 className="text-2xl text-slate-800 font-[400] mb-2">
+                   {lastScan.result === 'success' ? 'Ticket Valid' : 'Invalid Ticket'}
+                </h2>
+                
+                <p className="text-slate-500 text-sm font-[300] mb-8 leading-relaxed max-w-[260px]">
+                  {lastScan.message}
+                </p>
 
-            {/* Scan Again Button */}
-            <button
-              onClick={handleScanAgain}
-              className="w-full bg-white text-slate-900 font-semibold py-4 px-6 rounded-xl hover:bg-slate-100 transition-colors shadow-lg text-lg"
-            >
-              Scan Again
-            </button>
-          </div>
+                {lastScan.ticketNumber && (
+                   <div className="mb-8 w-full">
+                     <div className="flex items-center justify-between px-4 py-3 bg-white/50 rounded-xl border border-white/50">
+                        <span className="text-xs text-slate-400">Ticket No.</span>
+                        <span className="text-sm font-mono text-slate-600">{lastScan.ticketNumber}</span>
+                     </div>
+                   </div>
+                )}
+
+                <button 
+                  onClick={handleScanAgain}
+                  className={`w-full py-4 text-white font-[500] rounded-xl text-md flex items-center justify-center gap-2 hover:translate-y-[-2px] transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    lastScan.result === 'success' 
+                      ? 'bg-brand-500 focus:ring-brand-500' 
+                      : 'bg-rose-500 focus:ring-rose-500'
+                  }`}
+                >
+                  Scan Next Ticket
+                </button>
+              </div>
+           </div>
         </div>
       )}
 
       {/* History Sidebar */}
       {showHistory && (
-        <div className="fixed inset-y-0 right-0 w-80 bg-white shadow-5xl overflow-y-auto z-50">
-          <div className="p-4 bg-brand-50 flex items-center justify-between">
-            <h2 className="font-[300] text-lg">Scan History</h2>
-            <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-white">
-              ✕
-            </button>
-          </div>
-          <div className="p-4 space-y-2">
-            {scanHistory.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-8">No scans yet</p>
-            ) : (
-              scanHistory.map((scan) => (
-                <div
-                  key={scan.id}
-                  className={`p-3 rounded-lg border ${
-                    scan.result === 'success'
-                      ? 'bg-green-900/20 border-green-700'
-                      : 'bg-red-900/20 border-red-700'
-                  }`}
-                >
-                  <div className="flex items-start gap-2">
-                    {scan.result === 'success' ? (
-                      <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-400 mt-0.5" />
-                    )}
+        <>
+          <div 
+            className="fixed inset-0 bg-slate-900/5 backdrop-blur-sm z-40 transition-opacity" 
+            onClick={() => setShowHistory(false)}
+          />
+          <div className="fixed inset-y-0 right-0 w-full sm:w-[400px] bg-white z-50 p-6 shadow-2xl overflow-y-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-[400] text-slate-900">Scan History</h2>
+              <button 
+                onClick={() => setShowHistory(false)} 
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {scanHistory.length === 0 ? (
+                <div className="text-center py-12">
+                   <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                      <History className="w-8 h-8" strokeWidth={1.5} />
+                   </div>
+                   <p className="text-slate-400 text-sm">No scans recorded yet</p>
+                </div>
+              ) : (
+                scanHistory.map((scan) => (
+                  <div
+                    key={scan.id}
+                    className="p-4 rounded-[20px] bg-slate-50 flex items-center gap-4"
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                      scan.result === 'success' ? 'bg-brand-100 text-brand-600' : 'bg-rose-100 text-rose-600'
+                    }`}>
+                      {scan.result === 'success' ? <CheckCircle size={18} /> : <XCircle size={18} />}
+                    </div>
+                    
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{scan.message}</p>
-                      {scan.ticketNumber && (
-                        <p className="text-xs text-slate-400">{scan.ticketNumber}</p>
-                      )}
-                      <p className="text-xs text-slate-500 mt-1">
-                        {scan.timestamp.toLocaleTimeString()}
+                      <p className={`text-sm font-[500] truncate ${
+                        scan.result === 'success' ? 'text-slate-900' : 'text-rose-600'
+                      }`}>
+                        {scan.message}
                       </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-slate-400 font-mono">
+                          {scan.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {scan.ticketNumber && (
+                          <>
+                            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                            <span className="text-xs text-slate-500 font-mono truncate">
+                              #{scan.ticketNumber.slice(-6)}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

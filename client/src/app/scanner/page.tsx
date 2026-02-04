@@ -83,7 +83,7 @@ function ScannerJoinContent() {
   if (!token) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-[480px] w-full text-center">
+        <div className="bg-brand-50 rounded-2xl p-8 max-w-[480px] w-full text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Smartphone className="w-8 h-8 text-red-600" />
           </div>
@@ -98,7 +98,7 @@ function ScannerJoinContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-[480px] w-full">
+      <div className="bg-brand-50 rounded-2xl p-8 max-w-[480px] w-full">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Smartphone className="w-10 h-10 text-brand-600" />
