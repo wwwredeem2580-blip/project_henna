@@ -11,6 +11,85 @@ import mongoose from 'mongoose';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 /**
+ * Get active scanner session for an event
+ */
+export const getActiveSessionByEventService = async (eventId: string, hostId: string) => {
+  if (!isValidObjectId(eventId)) {
+    throw new CustomError('Invalid event ID', 400);
+  }
+
+  // Find active session for this event
+  const session = await ScannerSession.findOne({
+    eventId: new mongoose.Types.ObjectId(eventId),
+    sessionStatus: 'active'
+  });
+
+  if (!session) {
+    return null; // No active session
+  }
+
+  // Verify ownership
+  if (session.hostId.toString() !== hostId) {
+    throw new CustomError('Unauthorized', 403);
+  }
+
+  // Get active devices
+  const devices = await ScannerDevice.find({ sessionId: session._id })
+    .sort({ createdAt: -1 });
+
+  // Get scan statistics
+  const scanStats = await ScanLog.aggregate([
+    { $match: { sessionId: session._id } },
+    {
+      $group: {
+        _id: '$scanResult',
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const stats = {
+    total: 0,
+    success: 0,
+    duplicate: 0,
+    invalid: 0,
+    expired: 0,
+    cancelled: 0,
+    refunded: 0
+  };
+
+  scanStats.forEach((stat: any) => {
+    stats[stat._id as keyof typeof stats] = stat.count;
+    stats.total += stat.count;
+  });
+
+  // Generate scanner URL
+  const scannerUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/scanner?token=${session.accessToken}`;
+
+  return {
+    session: {
+      _id: session._id,
+      eventId: session.eventId,
+      sessionStatus: session.sessionStatus,
+      maxDevices: session.maxDevices,
+      activeDeviceCount: session.activeDeviceCount,
+      expiresAt: session.expiresAt,
+      createdAt: session.createdAt
+    },
+    devices: devices.map(d => ({
+      _id: d._id,
+      deviceName: d.deviceName,
+      totalScans: d.totalScans,
+      lastSeen: d.lastSeen,
+      isOnline: d.isOnline,
+      createdAt: d.createdAt
+    })),
+    stats,
+    scannerUrl
+  };
+};
+
+/**
  * Create a new scanner session for an event
  */
 export const createScannerSessionService = async (
@@ -79,7 +158,7 @@ export const createScannerSessionService = async (
   await session.save();
 
   // Generate scanner access URL
-  const scannerUrl = `${process.env.SCANNER_APP_URL || 'https://scan.zenvy.com'}/join?token=${accessToken}`;
+  const scannerUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/scanner?token=${accessToken}`;
 
   return {
     success: true,

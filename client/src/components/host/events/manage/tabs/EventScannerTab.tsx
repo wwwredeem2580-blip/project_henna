@@ -35,6 +35,32 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   // Check if event is eligible for scanner (published, live, or ended)
   const canUseScanner = ['published', 'live', 'ended'].includes(eventStatus || '');
 
+  // Load existing session on mount
+  useEffect(() => {
+    const loadExistingSession = async () => {
+      if (!eventId || !canUseScanner) return;
+
+      try {
+        setLoading(true);
+        const existingSession = await scannerService.getActiveSessionByEvent(eventId);
+        
+        if (existingSession) {
+          setSession(existingSession);
+          if (existingSession.scannerUrl) {
+            setScannerUrl(existingSession.scannerUrl);
+          }
+        }
+      } catch (error: any) {
+        // No active session or error - that's okay, show create button
+        console.log('No active session found');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadExistingSession();
+  }, [eventId, canUseScanner]);
+
   // Auto-refresh session details every 5 seconds when active
   useEffect(() => {
     if (session?.session?.sessionStatus === 'active') {

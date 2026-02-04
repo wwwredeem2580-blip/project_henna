@@ -52,6 +52,13 @@ class ScannerService {
   }
 
   /**
+   * Get active scanner session for an event
+   */
+  async getActiveSessionByEvent(eventId: string): Promise<SessionDetailsResponse & { scannerUrl?: string } | null> {
+    return await apiClient.get(`/api/scanner/session/event/${eventId}`);
+  }
+
+  /**
    * Get session details with devices and stats
    */
   async getSessionDetails(sessionId: string): Promise<SessionDetailsResponse> {

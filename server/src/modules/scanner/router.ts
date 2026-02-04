@@ -4,7 +4,8 @@ import {
   joinScannerSessionService,
   verifyTicketScanService,
   getSessionDetailsService,
-  closeScannerSessionService
+  closeScannerSessionService,
+  getActiveSessionByEventService
 } from './service';
 import { syncOfflineScansService } from './syncService';
 import { handleError } from '../../utils/handleError';
@@ -32,6 +33,26 @@ router.post('/session/create', requireAuth, requireHost, async (req, res) => {
 
     const result = await createScannerSessionService(eventId, hostId, maxDevices);
     res.status(201).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * GET /api/scanner/session/event/:eventId
+ * Get active scanner session for an event (Host only)
+ */
+router.get('/session/event/:eventId', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const hostId = (req as any).user?.sub;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const result = await getActiveSessionByEventService(eventId as string, hostId);
+    res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);
   }
