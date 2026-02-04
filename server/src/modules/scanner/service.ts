@@ -545,6 +545,18 @@ export const verifyTicketScanService = async (
     throw new CustomError('Device not found in this session', 404);
   }
 
+  // Check if device is disabled or revoked
+  if (device.status === 'disabled') {
+    throw new CustomError('This device has been disabled. Please contact the event host.', 403);
+  }
+
+  if (device.revokedAt) {
+    throw new CustomError('This device access has been revoked. Please contact the event host.', 403);
+  }
+
+  // Update device activity
+  await device.updateActivity();
+
   // Find ticket by QR code
   const ticket = await Ticket.findOne({ qrCode: qrData });
   if (!ticket) {

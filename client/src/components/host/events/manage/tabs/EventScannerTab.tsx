@@ -64,15 +64,24 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     loadExistingSession();
   }, [eventId, canUseScanner]);
 
-  // Auto-refresh session details every 5 seconds when active
+  // Auto-refresh session details every 3 seconds when session exists
   useEffect(() => {
-    if (session?.session?.sessionStatus === 'active') {
-      const interval = setInterval(() => {
-        fetchSessionDetails(session.session._id);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [session?.session?._id, session?.session?.sessionStatus]);
+    if (!session?.session?._id) return;
+
+    const refreshSession = async () => {
+      try {
+        const details = await scannerService.getSessionDetails(session.session._id);
+        setSession(details);
+      } catch (error: any) {
+        console.error('Failed to refresh session:', error);
+      }
+    };
+
+    // Refresh every 3 seconds
+    const interval = setInterval(refreshSession, 3000);
+    
+    return () => clearInterval(interval);
+  }, [session?.session?._id]);
 
   const fetchSessionDetails = async (sessionId: string) => {
     try {

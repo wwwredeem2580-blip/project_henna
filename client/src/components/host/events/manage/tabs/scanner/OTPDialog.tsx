@@ -56,10 +56,7 @@ export default function OTPDialog({ sessionId, onClose }: OTPDialogProps) {
 
   // Poll to detect OTP usage and auto-regenerate
   useEffect(() => {
-    console.log('[OTP Dialog] Polling effect triggered. OTP:', otp, 'TimeLeft:', timeLeft);
-    
     if (!otp || timeLeft === 0) {
-      console.log('[OTP Dialog] Polling skipped - no OTP or expired');
       return;
     }
 
@@ -67,31 +64,20 @@ export default function OTPDialog({ sessionId, onClose }: OTPDialogProps) {
 
     const checkOTPStatus = async () => {
       if (isGenerating) {
-        console.log('[OTP Dialog] Already generating, skipping check');
         return;
       }
 
       try {
-        console.log('[OTP Dialog] Checking OTP status for session:', sessionId);
         // Check if OTP is still valid by trying to get session details
         const session = await scannerService.getSessionDetails(sessionId);
         
-        console.log('[OTP Dialog] Session data received:', {
-          hasOTP: !!session.session.pairingOTP,
-          otpCode: session.session.pairingOTP?.code,
-          otpUsed: session.session.pairingOTP?.used,
-          currentOTP: otp
-        });
-        
         // If OTP was used (marked as used in backend), generate new one
         if (session.session.pairingOTP?.used && session.session.pairingOTP.code === otp) {
-          console.log('[OTP Dialog] ✅ OTP was used! Generating new one...');
           isGenerating = true;
           setError(''); // Clear any errors
           
           // Generate new OTP
           const result = await scannerService.generateOTP(sessionId);
-          console.log('[OTP Dialog] New OTP generated:', result.otp);
           
           setOtp(result.otp);
           setExpiresAt(new Date(result.expiresAt));
@@ -101,10 +87,7 @@ export default function OTPDialog({ sessionId, onClose }: OTPDialogProps) {
           setShowPairedMessage(true);
           setTimeout(() => setShowPairedMessage(false), 3000);
           
-          console.log('[OTP Dialog] State updated with new OTP');
           isGenerating = false;
-        } else {
-          console.log('[OTP Dialog] OTP not used yet or code mismatch');
         }
       } catch (err: any) {
         // Log errors but don't break polling
@@ -114,14 +97,12 @@ export default function OTPDialog({ sessionId, onClose }: OTPDialogProps) {
     };
 
     // Check every 2 seconds
-    console.log('[OTP Dialog] Starting polling interval (2s)');
     const interval = setInterval(checkOTPStatus, 2000);
     
     // Initial check
     checkOTPStatus();
     
     return () => {
-      console.log('[OTP Dialog] Cleaning up polling interval');
       clearInterval(interval);
     };
   }, [otp, timeLeft, sessionId]);
