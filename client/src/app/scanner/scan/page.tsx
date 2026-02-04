@@ -16,6 +16,7 @@ import {
 import { scannerService } from '@/lib/api/scanner';
 import { scannerDB } from '@/lib/db/scanner-db';
 import type { CachedTicket, QueuedScan } from '@/lib/db/scanner-db';
+import { useNotification } from '@/lib/context/notification';
 
 interface ScanResult {
   id: string;
@@ -50,6 +51,7 @@ export default function ScannerPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [pendingSyncs, setPendingSyncs] = useState(0);
   const [isCaching, setIsCaching] = useState(false);
+  const { showNotification } = useNotification();
   
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerInitialized = useRef(false);
@@ -332,7 +334,11 @@ export default function ScannerPage() {
 
       // Show modal
       setShowResultModal(true);
-    } catch (error) {
+    } catch (error: any) {
+      if(error.status === 403){
+        showNotification('error', 'Scan failed', error?.response?.data?.message || 'Your device has been disabled. Please contact host.');
+        return;
+      }
       console.error('Scan error:', error);
       result = {
         id: Date.now().toString(),
@@ -434,15 +440,15 @@ export default function ScannerPage() {
           .then(() => {
             scannerInitialized.current = false;
             html5QrCodeRef.current = null;
-            router.push('/scanner');
+            router.push('/');
           })
           .catch(() => {
             scannerInitialized.current = false;
             html5QrCodeRef.current = null;
-            router.push('/scanner');
+            router.push('/');
           });
       } else {
-        router.push('/scanner');
+        router.push('/');
       }
     }
   };
