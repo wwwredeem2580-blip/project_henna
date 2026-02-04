@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
 
         // Only redirect if on a protected route
-        const publicRoutes = ['/', '/auth', '/onboarding', '/events', '/learn', '/about', '/events/:id'];
+        const publicRoutes = ['/', '/auth', '/onboarding', '/events', '/learn', '/about', '/events/:id', '/scanner', '/scanner/scan'];
         const isPublicRoute = publicRoutes.some(route =>
           pathname === route || pathname?.startsWith(route + '/')
         );
