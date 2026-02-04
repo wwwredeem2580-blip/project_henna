@@ -90,6 +90,54 @@ export const getActiveSessionByEventService = async (eventId: string, hostId: st
 };
 
 /**
+ * Get all tickets for offline caching
+ */
+export const getTicketsForOfflineCacheService = async (sessionId: string, deviceId: string) => {
+  if (!isValidObjectId(sessionId)) {
+    throw new CustomError('Invalid session ID', 400);
+  }
+
+  // Find session
+  const session = await ScannerSession.findById(sessionId);
+  if (!session) {
+    throw new CustomError('Session not found', 404);
+  }
+
+  if (session.sessionStatus !== 'active') {
+    throw new CustomError('Session is not active', 400);
+  }
+
+  // Verify device belongs to this session
+  const device = await ScannerDevice.findOne({
+    _id: new mongoose.Types.ObjectId(deviceId),
+    sessionId: session._id
+  });
+
+  if (!device) {
+    throw new CustomError('Device not authorized for this session', 403);
+  }
+
+  // Get all valid tickets for this event
+  const tickets = await Ticket.find({
+    eventId: session.eventId,
+    status: { $in: ['valid', 'cancelled', 'refunded'] } // Include all for proper offline validation
+  }).select('ticketNumber ticketType status holderName');
+
+  return {
+    tickets: tickets.map(t => ({
+      ticketId: t._id.toString(),
+      ticketNumber: t.ticketNumber,
+      ticketType: t.ticketType,
+      status: t.status,
+      holderName: t.holderName,
+      eventId: session.eventId.toString()
+    })),
+    eventId: session.eventId.toString(),
+    cachedAt: new Date()
+  };
+};
+
+/**
  * Create a new scanner session for an event
  */
 export const createScannerSessionService = async (

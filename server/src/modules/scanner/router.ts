@@ -5,7 +5,8 @@ import {
   verifyTicketScanService,
   getSessionDetailsService,
   closeScannerSessionService,
-  getActiveSessionByEventService
+  getActiveSessionByEventService,
+  getTicketsForOfflineCacheService
 } from './service';
 import { syncOfflineScansService } from './syncService';
 import { handleError } from '../../utils/handleError';
@@ -52,6 +53,27 @@ router.get('/session/event/:eventId', requireAuth, requireHost, async (req, res)
     }
 
     const result = await getActiveSessionByEventService(eventId as string, hostId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * GET /api/scanner/tickets/:sessionId
+ * Get all tickets for offline caching
+ * Query: deviceId
+ */
+router.get('/tickets/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { deviceId } = req.query;
+
+    if (!deviceId || typeof deviceId !== 'string') {
+      return res.status(400).json({ error: 'Device ID required' });
+    }
+
+    const result = await getTicketsForOfflineCacheService(sessionId, deviceId);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);

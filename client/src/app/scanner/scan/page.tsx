@@ -10,9 +10,12 @@ import {
   WifiOff, 
   LogOut,
   History,
-  Settings
+  Settings,
+  CloudOff
 } from 'lucide-react';
 import { scannerService } from '@/lib/api/scanner';
+import { scannerDB } from '@/lib/db/scanner-db';
+import type { CachedTicket, QueuedScan } from '@/lib/db/scanner-db';
 
 interface ScanResult {
   id: string;
@@ -45,9 +48,27 @@ export default function ScannerPage() {
   const [stats, setStats] = useState({ success: 0, failed: 0, total: 0 });
   const [showResultModal, setShowResultModal] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [pendingSyncs, setPendingSyncs] = useState(0);
+  const [isCaching, setIsCaching] = useState(false);
   
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerInitialized = useRef(false);
+  const dbInitialized = useRef(false);
+
+  // Initialize IndexedDB and load session
+  useEffect(() => {
+    const initDB = async () => {
+      try {
+        await scannerDB.init();
+        dbInitialized.current = true;
+        console.log('IndexedDB initialized');
+      } catch (error) {
+        console.error('Failed to initialize IndexedDB:', error);
+      }
+    };
+
+    initDB();
+  }, []);
 
   // Load session from localStorage
   useEffect(() => {
@@ -66,6 +87,53 @@ export default function ScannerPage() {
     }
   }, [router]);
 
+  // Cache tickets when session is loaded
+  useEffect(() => {
+    if (!session || !dbInitialized.current || !isOnline) return;
+
+    const cacheTickets = async () => {
+      try {
+        setIsCaching(true);
+        console.log('Caching tickets for offline use...');
+        
+        const { tickets } = await scannerService.getTicketsForCache(session.sessionId, session.deviceId);
+        
+        const cachedTickets: CachedTicket[] = tickets.map(t => ({
+          ...t,
+          status: t.status as 'valid' | 'cancelled' | 'refunded',
+          cachedAt: Date.now()
+        }));
+
+        await scannerDB.cacheTickets(cachedTickets);
+        console.log(`Cached ${tickets.length} tickets`);
+      } catch (error) {
+        console.error('Failed to cache tickets:', error);
+      } finally {
+        setIsCaching(false);
+      }
+    };
+
+    cacheTickets();
+  }, [session, isOnline]);
+
+  // Check for pending syncs
+  useEffect(() => {
+    if (!dbInitialized.current) return;
+
+    const checkPendingSyncs = async () => {
+      try {
+        const unsynced = await scannerDB.getUnsyncedScans();
+        setPendingSyncs(unsynced.length);
+      } catch (error) {
+        console.error('Failed to check pending syncs:', error);
+      }
+    };
+
+    checkPendingSyncs();
+    const interval = setInterval(checkPendingSyncs, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Monitor online status
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -79,6 +147,55 @@ export default function ScannerPage() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Auto-sync when connection is restored
+  useEffect(() => {
+    if (!isOnline || !dbInitialized.current || pendingSyncs === 0) return;
+
+    const syncOfflineScans = async () => {
+      try {
+        console.log(`Syncing ${pendingSyncs} offline scans...`);
+        const unsyncedScans = await scannerDB.getUnsyncedScans();
+
+        if (unsyncedScans.length === 0) {
+          setPendingSyncs(0);
+          return;
+        }
+
+        // Sync each scan individually
+        let syncedCount = 0;
+        for (const scan of unsyncedScans) {
+          try {
+            await scannerService.verifyTicket(
+              scan.qrData,
+              scan.accessToken,
+              scan.deviceId
+            );
+            await scannerDB.markScanAsSynced(scan.id);
+            syncedCount++;
+          } catch (error) {
+            console.error(`Failed to sync scan ${scan.id}:`, error);
+            // Continue with next scan
+          }
+        }
+
+        console.log(`Successfully synced ${syncedCount}/${unsyncedScans.length} scans`);
+        
+        // Clean up synced scans
+        await scannerDB.clearSyncedScans();
+        
+        // Update pending count
+        const remaining = await scannerDB.getUnsyncedScans();
+        setPendingSyncs(remaining.length);
+      } catch (error) {
+        console.error('Auto-sync error:', error);
+      }
+    };
+
+    // Delay sync slightly to ensure connection is stable
+    const timeoutId = setTimeout(syncOfflineScans, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [isOnline, pendingSyncs]);
 
   // Define scan callbacks with useCallback to prevent re-renders
   const onScanSuccess = useCallback(async (decodedText: string) => {
@@ -99,24 +216,108 @@ export default function ScannerPage() {
       navigator.vibrate(100);
     }
 
-    try {
-      const response = await scannerService.verifyTicket(
-        decodedText,
-        session.accessToken,
-        session.deviceId
-      );
+    let result: ScanResult;
 
-      const result: ScanResult = {
-        id: Date.now().toString(),
-        timestamp: new Date(),
-        ticketNumber: response.ticket?.ticketNumber,
-        result: response.valid ? 'success' : 
-                response.reason === 'ALREADY_CHECKED_IN' ? 'duplicate' :
-                response.reason === 'TICKET_EXPIRED' ? 'expired' :
-                response.reason?.includes('CANCELLED') ? 'cancelled' : 'invalid',
-        message: response.message,
-        offline: false
-      };
+    try {
+      if (isOnline) {
+        // ONLINE: Verify with server
+        const response = await scannerService.verifyTicket(
+          decodedText,
+          session.accessToken,
+          session.deviceId
+        );
+
+        result = {
+          id: Date.now().toString(),
+          timestamp: new Date(),
+          ticketNumber: response.ticket?.ticketNumber,
+          result: response.valid ? 'success' : 
+                  response.reason === 'ALREADY_CHECKED_IN' ? 'duplicate' :
+                  response.reason === 'TICKET_EXPIRED' ? 'expired' :
+                  response.reason?.includes('CANCELLED') ? 'cancelled' : 'invalid',
+          message: response.message,
+          offline: false
+        };
+
+        // Mark as scanned in local DB for offline duplicate detection (use ticket number as ID)
+        if (response.valid && response.ticket?.ticketNumber) {
+          await scannerDB.markTicketAsScanned(response.ticket.ticketNumber, false);
+        }
+      } else {
+        // OFFLINE: Verify with cached data
+        const ticket = await scannerDB.getTicketByNumber(decodedText);
+
+        if (!ticket) {
+          result = {
+            id: Date.now().toString(),
+            timestamp: new Date(),
+            result: 'invalid',
+            message: 'Ticket not found in offline cache',
+            offline: true
+          };
+        } else {
+          // Check if already scanned
+          const alreadyScanned = await scannerDB.isTicketScanned(ticket.ticketId);
+
+          if (alreadyScanned) {
+            result = {
+              id: Date.now().toString(),
+              timestamp: new Date(),
+              ticketNumber: ticket.ticketNumber,
+              result: 'duplicate',
+              message: 'Ticket already checked in (offline)',
+              offline: true
+            };
+          } else if (ticket.status === 'cancelled') {
+            result = {
+              id: Date.now().toString(),
+              timestamp: new Date(),
+              ticketNumber: ticket.ticketNumber,
+              result: 'cancelled',
+              message: 'Ticket has been cancelled',
+              offline: true
+            };
+          } else if (ticket.status === 'refunded') {
+            result = {
+              id: Date.now().toString(),
+              timestamp: new Date(),
+              ticketNumber: ticket.ticketNumber,
+              result: 'invalid',
+              message: 'Ticket has been refunded',
+              offline: true
+            };
+          } else {
+            // Valid ticket
+            result = {
+              id: Date.now().toString(),
+              timestamp: new Date(),
+              ticketNumber: ticket.ticketNumber,
+              result: 'success',
+              message: `Valid ${ticket.ticketType} ticket (offline)`,
+              offline: true
+            };
+
+            // Mark as scanned
+            await scannerDB.markTicketAsScanned(ticket.ticketId, true);
+
+            // Add to sync queue
+            const queuedScan: QueuedScan = {
+              id: Date.now().toString(),
+              qrData: decodedText,
+              ticketId: ticket.ticketId,
+              scannedAt: Date.now(),
+              deviceId: session.deviceId,
+              accessToken: session.accessToken,
+              result: 'success',
+              message: result.message,
+              ticketNumber: ticket.ticketNumber,
+              synced: false
+            };
+            await scannerDB.addToScanQueue(queuedScan);
+            setPendingSyncs(prev => prev + 1);
+          }
+        }
+      }
 
       setLastScan(result);
       setScanHistory(prev => [result, ...prev].slice(0, 50));
@@ -133,7 +334,7 @@ export default function ScannerPage() {
       setShowResultModal(true);
     } catch (error) {
       console.error('Scan error:', error);
-      const result: ScanResult = {
+      result = {
         id: Date.now().toString(),
         timestamp: new Date(),
         result: 'invalid',
@@ -267,12 +468,30 @@ export default function ScannerPage() {
             </p>
           </div>
           <div className="flex items-center gap-3 self-end sm:self-start">
+            {/* Online/Offline Status */}
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-[400] ${
-              isOnline ? 'bg-brand-50 text-brand-700' : 'bg-red-50 text-red-600'
+              isOnline ? 'bg-brand-50 text-brand-700' : 'bg-orange-50 text-orange-700'
             }`}>
-              {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+              {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <CloudOff className="w-3.5 h-3.5" />}
               {isOnline ? 'Online' : 'Offline'}
             </div>
+
+            {/* Pending Syncs Indicator */}
+            {pendingSyncs > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-[400] bg-amber-50 text-amber-700">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                {pendingSyncs} pending
+              </div>
+            )}
+
+            {/* Caching Indicator */}
+            {isCaching && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-[400] bg-blue-50 text-blue-700">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                Caching...
+              </div>
+            )}
+
             <button
               onClick={() => setShowHistory(!showHistory)}
               className="p-2.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"

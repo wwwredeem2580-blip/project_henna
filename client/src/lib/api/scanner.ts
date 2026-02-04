@@ -114,6 +114,24 @@ class ScannerService {
   }
 
   /**
+   * Get tickets for offline caching
+   */
+  async getTicketsForCache(sessionId: string, deviceId: string): Promise<{
+    tickets: Array<{
+      ticketId: string;
+      ticketNumber: string;
+      ticketType: string;
+      status: string;
+      holderName?: string;
+      eventId: string;
+    }>;
+    eventId: string;
+    cachedAt: Date;
+  }> {
+    return await apiClient.get(`/api/scanner/tickets/${sessionId}?deviceId=${deviceId}`);
+  }
+
+  /**
    * Close a scanner session
    */
   async closeSession(sessionId: string): Promise<{ success: boolean; message: string }> {
