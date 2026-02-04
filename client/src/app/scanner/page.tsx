@@ -82,12 +82,12 @@ function ScannerJoinContent() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-[480px] w-full text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Smartphone className="w-8 h-8 text-red-600" />
           </div>
-          <h1 className="text-2xl font-semibold text-slate-800 mb-2">Invalid Link</h1>
+          <h1 className="text-2xl font-[500] text-slate-800 mb-2">Invalid Link</h1>
           <p className="text-slate-600">
             This scanner link is invalid or has expired. Please request a new link from your event host.
           </p>
@@ -97,13 +97,13 @@ function ScannerJoinContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-[480px] w-full">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Smartphone className="w-10 h-10 text-brand-600" />
           </div>
-          <h1 className="text-2xl font-semibold text-slate-800 mb-2">Join Scanner Session</h1>
+          <h1 className="text-2xl font-[500] text-slate-800 mb-2">Join Scanner Session</h1>
           <p className="text-sm text-slate-600">
             Enter a name for this device to start scanning tickets
           </p>

@@ -255,28 +255,28 @@ export default function ScannerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+    <div className="min-h-screen max-w-[768px] mx-auto text-white flex flex-col">
       {/* Header */}
-      <header className="bg-slate-800 border-b border-slate-700 p-4">
-        <div className="flex items-center justify-between">
+      <header className="p-4">
+        <div className="flex items-center flex-col items-start sm:flex-row sm:justify-between">
           <div>
-            <h1 className="text-lg font-semibold">{session.eventTitle}</h1>
-            <p className="text-sm text-slate-400">{session.deviceName}</p>
+            <h1 className="text-lg text-neutral-800 font-[500]">{session.eventTitle}</h1>
+            <p className="text-sm text-neutral-600">{session.deviceName}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 self-end sm:self-start">
             <div className={`flex items-center gap-1 text-sm ${isOnline ? 'text-green-400' : 'text-red-400'}`}>
               {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
               {isOnline ? 'Online' : 'Offline'}
             </div>
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+              className="p-2 text-neutral-600 rounded-lg transition-colors"
             >
               <History className="w-5 h-5" />
             </button>
             <button
               onClick={handleLogout}
-              className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+              className="p-2 text-rose-600 rounded-lg transition-colors"
             >
               <LogOut className="w-5 h-5" />
             </button>
@@ -285,18 +285,18 @@ export default function ScannerPage() {
       </header>
 
       {/* Stats Bar */}
-      <div className="bg-slate-800 border-b border-slate-700 px-4 py-3">
+      <div className="px-4 py-3">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <div className="text-2xl font-bold text-green-400">{stats.success}</div>
+            <div className="text-2xl font-[500] text-green-400">{stats.success}</div>
             <div className="text-xs text-slate-400">Success</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-red-400">{stats.failed}</div>
+            <div className="text-2xl font-[500] text-red-400">{stats.failed}</div>
             <div className="text-xs text-slate-400">Failed</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-blue-400">{stats.total}</div>
+            <div className="text-2xl font-[500] text-blue-400">{stats.total}</div>
             <div className="text-xs text-slate-400">Total</div>
           </div>
         </div>
@@ -329,7 +329,7 @@ export default function ScannerPage() {
       {/* Result Modal */}
       {showResultModal && lastScan && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className={`w-full max-w-md rounded-2xl p-8 text-center ${
+          <div className={`w-full max-w-[480px] rounded-2xl p-8 text-center ${
             lastScan.result === 'success' 
               ? 'bg-gradient-to-br from-green-500 to-green-600' 
               : 'bg-gradient-to-br from-red-500 to-red-600'
@@ -373,9 +373,9 @@ export default function ScannerPage() {
 
       {/* History Sidebar */}
       {showHistory && (
-        <div className="fixed inset-y-0 right-0 w-80 bg-slate-800 border-l border-slate-700 shadow-2xl overflow-y-auto z-50">
-          <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-            <h2 className="font-semibold">Scan History</h2>
+        <div className="fixed inset-y-0 right-0 w-80 bg-white shadow-5xl overflow-y-auto z-50">
+          <div className="p-4 bg-brand-50 flex items-center justify-between">
+            <h2 className="font-[300] text-lg">Scan History</h2>
             <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-white">
               ✕
             </button>
