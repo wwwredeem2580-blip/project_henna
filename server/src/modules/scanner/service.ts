@@ -138,6 +138,209 @@ export const getTicketsForOfflineCacheService = async (sessionId: string, device
 };
 
 /**
+ * Generate OTP for device pairing
+ */
+export const generatePairingOTPService = async (sessionId: string, hostId: string) => {
+  if (!isValidObjectId(sessionId)) {
+    throw new CustomError('Invalid session ID', 400);
+  }
+
+  const session = await ScannerSession.findById(sessionId);
+  if (!session) {
+    throw new CustomError('Session not found', 404);
+  }
+
+  // Verify ownership
+  if (session.hostId.toString() !== hostId) {
+    throw new CustomError('Unauthorized', 403);
+  }
+
+  if (session.sessionStatus !== 'active') {
+    throw new CustomError('Session is not active', 400);
+  }
+
+  // Generate 6-digit OTP
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  session.pairingOTP = {
+    code: otpCode,
+    expiresAt: otpExpiresAt,
+    used: false
+  };
+
+  await session.save();
+
+  return {
+    success: true,
+    otp: otpCode,
+    expiresAt: otpExpiresAt,
+    validFor: 300 // seconds
+  };
+};
+
+/**
+ * Verify OTP for device pairing
+ */
+export const verifyPairingOTPService = async (accessToken: string, otpCode: string) => {
+  // Find session by access token
+  const session = await ScannerSession.findOne({ accessToken });
+  if (!session) {
+    throw new CustomError('Invalid session', 404);
+  }
+
+  if (session.sessionStatus !== 'active') {
+    throw new CustomError('Session is not active', 400);
+  }
+
+  // Check if OTP exists
+  if (!session.pairingOTP || !session.pairingOTP.code) {
+    throw new CustomError('No OTP generated for this session', 400);
+  }
+
+  // Check if OTP is already used
+  if (session.pairingOTP.used) {
+    throw new CustomError('OTP has already been used', 400);
+  }
+
+  // Check if OTP is expired
+  if (new Date() > session.pairingOTP.expiresAt) {
+    throw new CustomError('OTP has expired', 400);
+  }
+
+  // Verify OTP code
+  if (session.pairingOTP.code !== otpCode) {
+    throw new CustomError('Invalid OTP code', 400);
+  }
+
+  // Mark OTP as used
+  session.pairingOTP.used = true;
+  await session.save();
+
+  return {
+    success: true,
+    message: 'OTP verified successfully',
+    sessionId: session._id.toString(),
+    eventId: session.eventId.toString()
+  };
+};
+
+/**
+ * Disable a device
+ */
+export const disableDeviceService = async (deviceId: string, sessionId: string, hostId: string) => {
+  if (!isValidObjectId(deviceId) || !isValidObjectId(sessionId)) {
+    throw new CustomError('Invalid device or session ID', 400);
+  }
+
+  const session = await ScannerSession.findById(sessionId);
+  if (!session) {
+    throw new CustomError('Session not found', 404);
+  }
+
+  // Verify ownership
+  if (session.hostId.toString() !== hostId) {
+    throw new CustomError('Unauthorized', 403);
+  }
+
+  const device = await ScannerDevice.findOne({
+    _id: new mongoose.Types.ObjectId(deviceId),
+    sessionId: session._id
+  });
+
+  if (!device) {
+    throw new CustomError('Device not found', 404);
+  }
+
+  device.status = 'disabled';
+  await device.save();
+
+  // Decrement active device count
+  session.activeDeviceCount = Math.max(0, session.activeDeviceCount - 1);
+  await session.save();
+
+  return {
+    success: true,
+    message: 'Device disabled successfully'
+  };
+};
+
+/**
+ * Force logout a device (revoke access)
+ */
+export const forceLogoutDeviceService = async (deviceId: string, sessionId: string, hostId: string) => {
+  if (!isValidObjectId(deviceId) || !isValidObjectId(sessionId)) {
+    throw new CustomError('Invalid device or session ID', 400);
+  }
+
+  const session = await ScannerSession.findById(sessionId);
+  if (!session) {
+    throw new CustomError('Session not found', 404);
+  }
+
+  // Verify ownership
+  if (session.hostId.toString() !== hostId) {
+    throw new CustomError('Unauthorized', 403);
+  }
+
+  const device = await ScannerDevice.findOne({
+    _id: new mongoose.Types.ObjectId(deviceId),
+    sessionId: session._id
+  });
+
+  if (!device) {
+    throw new CustomError('Device not found', 404);
+  }
+
+  device.status = 'disabled';
+  device.revokedAt = new Date();
+  await device.save();
+
+  // Decrement active device count
+  session.activeDeviceCount = Math.max(0, session.activeDeviceCount - 1);
+  await session.save();
+
+  return {
+    success: true,
+    message: 'Device logged out successfully'
+  };
+};
+
+/**
+ * Update device status (battery, gate, last scan)
+ */
+export const updateDeviceStatusService = async (
+  deviceId: string,
+  updates: { battery?: number; gate?: string; lastScanAt?: Date }
+) => {
+  if (!isValidObjectId(deviceId)) {
+    throw new CustomError('Invalid device ID', 400);
+  }
+
+  const device = await ScannerDevice.findById(deviceId);
+  if (!device) {
+    throw new CustomError('Device not found', 404);
+  }
+
+  if (updates.battery !== undefined) {
+    device.battery = updates.battery;
+  }
+  if (updates.gate !== undefined) {
+    device.gate = updates.gate;
+  }
+  if (updates.lastScanAt !== undefined) {
+    device.lastScanAt = updates.lastScanAt;
+  }
+
+  await device.save();
+
+  return {
+    success: true,
+    message: 'Device status updated'
+  };
+};
+
+/**
  * Create a new scanner session for an event
  */
 export const createScannerSessionService = async (
@@ -536,7 +739,8 @@ export const getSessionDetailsService = async (sessionId: string, hostId: string
       maxDevices: session.maxDevices,
       activeDeviceCount: session.activeDeviceCount,
       expiresAt: session.expiresAt,
-      createdAt: session.createdAt
+      createdAt: session.createdAt,
+      pairingOTP: session.pairingOTP // Include OTP status for auto-refresh
     },
     devices: devices.map(d => ({
       _id: d._id,
@@ -544,7 +748,9 @@ export const getSessionDetailsService = async (sessionId: string, hostId: string
       totalScans: d.totalScans,
       lastSeen: d.lastSeen,
       isOnline: d.isOnline,
-      createdAt: d.createdAt
+      createdAt: d.createdAt,
+      status: d.status,
+      revokedAt: d.revokedAt
     })),
     stats
   };

@@ -9,6 +9,11 @@ export interface ScannerSession {
   activeDeviceCount: number;
   expiresAt: string;
   createdAt: string;
+  pairingOTP?: {
+    code: string;
+    expiresAt: Date;
+    used: boolean;
+  };
 }
 
 export interface ScannerDevice {
@@ -18,6 +23,8 @@ export interface ScannerDevice {
   lastSeen: string;
   isOnline: boolean;
   createdAt: string;
+  status?: 'active' | 'disabled';
+  revokedAt?: string;
 }
 
 export interface ScanStats {
@@ -129,6 +136,67 @@ class ScannerService {
     cachedAt: Date;
   }> {
     return await apiClient.get(`/api/scanner/tickets/${sessionId}?deviceId=${deviceId}`);
+  }
+
+  /**
+   * Generate OTP for device pairing
+   */
+  async generateOTP(sessionId: string): Promise<{
+    success: boolean;
+    otp: string;
+    expiresAt: Date;
+    validFor: number;
+  }> {
+    return await apiClient.post(`/api/scanner/session/${sessionId}/generate-otp`, {});
+  }
+
+  /**
+   * Verify OTP before joining session
+   */
+  async verifyOTP(accessToken: string, otpCode: string): Promise<{
+    success: boolean;
+    message: string;
+    sessionId: string;
+    eventId: string;
+  }> {
+    return await apiClient.post('/api/scanner/session/verify-otp', {
+      accessToken,
+      otpCode
+    });
+  }
+
+  /**
+   * Disable a device
+   */
+  async disableDevice(deviceId: string, sessionId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    return await apiClient.put(`/api/scanner/device/${deviceId}/disable`, { sessionId });
+  }
+
+  /**
+   * Force logout a device
+   */
+  async forceLogoutDevice(deviceId: string, sessionId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    return await apiClient.post(`/api/scanner/device/${deviceId}/logout`, { sessionId });
+  }
+
+  /**
+   * Update device status (battery, gate, last scan)
+   */
+  async updateDeviceStatus(deviceId: string, updates: {
+    battery?: number;
+    gate?: string;
+    lastScanAt?: Date;
+  }): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    return await apiClient.put(`/api/scanner/device/${deviceId}/status`, updates);
   }
 
   /**

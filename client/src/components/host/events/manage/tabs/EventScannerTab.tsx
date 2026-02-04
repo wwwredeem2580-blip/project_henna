@@ -12,11 +12,13 @@ import {
   ExternalLink,
   Power,
   PowerOff,
-  RefreshCw
+  RefreshCw,
+  Plus
 } from 'lucide-react';
 import { scannerService, SessionDetailsResponse, CreateSessionResponse } from '@/lib/api/scanner';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
 import { useNotification } from '@/lib/context/notification';
+import OTPDialog from './scanner/OTPDialog';
 
 interface EventScannerTabProps {
   data: HostEventDetailsResponse | null;
@@ -27,6 +29,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [scannerUrl, setScannerUrl] = useState<string>('');
+  const [showOTPDialog, setShowOTPDialog] = useState(false);
   const { showNotification } = useNotification();
 
   const eventId = data?.event?._id;
@@ -257,7 +260,16 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
                 <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
               </a>
             </div>
-            <p className="text-xs text-brand-600 mt-2">Share this link with your staff to start scanning tickets</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-brand-600">Share this link with your staff to start scanning tickets</p>
+              <button
+                onClick={() => setShowOTPDialog(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-100 rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Device
+              </button>
+            </div>
           </div>
         )}
 
@@ -295,45 +307,99 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
       </div>
 
       {/* Active Devices */}
-      <div className="bg-brand-50 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white rounded-lg border border-slate-200">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <h3 className="text-lg font-[400] text-slate-800">Active Devices</h3>
           <span className="text-sm text-slate-500">
-            {devices.filter(d => d.isOnline).length} / {sessionData.maxDevices} online
+            {devices.filter(d => d.isOnline && d.status !== 'disabled').length} / {sessionData.maxDevices} online
           </span>
         </div>
 
-        {devices.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">
+        {devices.filter(d => d.status !== 'disabled').length === 0 ? (
+          <div className="text-center py-12 text-slate-500">
             <Smartphone className="w-12 h-12 text-slate-300 mx-auto mb-2" />
             <p className="text-sm">No devices connected yet</p>
             <p className="text-xs mt-1">Share the scanner link with your staff</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {devices.map((device) => (
+          <div className="divide-y divide-slate-100">
+            {devices.filter(d => d.status !== 'disabled').map((device) => (
               <div
                 key={device._id}
-                className="flex items-center justify-between p-4 bg-slate-50 rounded-lg"
+                className="p-4 hover:bg-slate-50 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${device.isOnline ? 'bg-green-500' : 'bg-slate-300'}`} />
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">{device.deviceName}</p>
-                    <p className="text-xs text-slate-500">
-                      {device.isOnline ? 'Online' : 'Offline'} • Last seen {formatTimeAgo(device.lastSeen)}
-                    </p>
+                <div className="flex items-start justify-between gap-4">
+                  {/* Device Info */}
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className={`w-2 h-2 rounded-full mt-1.5 ${device.isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-medium text-slate-800 truncate">{device.deviceName}</p>
+                        {device.isOnline && (
+                          <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                            Online
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                        <span>Last seen {formatTimeAgo(device.lastSeen)}</span>
+                        <span>•</span>
+                        <span className="font-semibold text-slate-700">{device.totalScans} scans</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-slate-800">{device.totalScans}</p>
-                  <p className="text-xs text-slate-500">scans</p>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Disable ${device.deviceName}? This will prevent it from scanning.`)) {
+                          try {
+                            await scannerService.disableDevice(device._id, sessionData._id);
+                            showNotification('success', 'Device Disabled', `${device.deviceName} has been disabled`);
+                            fetchSessionDetails(sessionData._id);
+                          } catch (err: any) {
+                            showNotification('error', 'Failed to Disable', err.message);
+                          }
+                        }
+                      }}
+                      className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                      title="Disable device"
+                    >
+                      <PowerOff className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Force logout ${device.deviceName}? This will revoke access immediately.`)) {
+                          try {
+                            await scannerService.forceLogoutDevice(device._id, sessionData._id);
+                            showNotification('success', 'Device Logged Out', `${device.deviceName} has been logged out`);
+                            fetchSessionDetails(sessionData._id);
+                          } catch (err: any) {
+                            showNotification('error', 'Failed to Logout', err.message);
+                          }
+                        }
+                      }}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Force logout"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* OTP Dialog */}
+      {showOTPDialog && session?.session?._id && (
+        <OTPDialog
+          sessionId={session.session._id}
+          onClose={() => setShowOTPDialog(false)}
+        />
+      )}
     </div>
   );
 }

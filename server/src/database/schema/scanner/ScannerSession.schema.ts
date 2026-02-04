@@ -61,6 +61,22 @@ const scannerSessionSchema = new mongoose.Schema({
     required: true
   }, // Event end + 3 hours
 
+  // OTP for device pairing
+  pairingOTP: {
+    code: {
+      type: String,
+      default: null
+    },
+    expiresAt: {
+      type: Date,
+      default: null
+    },
+    used: {
+      type: Boolean,
+      default: false
+    }
+  },
+
   createdAt: {
     type: Date,
     default: Date.now

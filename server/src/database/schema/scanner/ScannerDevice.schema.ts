@@ -26,6 +26,37 @@ const scannerDeviceSchema = new mongoose.Schema({
     required: true
   }, // Browser user agent for basic fingerprinting
 
+  // DEVICE MANAGEMENT
+  status: {
+    type: String,
+    enum: ['active', 'disabled'],
+    default: 'active',
+    required: true
+  },
+
+  battery: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: null
+  }, // Battery percentage (0-100)
+
+  gate: {
+    type: String,
+    default: null,
+    trim: true
+  }, // Assigned gate/entrance (e.g., "Gate A", "Main Entrance")
+
+  lastScanAt: {
+    type: Date,
+    default: null
+  }, // Timestamp of last successful scan
+
+  revokedAt: {
+    type: Date,
+    default: null
+  }, // Timestamp when device was force logged out
+
   // ACTIVITY TRACKING
   lastSeen: {
     type: Date,

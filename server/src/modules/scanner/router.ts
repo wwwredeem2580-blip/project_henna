@@ -6,7 +6,12 @@ import {
   getSessionDetailsService,
   closeScannerSessionService,
   getActiveSessionByEventService,
-  getTicketsForOfflineCacheService
+  getTicketsForOfflineCacheService,
+  generatePairingOTPService,
+  verifyPairingOTPService,
+  disableDeviceService,
+  forceLogoutDeviceService,
+  updateDeviceStatusService
 } from './service';
 import { syncOfflineScansService } from './syncService';
 import { handleError } from '../../utils/handleError';
@@ -67,13 +72,53 @@ router.get('/session/event/:eventId', requireAuth, requireHost, async (req, res)
 router.get('/tickets/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { deviceId } = req.query;
+    const deviceId = req.query.deviceId as string;
 
     if (!deviceId || typeof deviceId !== 'string') {
       return res.status(400).json({ error: 'Device ID required' });
     }
 
     const result = await getTicketsForOfflineCacheService(sessionId, deviceId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * POST /api/scanner/session/:sessionId/generate-otp
+ * Generate OTP for device pairing (Host only)
+ */
+router.post('/session/:sessionId/generate-otp', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const hostId = (req as any).user?.sub;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const result = await generatePairingOTPService(sessionId as string, hostId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * POST /api/scanner/session/verify-otp
+ * Verify OTP before joining session (Public)
+ * Body: { accessToken, otpCode }
+ */
+router.post('/session/verify-otp', async (req, res) => {
+  try {
+    const { accessToken, otpCode } = req.body;
+
+    if (!accessToken || !otpCode) {
+      return res.status(400).json({ error: 'Access token and OTP code required' });
+    }
+
+    const result = await verifyPairingOTPService(accessToken, otpCode);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);
@@ -155,6 +200,80 @@ router.post('/session/:sessionId/close', requireAuth, requireHost, async (req, r
     }
 
     const result = await closeScannerSessionService(sessionId as string, hostId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * PUT /api/scanner/device/:deviceId/disable
+ * Disable a device (Host only)
+ * Body: { sessionId }
+ */
+router.put('/device/:deviceId/disable', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const { sessionId } = req.body;
+    const hostId = (req as any).user?.sub;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'sessionId is required' });
+    }
+
+    const result = await disableDeviceService(deviceId as string, sessionId, hostId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * POST /api/scanner/device/:deviceId/logout
+ * Force logout a device (Host only)
+ * Body: { sessionId }
+ */
+router.post('/device/:deviceId/logout', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const { sessionId } = req.body;
+    const hostId = (req as any).user?.sub;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'sessionId is required' });
+    }
+
+    const result = await forceLogoutDeviceService(deviceId as string, sessionId, hostId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * PUT /api/scanner/device/:deviceId/status
+ * Update device status (Device updates own status)
+ * Body: { battery?, gate?, lastScanAt? }
+ */
+router.put('/device/:deviceId/status', async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const { battery, gate, lastScanAt } = req.body;
+
+    const updates: any = {};
+    if (battery !== undefined) updates.battery = battery;
+    if (gate !== undefined) updates.gate = gate;
+    if (lastScanAt !== undefined) updates.lastScanAt = new Date(lastScanAt);
+
+    const result = await updateDeviceStatusService(deviceId, updates);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);
