@@ -3,9 +3,12 @@ import {
   getTicketsService,
   updateTicketStatusService,
   manualCheckInService,
-  getEventTicketsService
+  getEventTicketsService,
+  verifyTicketService
 } from './service';
 import { handleError } from '../../../utils/handleError';
+import CustomError from '../../../utils/CustomError';
+import { isValidObjectId } from '../../../utils/isValidObjectId';
 
 const router = Router();
 
@@ -92,6 +95,27 @@ router.get('/event/:eventId', async (req, res) => {
 
     const result = await getEventTicketsService(eventId, cursor, limit);
     res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+router.post('/verify/:eventId', async (req, res) => {
+  try {
+    if(!req.body || !req.body.qrData){
+      throw new CustomError('Invalid request body', 400);
+    }
+    const { qrData } = req.body;
+    const { eventId } = req.params;
+
+    if(!isValidObjectId(eventId as string)) {
+      throw new CustomError('Invalid event ID', 400);
+    }
+
+    // Call service layer
+    const result = await verifyTicketService(qrData, eventId as string);
+
+    res.json(result);
   } catch (error: any) {
     return handleError(error, res);
   }

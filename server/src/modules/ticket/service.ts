@@ -1,65 +1,6 @@
 import mongoose from "mongoose";
 import { Ticket } from '../../database/ticket/ticket';
 
-export const verifyTicketService = async (qrData: string, eventId: string) => {
-  const ticket = await Ticket.findOne({ qrCode: qrData });
-  if (!ticket) {
-    return { valid: false, reason: "INVALID_QR" };
-  }
-
-  if (ticket.status !== "valid") {
-    return { valid: false, reason: "TICKET_INVALID" };
-  }
-
-  if (ticket.eventId.toString() !== eventId) {
-    return { valid: false, reason: "EVENT_MISMATCH" };
-  }
-
-  if (ticket.validUntil && new Date() > new Date(ticket.validUntil)) {
-    return { valid: false, reason: "TICKET_EXPIRED" };
-  }
-  if (ticket.checkInStatus === "checked_in") {
-    return {
-      valid: false,
-      reason: "ALREADY_USED",
-      checkedInAt: ticket.checkedInAt
-    };
-  }
-
-  const updated = await Ticket.findOneAndUpdate(
-    {
-      _id: ticket._id,
-      checkInStatus: "not_checked_in"
-    },
-    {
-      $set: {
-        checkInStatus: "checked_in",
-        status: "used",
-        checkedInAt: new Date()
-      }
-    },
-    { new: true }
-  );
-
-  if (!updated) {
-    return {
-      valid: false,
-      reason: "RACE_CONDITION"
-    };
-  }
-
-  // 6️⃣ Success response
-  return {
-    valid: true,
-    ticketNumber: updated.ticketNumber,
-    ticketType: updated.ticketType,
-    userId: updated.userId,
-    eventTitle: updated.eventTitle,
-    checkedInAt: updated.checkedInAt
-  };
-};
-
-
 export const getTicketsService = async (userId: string) => {
   const tickets = await Ticket.aggregate([
     { $match: { userId: new mongoose.Types.ObjectId(userId) } },
