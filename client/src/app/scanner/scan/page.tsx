@@ -424,7 +424,7 @@ export default function ScannerPage() {
           });
       }
     };
-  }, [session, onScanSuccess, onScanFailure]);
+  }, [session]);
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout? You will need to rejoin the session.')) {
