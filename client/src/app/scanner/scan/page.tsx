@@ -122,7 +122,7 @@ export default function ScannerPage() {
     };
 
     cacheTickets();
-  }, [session, isOnline]);
+  }, [session, isOnline, dbInitialized]);
 
   // Check for pending syncs
   useEffect(() => {
