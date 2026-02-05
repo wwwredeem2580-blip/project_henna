@@ -149,7 +149,7 @@ function generatePDFBuffer(
       .fontSize(12)
       .font('Helvetica')
       .text(`Date: ${new Date(event.startDate).toLocaleDateString()}`, { align: 'center' })
-      .text(`Venue: ${event.location.venue}`, { align: 'center' })
+      .text(`Venue: ${event.venue?.name}`, { align: 'center' })
       .text(`Total Tickets: ${totalTickets}`, { align: 'center' })
       .moveDown(1);
 
@@ -164,8 +164,8 @@ function generatePDFBuffer(
     doc
       .fontSize(10)
       .font('Helvetica-Bold')
-      .text('Ticket Number', 50, doc.y, { width: 250, continued: true })
-      .text('Type', 300, doc.y, { width: 245 })
+      .text('Ticket Number', 50, doc.y, { width: 400, continued: true })
+      .text('Type', 460, doc.y, { width: 135 })
       .moveDown(0.5);
 
     doc
@@ -222,8 +222,8 @@ function generatePDFBuffer(
             doc
               .fontSize(10)
               .font('Helvetica-Bold')
-              .text('Ticket Number', 50, doc.y, { width: 250, continued: true })
-              .text('Type', 300, doc.y, { width: 245 })
+              .text('Ticket Number', 50, doc.y, { width: 400, continued: true })
+              .text('Type', 460, doc.y, { width: 135 })
               .moveDown(0.5);
 
             doc.font('Helvetica').fontSize(9);
@@ -231,8 +231,8 @@ function generatePDFBuffer(
 
           const yPos = doc.y;
           doc
-            .text(ticket.ticketNumber, 50, yPos, { width: 250 })
-            .text(ticket.ticketType, 300, yPos, { width: 245 });
+            .text(ticket.ticketNumber, 50, yPos, { width: 400 })
+            .text(ticket.ticketType, 460, yPos, { width: 135 });
 
           doc.moveDown(0.3);
         });

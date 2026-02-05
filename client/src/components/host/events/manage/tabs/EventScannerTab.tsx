@@ -685,7 +685,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
           </div>
 
           {/* Ticket Sheet Download - Only show if event starts within 24 hours */}
-          {isWithin24Hours && (
+          {/* {isWithin24Hours && (
           <div className="bg-white/70 rounded-lg p-4 mb-4">
             <div className="flex items-center justify-between">
               <div>
@@ -703,7 +703,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
               </button>
             </div>
           </div>
-          )}
+          )} */}
 
           {/* Ticket ID Lookup */}
           <div className="bg-white/70 rounded-lg p-4 mb-4">
