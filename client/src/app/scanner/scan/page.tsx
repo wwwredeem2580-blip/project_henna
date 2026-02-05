@@ -52,6 +52,7 @@ export default function ScannerPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [pendingSyncs, setPendingSyncs] = useState(0);
   const [isCaching, setIsCaching] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false); // Sync lock to prevent concurrent syncs
   const { showNotification } = useNotification();
   
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
@@ -160,23 +161,59 @@ export default function ScannerPage() {
 
   // Auto-sync when connection is restored
   useEffect(() => {
-    if (!isOnline || !dbInitialized.current || pendingSyncs === 0) return;
+    if (!isOnline || !dbInitialized.current || pendingSyncs === 0 || isSyncing) return;
 
     const syncOfflineScans = async () => {
+      // Prevent concurrent syncs
+      if (isSyncing) {
+        console.log('⏸️ Sync already in progress, skipping...');
+        return;
+      }
+
+      setIsSyncing(true);
+
       try {
-        console.log(`Syncing ${pendingSyncs} offline scans...`);
+        // Validate session before syncing
+        if (!session || !session.accessToken) {
+          console.error('❌ No valid session, cannot sync');
+          setIsSyncing(false);
+          return;
+        }
+
+        // Check if session is still valid (not expired)
+        const sessionExpiry = new Date(session.expiresAt);
+        if (sessionExpiry < new Date()) {
+          console.error('❌ Session expired, cannot sync offline scans');
+          showNotification('error', 'Session Expired', 'Please rejoin the scanner session to sync offline scans');
+          setIsSyncing(false);
+          return;
+        }
+
+        console.log(`🔄 Syncing ${pendingSyncs} offline scans...`);
         const unsyncedScans = await scannerDB.getUnsyncedScans();
 
         if (unsyncedScans.length === 0) {
           setPendingSyncs(0);
+          setIsSyncing(false);
           return;
         }
 
-        // Sync each scan individually
+        const MAX_RETRIES = 3;
         let syncedCount = 0;
         let duplicateCount = 0;
+        let failedCount = 0;
         
         for (const scan of unsyncedScans) {
+          const retryCount = scan.retryCount || 0;
+          
+          // Check retry limit
+          if (retryCount >= MAX_RETRIES) {
+            console.error(`❌ Scan ${scan.id} exceeded max retries (${MAX_RETRIES}), marking as failed`);
+            await scannerDB.markScanAsFailed(scan.id);
+            failedCount++;
+            continue;
+          }
+
           try {
             await scannerService.verifyTicket(
               scan.qrData,
@@ -188,17 +225,18 @@ export default function ScannerPage() {
           } catch (error: any) {
             // If ticket was already checked in, mark as synced (not an error)
             if (error.message?.includes('ALREADY_CHECKED_IN') || error.message?.includes('already checked in')) {
-              console.log(`Scan ${scan.id} already synced (duplicate), marking as complete`);
+              console.log(`✅ Scan ${scan.id} already synced (duplicate), marking as complete`);
               await scannerDB.markScanAsSynced(scan.id);
               duplicateCount++;
             } else {
-              console.error(`Failed to sync scan ${scan.id}:`, error);
-              // Continue with next scan - don't block on failures
+              console.error(`⚠️ Failed to sync scan ${scan.id} (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error.message);
+              // Increment retry count for next attempt
+              await scannerDB.incrementRetryCount(scan.id);
             }
           }
         }
 
-        console.log(`Successfully synced ${syncedCount}/${unsyncedScans.length} scans (${duplicateCount} duplicates)`);
+        console.log(`✅ Sync complete: ${syncedCount} synced, ${duplicateCount} duplicates, ${failedCount} failed`);
         
         // Clean up synced scans
         await scannerDB.clearSyncedScans();
@@ -206,15 +244,21 @@ export default function ScannerPage() {
         // Update pending count
         const remaining = await scannerDB.getUnsyncedScans();
         setPendingSyncs(remaining.length);
+
+        if (failedCount > 0) {
+          showNotification('error', 'Sync Incomplete', `${failedCount} scan(s) failed after ${MAX_RETRIES} attempts`);
+        }
       } catch (error) {
-        console.error('Auto-sync error:', error);
+        console.error('❌ Auto-sync error:', error);
+      } finally {
+        setIsSyncing(false);
       }
     };
 
     // Delay sync slightly to ensure connection is stable
     const timeoutId = setTimeout(syncOfflineScans, 2000);
     return () => clearTimeout(timeoutId);
-  }, [isOnline, pendingSyncs]);
+  }, [isOnline, pendingSyncs, isSyncing, session]);
 
   // Define scan callbacks with useCallback to prevent re-renders
   const onScanSuccess = useCallback(async (decodedText: string) => {
