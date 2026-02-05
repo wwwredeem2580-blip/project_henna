@@ -139,6 +139,9 @@ export default function ScannerPage() {
 
   // Monitor online status
   useEffect(() => {
+    // Set initial state from navigator.onLine
+    setIsOnline(navigator.onLine);
+    
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     
@@ -223,29 +226,111 @@ export default function ScannerPage() {
 
     try {
       if (isOnline) {
-        // ONLINE: Verify with server
-        const response = await scannerService.verifyTicket(
-          decodedText,
-          session.accessToken,
-          session.deviceId
-        );
+        // ONLINE: Try to verify with server
+        try {
+          const response = await scannerService.verifyTicket(
+            decodedText,
+            session.accessToken,
+            session.deviceId
+          );
 
-        result = {
-          id: Date.now().toString(),
-          timestamp: new Date(),
-          ticketNumber: response.ticket?.ticketNumber,
-          result: response.valid ? 'success' : 
-                  response.reason === 'ALREADY_CHECKED_IN' ? 'duplicate' :
-                  response.reason === 'TICKET_EXPIRED' ? 'expired' :
-                  response.reason?.includes('CANCELLED') ? 'cancelled' : 'invalid',
-          message: response.message,
-          offline: false,
-          wristbandColor: response.ticket?.wristbandColor
-        };
+          result = {
+            id: Date.now().toString(),
+            timestamp: new Date(),
+            ticketNumber: response.ticket?.ticketNumber,
+            result: response.valid ? 'success' : 
+                    response.reason === 'ALREADY_CHECKED_IN' ? 'duplicate' :
+                    response.reason === 'TICKET_EXPIRED' ? 'expired' :
+                    response.reason?.includes('CANCELLED') ? 'cancelled' : 'invalid',
+            message: response.message,
+            offline: false,
+            wristbandColor: response.ticket?.wristbandColor
+          };
 
-        // Mark as scanned in local DB for offline duplicate detection (use ticket number as ID)
-        if (response.valid && response.ticket?.ticketNumber) {
-          await scannerDB.markTicketAsScanned(response.ticket.ticketNumber, false);
+          // Mark as scanned in local DB for offline duplicate detection (use ticket number as ID)
+          if (response.valid && response.ticket?.ticketNumber) {
+            await scannerDB.markTicketAsScanned(response.ticket.ticketNumber, false);
+          }
+        } catch (apiError: any) {
+          // Network error - fallback to offline mode
+          console.warn('API call failed, falling back to offline mode:', apiError);
+          
+          // Temporarily set offline
+          setIsOnline(false);
+          
+          // Use offline verification
+          const ticket = await scannerDB.getTicketByNumber(decodedText);
+
+          if (!ticket) {
+            result = {
+              id: Date.now().toString(),
+              timestamp: new Date(),
+              result: 'invalid',
+              message: 'Network error - Ticket not found in offline cache',
+              offline: true
+            };
+          } else {
+            // Check if already scanned
+            const alreadyScanned = await scannerDB.isTicketScanned(ticket.ticketId);
+
+            if (alreadyScanned) {
+              result = {
+                id: Date.now().toString(),
+                timestamp: new Date(),
+                ticketNumber: ticket.ticketNumber,
+                result: 'duplicate',
+                message: 'Ticket already checked in (offline)',
+                offline: true
+              };
+            } else if (ticket.status === 'cancelled') {
+              result = {
+                id: Date.now().toString(),
+                timestamp: new Date(),
+                ticketNumber: ticket.ticketNumber,
+                result: 'cancelled',
+                message: 'Ticket has been cancelled',
+                offline: true
+              };
+            } else if (ticket.status === 'refunded') {
+              result = {
+                id: Date.now().toString(),
+                timestamp: new Date(),
+                ticketNumber: ticket.ticketNumber,
+                result: 'invalid',
+                message: 'Ticket has been refunded',
+                offline: true
+              };
+            } else {
+              // Valid ticket
+              result = {
+                id: Date.now().toString(),
+                timestamp: new Date(),
+                ticketNumber: ticket.ticketNumber,
+                result: 'success',
+                message: `Valid ${ticket.ticketType} ticket (offline - network error)`,
+                offline: true
+              };
+
+              // Mark as scanned
+              await scannerDB.markTicketAsScanned(ticket.ticketId, true);
+
+              // Add to sync queue
+              const queuedScan: QueuedScan = {
+                id: Date.now().toString(),
+                qrData: decodedText,
+                ticketId: ticket.ticketId,
+                scannedAt: Date.now(),
+                deviceId: session.deviceId,
+                accessToken: session.accessToken,
+                result: 'success',
+                message: result.message,
+                ticketNumber: ticket.ticketNumber,
+                synced: false
+              };
+              await scannerDB.addToScanQueue(queuedScan);
+              setPendingSyncs(prev => prev + 1);
+            }
+          }
         }
       } else {
         // OFFLINE: Verify with cached data
