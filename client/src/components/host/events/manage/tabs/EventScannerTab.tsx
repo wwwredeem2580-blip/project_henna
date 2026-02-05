@@ -14,7 +14,10 @@ import {
   PowerOff,
   RefreshCw,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  Loader2,
+  Download,
+  AlertCircle
 } from 'lucide-react';
 import { scannerService, SessionDetailsResponse, CreateSessionResponse } from '@/lib/api/scanner';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
@@ -38,6 +41,14 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  
+  // PDF download state
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [lastDownloadInfo, setLastDownloadInfo] = useState<{
+    timestamp: Date;
+    ticketCount: number;
+  } | null>(null);
+  const [currentTicketCount, setCurrentTicketCount] = useState(0);
   
   const { showNotification } = useNotification();
 
@@ -97,6 +108,92 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     
     return () => clearInterval(interval);
   }, [session?.session?._id]);
+
+  // Track current ticket count for new ticket alerts
+  useEffect(() => {
+    if (!eventId || !data?.event) return;
+    
+    const fetchTicketCount = async () => {
+      try {
+        // Calculate total tickets sold from event data
+        const count = data.event.tickets?.reduce((sum: number, t: any) => sum + (t.sold || 0), 0) || 0;
+        setCurrentTicketCount(count);
+      } catch (error) {
+        console.error('Failed to fetch ticket count:', error);
+      }
+    };
+    
+    fetchTicketCount();
+    // Update every 30 seconds
+    const interval = setInterval(fetchTicketCount, 30000);
+    
+    return () => clearInterval(interval);
+  }, [eventId, data]);
+
+  // PDF Download Handler
+  const handleDownloadTicketSheet = async () => {
+    if (!eventId || isGeneratingPDF) return;
+
+    try {
+      setIsGeneratingPDF(true);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/scanner/event/${eventId}/ticket-sheet`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/pdf'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to generate PDF' }));
+        throw new Error(error.message || 'Failed to generate PDF');
+      }
+
+      // Get metadata from headers
+      const ticketCount = parseInt(response.headers.get('X-Ticket-Count') || '0');
+      const generatedAt = response.headers.get('X-Generated-At');
+
+      // Download PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ticket-sheet-${eventId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      // Update last download info
+      setLastDownloadInfo({
+        timestamp: generatedAt ? new Date(generatedAt) : new Date(),
+        ticketCount
+      });
+
+      showNotification('success', 'Download Complete', `PDF with ${ticketCount} tickets downloaded`);
+    } catch (error: any) {
+      console.error('PDF generation error:', error);
+      
+      // Show specific error messages
+      let errorMessage = 'Failed to generate PDF';
+      if (error.message.includes('available 24 hours')) {
+        errorMessage = 'Ticket sheet only available 24 hours before event';
+      } else if (error.message.includes('No tickets')) {
+        errorMessage = 'No tickets found for this event';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Generation timed out. Please try again.';
+      }
+      
+      showNotification('error', 'Generation Failed', errorMessage + '. Contact support if issue persists.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
 
   const fetchSessionDetails = async (sessionId: string) => {
     try {
@@ -204,14 +301,6 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     } finally {
       setIsCheckingIn(false);
     }
-  };
-
-  const handleDownloadTicketSheet = () => {
-    if (!eventId) return;
-    
-    const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/scanner/event/${eventId}/ticket-sheet`;
-    window.open(downloadUrl, '_blank');
-    showNotification('info', 'Downloading', 'Ticket sheet download started');
   };
 
 
@@ -382,7 +471,85 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
             <p className="text-2xl font-[400] text-slate-800">{stats.total}</p>
           </div>
         </div>
-      </div>
+
+        {/* PDF Ticket Sheet Download Section */}
+        <div className="bg-white rounded-lg border border-slate-200 p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-medium text-slate-800 mb-1">Ticket Sheet PDF</h3>
+              <p className="text-sm text-slate-500">
+                Download a printable list of all valid tickets for manual verification
+              </p>
+            </div>
+          </div>
+
+          {/* New Ticket Alert */}
+          {lastDownloadInfo && currentTicketCount > lastDownloadInfo.ticketCount && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-amber-800">New Tickets Available</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  {currentTicketCount - lastDownloadInfo.ticketCount} new ticket(s) purchased since last download.
+                  Download again to get the latest list.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Availability Info */}
+          {!isWithin24Hours && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+              <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-800">Available Soon</p>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  Ticket sheet will be available 24 hours before the event starts
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Download Button */}
+          <button
+            onClick={handleDownloadTicketSheet}
+            disabled={isGeneratingPDF || !isWithin24Hours}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+              isGeneratingPDF || !isWithin24Hours
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : 'bg-brand-500 hover:bg-brand-600 text-white'
+            }`}
+          >
+            {isGeneratingPDF ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5" />
+                Generate & Download PDF
+              </>
+            )}
+          </button>
+
+          {/* Last Download Info */}
+          {lastDownloadInfo && (
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Last downloaded:</span>
+                <span className="font-medium text-slate-700">
+                  {new Date(lastDownloadInfo.timestamp).toLocaleString()} ({lastDownloadInfo.ticketCount} tickets)
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Emergency Manual Verification Section */}
+        <div className="bg-white rounded-lg border border-slate-200 p-6">
+          {/* Manual verification content will be here */}
+        </div>
 
       {/* Active Devices */}
       <div className="bg-white rounded-lg">
@@ -593,5 +760,6 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
         />
       )}
     </div>
+  </div>
   );
 }

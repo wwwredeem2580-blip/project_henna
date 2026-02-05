@@ -208,6 +208,14 @@ const eventSchema = new mongoose.Schema(
     },
 
     // =====================
+    // NOTIFICATIONS
+    // =====================
+    notifications: {
+      ticketSheet24hSent: { type: Boolean, default: false },
+      ticketSheet3hSent: { type: Boolean, default: false }
+    },
+
+    // =====================
     // AUDIT
     // =====================
     submittedAt: Date,
