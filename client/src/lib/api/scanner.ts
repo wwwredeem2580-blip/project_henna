@@ -258,6 +258,48 @@ class ScannerService {
   }> {
     return await apiClient.post(`/api/scanner/session/${sessionId}/manual-checkin`, { ticketId, notes });
   }
+
+  /**
+   * Download ticket sheet PDF for an event
+   */
+  async downloadTicketSheet(eventId: string): Promise<{
+    blob: Blob;
+    ticketCount: number;
+    generatedAt: Date;
+  }> {
+    const response = await fetch(
+      `${process.env.NODE_ENV === 
+          'development' ? 
+          `${process.env.NEXT_PUBLIC_API_URL}/scanner/event/${eventId}/ticket-sheet` : 
+          `${process.env.NEXT_PUBLIC_API_URL}/api/scanner/event/${eventId}/ticket-sheet`}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/pdf'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to generate PDF' }));
+      throw new Error(error.message || 'Failed to generate PDF');
+    }
+
+    // Get metadata from headers
+    const ticketCount = parseInt(response.headers.get('X-Ticket-Count') || '0');
+    const generatedAtStr = response.headers.get('X-Generated-At');
+    const generatedAt = generatedAtStr ? new Date(generatedAtStr) : new Date();
+
+    // Get PDF blob
+    const blob = await response.blob();
+
+    return {
+      blob,
+      ticketCount,
+      generatedAt
+    };
+  }
 }
 
 export const scannerService = new ScannerService();

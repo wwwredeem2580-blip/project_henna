@@ -137,28 +137,10 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     try {
       setIsGeneratingPDF(true);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/scanner/event/${eventId}/ticket-sheet`,
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/pdf'
-          }
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Failed to generate PDF' }));
-        throw new Error(error.message || 'Failed to generate PDF');
-      }
-
-      // Get metadata from headers
-      const ticketCount = parseInt(response.headers.get('X-Ticket-Count') || '0');
-      const generatedAt = response.headers.get('X-Generated-At');
+      // Use scanner service instead of direct fetch
+      const { blob, ticketCount, generatedAt } = await scannerService.downloadTicketSheet(eventId);
 
       // Download PDF
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -170,7 +152,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
 
       // Update last download info
       setLastDownloadInfo({
-        timestamp: generatedAt ? new Date(generatedAt) : new Date(),
+        timestamp: generatedAt,
         ticketCount
       });
 

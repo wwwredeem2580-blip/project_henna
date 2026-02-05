@@ -101,6 +101,8 @@ export default function ScannerPage() {
         
         const { tickets } = await scannerService.getTicketsForCache(session.sessionId, session.deviceId);
         
+        console.log(`Fetched ${tickets.length} tickets from server for caching`);
+        
         const cachedTickets: CachedTicket[] = tickets.map(t => ({
           ...t,
           status: t.status as 'valid' | 'cancelled' | 'refunded',
@@ -108,9 +110,10 @@ export default function ScannerPage() {
         }));
 
         await scannerDB.cacheTickets(cachedTickets);
-        console.log(`Cached ${tickets.length} tickets`);
+        console.log(`✅ Successfully cached ${tickets.length} tickets in IndexedDB`);
+        console.log('Sample ticket numbers:', tickets.slice(0, 3).map(t => t.ticketNumber));
       } catch (error) {
-        console.error('Failed to cache tickets:', error);
+        console.error('❌ Failed to cache tickets:', error);
       } finally {
         setIsCaching(false);
       }
@@ -170,6 +173,8 @@ export default function ScannerPage() {
 
         // Sync each scan individually
         let syncedCount = 0;
+        let duplicateCount = 0;
+        
         for (const scan of unsyncedScans) {
           try {
             await scannerService.verifyTicket(
@@ -179,13 +184,20 @@ export default function ScannerPage() {
             );
             await scannerDB.markScanAsSynced(scan.id);
             syncedCount++;
-          } catch (error) {
-            console.error(`Failed to sync scan ${scan.id}:`, error);
-            // Continue with next scan
+          } catch (error: any) {
+            // If ticket was already checked in, mark as synced (not an error)
+            if (error.message?.includes('ALREADY_CHECKED_IN') || error.message?.includes('already checked in')) {
+              console.log(`Scan ${scan.id} already synced (duplicate), marking as complete`);
+              await scannerDB.markScanAsSynced(scan.id);
+              duplicateCount++;
+            } else {
+              console.error(`Failed to sync scan ${scan.id}:`, error);
+              // Continue with next scan - don't block on failures
+            }
           }
         }
 
-        console.log(`Successfully synced ${syncedCount}/${unsyncedScans.length} scans`);
+        console.log(`Successfully synced ${syncedCount}/${unsyncedScans.length} scans (${duplicateCount} duplicates)`);
         
         // Clean up synced scans
         await scannerDB.clearSyncedScans();
