@@ -11,6 +11,7 @@ import { calculatePricing } from '../../utils/order/calculatePricing';
 import { updateEventMetrics } from '../../utils/order/updateEventMetrics';
 import { createTicket } from '../../utils/order/ticket';
 import { handlePaymentFailure } from '../../utils/order/payment';
+import { invalidatePDFCache } from '../../lib/redis';
 
 const FREE_TICKET_LIMITS = {
   maxPerUser: 2,
@@ -169,6 +170,9 @@ export const createOrderService = async (data: any) => {
       
       // Complete Order (Generate tickets, email, metrics)
       await completeOrder(order);
+      
+      // Invalidate PDF cache (new tickets added)
+      await invalidatePDFCache(data.eventId);
       
       return {
           orderId: order._id.toString(),
@@ -439,6 +443,9 @@ export const handleBkashCallbackService = async (
     await order.save();
   }
   await updateEventMetrics(order._id.toString());
+  
+  // Invalidate PDF cache (new tickets added)
+  await invalidatePDFCache(order.eventId.toString());
   // 14. SEND ORDER CONFIRMATION EMAIL
   try {
     const { addEmailJob } = await import('../../workers/email.queue');

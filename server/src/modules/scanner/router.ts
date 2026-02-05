@@ -385,11 +385,15 @@ router.post('/session/:sessionId/manual-checkin', requireAuth, requireHost, asyn
   }
 });
 
+
 export default router;
-import { generateTicketSheetService, getTicketSheetService } from './ticketSheetService';
+
+// Import PDF generation service
+import { generateTicketSheetPDF } from './ticketSheetService';
+
 /**
  * GET /api/scanner/event/:eventId/ticket-sheet
- * Get ticket sheet for download
+ * Generate and download ticket sheet PDF on-demand
  * Host only
  */
 router.get('/event/:eventId/ticket-sheet', requireAuth, requireHost, async (req, res) => {
@@ -401,36 +405,37 @@ router.get('/event/:eventId/ticket-sheet', requireAuth, requireHost, async (req,
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const result = await getTicketSheetService(eventId as string, hostId);
-    
-    if (!result.available) {
-      return res.status(404).json(result);
-    }
+    // Generate or get cached PDF
+    const { pdf, ticketCount, generatedAt } = await generateTicketSheetPDF(eventId as string, hostId);
 
-    // Send PDF file
-    res.download(result?.sheet?.pdfUrl, `ticket-sheet-${eventId}.pdf`);
+    // Log download (simple console log for now)
+    console.log({
+      type: 'TICKET_SHEET_DOWNLOAD',
+      eventId,
+      hostId,
+      ticketCount,
+      success: true,
+      timestamp: new Date()
+    });
+
+    // Stream PDF with metadata headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="ticket-sheet-${eventId}.pdf"`);
+    res.setHeader('Content-Length', pdf.length.toString());
+    res.setHeader('X-Ticket-Count', ticketCount.toString());
+    res.setHeader('X-Generated-At', generatedAt.toISOString());
+
+    res.send(pdf);
   } catch (error: any) {
-    return handleError(error, res);
-  }
-});
+    // Log failed download
+    console.error({
+      type: 'TICKET_SHEET_DOWNLOAD_FAILED',
+      eventId: req.params.eventId,
+      hostId: (req as any).user?.sub,
+      error: error.message,
+      timestamp: new Date()
+    });
 
-/**
- * POST /api/scanner/event/:eventId/generate-sheet
- * Generate ticket sheet PDF
- * Host only
- */
-router.post('/event/:eventId/generate-sheet', requireAuth, requireHost, async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const hostId = (req as any).user?.sub;
-
-    if (!hostId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    const result = await generateTicketSheetService(eventId as string, hostId);
-    res.status(200).json(result);
-  } catch (error: any) {
     return handleError(error, res);
   }
 });

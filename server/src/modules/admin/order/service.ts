@@ -7,6 +7,7 @@ import { isValidObjectId } from "../../../utils/isValidObjectId";
 import CustomError from "../../../utils/CustomError";
 import { addEmailJob } from "../../../workers/email.queue";
 import { success } from "zod";
+import { invalidatePDFCache } from "../../../lib/redis";
 
 
 
@@ -150,6 +151,9 @@ export const refundOrderService = async (orderId: string, amount: number, reason
         checkInStatus: 'invalid'
       }
     );
+    
+    // Invalidate PDF cache for this event (tickets changed)
+    await invalidatePDFCache(order.eventId.toString());
     
     // Update event metrics
     const ticketCount = order.tickets.reduce((sum: number, t: any) => sum + t.quantity, 0);

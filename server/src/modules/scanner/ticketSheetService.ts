@@ -1,324 +1,246 @@
 import PDFDocument from 'pdfkit';
 import { Ticket } from '../../database/ticket/ticket';
 import { Event } from '../../database/event/event';
-import { TicketSheet } from '../../database/event/ticketSheet';
 import CustomError from '../../utils/CustomError';
 import { isValidObjectId } from '../../utils/isValidObjectId';
-import fs from 'fs';
-import path from 'path';
+import { getCachedPDF, cachePDF, acquirePDFLock, releasePDFLock } from '../../lib/redis';
 
 /**
- * Generate PDF ticket sheet for emergency manual verification
- * Returns alphabetically sorted ticket numbers with types
+ * Generate PDF ticket sheet on-demand with Redis caching
+ * Returns PDF as Buffer for streaming
  */
-export const generateTicketSheetPDF = async (eventId: string, hostId: string): Promise<string> => {
+export const generateTicketSheetPDF = async (
+  eventId: string,
+  hostId: string
+): Promise<{ pdf: Buffer; ticketCount: number; generatedAt: Date }> => {
   if (!isValidObjectId(eventId)) {
     throw new CustomError('Invalid event ID', 400);
   }
 
-  // Get event details
-  const event = await Event.findById(eventId);
-  if (!event) {
-    throw new CustomError('Event not found', 404);
+  // 1. Check Redis cache first
+  const cachedPDF = await getCachedPDF(eventId);
+  if (cachedPDF) {
+    console.log(`Serving cached PDF for event ${eventId}`);
+    const ticketCount = await Ticket.countDocuments({
+      eventId,
+      status: { $in: ['valid', 'used'] }
+    });
+    return {
+      pdf: cachedPDF,
+      ticketCount,
+      generatedAt: new Date() // Approximate - cache doesn't store this
+    };
   }
 
-  // Verify ownership
-  if (event.hostId.toString() !== hostId) {
-    throw new CustomError('Unauthorized', 403);
+  // 2. Try to acquire lock (prevent concurrent generation)
+  const lockAcquired = await acquirePDFLock(eventId);
+  if (!lockAcquired) {
+    // Another request is generating, wait and retry cache
+    console.log(`Waiting for concurrent generation for event ${eventId}`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    const retryCache = await getCachedPDF(eventId);
+    if (retryCache) {
+      const ticketCount = await Ticket.countDocuments({
+        eventId,
+        status: { $in: ['valid', 'used'] }
+      });
+      return { pdf: retryCache, ticketCount, generatedAt: new Date() };
+    }
+    throw new CustomError('PDF generation timeout - please try again', 408);
   }
 
-  // Get all valid tickets for this event
-  const tickets = await Ticket.find({
-    eventId: eventId,
-    status: { $in: ['valid', 'used'] } // Include both valid and already used tickets
-  })
-    .select('ticketNumber ticketType')
-    .lean();
+  try {
+    // 3. Verify event and ownership
+    const event = await Event.findById(eventId);
+    if (!event) {
+      throw new CustomError('Event not found', 404);
+    }
+    if (event.hostId.toString() !== hostId) {
+      throw new CustomError('Unauthorized', 403);
+    }
+
+    // 4. Check availability window (24h before → event end)
+    const now = new Date();
+    const eventStart = new Date(event.startDate);
+    const eventEnd = new Date(event.endDate);
+    const availableFrom = new Date(eventStart.getTime() - 24 * 60 * 60 * 1000);
+
+    if (now < availableFrom || now > eventEnd) {
+      throw new CustomError(
+        'Ticket sheet only available 24 hours before event until event ends',
+        403
+      );
+    }
+
+    // 5. Get valid tickets (exclude refunded)
+    const tickets = await Ticket.find({
+      eventId: eventId,
+      status: { $in: ['valid', 'used'] }
+    })
+      .select('ticketNumber ticketType')
+      .lean();
 
   if (tickets.length === 0) {
     throw new CustomError('No tickets found for this event', 404);
   }
 
-  // Sort tickets alphabetically by ticket number
-  const sortedTickets = tickets.sort((a, b) => 
-    a.ticketNumber.localeCompare(b.ticketNumber)
-  );
+    // 6. Sort alphabetically
+    const sortedTickets = tickets.sort((a, b) =>
+      a.ticketNumber.localeCompare(b.ticketNumber)
+    );
 
-  // Group tickets by first letter
-  const groupedTickets: Record<string, typeof tickets> = {};
-  sortedTickets.forEach(ticket => {
-    const firstLetter = ticket.ticketNumber.charAt(0).toUpperCase();
-    if (!groupedTickets[firstLetter]) {
-      groupedTickets[firstLetter] = [];
-    }
-    groupedTickets[firstLetter].push(ticket);
-  });
+    // 7. Group by first letter
+    const groupedTickets: Record<string, typeof tickets> = {};
+    sortedTickets.forEach(ticket => {
+      const firstLetter = ticket.ticketNumber.charAt(0).toUpperCase();
+      if (!groupedTickets[firstLetter]) {
+        groupedTickets[firstLetter] = [];
+      }
+      groupedTickets[firstLetter].push(ticket);
+    });
 
-  // Create PDF
-  const doc = new PDFDocument({
-    size: 'A4',
-    margins: { top: 50, bottom: 50, left: 50, right: 50 }
-  });
+    // 8. Generate PDF to Buffer (not file)
+    const pdfBuffer = await generatePDFBuffer(event, groupedTickets, tickets.length);
 
-  // Create temp directory if it doesn't exist
-  const tempDir = path.join(process.cwd(), 'temp');
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
+    // 9. Cache in Redis
+    await cachePDF(eventId, pdfBuffer);
+
+    return {
+      pdf: pdfBuffer,
+      ticketCount: tickets.length,
+      generatedAt: new Date()
+    };
+  } finally {
+    // Always release lock
+    await releasePDFLock(eventId);
   }
+};
 
-  const fileName = `ticket-sheet-${eventId}-${Date.now()}.pdf`;
-  const filePath = path.join(tempDir, fileName);
-  const writeStream = fs.createWriteStream(filePath);
-  doc.pipe(writeStream);
+/**
+ * Generate PDF to Buffer (stream to memory)
+ */
+function generatePDFBuffer(
+  event: any,
+  groupedTickets: Record<string, any[]>,
+  totalTickets: number
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 50, bottom: 50, left: 50, right: 50 }
+    });
 
-  // Header
-  doc
-    .fontSize(20)
-    .font('Helvetica-Bold')
-    .text('CONFIDENTIAL - FOR EVENT USE ONLY', { align: 'center' })
-    .moveDown(0.5);
+    const chunks: Buffer[] = [];
 
-  doc
-    .fontSize(16)
-    .text(event.title, { align: 'center' })
-    .fontSize(12)
-    .font('Helvetica')
-    .text(`Date: ${new Date(event.startDate).toLocaleDateString()}`, { align: 'center' })
-    .text(`Venue: ${event.location.venue}`, { align: 'center' })
-    .text(`Total Tickets: ${tickets.length}`, { align: 'center' })
-    .moveDown(1);
+    doc.on('data', chunk => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
 
-  // Divider
-  doc
-    .moveTo(50, doc.y)
-    .lineTo(545, doc.y)
-    .stroke()
-    .moveDown(1);
-
-  // Table header
-  doc
-    .fontSize(10)
-    .font('Helvetica-Bold')
-    .text('Ticket Number', 50, doc.y, { width: 250, continued: true })
-    .text('Type', 300, doc.y, { width: 245 })
-    .moveDown(0.5);
-
-  doc
-    .moveTo(50, doc.y)
-    .lineTo(545, doc.y)
-    .stroke()
-    .moveDown(0.5);
-
-  // Content
-  doc.font('Helvetica').fontSize(9);
-
-  let pageNumber = 1;
-  const addPageNumber = () => {
+    // Header
     doc
-      .fontSize(8)
-      .text(
-        `Page ${pageNumber}`,
-        50,
-        doc.page.height - 30,
-        { align: 'center' }
-      );
-    pageNumber++;
-  };
-
-  // Add tickets grouped by letter
-  Object.keys(groupedTickets).sort().forEach((letter, index) => {
-    // Section header
-    if (doc.y > 700) {
-      addPageNumber();
-      doc.addPage();
-    }
-
-    doc
-      .fontSize(12)
+      .fontSize(20)
       .font('Helvetica-Bold')
-      .fillColor('#4f46e5')
-      .text(letter, 50, doc.y)
-      .fillColor('#000000')
-      .moveDown(0.3);
+      .text('CONFIDENTIAL - FOR EVENT USE ONLY', { align: 'center' })
+      .moveDown(0.5);
+
+    doc
+      .fontSize(16)
+      .text(event.title, { align: 'center' })
+      .fontSize(12)
+      .font('Helvetica')
+      .text(`Date: ${new Date(event.startDate).toLocaleDateString()}`, { align: 'center' })
+      .text(`Venue: ${event.location.venue}`, { align: 'center' })
+      .text(`Total Tickets: ${totalTickets}`, { align: 'center' })
+      .moveDown(1);
+
+    // Divider
+    doc
+      .moveTo(50, doc.y)
+      .lineTo(545, doc.y)
+      .stroke()
+      .moveDown(1);
+
+    // Table header
+    doc
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .text('Ticket Number', 50, doc.y, { width: 250, continued: true })
+      .text('Type', 300, doc.y, { width: 245 })
+      .moveDown(0.5);
 
     doc
       .moveTo(50, doc.y)
       .lineTo(545, doc.y)
-      .strokeColor('#cccccc')
       .stroke()
-      .strokeColor('#000000')
-      .moveDown(0.3);
+      .moveDown(0.5);
 
-    // Tickets in this section
-    doc.fontSize(9).font('Helvetica');
-    
-    groupedTickets[letter].forEach((ticket, ticketIndex) => {
-      if (doc.y > 720) {
-        addPageNumber();
-        doc.addPage();
-        
-        // Repeat table header on new page
-        doc
-          .fontSize(10)
-          .font('Helvetica-Bold')
-          .text('Ticket Number', 50, doc.y, { width: 250, continued: true })
-          .text('Type', 300, doc.y, { width: 245 })
-          .moveDown(0.5);
-        
-        doc.font('Helvetica').fontSize(9);
-      }
+    // Content
+    doc.font('Helvetica').fontSize(9);
 
-      const yPos = doc.y;
+    let pageNumber = 1;
+    const addPageNumber = () => {
       doc
-        .text(ticket.ticketNumber, 50, yPos, { width: 250 })
-        .text(ticket.ticketType, 300, yPos, { width: 245 });
-      
-      doc.moveDown(0.3);
-    });
-
-    doc.moveDown(0.5);
-  });
-
-  // Add final page number
-  addPageNumber();
-
-  // Finalize PDF
-  doc.end();
-
-  // Wait for PDF to be written
-  await new Promise((resolve, reject) => {
-    writeStream.on('finish', resolve);
-    writeStream.on('error', reject);
-  });
-
-  return filePath;
-};
-
-/**
- * Generate ticket sheet and save to database
- */
-export const generateTicketSheetService = async (eventId: string, hostId: string) => {
-  if (!isValidObjectId(eventId)) {
-    throw new CustomError('Invalid event ID', 400);
-  }
-
-  const event = await Event.findById(eventId);
-  if (!event) {
-    throw new CustomError('Event not found', 404);
-  }
-
-  if (event.hostId.toString() !== hostId) {
-    throw new CustomError('Unauthorized', 403);
-  }
-
-  // Check if sheet already exists
-  const existingSheet = await TicketSheet.findOne({
-    eventId: eventId,
-    status: { $in: ['generating', 'available'] }
-  });
-
-  if (existingSheet) {
-    return {
-      success: true,
-      message: 'Ticket sheet already exists',
-      sheet: {
-        availableFrom: existingSheet.availableFrom,
-        expiresAt: existingSheet.expiresAt,
-        totalTickets: existingSheet.totalTickets,
-        status: existingSheet.status
-      }
+        .fontSize(8)
+        .text(`Page ${pageNumber}`, 50, doc.page.height - 30, { align: 'center' });
+      pageNumber++;
     };
-  }
 
-  // Generate PDF
-  const pdfPath = await generateTicketSheetPDF(eventId, hostId);
-  
-  // Get ticket count
-  const ticketCount = await Ticket.countDocuments({
-    eventId: eventId,
-    status: { $in: ['valid', 'used'] }
+    // Add tickets grouped by letter
+    Object.keys(groupedTickets)
+      .sort()
+      .forEach(letter => {
+        // Section header
+        if (doc.y > 700) {
+          addPageNumber();
+          doc.addPage();
+        }
+
+        doc
+          .fontSize(12)
+          .font('Helvetica-Bold')
+          .fillColor('#4f46e5')
+          .text(letter, 50, doc.y)
+          .fillColor('#000000')
+          .moveDown(0.3);
+
+        doc
+          .moveTo(50, doc.y)
+          .lineTo(545, doc.y)
+          .strokeColor('#cccccc')
+          .stroke()
+          .strokeColor('#000000')
+          .moveDown(0.3);
+
+        doc.fontSize(9).font('Helvetica');
+
+        groupedTickets[letter].forEach(ticket => {
+          if (doc.y > 720) {
+            addPageNumber();
+            doc.addPage();
+
+            // Repeat header
+            doc
+              .fontSize(10)
+              .font('Helvetica-Bold')
+              .text('Ticket Number', 50, doc.y, { width: 250, continued: true })
+              .text('Type', 300, doc.y, { width: 245 })
+              .moveDown(0.5);
+
+            doc.font('Helvetica').fontSize(9);
+          }
+
+          const yPos = doc.y;
+          doc
+            .text(ticket.ticketNumber, 50, yPos, { width: 250 })
+            .text(ticket.ticketType, 300, yPos, { width: 245 });
+
+          doc.moveDown(0.3);
+        });
+
+        doc.moveDown(0.5);
+      });
+
+    addPageNumber();
+    doc.end();
   });
-
-  // Calculate availability window (24h before event)
-  const eventStart = new Date(event.startDate);
-  const availableFrom = new Date(eventStart.getTime() - 24 * 60 * 60 * 1000); // 24h before
-  const expiresAt = new Date(event.endDate);
-
-  // Create ticket sheet record
-  const ticketSheet = await new TicketSheet({
-    eventId: eventId,
-    generatedBy: hostId,
-    availableFrom: availableFrom,
-    expiresAt: expiresAt,
-    pdfUrl: pdfPath, // In production, this would be S3 URL
-    pdfKey: path.basename(pdfPath),
-    totalTickets: ticketCount,
-    fileSize: fs.statSync(pdfPath).size,
-    status: 'available'
-  }).save();
-
-  return {
-    success: true,
-    message: 'Ticket sheet generated successfully',
-    sheet: {
-      id: ticketSheet._id,
-      availableFrom: ticketSheet.availableFrom,
-      expiresAt: ticketSheet.expiresAt,
-      totalTickets: ticketSheet.totalTickets,
-      pdfUrl: ticketSheet.pdfUrl
-    }
-  };
-};
-
-/**
- * Get ticket sheet for download
- */
-export const getTicketSheetService = async (eventId: string, hostId: string) => {
-  if (!isValidObjectId(eventId)) {
-    throw new CustomError('Invalid event ID', 400);
-  }
-
-  const event = await Event.findById(eventId);
-  if (!event) {
-    throw new CustomError('Event not found', 404);
-  }
-
-  if (event.hostId.toString() !== hostId) {
-    throw new CustomError('Unauthorized', 403);
-  }
-
-  const ticketSheet = await TicketSheet.findOne({
-    eventId: eventId,
-    status: 'available'
-  });
-
-  if (!ticketSheet) {
-    return {
-      available: false,
-      message: 'Ticket sheet not yet available'
-    };
-  }
-
-  // Check if available
-  if (!ticketSheet.isAvailable()) {
-    return {
-      available: false,
-      message: 'Ticket sheet is not available yet or has expired',
-      availableFrom: ticketSheet.availableFrom
-    };
-  }
-
-  // Record download
-  await ticketSheet.recordDownload(hostId);
-
-  return {
-    available: true,
-    sheet: {
-      pdfUrl: ticketSheet.pdfUrl,
-      totalTickets: ticketSheet.totalTickets,
-      generatedAt: ticketSheet.generatedAt,
-      availableFrom: ticketSheet.availableFrom,
-      expiresAt: ticketSheet.expiresAt
-    }
-  };
-};
+}
