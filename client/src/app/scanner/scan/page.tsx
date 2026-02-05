@@ -106,12 +106,13 @@ export default function ScannerPage() {
         const cachedTickets: CachedTicket[] = tickets.map(t => ({
           ...t,
           status: t.status as 'valid' | 'cancelled' | 'refunded',
+          qrHash: t.qrHash, // Include QR hash for offline lookup
           cachedAt: Date.now()
         }));
 
         await scannerDB.cacheTickets(cachedTickets);
         console.log(`✅ Successfully cached ${tickets.length} tickets in IndexedDB`);
-        console.log('Sample ticket numbers:', tickets.slice(0, 3).map(t => t.ticketNumber));
+        console.log('Sample QR hashes:', tickets.slice(0, 2).map(t => t.qrHash?.substring(0, 16) + '...'));
       } catch (error) {
         console.error('❌ Failed to cache tickets:', error);
       } finally {
@@ -271,7 +272,7 @@ export default function ScannerPage() {
           setIsOnline(false);
           
           // Use offline verification
-          const ticket = await scannerDB.getTicketByNumber(decodedText);
+          const ticket = await scannerDB.getTicketByQRHash(decodedText);
 
           if (!ticket) {
             result = {
@@ -346,7 +347,7 @@ export default function ScannerPage() {
         }
       } else {
         // OFFLINE: Verify with cached data
-        const ticket = await scannerDB.getTicketByNumber(decodedText);
+        const ticket = await scannerDB.getTicketByQRHash(decodedText);
 
         if (!ticket) {
           result = {

@@ -121,7 +121,7 @@ export const getTicketsForOfflineCacheService = async (sessionId: string, device
   const tickets = await Ticket.find({
     eventId: session.eventId,
     status: { $in: ['valid', 'cancelled', 'refunded'] } // Include all for proper offline validation
-  }).select('ticketNumber ticketType status holderName');
+  }).select('ticketNumber ticketType status holderName qrCode');
 
   return {
     tickets: tickets.map(t => ({
@@ -130,7 +130,8 @@ export const getTicketsForOfflineCacheService = async (sessionId: string, device
       ticketType: t.ticketType,
       status: t.status,
       holderName: t.holderName,
-      eventId: session.eventId.toString()
+      eventId: session.eventId.toString(),
+      qrHash: t.qrCode // QR code hash for offline lookup
     })),
     eventId: session.eventId.toString(),
     cachedAt: new Date()

@@ -132,6 +132,7 @@ class ScannerService {
       status: string;
       holderName?: string;
       eventId: string;
+      qrHash: string; // QR code hash for offline lookup
     }>;
     eventId: string;
     cachedAt: Date;

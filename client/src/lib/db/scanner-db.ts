@@ -10,6 +10,7 @@ interface CachedTicket {
   status: 'valid' | 'cancelled' | 'refunded';
   eventId: string;
   holderName?: string;
+  qrHash: string; // QR code hash for offline lookup
   cachedAt: number;
 }
 
@@ -33,7 +34,7 @@ interface ScannedTicket {
 }
 
 const DB_NAME = 'ScannerDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incremented for qrHash index
 
 class ScannerDB {
   private db: IDBDatabase | null = null;
@@ -56,6 +57,14 @@ class ScannerDB {
           const ticketStore = db.createObjectStore('tickets', { keyPath: 'ticketId' });
           ticketStore.createIndex('eventId', 'eventId', { unique: false });
           ticketStore.createIndex('ticketNumber', 'ticketNumber', { unique: false });
+          ticketStore.createIndex('qrHash', 'qrHash', { unique: false });
+        } else {
+          // Upgrade existing store to add qrHash index
+          const transaction = (event.target as IDBOpenDBRequest).transaction!;
+          const ticketStore = transaction.objectStore('tickets');
+          if (!ticketStore.indexNames.contains('qrHash')) {
+            ticketStore.createIndex('qrHash', 'qrHash', { unique: false });
+          }
         }
 
         // Scan Queue Store
@@ -107,6 +116,20 @@ class ScannerDB {
       const store = transaction.objectStore('tickets');
       const index = store.index('ticketNumber');
       const request = index.get(ticketNumber);
+
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async getTicketByQRHash(qrHash: string): Promise<CachedTicket | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['tickets'], 'readonly');
+      const store = transaction.objectStore('tickets');
+      const index = store.index('qrHash');
+      const request = index.get(qrHash);
 
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);
