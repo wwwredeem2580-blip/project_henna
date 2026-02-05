@@ -25,6 +25,8 @@ interface QueuedScan {
   message: string;
   ticketNumber?: string;
   synced: boolean;
+  retryCount?: number; // Track retry attempts
+  lastRetryAt?: number; // Track last retry timestamp
 }
 
 interface ScannedTicket {
@@ -206,6 +208,55 @@ class ScannerDB {
         const scan = getRequest.result;
         if (scan) {
           scan.synced = true;
+          const updateRequest = store.put(scan);
+          updateRequest.onsuccess = () => resolve();
+          updateRequest.onerror = () => reject(updateRequest.error);
+        } else {
+          resolve();
+        }
+      };
+      getRequest.onerror = () => reject(getRequest.error);
+    });
+  }
+
+  async incrementRetryCount(scanId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['scanQueue'], 'readwrite');
+      const store = transaction.objectStore('scanQueue');
+      const getRequest = store.get(scanId);
+
+      getRequest.onsuccess = () => {
+        const scan = getRequest.result;
+        if (scan) {
+          scan.retryCount = (scan.retryCount || 0) + 1;
+          scan.lastRetryAt = Date.now();
+          const updateRequest = store.put(scan);
+          updateRequest.onsuccess = () => resolve();
+          updateRequest.onerror = () => reject(updateRequest.error);
+        } else {
+          resolve();
+        }
+      };
+      getRequest.onerror = () => reject(getRequest.error);
+    });
+  }
+
+  async markScanAsFailed(scanId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['scanQueue'], 'readwrite');
+      const store = transaction.objectStore('scanQueue');
+      const getRequest = store.get(scanId);
+
+      getRequest.onsuccess = () => {
+        const scan = getRequest.result;
+        if (scan) {
+          scan.synced = true; // Mark as synced to remove from queue
+          scan.result = 'invalid';
+          scan.message = 'Failed to sync after max retries';
           const updateRequest = store.put(scan);
           updateRequest.onsuccess = () => resolve();
           updateRequest.onerror = () => reject(updateRequest.error);
