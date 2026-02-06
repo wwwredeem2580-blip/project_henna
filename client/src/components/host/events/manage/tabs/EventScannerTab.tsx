@@ -1,29 +1,21 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { 
-  QrCode, 
-  Smartphone, 
-  Users, 
-  CheckCircle, 
-  XCircle, 
-  Clock,
-  Copy,
-  ExternalLink,
-  Power,
-  PowerOff,
-  RefreshCw,
-  Plus,
-  AlertTriangle,
-  Loader2,
-  Download,
-  AlertCircle
+  QrCode
 } from 'lucide-react';
 import { scannerService, SessionDetailsResponse, CreateSessionResponse } from '@/lib/api/scanner';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
 import { useNotification } from '@/lib/context/notification';
 import OTPDialog from './scanner/OTPDialog';
-import VerificationResultCard from './scanner/VerificationResultCard';
+
+// Import new components
+import { ScannerOverview } from './scanner/ScannerOverview';
+import { SessionManager } from './scanner/SessionManager';
+import { DeviceList } from './scanner/DeviceList';
+import { ManualVerification } from './scanner/ManualVerification';
+import { ToolsCard } from './scanner/ToolsCard';
 
 interface EventScannerTabProps {
   data: HostEventDetailsResponse | null;
@@ -37,7 +29,6 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   const [showOTPDialog, setShowOTPDialog] = useState(false);
   
   // Manual verification state
-  const [ticketIdInput, setTicketIdInput] = useState('');
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
@@ -80,7 +71,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
           }
         }
       } catch (error: any) {
-        // No active session or error - that's okay, show create button
+        // No active session or error - that's okay
         console.log('No active session found');
       } finally {
         setLoading(false);
@@ -176,7 +167,6 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     }
   };
 
-
   const fetchSessionDetails = async (sessionId: string) => {
     try {
       const details = await scannerService.getSessionDetails(sessionId);
@@ -214,8 +204,11 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     try {
       setLoading(true);
       await scannerService.closeSession(session.session._id);
-      setSession(null);
-      setScannerUrl('');
+      // We don't set session to null, we just refresh it to show closed status or update local state
+      // Actually, if we close it, we might want to keep showing stats but mark inactive
+      const details = await scannerService.getSessionDetails(session.session._id);
+      setSession(details);
+      
       showNotification('success', 'Session Closed', 'Scanner session has been closed');
     } catch (error: any) {
       showNotification('error', 'Failed to Close Session', error.response?.data?.error || error.message);
@@ -229,26 +222,53 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     showNotification('success', 'Copied!', 'Scanner link copied to clipboard');
   };
 
-  const formatTime = (date: string) => {
-    return new Date(date).toLocaleString();
+  // Device Management Handlers
+  const handleDisableDevice = async (deviceId: string) => {
+     if (!session?.session?._id) return;
+     try {
+        await scannerService.disableDevice(deviceId, session.session._id);
+        showNotification('success', 'Device Disabled', 'Device access has been revoked');
+        fetchSessionDetails(session.session._id);
+     } catch (err: any) {
+        showNotification('error', 'Failed to Disable', err.message);
+     }
   };
 
-  const formatTimeAgo = (date: string) => {
-    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    return `${Math.floor(seconds / 3600)}h ago`;
-  };
+  const handleEnableDevice = async (deviceId: string) => {
+    if (!session?.session?._id) return;
+    try {
+       await scannerService.enableDevice(deviceId, session.session._id);
+       showNotification('success', 'Device Enabled', 'Device usage restored');
+       fetchSessionDetails(session.session._id);
+    } catch (err: any) {
+       showNotification('error', 'Failed to Enable', err.message);
+    }
+ };
+
+ const handleForceLogout = async (deviceId: string) => {
+    if (!session?.session?._id) return;
+    if (!confirm('This will immediately log out the device. Continue?')) return;
+    try {
+       await scannerService.forceLogoutDevice(deviceId, session.session._id);
+       showNotification('success', 'Device Logged Out', 'Device has been disconnected');
+       fetchSessionDetails(session.session._id);
+    } catch (err: any) {
+       showNotification('error', 'Failed to Logout', err.message);
+    }
+ };
 
   // Manual verification handlers
-  const handleLookupTicket = async () => {
-    if (!ticketIdInput.trim() || !session?.session?._id) return;
+  const handleLookupTicket = async (ticketId: string) => {
+    if (!session?.session?._id) {
+       showNotification('error', 'No Active Session', 'Please activate a scanner session first');
+       return;
+    }
 
     try {
       setIsLookingUp(true);
       setVerificationResult(null);
       
-      const result = await scannerService.lookupTicket(ticketIdInput.trim().toUpperCase(), session.session._id);
+      const result = await scannerService.lookupTicket(ticketId, session.session._id);
       
       if (!result.found) {
         showNotification('error', 'Ticket Not Found', result.message || 'Ticket not found');
@@ -264,20 +284,21 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   };
 
   const handleManualCheckIn = async (notes?: string) => {
-    if (!ticketIdInput.trim() || !session?.session?._id) return;
+    if (!verificationResult?.ticketNumber || !session?.session?._id) return;
 
     try {
       setIsCheckingIn(true);
       
-      await scannerService.manualCheckIn(ticketIdInput.trim().toUpperCase(), session.session._id, notes);
+      await scannerService.manualCheckIn(verificationResult.ticketNumber, session.session._id, notes);
       
       showNotification('success', 'Check-in Successful', 'Ticket checked in manually');
       
-      // Refresh verification result
-      await handleLookupTicket();
+      // Refresh verification result to show new status
+      const result = await scannerService.lookupTicket(verificationResult.ticketNumber, session.session._id);
+      if (result.found) {
+         setVerificationResult(result.ticket);
+      }
       
-      // Clear input
-      setTicketIdInput('');
     } catch (error: any) {
       showNotification('error', 'Check-in Failed', error.message);
     } finally {
@@ -285,455 +306,90 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     }
   };
 
-
   if (!canUseScanner) {
     return (
       <div className="max-w-[1080px] mx-auto py-12">
-        <div className="bg-slate-50 rounded-lg p-8 text-center">
-          <QrCode className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-700 mb-2">Scanner Not Available</h3>
-          <p className="text-sm text-slate-500">
+        <div className="bg-slate-50 rounded-[2rem] p-12 text-center border border-slate-100">
+          <QrCode className="w-16 h-16 text-slate-300 mx-auto mb-6" />
+          <h3 className="text-xl font-bold text-slate-700 mb-2">Scanner Not Available</h3>
+          <p className="text-slate-500">
             Scanner functionality is only available for published, live, or ended events.
+            <br />
+            Current Status: <span className="font-bold uppercase">{eventStatus}</span>
           </p>
         </div>
       </div>
     );
   }
 
-  if (!session) {
-    return (
-      <div className="max-w-[1080px] mx-auto py-12">
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <QrCode className="w-10 h-10 text-brand-500" />
-            </div>
-            <h3 className="text-xl font-medium text-slate-800 mb-2">QR Code Scanner</h3>
-            <p className="text-sm text-slate-500 max-w-[1080px] mx-auto">
-              Create a scanner session to enable your staff to scan tickets at the event entrance using their phones.
-            </p>
-          </div>
+  // Default empty stats if logic hasn't loaded
+  const currentStats = session?.stats || {
+    total: 0,
+    success: 0,
+    duplicate: 0,
+    invalid: 0,
+    expired: 0,
+    cancelled: 0,
+    refunded: 0
+  };
 
-          <div className="grid md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-slate-50 rounded-lg p-4 text-center">
-              <Smartphone className="w-8 h-8 text-brand-500 mx-auto mb-2" />
-              <h4 className="text-sm font-medium text-slate-700 mb-1">Browser-Based</h4>
-              <p className="text-xs text-slate-500">No app installation required</p>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4 text-center">
-              <Users className="w-8 h-8 text-brand-500 mx-auto mb-2" />
-              <h4 className="text-sm font-medium text-slate-700 mb-1">Multiple Devices</h4>
-              <p className="text-xs text-slate-500">Up to 5 devices per session</p>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4 text-center">
-              <CheckCircle className="w-8 h-8 text-brand-500 mx-auto mb-2" />
-              <h4 className="text-sm font-medium text-slate-700 mb-1">Offline Support</h4>
-              <p className="text-xs text-slate-500">Works without internet</p>
-            </div>
-          </div>
-
-          <button
-            onClick={handleCreateSession}
-            disabled={creating}
-            className="w-full max-w-[360px] mx-auto bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {creating ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Creating Session...
-              </>
-            ) : (
-              <>
-                <Power className="w-5 h-5" />
-                Activate Scanner
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const { session: sessionData, devices, stats } = session;
-  const isActive = sessionData.sessionStatus === 'active';
+  const currentDevices = session?.devices || [];
+  const maxDevices = session?.session?.maxDevices || 5;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Session Status Card */}
-      <div className="bg-white rounded-lg p-4">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
-            <div>
-              <h3 className="sm:text-lg text-md font-[400] text-slate-800">Scanner Session</h3>
-              <p className="text-xs sm:text-sm text-slate-500">
-                {isActive ? 'Active' : 'Closed'} • Expires {formatTime(sessionData.expiresAt)}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleCloseSession}
-            disabled={loading || !isActive}
-            className="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <PowerOff className="w-4 h-4" />
-            Close Session
-          </button>
+    <div className="p-0 max-w-7xl mx-auto space-y-6">
+      {/* Top Row Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+        <div className="lg:col-span-6 h-[400px]">
+          <ScannerOverview stats={currentStats} />
         </div>
-
-        {/* Scanner URL */}
-        {scannerUrl && isActive && (
-          <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 mb-6">
-            <label className="text-xs sm:text-sm font-medium text-brand-700 mb-2 block">Scanner Link</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={scannerUrl}
-                readOnly
-                className="flex-1 bg-white border border-brand-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-700 font-mono"
-              />
-              <button
-                onClick={() => copyToClipboard(scannerUrl)}
-                className="p-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors"
-                title="Copy to clipboard"
-              >
-                <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
-              <a
-                href={scannerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors"
-                title="Open scanner"
-              >
-                <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
-              </a>
-            </div>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-brand-600">Share this link with your staff to start scanning tickets</p>
-              <button
-                onClick={() => setShowOTPDialog(true)}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-100 rounded-lg transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Add Device
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-xs font-[300] text-slate-600">Successful</span>
-            </div>
-            <p className="text-2xl font-[400] text-slate-800">{stats.success}</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <XCircle className="w-4 h-4 text-red-500" />
-              <span className="text-xs font-[300] text-slate-600">Duplicates</span>
-            </div>
-            <p className="text-2xl font-[400] text-slate-800">{stats.duplicate}</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <XCircle className="w-4 h-4 text-orange-500" />
-              <span className="text-xs font-[300] text-slate-600">Invalid</span>
-            </div>
-            <p className="text-2xl font-[400] text-slate-800">{stats.invalid + stats.expired}</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Users className="w-4 h-4 text-brand-500" />
-              <span className="text-xs font-[300] text-slate-600">Total Scans</span>
-            </div>
-            <p className="text-2xl font-[400] text-slate-800">{stats.total}</p>
-          </div>
+        <div className="lg:col-span-4 h-[400px]">
+            <SessionManager 
+                session={session?.session ? session.session : undefined}
+                loading={loading || creating}
+                onCreate={handleCreateSession}
+                onClose={handleCloseSession}
+                scannerUrl={scannerUrl}
+                onCopy={copyToClipboard}
+            />
         </div>
-
-
-        {/* Emergency Manual Verification Section */}
-        <div className="bg-white rounded-lg p-6">
-          {/* Manual verification content will be here */}
-        </div>
-
-      {/* Active Devices */}
-      <div className="bg-white rounded-lg">
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <h3 className="text-lg font-[400] text-slate-800">Devices</h3>
-          <span className="text-sm text-slate-500">
-            {devices.filter(d => d.isOnline && d.status !== 'disabled').length} / {sessionData.maxDevices} online
-          </span>
-        </div>
-
-        {devices.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
-            <Smartphone className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm">No devices connected yet</p>
-            <p className="text-xs mt-1">Share the scanner link with your staff</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {devices.map((device) => {
-              const isDisabled = device.status === 'disabled';
-              return (
-              <div
-                key={device._id}
-                className={`p-4 hover:bg-slate-50 transition-colors ${isDisabled ? 'opacity-60 bg-slate-50/50' : ''}`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  {/* Device Info */}
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className={`w-2 h-2 rounded-full mt-1.5 ${isDisabled ? 'bg-red-400' : device.isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className={`text-sm font-[400] truncate ${isDisabled ? 'text-slate-500' : 'text-slate-800'}`}>{device.deviceName}</p>
-                        {isDisabled ? (
-                          <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
-                            Disabled
-                          </span>
-                        ) : device.isOnline && (
-                          <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
-                            Online
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                        <span>Last seen {formatTimeAgo(device.lastSeen)}</span>
-                        <span>•</span>
-                        <span className="font-[400] text-slate-700">{device.totalScans} scans</span>
-                        {device.revokedAt && (
-                          <>
-                            <span>•</span>
-                            <span className="text-red-600">Revoked {formatTimeAgo(device.revokedAt)}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    {isDisabled ? (
-                      <button
-                        onClick={async () => {
-                          try {
-                            await scannerService.enableDevice(device._id, sessionData._id);
-                            showNotification('success', 'Device Re-enabled', `${device.deviceName} can now scan again`);
-                            fetchSessionDetails(sessionData._id);
-                          } catch (err: any) {
-                            showNotification('error', 'Failed to Re-enable', err.message);
-                          }
-                        }}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Re-enable device"
-                      >
-                        <Power className="w-4 h-4" />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={async () => {
-                          if (confirm(`Disable ${device.deviceName}? This will prevent it from scanning.`)) {
-                            try {
-                              await scannerService.disableDevice(device._id, sessionData._id);
-                              showNotification('success', 'Device Disabled', `${device.deviceName} has been disabled`);
-                              fetchSessionDetails(sessionData._id);
-                            } catch (err: any) {
-                              showNotification('error', 'Failed to Disable', err.message);
-                            }
-                          }
-                        }}
-                        className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                        title="Disable device"
-                      >
-                        <PowerOff className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={async () => {
-                        if (confirm(`Force logout ${device.deviceName}? This will revoke access immediately.`)) {
-                          try {
-                            await scannerService.forceLogoutDevice(device._id, sessionData._id);
-                            showNotification('success', 'Device Logged Out', `${device.deviceName} has been logged out`);
-                            fetchSessionDetails(sessionData._id);
-                          } catch (err: any) {
-                            showNotification('error', 'Failed to Logout', err.message);
-                          }
-                        }
-                      }}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Force logout"
-                    >
-                      <XCircle className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-            })}
-          </div>
-        )}
       </div>
 
-      {/* PDF Ticket Sheet Download Section */}
-      <div className="bg-white rounded-lg p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-medium text-slate-800 mb-1">Ticket Sheet PDF</h3>
-            <p className="text-sm text-slate-500">
-              Download a printable list of all valid tickets for manual verification
-            </p>
-          </div>
+      {/* Secondary Details Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <div className="min-h-[500px]">
+            <DeviceList 
+                devices={currentDevices} 
+                maxDevices={maxDevices}
+                onAddDevice={() => setShowOTPDialog(true)}
+                onRefresh={() => session?.session?._id && fetchSessionDetails(session.session._id)}
+                onDisableDevice={handleDisableDevice}
+                onEnableDevice={handleEnableDevice}
+                onForceLogout={handleForceLogout}
+            />
         </div>
-
-        {/* New Ticket Alert */}
-        {lastDownloadInfo && currentTicketCount > lastDownloadInfo.ticketCount && (
-          <div className="bg-amber-50 rounded-lg p-3 mb-4 flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-amber-800">New Tickets Available</p>
-              <p className="text-xs text-amber-700 mt-0.5">
-                {currentTicketCount - lastDownloadInfo.ticketCount} new ticket(s) purchased since last download.
-                Download again to get the latest list.
-              </p>
+        <div className="grid grid-cols-1 gap-6 min-h-[500px]">
+            <div className="flex-1 min-h-[300px]">
+                <ManualVerification 
+                    onLookup={handleLookupTicket}
+                    isLookingUp={isLookingUp}
+                    verificationResult={verificationResult}
+                    onCheckIn={handleManualCheckIn}
+                    isCheckingIn={isCheckingIn}
+                    onClearResult={() => setVerificationResult(null)}
+                />
             </div>
-          </div>
-        )}
-
-        {/* Availability Info */}
-        {!isWithin24Hours && (
-          <div className="bg-blue-50 rounded-lg p-3 mb-4 flex items-start gap-2">
-            <Clock className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5 mt-1" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-blue-800">Available Soon</p>
-              <p className="text-xs text-blue-700 mt-0.5">
-                Ticket sheet will be available 24 hours before the event starts
-              </p>
+            <div className="h-auto">
+                <ToolsCard 
+                    onDownload={handleDownloadTicketSheet}
+                    isDownloading={isGeneratingPDF}
+                    isAvailable={isWithin24Hours}
+                    lastDownload={lastDownloadInfo || undefined}
+                    currentTicketCount={currentTicketCount}
+                />
             </div>
-          </div>
-        )}
-
-        {/* Download Button */}
-        <button
-          onClick={handleDownloadTicketSheet}
-          disabled={isGeneratingPDF || !isWithin24Hours}
-          className={`w-full max-w-[250px] ml-auto text-sm flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-[400] transition-colors ${
-            isGeneratingPDF || !isWithin24Hours
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              : 'bg-brand-500 hover:bg-brand-600 text-white'
-          }`}
-        >
-          {isGeneratingPDF ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Generating PDF...
-            </>
-          ) : (
-            <>
-              <Download className="w-4 h-4" />
-              Generate & Download PDF
-            </>
-          )}
-        </button>
-
-        {/* Last Download Info */}
-        {lastDownloadInfo && (
-          <div className="mt-4 pt-4">
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>Last downloaded:</span>
-              <span className="font-medium text-slate-700">
-                {new Date(lastDownloadInfo.timestamp).toLocaleString()} ({lastDownloadInfo.ticketCount} tickets)
-              </span>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
-
-      {/* Emergency Manual Verification */}
-      {session && (
-        <div className="bg-amber-50 border-1 border-amber-200 rounded-lg p-6 mt-6">
-          <div className="flex items-start gap-3 mb-4">
-            <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
-            <div>
-              <h3 className="text-lg font-[500] text-amber-900 mb-1">
-                🚨 Emergency Manual Verification
-              </h3>
-              <p className="text-sm text-amber-700">
-                Use this if scanners fail or attendee doesn't have QR code. All manual check-ins are logged with full audit trail.
-              </p>
-            </div>
-          </div>
-
-          {/* Ticket Sheet Download - Only show if event starts within 24 hours */}
-          {/* {isWithin24Hours && (
-          <div className="bg-white/70 rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-[500] text-slate-800 mb-1">📄 Ticket Sheet (PDF)</h4>
-                <p className="text-xs text-slate-600">
-                  Download alphabetically sorted ticket list for offline verification
-                </p>
-              </div>
-              <button
-                onClick={handleDownloadTicketSheet}
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-[500] transition-colors flex items-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Download Sheet
-              </button>
-            </div>
-          </div>
-          )} */}
-
-          {/* Ticket ID Lookup */}
-          <div className="bg-white/70 rounded-lg p-4 mb-4">
-            <label className="block text-sm font-[500] text-slate-700 mb-2">
-              Ticket Number Lookup
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={ticketIdInput}
-                onChange={(e) => setTicketIdInput(e.target.value.toUpperCase())}
-                onKeyDown={(e) => e.key === 'Enter' && handleLookupTicket()}
-                placeholder="Enter Ticket Number (e.g., ZNV-GALA-92XK7)"
-                className="flex-1 px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono"
-              />
-              <button
-                onClick={handleLookupTicket}
-                disabled={isLookingUp || !ticketIdInput.trim()}
-                className="px-6 py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 text-white rounded-lg font-[500] transition-colors flex items-center gap-2"
-              >
-                {isLookingUp ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Looking up...
-                  </>
-                ) : (
-                  <>
-                    <QrCode className="w-4 h-4" />
-                    Verify Ticket
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Verification Result */}
-          {verificationResult && (
-            <div className="mt-4">
-              <VerificationResultCard
-                ticket={verificationResult}
-                onCheckIn={handleManualCheckIn}
-                isCheckingIn={isCheckingIn}
-              />
-            </div>
-          )}
-        </div>
-      )}
 
       {/* OTP Dialog */}
       {showOTPDialog && session?.session?._id && (
@@ -743,6 +399,5 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
         />
       )}
     </div>
-  </div>
   );
 }
