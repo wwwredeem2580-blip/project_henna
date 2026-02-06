@@ -124,6 +124,39 @@ export default function ScannerPage() {
     cacheTickets();
   }, [session, isOnline, dbInitialized]);
 
+  // Cache tickets when session is loaded
+  useEffect(() => {
+    if (!session) return;
+
+    const cacheTickets = async () => {
+      try {
+        setIsCaching(true);
+        console.log('Caching tickets for offline use...');
+        
+        const { tickets } = await scannerService.getTicketsForCache(session.sessionId, session.deviceId);
+        
+        console.log(`Fetched ${tickets.length} tickets from server for caching`);
+        
+        const cachedTickets: CachedTicket[] = tickets.map(t => ({
+          ...t,
+          status: t.status as 'valid' | 'cancelled' | 'refunded',
+          qrHash: t.qrHash, // Include QR hash for offline lookup
+          cachedAt: Date.now()
+        }));
+
+        await scannerDB.cacheTickets(cachedTickets);
+        console.log(`✅ Successfully cached ${tickets.length} tickets in IndexedDB`);
+        console.log('Sample QR hashes:', tickets.slice(0, 2).map(t => t.qrHash?.substring(0, 16) + '...'));
+      } catch (error) {
+        console.error('❌ Failed to cache tickets:', error);
+      } finally {
+        setIsCaching(false);
+      }
+    };
+
+    cacheTickets();
+  }, []);
+
   // Check for pending syncs
   useEffect(() => {
     if (!dbInitialized.current) return;

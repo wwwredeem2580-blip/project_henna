@@ -48,7 +48,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-tr-[2rem] rounded-bl-[2rem] overflow-hidden h-full">
+    <div className="bg-white rounded-tr-[2rem] rounded-bl-[2rem] overflow-visible h-full">
       <div className="p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -68,11 +68,11 @@ export const DeviceList: React.FC<DeviceListProps> = ({
           {devices.map((device) => {
              const isDisabled = device.status === 'disabled';
              return (
-            <div key={device._id} className={`relative group flex items-center justify-between p-5 rounded-3xl border transition-all ${
-                isDisabled ? 'border-slate-100 bg-slate-50 opacity-70' : 'border-slate-100 hover:border-[#683ee6]/30 hover:bg-[#efebff]/20'
+            <div key={device._id} className={`relative bg-slate-50 group flex items-center justify-between py-5 px-2 rounded-3xl border transition-all ${
+                isDisabled ? 'bg-slate-50 opacity-70' : 'border-slate-100 hover:border-[#683ee6]/30 hover:bg-[#efebff]/20'
             }`}>
               <div className="flex items-center gap-5">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${
                     isDisabled ? 'bg-slate-200' :
                     device.isOnline ? 'bg-emerald-50' : 'bg-slate-100'
                 }`}>
@@ -82,11 +82,11 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                    }`} />
                 </div>
                 <div>
-                  <h4 className="font-[500] text-slate-900 text-md flex items-center gap-2">
+                  <h4 className="font-[500] text-slate-900 text-sm flex items-center gap-2">
                     {device.deviceName}
                     {isDisabled && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Disabled</span>}
                   </h4>
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
                     <span className={`w-2 h-2 rounded-full ${
                         isDisabled ? 'bg-red-400' :
                         device.isOnline ? 'bg-emerald-500' : 'bg-slate-300'
@@ -105,7 +105,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                 </button>
 
                 {openMenuId === device._id && (
-                  <div ref={menuRef} className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 z-10 py-1 overflow-hidden">
+                  <div ref={menuRef} className="absolute bg-white right-0 top-full mt-2 w-48 rounded-xl shadow-lg border border-slate-100 z-50 py-1 overflow-hidden">
                     {isDisabled ? (
                          <button 
                             onClick={() => { onEnableDevice(device._id); setOpenMenuId(null); }}
