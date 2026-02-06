@@ -77,31 +77,37 @@ export default function ManageEvent() {
         label: 'Overview',
         content: <EventOverview data={data} onUpdate={handleUpdateData} onRefetch={fetchEventData} />,
         icon: <Layout size={16} />,
+        key: 'overview'
       },
       {
         label: 'Tickets',
         content: <EventTicketsTab data={data} onUpdate={handleUpdateData} onRefetch={fetchEventData} />,
-        icon: <Ticket size={16} />
+        icon: <Ticket size={16} />,
+        key: 'tickets'
       },
       {
         label: 'Details',
         content: <EventDetailsTab data={data} onUpdate={handleUpdateData} />,
-        icon: <Info size={16} />
+        icon: <Info size={16} />,
+        key: 'details'
       },
       {
         label: 'Check-in',
         content: <EventCheckInTab data={data} />,
-        icon: <CheckIcon size={16} />
+        icon: <CheckIcon size={16} />,
+        key: 'checkin'
       },
       {
         label: 'Scanner',
         content: <EventScannerTab data={data} />,
-        icon: <QrCode size={16} />
+        icon: <QrCode size={16} />,
+        key: 'scanner'
       },
       {
         label: 'Analytics',
         content: <EventAnalyticsTab data={data} />,
-        icon: <ChartBar size={16} />
+        icon: <ChartBar size={16} />,
+        key: 'analytics'
       }
     ];
 
