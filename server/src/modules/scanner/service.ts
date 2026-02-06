@@ -64,7 +64,12 @@ export const getActiveSessionByEventService = async (eventId: string, hostId: st
   });
 
   // Generate scanner URL
-  const scannerUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/scanner?token=${session.accessToken}`;
+  // Generate scanner URL
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://scanner.zenvy.com.bd' 
+    : `${process.env.CLIENT_URL || 'http://localhost:3000'}/scanner`;
+
+  const scannerUrl = `${baseUrl}?token=${session.accessToken}`;
 
   return {
     session: {
@@ -451,7 +456,12 @@ export const createScannerSessionService = async (
   await session.save();
 
   // Generate scanner access URL
-  const scannerUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/scanner?token=${accessToken}`;
+  // Generate scanner access URL
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://scanner.zenvy.com.bd' 
+    : `${process.env.CLIENT_URL || 'http://localhost:3000'}/scanner`;
+    
+  const scannerUrl = `${baseUrl}?token=${accessToken}`;
 
   return {
     success: true,
