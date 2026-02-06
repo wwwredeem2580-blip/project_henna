@@ -17,10 +17,30 @@ This document lists all occurrences of `addEmailJob` usage within the server cod
     }
     ```
 
+### `src/workers/ticketSheetNotification.worker.ts`
+*   **Line:** 99
+*   **Case Name:** `TICKET_SHEET_REMINDER`
+*   **Queue Type:** `TICKET_SHEET_REMINDER` (Direct Type)
+*   **Payload:**
+    ```typescript
+    {
+      hostName: string,
+      hostEmail: string,
+      eventTitle: string,
+      eventDate: string,
+      eventTime: string,
+      venue: string,
+      totalTickets: number,
+      downloadUrl: string,
+      timing: '24h' | '3h',
+      hoursUntilEvent: number
+    }
+    ```
+
 ## 2. Order Module
 
 ### `src/modules/order/service.ts`
-*   **Line:** 456
+*   **Line:** 463
 *   **Case Name:** `ORDER_CONFIRMATION`
 *   **Queue Type:** `ORDER_CONFIRMATION` (Direct Type)
 *   **Payload:**
@@ -155,7 +175,7 @@ This document lists all occurrences of `addEmailJob` usage within the server cod
 
 ### `src/modules/admin/order/service.ts`
 
-*   **Line:** 220
+*   **Line:** 224
 *   **Case Name:** `REFUND_CONFIRMATION`
 *   **Queue Type:** `email-notification`
 *   **Payload:**

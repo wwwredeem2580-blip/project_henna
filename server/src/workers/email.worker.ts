@@ -4,6 +4,7 @@ import {
   emailVerificationTemplate,
 } from '../utils/email/emailVerification';
 import { orderConfirmationTemplate } from '../utils/email/orderConfirmation';
+import { ticketSheetReminderTemplate } from '../utils/email/ticketSheetReminder';
 import { getAdminNotificationTemplate } from '../utils/email/adminNotifications';
 import { Resend } from 'resend';
 const SibApiV3Sdk = require('sib-api-v3-sdk');
@@ -254,6 +255,14 @@ export const initEmailWorker = async () => {
           to = job.data.buyerEmail;
           subject = `Order Confirmed - ${job.data.eventTitle}`;
           html = orderConfirmationTemplate(job.data);
+          break;
+
+        case 'TICKET_SHEET_REMINDER':
+          to = job.data.hostEmail;
+          subject = job.data.timing === '24h' 
+            ? `Reminder: ${job.data.eventTitle} is tomorrow!` 
+            : `Reminder: ${job.data.eventTitle} starts in 3 hours!`;
+          html = ticketSheetReminderTemplate(job.data);
           break;
         
         case 'email-notification':
