@@ -29,7 +29,8 @@ export const registerHostService = async (req: Request, res: Response) => {
       throw new CustomError('User already exists', 409);
     }
 
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '8');
+    const hashedPassword = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
     
     const user = await User.create({
       // Personal Information
@@ -115,7 +116,8 @@ export const registerUserService = async (req: Request, res: Response) => {
       throw new CustomError('User already exists', 409);
     }
 
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '8');
+    const hashedPassword = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
     
     const user = await User.create({
       // Personal Information

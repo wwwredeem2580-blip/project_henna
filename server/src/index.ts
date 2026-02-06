@@ -2,6 +2,7 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import app from './app';
 import { initEmailWorker } from './workers/email.worker';
+import './workers/loginHistory.worker'; // Initialize login history worker
 import { initChatbotSocket } from './websocket/chatbot';
 import cleanupExpiredOrders from './workers/orders.cleanup';
 import { generatePendingPayouts } from './workers/payout.worker';

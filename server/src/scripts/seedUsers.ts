@@ -41,7 +41,8 @@ const seedUsers = async () => {
         const passwordPlain = 'Password123!'; // Default password for all dummy users
         
         // Hash password
-        const hashedPassword = await bcrypt.hash(passwordPlain, 10);
+        const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '8');
+        const hashedPassword = await bcrypt.hash(passwordPlain, BCRYPT_ROUNDS);
 
         const user = {
             firstName,

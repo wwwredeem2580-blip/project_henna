@@ -164,6 +164,7 @@ const userSchema = new mongoose.Schema({
 
 // Indexes for common queries
 userSchema.index({ email: 1 });
+userSchema.index({ email: 1, provider: 1 }); // Compound index for login optimization
 userSchema.index({ businessName: 1 });
 userSchema.index({ widgetId: 1 }, { sparse: true });
 userSchema.index({ role: 1, isSuspended: 1 });
