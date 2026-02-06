@@ -19,42 +19,39 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <h4 className="text-neutral-950 font-light uppercase tracking-widest text-xs">Features</h4>
+          <h4 className="text-neutral-950 font-light uppercase tracking-widest text-xs">Platform</h4>
           <ul className="space-y-4 text-neutral-500 font-medium text-xs uppercase tracking-wider">
-            <li><a href="#" className="hover:text-brand-600 transition-colors font-medium">Ticketing</a></li>
-            <li><a href="#" className="hover:text-brand-600 transition-colors font-medium">Verification</a></li>
-            <li><a href="#" className="hover:text-brand-600 transition-colors font-medium">Analytics</a></li>
+            <li><a href="/events" className="hover:text-brand-600 transition-colors font-medium">Explore Events</a></li>
+            <li><a href="/learn" className="hover:text-brand-600 transition-colors font-medium">Learn</a></li>
+            <li><a href="/about" className="hover:text-brand-600 transition-colors font-medium">About Zenvy</a></li>
+          </ul>
+        </div>
+
+        <div className="space-y-6">
+          <h4 className="text-neutral-950 font-light uppercase tracking-widest text-xs">Organizers</h4>
+          <ul className="space-y-4 text-neutral-500 font-medium text-xs uppercase tracking-wider">
+            <li><a href="/host/events/create" className="hover:text-brand-600 transition-colors font-medium">Sell Tickets</a></li>
+            <li><a href="/dashboard" className="hover:text-brand-600 transition-colors font-medium">Dashboard</a></li>
+            <li><a href="/host/analytics" className="hover:text-brand-600 transition-colors font-medium">Analytics</a></li>
           </ul>
         </div>
 
         <div className="space-y-6">
           <h4 className="text-neutral-950 font-light uppercase tracking-widest text-xs">Support</h4>
           <ul className="space-y-4 text-neutral-500 font-medium text-xs uppercase tracking-wider">
-            <li><a href="#" className="hover:text-brand-600 transition-colors font-medium">Help Center</a></li>
-            <li><a href="#" className="hover:text-brand-600 transition-colors font-medium">Contact</a></li>
-            <li><a href="#" className="hover:text-brand-600 transition-colors font-medium">System Status</a></li>
+            <li><a href="/help" className="hover:text-brand-600 transition-colors font-medium">Help Center</a></li>
+            <li><a href="/contact" className="hover:text-brand-600 transition-colors font-medium">Contact Us</a></li>
+            <li><a href="/status" className="hover:text-brand-600 transition-colors font-medium">System Status</a></li>
           </ul>
-        </div>
-
-        <div className="space-y-6">
-          <h4 className="text-neutral-950 font-light uppercase tracking-widest text-xs">Newsletter</h4>
-          <div className="flex gap-2">
-            <Input
-              type="email"
-              placeholder="Stay updated..."
-              className="bg-neutral-50 border-brand-200 focus-visible:ring-brand-600 font-medium text-xs"
-            />
-            <Button variant="brand" size="sm" className="h-9 px-4">Join</Button>
-          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto pt-12 border-t border-brand-200 flex flex-col sm:flex-row justify-between items-center text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-300">
          <p>© 2026 Zenvy Inc.</p>
          <div className="flex gap-8 mt-4 sm:mt-0">
-           <a href="#" className="hover:text-brand-600">Privacy</a>
-           <a href="#" className="hover:text-brand-600">Security</a>
-           <a href="#" className="hover:text-brand-600">Terms</a>
+           <a href="/legal/privacy" className="hover:text-brand-600">Privacy</a>
+           <a href="/legal/security" className="hover:text-brand-600">Security</a>
+           <a href="/legal/terms" className="hover:text-brand-600">Terms</a>
          </div>
       </div>
     </footer>

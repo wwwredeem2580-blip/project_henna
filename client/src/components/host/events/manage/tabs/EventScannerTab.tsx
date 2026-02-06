@@ -454,82 +454,9 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
           </div>
         </div>
 
-        {/* PDF Ticket Sheet Download Section */}
-        <div className="bg-white rounded-lg border border-slate-200 p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-medium text-slate-800 mb-1">Ticket Sheet PDF</h3>
-              <p className="text-sm text-slate-500">
-                Download a printable list of all valid tickets for manual verification
-              </p>
-            </div>
-          </div>
-
-          {/* New Ticket Alert */}
-          {lastDownloadInfo && currentTicketCount > lastDownloadInfo.ticketCount && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-amber-800">New Tickets Available</p>
-                <p className="text-xs text-amber-700 mt-0.5">
-                  {currentTicketCount - lastDownloadInfo.ticketCount} new ticket(s) purchased since last download.
-                  Download again to get the latest list.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Availability Info */}
-          {!isWithin24Hours && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-start gap-2">
-              <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-blue-800">Available Soon</p>
-                <p className="text-xs text-blue-700 mt-0.5">
-                  Ticket sheet will be available 24 hours before the event starts
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Download Button */}
-          <button
-            onClick={handleDownloadTicketSheet}
-            disabled={isGeneratingPDF || !isWithin24Hours}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
-              isGeneratingPDF || !isWithin24Hours
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                : 'bg-brand-500 hover:bg-brand-600 text-white'
-            }`}
-          >
-            {isGeneratingPDF ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <Download className="w-5 h-5" />
-                Generate & Download PDF
-              </>
-            )}
-          </button>
-
-          {/* Last Download Info */}
-          {lastDownloadInfo && (
-            <div className="mt-4 pt-4 border-t border-slate-200">
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>Last downloaded:</span>
-                <span className="font-medium text-slate-700">
-                  {new Date(lastDownloadInfo.timestamp).toLocaleString()} ({lastDownloadInfo.ticketCount} tickets)
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Emergency Manual Verification Section */}
-        <div className="bg-white rounded-lg border border-slate-200 p-6">
+        <div className="bg-white rounded-lg p-6">
           {/* Manual verification content will be here */}
         </div>
 
@@ -651,9 +578,83 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
         )}
       </div>
 
+      {/* PDF Ticket Sheet Download Section */}
+      <div className="bg-white rounded-lg p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-medium text-slate-800 mb-1">Ticket Sheet PDF</h3>
+            <p className="text-sm text-slate-500">
+              Download a printable list of all valid tickets for manual verification
+            </p>
+          </div>
+        </div>
+
+        {/* New Ticket Alert */}
+        {lastDownloadInfo && currentTicketCount > lastDownloadInfo.ticketCount && (
+          <div className="bg-amber-50 rounded-lg p-3 mb-4 flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800">New Tickets Available</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                {currentTicketCount - lastDownloadInfo.ticketCount} new ticket(s) purchased since last download.
+                Download again to get the latest list.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Availability Info */}
+        {!isWithin24Hours && (
+          <div className="bg-blue-50 rounded-lg p-3 mb-4 flex items-start gap-2">
+            <Clock className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5 mt-1" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-800">Available Soon</p>
+              <p className="text-xs text-blue-700 mt-0.5">
+                Ticket sheet will be available 24 hours before the event starts
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Download Button */}
+        <button
+          onClick={handleDownloadTicketSheet}
+          disabled={isGeneratingPDF || !isWithin24Hours}
+          className={`w-full max-w-[250px] ml-auto text-sm flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-[400] transition-colors ${
+            isGeneratingPDF || !isWithin24Hours
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              : 'bg-brand-500 hover:bg-brand-600 text-white'
+          }`}
+        >
+          {isGeneratingPDF ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Generating PDF...
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              Generate & Download PDF
+            </>
+          )}
+        </button>
+
+        {/* Last Download Info */}
+        {lastDownloadInfo && (
+          <div className="mt-4 pt-4">
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>Last downloaded:</span>
+              <span className="font-medium text-slate-700">
+                {new Date(lastDownloadInfo.timestamp).toLocaleString()} ({lastDownloadInfo.ticketCount} tickets)
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Emergency Manual Verification */}
       {session && (
-        <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-6 mt-6">
+        <div className="bg-amber-50 border-1 border-amber-200 rounded-lg p-6 mt-6">
           <div className="flex items-start gap-3 mb-4">
             <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
             <div>

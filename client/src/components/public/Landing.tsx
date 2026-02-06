@@ -165,15 +165,15 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
       <section className="relative pt-20 pb-16 overflow-hidden px-6">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-[radial-gradient(ellipse_at_top,_rgba(103,61,230,0.06)_0%,_transparent_70%)] pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto text-center relative z-1 space-y-8">
-          <motion.div
+        <div className="max-w-5xl mx-auto text-center relative space-y-8">
+          {/* <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-3 py-1 bg-brand-50 border border-brand-100 rounded-full text-brand-600 text-[10px] font-bold uppercase tracking-widest"
           >
             <Sparkles size={12} className="animate-pulse" />
             Human-led, AI-powered
-          </motion.div>
+          </motion.div> */}
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -181,8 +181,8 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
             transition={{ delay: 0.1 }}
             className="text-[42px] md:text-[56px] font-[300] text-neutral-950 tracking-tighter leading-[1.1]"
           >
-            From Idea to Online, <br />
-            <span className="text-brand-500 italic">Quicker and Slicker</span>
+            Bangladesh's <br />
+            <span className="text-brand-500 italic">Trusted Event Ticketing Platform</span>
           </motion.h1>
 
           <motion.p
@@ -192,7 +192,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
             style={{ lineHeight: '32px' }}
             className="text-[18px] font-light text-neutral-600 w-full mx-auto"
           >
-            Top-notch precision for your events. Zenvy provides the infrastructure for high-end hybrid experiences, from automated payouts to encrypted document vaults.
+            Verified organizers, secure ticketing, and intelligent event management powered by Zenvy.
           </motion.p>
 
           {user ? (

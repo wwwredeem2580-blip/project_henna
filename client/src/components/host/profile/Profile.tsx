@@ -51,6 +51,7 @@ import { BDTIcon } from '@/components/ui/Icons';
 
 
 import { PhoneVerification } from './PhoneVerification';
+import { useNotification } from '@/lib/context/notification';
 
 export interface PayoutConfig {
   type: 'bank' | 'bkash' | 'nagad' | null;
@@ -77,6 +78,7 @@ export default function Profile() {
   const [activeSettingsSection, setActiveSettingsSection] = useState('Phone Verification');
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { showNotification } = useNotification();
 
   // Payment form state
   const [paymentFormData, setPaymentFormData] = useState({
@@ -171,7 +173,7 @@ export default function Profile() {
       setEditingPayoutType(null);
     } catch (error: any) {
       console.error('Failed to save payment details:', error);
-      setError(error.message || 'Failed to save payment details');
+      showNotification('error', 'Payment details not saved', error?.response?.data?.message || 'Failed to save payment details')
     } finally {
       setIsSaving(false);
     }
