@@ -4,12 +4,12 @@ import http from 'k6/http'
 export const options = {
   stages: [
     // Ramp-up
-    { duration: '2m', target: 200 },   
-    { duration: '3m', target: 400 },   
+    { duration: '2m', target: 400 },   
+    { duration: '3m', target: 600 },   
     // Peak load
-    { duration: '5m', target: 500 },  
+    { duration: '5m', target: 800 },  
     // Ramp-down
-    { duration: '2m', target: 200 },    
+    { duration: '2m', target: 400 },    
   ],
   thresholds: {
     http_req_failed: ['rate<0.02'],       // max 2% failed requests
