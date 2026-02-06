@@ -112,6 +112,18 @@ const userSchema = new mongoose.Schema({
         index: true
     },
     
+    // Security and Notifications
+    loginHistory: [{
+        ip: { type: String, required: true },
+        userAgent: { type: String, required: true },
+        deviceId: { type: String },
+        timestamp: { type: Date, default: Date.now }
+    }],
+    welcomeEmailSent: {
+        type: Boolean,
+        default: false
+    },
+
     // Role (B2B Team Structure)
     role: {
         type: String,

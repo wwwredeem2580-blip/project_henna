@@ -121,6 +121,43 @@ This document lists all occurrences of `addEmailJob` usage within the server cod
     }
     ```
 
+    ```
+
+### `src/modules/auth/login/service.ts`
+*   **Case Name:** `SUSPICIOUS_LOGIN`
+*   **Queue Type:** `SUSPICIOUS_LOGIN` (Direct Type)
+*   **Payload:**
+    ```typescript
+    {
+      name: string,
+      email: string,
+      time: string,
+      ip: string,
+      device: string
+    }
+    ```
+
+### `src/modules/auth/email/service.ts`
+*   **Case Name:** `WELCOME_USER`
+*   **Queue Type:** `WELCOME_USER` (Direct Type)
+*   **Payload:**
+    ```typescript
+    {
+      name: string,
+      email: string
+    }
+    ```
+
+*   **Case Name:** `WELCOME_HOST`
+*   **Queue Type:** `WELCOME_HOST` (Direct Type)
+*   **Payload:**
+    ```typescript
+    {
+      name: string,
+      email: string
+    }
+    ```
+
 ## 5. Admin Modules
 
 ### `src/modules/admin/payout/service.ts`

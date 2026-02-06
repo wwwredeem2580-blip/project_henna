@@ -29,6 +29,48 @@ export const loginService = async (req: Request, res: Response) => {
     if (!isMatch) {
       throw new CustomError('Invalid Credentials', 401);
     }
+
+    // --- Security: Suspicious Login Detection ---
+    const currentIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'Unknown';
+    const currentUserAgent = req.headers['user-agent'] || 'Unknown';
+
+    console.log(`[LOGIN] User: ${user.email}, IP: ${currentIp}`);
+
+    // If history exists, check if this IP is new
+    if (user.loginHistory && user.loginHistory.length > 0) {
+      const isKnownIp = user.loginHistory.some((entry: any) => entry.ip === currentIp);
+      
+      if (!isKnownIp) {
+        console.warn(`[SECURITY] New IP login detected for ${user.email}: ${currentIp}`);
+        
+        // Trigger Email Alert
+        // We import dynamically to avoid circular dependencies if any
+        const { addEmailJob } = await import('../../../workers/email.queue');
+        
+        await addEmailJob('SUSPICIOUS_LOGIN', {
+          name: user.firstName,
+          email: user.email,
+          time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }), // Adjust timezone as needed
+          ip: typeof currentIp === 'string' ? currentIp : 'Unknown',
+          device: currentUserAgent
+        });
+      }
+    }
+
+    // Update Login History
+    if (!user.loginHistory) user.loginHistory = [];
+    
+    user.loginHistory.push({
+      ip: typeof currentIp === 'string' ? currentIp : 'Unknown',
+      userAgent: currentUserAgent,
+      timestamp: new Date()
+    });
+
+    // Keep history manageable (last 20 entries)
+    if (user.loginHistory.length > 20) {
+      user.loginHistory = user.loginHistory.slice(-20);
+    }
+    // --------------------------------------------
     const accessToken = generateAccessToken({ 
       sub: user._id.toString(), 
       email: user.email, 

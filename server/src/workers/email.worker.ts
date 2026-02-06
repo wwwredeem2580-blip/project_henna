@@ -5,6 +5,9 @@ import {
 } from '../utils/email/emailVerification';
 import { orderConfirmationTemplate } from '../utils/email/orderConfirmation';
 import { ticketSheetReminderTemplate } from '../utils/email/ticketSheetReminder';
+import { welcomeUserTemplate } from '../utils/email/welcomeUser';
+import { welcomeHostTemplate } from '../utils/email/welcomeHost';
+import { suspiciousLoginTemplate } from '../utils/email/suspiciousLogin';
 import { getAdminNotificationTemplate } from '../utils/email/adminNotifications';
 import { Resend } from 'resend';
 const SibApiV3Sdk = require('sib-api-v3-sdk');
@@ -255,6 +258,24 @@ export const initEmailWorker = async () => {
           to = job.data.buyerEmail;
           subject = `Order Confirmed - ${job.data.eventTitle}`;
           html = orderConfirmationTemplate(job.data);
+          break;
+
+        case 'WELCOME_USER':
+          to = job.data.email;
+          subject = 'Welcome to Zenvy! 🎉';
+          html = welcomeUserTemplate(job.data);
+          break;
+
+        case 'WELCOME_HOST':
+          to = job.data.email;
+          subject = 'Welcome to Zenvy for Organizers 🚀';
+          html = welcomeHostTemplate(job.data);
+          break;
+
+        case 'SUSPICIOUS_LOGIN':
+          to = job.data.email;
+          subject = 'New Login Detected - Security Alert';
+          html = suspiciousLoginTemplate(job.data);
           break;
 
         case 'TICKET_SHEET_REMINDER':

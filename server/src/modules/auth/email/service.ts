@@ -62,9 +62,24 @@ export const verifyEmailService = async (req: Request, res: Response) => {
     await verification.save();
 
     // Update user verification status
-    await User.findByIdAndUpdate(verification.userId, {
-      emailVerified: true
-    });
+    if (!user.welcomeEmailSent) {
+      await User.findByIdAndUpdate(verification.userId, {
+        emailVerified: true,
+        welcomeEmailSent: true
+      });
+
+      // Send Welcome Email
+      const emailType = user.role === 'host' ? 'WELCOME_HOST' : 'WELCOME_USER';
+      await addEmailJob(emailType, {
+        name: user.firstName, // Use first name for friendlier welcome
+        email: user.email
+      });
+      console.log(`📧 Welcome email queued for: ${user.email} (${user.role})`);
+    } else {
+      await User.findByIdAndUpdate(verification.userId, {
+        emailVerified: true
+      });
+    }
 
     // Return success WITHOUT setting cookies (stateless)
     return res.status(200).json({ 
