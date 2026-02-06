@@ -102,7 +102,8 @@ function ScannerJoinContent() {
       }));
 
       // Redirect to scanner
-      router.push('/scanner/scan');
+      const isScannerSubdomain = window.location.hostname === 'scanner.zenvy.com.bd';
+      router.push(isScannerSubdomain ? '/scan' : '/scanner/scan');
     } catch (err: any) {
       console.error('Join error:', err);
       setError(err.response?.data?.error || 'Failed to join session. Please try again.');

@@ -78,7 +78,8 @@ export default function ScannerPage() {
   useEffect(() => {
     const sessionData = localStorage.getItem('scanner_session');
     if (!sessionData) {
-      router.push('/scanner');
+      const isScannerSubdomain = window.location.hostname === 'scanner.zenvy.com.bd';
+      router.push(isScannerSubdomain ? '/' : '/scanner');
       return;
     }
     
@@ -87,7 +88,8 @@ export default function ScannerPage() {
       setSession(parsed);
     } catch (error) {
       console.error('Failed to parse session:', error);
-      router.push('/scanner');
+      const isScannerSubdomain = window.location.hostname === 'scanner.zenvy.com.bd';
+      router.push(isScannerSubdomain ? '/' : '/scanner');
     }
   }, [router]);
 
@@ -617,15 +619,18 @@ export default function ScannerPage() {
           .then(() => {
             scannerInitialized.current = false;
             html5QrCodeRef.current = null;
-            router.push('/');
+            const isScannerSubdomain = window.location.hostname === 'scanner.zenvy.com.bd';
+            router.push(isScannerSubdomain ? '/' : '/scanner');
           })
           .catch(() => {
             scannerInitialized.current = false;
             html5QrCodeRef.current = null;
-            router.push('/');
+            const isScannerSubdomain = window.location.hostname === 'scanner.zenvy.com.bd';
+            router.push(isScannerSubdomain ? '/' : '/scanner');
           });
       } else {
-        router.push('/');
+        const isScannerSubdomain = window.location.hostname === 'scanner.zenvy.com.bd';
+        router.push(isScannerSubdomain ? '/' : '/scanner');
       }
     }
   };

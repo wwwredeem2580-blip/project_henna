@@ -15,7 +15,11 @@ mongoose.connect(process.env.MONGO_URI!);
 app.use(express.json())
 
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:3000', 
+    'https://scanner.zenvy.com.bd',
+    'https://www.zenvy.com.bd'
+  ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
