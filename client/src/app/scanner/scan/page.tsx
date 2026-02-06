@@ -95,7 +95,7 @@ export default function ScannerPage() {
 
   // Cache tickets when session is loaded
   useEffect(() => {
-    if (!session || !dbInitialized.current || !isOnline) return;
+    if (!session || !dbInitialized.current) return;
 
     const cacheTickets = async () => {
       try {
@@ -109,7 +109,7 @@ export default function ScannerPage() {
         const cachedTickets: CachedTicket[] = tickets.map(t => ({
           ...t,
           status: t.status as 'valid' | 'cancelled' | 'refunded',
-          qrHash: t.qrHash, // Include QR hash for offline lookup
+          qrHash: t.qrHash,
           cachedAt: Date.now()
         }));
 
@@ -118,46 +118,14 @@ export default function ScannerPage() {
         console.log('Sample QR hashes:', tickets.slice(0, 2).map(t => t.qrHash?.substring(0, 16) + '...'));
       } catch (error) {
         console.error('❌ Failed to cache tickets:', error);
+        showNotification('error', 'Caching Failed', 'Could not cache tickets for offline use');
       } finally {
         setIsCaching(false);
       }
     };
 
     cacheTickets();
-  }, [session, isOnline, dbInitialized]);
-
-  // Cache tickets when session is loaded
-  useEffect(() => {
-    if (!session) return;
-
-    const cacheTickets = async () => {
-      try {
-        setIsCaching(true);
-        console.log('Caching tickets for offline use...');
-        
-        const { tickets } = await scannerService.getTicketsForCache(session.sessionId, session.deviceId);
-        
-        console.log(`Fetched ${tickets.length} tickets from server for caching`);
-        
-        const cachedTickets: CachedTicket[] = tickets.map(t => ({
-          ...t,
-          status: t.status as 'valid' | 'cancelled' | 'refunded',
-          qrHash: t.qrHash, // Include QR hash for offline lookup
-          cachedAt: Date.now()
-        }));
-
-        await scannerDB.cacheTickets(cachedTickets);
-        console.log(`✅ Successfully cached ${tickets.length} tickets in IndexedDB`);
-        console.log('Sample QR hashes:', tickets.slice(0, 2).map(t => t.qrHash?.substring(0, 16) + '...'));
-      } catch (error) {
-        console.error('❌ Failed to cache tickets:', error);
-      } finally {
-        setIsCaching(false);
-      }
-    };
-
-    cacheTickets();
-  }, []);
+  }, [session, dbInitialized]); // Removed isOnline dependency - cache regardless of connection
 
   // Check for pending syncs
   useEffect(() => {
