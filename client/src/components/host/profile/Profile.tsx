@@ -34,6 +34,8 @@ import {
   ArrowLeft,
   Pencil,
   Edit,
+  CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { useRouter } from 'next/navigation';
@@ -217,7 +219,48 @@ export default function Profile() {
             <p className="text-sm text-red-600">{error}</p>
           </div>
         ) : 
-          <div className="flex h-[calc(100vh-180px)] bg-white overflow-hidden flex-col md:flex-row">
+          <div className="flex flex-col h-[calc(100vh-180px)]">
+            
+            {/* Eligibility Banner */}
+            <div className="mb-6">
+              {profile?.phoneVerified && profile?.paymentDetails ? (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex flex-col gap-4 md:flex-row items-start md:items-center md:justify-between">
+                  <div className="flex items-center gap-4">
+                     <div className="min-w-8 min-h-8 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm">
+                        <CheckCircle size={16} strokeWidth={2} />
+                     </div>
+                     <div>
+                        <h3 className="text-md font-[500] text-slate-800">You are eligible to create events!</h3>
+                        <p className="text-xs text-slate-500 font-[300]">Your profile is complete. You can now start hosting events on Zenvy.</p>
+                     </div>
+                  </div>
+                  <button 
+                    onClick={() => router.push('/host/events/create')}
+                    className="px-4 ml-12 md:ml-0 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-[500] text-[10px] transition-all shadow-sm shadow-emerald-200 flex items-center gap-2"
+                  >
+                    Create Event <ArrowUpRight size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                     <div className="min-w-8 min-h-8 bg-white rounded-full flex items-center justify-center text-amber-500 shadow-sm">
+                        <AlertCircle size={16} strokeWidth={2} />
+                     </div>
+                     <div>
+                        <h3 className="text-md font-[500] text-slate-800">Complete your profile to host events</h3>
+                        <p className="text-xs text-slate-500 font-[300]">
+                          You need to { !profile?.phoneVerified ? 'verify your phone number' : '' } 
+                          { !profile?.phoneVerified && !profile?.paymentDetails ? ' and ' : '' }
+                          { !profile?.paymentDetails ? 'add a payout method' : '' } to be eligible.
+                        </p>
+                     </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-1 bg-white overflow-hidden flex-col md:flex-row">
             <div className={`w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-100 flex-col bg-white ${isMobileDetailOpen ? 'hidden md:flex' : 'flex'}`}>
               <div className="p-4 md:p-6 border-b border-slate-50">
                 <h3 className="text-md font-[500] text-neutral-750 uppercase tracking-widest"></h3>
@@ -541,6 +584,7 @@ export default function Profile() {
                 )}
               </AnimatePresence>
             </div>
+          </div>
           </div>
       }
       </main>
