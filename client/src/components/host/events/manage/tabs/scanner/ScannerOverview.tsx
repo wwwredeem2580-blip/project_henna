@@ -17,10 +17,6 @@ export const ScannerOverview: React.FC<ScannerOverviewProps> = ({ stats }) => {
     <div className="bg-white rounded-[1.5rem] h-full overflow-hidden flex flex-col">
       <div className="p-6 border-b border-slate-50 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h3 className="text-md font-[500] text-neutral-800">Scanner Overview</h3>
-          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-[500] rounded uppercase tracking-wider">
-            Live Stats
-          </span>
         </div>
         <div className="text-right">
           {/* We could add logic for 'Last scan' time here if available in stats or separate prop */}
@@ -28,7 +24,7 @@ export const ScannerOverview: React.FC<ScannerOverviewProps> = ({ stats }) => {
         </div>
       </div>
       
-      <div className="p-8 flex flex-col md:flex-row items-center justify-center gap-12 flex-1">
+      <div className="p-8 flex flex-col items-center justify-center gap-12 flex-1">
         {/* Donut Chart */}
         <div className="relative w-48 h-48 shrink-0">
           <svg className="w-full h-full transform -rotate-90">
@@ -64,23 +60,23 @@ export const ScannerOverview: React.FC<ScannerOverviewProps> = ({ stats }) => {
         {/* Legend */}
         <div className="space-y-4 min-w-[180px]">
           <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-[#683ee6]"></div>
+            <div className="w-2 h-2 rounded-full bg-[#683ee6]"></div>
             <div className="flex flex-col">
-              <span className="text-sm font-[500] text-slate-900">Successful</span>
+              <span className="text-sm font-[400] text-slate-900">Successful</span>
               <span className="text-xs text-slate-500">{stats.success} scans</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+            <div className="w-2 h-2 rounded-full bg-amber-400"></div>
             <div className="flex flex-col">
-              <span className="text-sm font-[500] text-slate-900">Duplicates</span>
+              <span className="text-sm font-[400] text-slate-900">Duplicates</span>
               <span className="text-xs text-slate-500">{stats.duplicate} scans</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+            <div className="w-2 h-2 rounded-full bg-rose-500"></div>
             <div className="flex flex-col">
-              <span className="text-sm font-[500] text-slate-900">Invalid</span>
+              <span className="text-sm font-[400] text-slate-900">Invalid</span>
               <span className="text-xs text-slate-500">{stats.invalid + stats.expired + (stats.cancelled || 0) + (stats.refunded || 0)} scans</span>
             </div>
           </div>

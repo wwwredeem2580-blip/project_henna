@@ -48,19 +48,19 @@ export const DeviceList: React.FC<DeviceListProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-[2rem] overflow-hidden h-full">
+    <div className="bg-white rounded-tr-[2rem] rounded-bl-[2rem] overflow-hidden h-full">
       <div className="p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-1">Connected Devices</h3>
-            <p className="text-slate-500 text-sm">{onlineCount} / {maxDevices} Devices Online</p>
+            <h3 className="text-md font-[500] text-slate-900 mb-1">Connected Devices</h3>
+            <p className="text-slate-500 text-xs">{onlineCount} / {maxDevices} Devices Online</p>
           </div>
           <button 
             onClick={onAddDevice}
-            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-900 rounded-2xl font-semibold hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-2 px-2 py-2 bg-white border border-slate-200 text-slate-900 rounded-2xl font-semibold hover:bg-slate-50 transition-colors"
           >
-            <Plus className="w-5 h-5" />
-            <span className="hidden sm:inline">Add Device</span>
+            <Plus className="w-3 h-3" />
+            <span className="hidden text-[10px] sm:inline">Add Device</span>
           </button>
         </div>
 
@@ -76,13 +76,13 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                     isDisabled ? 'bg-slate-200' :
                     device.isOnline ? 'bg-emerald-50' : 'bg-slate-100'
                 }`}>
-                  <Smartphone className={`w-7 h-7 ${
+                  <Smartphone className={`w-5 h-5 ${
                       isDisabled ? 'text-slate-400' :
                       device.isOnline ? 'text-emerald-500' : 'text-slate-400'
                    }`} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-lg flex items-center gap-2">
+                  <h4 className="font-[500] text-slate-900 text-md flex items-center gap-2">
                     {device.deviceName}
                     {isDisabled && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Disabled</span>}
                   </h4>
@@ -134,10 +134,10 @@ export const DeviceList: React.FC<DeviceListProps> = ({
           )})}
 
           {devices.length === 0 && (
-            <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-3xl">
-              <Smartphone className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500 font-medium">No devices connected</p>
-              <p className="text-xs text-slate-400">Scan the QR code on a mobile device to begin.</p>
+            <div className="text-center py-2 border-2 border-dashed border-slate-200 rounded-tr-xl rounded-bl-xl">
+              <Smartphone className="w-8 h-8 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-900 text-xs font-[400]">No devices connected</p>
+              <p className="text-slate-600 px-4 text-[10px] font-[300]">Scan the QR code on a mobile device to begin.</p>
             </div>
           )}
         </div>

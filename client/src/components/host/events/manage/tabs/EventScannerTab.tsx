@@ -13,7 +13,7 @@ import OTPDialog from './scanner/OTPDialog';
 // Import new components
 import { ScannerOverview } from './scanner/ScannerOverview';
 import { SessionManager } from './scanner/SessionManager';
-import { DeviceList } from './scanner/DeviceList';
+// DeviceList is now used internally by SessionManager
 import { ManualVerification } from './scanner/ManualVerification';
 import { ToolsCard } from './scanner/ToolsCard';
 
@@ -245,7 +245,7 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
     }
  };
 
- const handleForceLogout = async (deviceId: string) => {
+  const handleForceLogout = async (deviceId: string) => {
     if (!session?.session?._id) return;
     if (!confirm('This will immediately log out the device. Continue?')) return;
     try {
@@ -334,61 +334,105 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   };
 
   const currentDevices = session?.devices || [];
+
   const maxDevices = session?.session?.maxDevices || 5;
+  const [activeTab, setActiveTab] = useState<'scanner' | 'manual' | 'tools'>('scanner');
 
   return (
     <div className="p-0 max-w-7xl mx-auto space-y-6">
-      {/* Top Row Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-        <div className="lg:col-span-6 h-[400px]">
-          <ScannerOverview stats={currentStats} />
-        </div>
-        <div className="lg:col-span-4 h-[400px]">
-            <SessionManager 
-                session={session?.session ? session.session : undefined}
-                loading={loading || creating}
-                onCreate={handleCreateSession}
-                onClose={handleCloseSession}
-                scannerUrl={scannerUrl}
-                onCopy={copyToClipboard}
-            />
+      {/* Tab Navigation */}
+      <div className="flex justify-center">
+        <div className="bg-slate-100 p-1 rounded-xl inline-flex gap-1 flex-wrap justify-center">
+          <button
+            onClick={() => setActiveTab('scanner')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'scanner'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Scanner & Devices
+          </button>
+          <button
+            onClick={() => setActiveTab('manual')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'manual'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Manual Check-in
+          </button>
+          <button
+            onClick={() => setActiveTab('tools')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'tools'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Tools & Exports
+          </button>
         </div>
       </div>
 
-      {/* Secondary Details Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-        <div className="min-h-[500px]">
-            <DeviceList 
-                devices={currentDevices} 
-                maxDevices={maxDevices}
-                onAddDevice={() => setShowOTPDialog(true)}
-                onRefresh={() => session?.session?._id && fetchSessionDetails(session.session._id)}
-                onDisableDevice={handleDisableDevice}
-                onEnableDevice={handleEnableDevice}
-                onForceLogout={handleForceLogout}
-            />
-        </div>
-        <div className="grid grid-cols-1 gap-6 min-h-[500px]">
-            <div className="flex-1 min-h-[300px]">
-                <ManualVerification 
-                    onLookup={handleLookupTicket}
-                    isLookingUp={isLookingUp}
-                    verificationResult={verificationResult}
-                    onCheckIn={handleManualCheckIn}
-                    isCheckingIn={isCheckingIn}
-                    onClearResult={() => setVerificationResult(null)}
-                />
-            </div>
-            <div className="h-auto">
-                <ToolsCard 
-                    onDownload={handleDownloadTicketSheet}
-                    isDownloading={isGeneratingPDF}
-                    isAvailable={isWithin24Hours}
-                    lastDownload={lastDownloadInfo || undefined}
-                    currentTicketCount={currentTicketCount}
-                />
-            </div>
-        </div>
+      <div className="min-h-[400px]">
+        {activeTab === 'scanner' && (
+           <div className="flex flex-col xl:flex-row">
+             {/* Left Column - Session & Verification */}
+             <div className="w-full flex-1 mx-auto max-w-[600px] space-y-6">
+                 <div className="min-h-[400px]">
+                     <SessionManager 
+                         session={session?.session ? session.session : undefined}
+                         devices={currentDevices}
+                         maxDevices={maxDevices}
+                         loading={loading || creating}
+                         onCreate={handleCreateSession}
+                         onClose={handleCloseSession}
+                         scannerUrl={scannerUrl}
+                         onCopy={copyToClipboard}
+                         onAddDevice={() => setShowOTPDialog(true)}
+                         onRefresh={() => session?.session?._id && fetchSessionDetails(session.session._id)}
+                         onDisableDevice={handleDisableDevice}
+                         onEnableDevice={handleEnableDevice}
+                         onForceLogout={handleForceLogout}
+                     />
+                 </div>
+             </div>
+     
+             {/* Right Column - Stats */}
+             <div className="w-full flex-1 mx-auto space-y-6">
+                 <div className="h-auto">
+                     <ScannerOverview stats={currentStats} />
+                 </div>
+             </div>
+           </div>
+        )}
+
+        {activeTab === 'manual' && (
+           <div className="max-w-2xl mx-auto">
+               <ManualVerification 
+                   onLookup={handleLookupTicket}
+                   isLookingUp={isLookingUp}
+                   verificationResult={verificationResult}
+                   onCheckIn={handleManualCheckIn}
+                   isCheckingIn={isCheckingIn}
+                   onClearResult={() => setVerificationResult(null)}
+               />
+           </div>
+        )}
+
+        {activeTab === 'tools' && (
+           <div className="max-w-2xl mx-auto">
+               <ToolsCard 
+                   onDownload={handleDownloadTicketSheet}
+                   isDownloading={isGeneratingPDF}
+                   isAvailable={isWithin24Hours}
+                   lastDownload={lastDownloadInfo || undefined}
+                   currentTicketCount={currentTicketCount}
+               />
+           </div>
+        )}
       </div>
 
       {/* OTP Dialog */}

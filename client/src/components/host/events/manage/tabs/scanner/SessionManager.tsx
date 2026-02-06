@@ -1,24 +1,39 @@
 
 import React, { useState } from 'react';
 import { Power, Copy, Check, ExternalLink, RefreshCw, Share2 } from 'lucide-react';
-import { ScannerSession } from '@/lib/api/scanner';
+import { ScannerSession, ScannerDevice } from '@/lib/api/scanner';
+import { DeviceList } from './DeviceList';
 
 interface SessionManagerProps {
   session: ScannerSession | undefined;
+  devices: ScannerDevice[];
+  maxDevices: number;
   loading: boolean;
   scannerUrl: string;
   onCreate: () => void;
   onClose: () => void;
   onCopy: (text: string) => void;
+  onAddDevice: () => void;
+  onRefresh: () => void;
+  onDisableDevice: (deviceId: string) => void;
+  onEnableDevice: (deviceId: string) => void;
+  onForceLogout: (deviceId: string) => void;
 }
 
 export const SessionManager: React.FC<SessionManagerProps> = ({
   session,
+  devices,
+  maxDevices,
   loading,
   scannerUrl,
   onCreate,
   onClose,
-  onCopy
+  onCopy,
+  onAddDevice,
+  onRefresh,
+  onDisableDevice,
+  onEnableDevice,
+  onForceLogout
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -31,8 +46,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
   };
 
   return (
-    <div className="bg-brand-50 rounded-[1.5rem] h-full flex flex-col overflow-hidden">
-      <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+    <div className="bg-brand-50 rounded-[1.5rem] flex flex-col overflow-hidden h-full">
+      <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-brand-50">
         <div className="flex items-center gap-3">
           <h3 className="text-md font-[500] text-slate-900">Scanner Session</h3>
           <span className={`px-2 py-0.5 text-[8px] font-[500] rounded uppercase tracking-wider ${
@@ -61,7 +76,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
         )}
       </div>
 
-      <div className="p-8 space-y-6 flex-1 flex flex-col justify-center">
+      <div className="p-8 space-y-6 flex flex-col justify-center flex-1">
         {!isActive ? (
           <div className="text-center space-y-2">
              <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -73,54 +88,68 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
              </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div>
-               <div className="flex items-center justify-center mb-6">
-                  <div className="w-12 h-12 bg-brand-500 rounded-full flex items-center justify-center animate-pulse">
-                    <div className="w-10 h-10 bg-brand-50 rounded-full flex items-center justify-center">
-                        <Check className="w-5 h-5 text-brand-600" />
+          <div className="space-y-8">
+            <div className="space-y-4">
+                <div>
+                    <div className="flex items-center justify-center mb-6">
+                        <div className="w-12 h-12 bg-brand-500 rounded-full flex items-center justify-center animate-pulse">
+                            <div className="w-10 h-10 bg-brand-50 rounded-full flex items-center justify-center">
+                                <Check className="w-5 h-5 text-brand-600" />
+                            </div>
+                        </div>
                     </div>
-                  </div>
-               </div>
-               
-               <label className="block text-xs font-[500] text-slate-500 uppercase tracking-widest mb-2 px-1">
-                 Scanner Link
-               </label>
-               <div className="flex flex-col gap-3">
-                <div className="relative group">
-                  <input 
-                    type="text" 
-                    readOnly 
-                    value={scannerUrl}
-                    className="w-full pl-4 pr-12 py-3 bg-white border border-slate-100 rounded-xl text-slate-600 text-sm font-mono truncate focus:outline-none"
-                  />
-                </div>
                 
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={handleCopy}
-                    className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-[500] hover:border-[#683ee6] hover:text-[#683ee6] transition-all"
-                  >
-                    {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                    {copied ? 'Copied' : 'Copy Link'}
-                  </button>
-                  <a 
-                    href={scannerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-3 py-2 bg-[#683ee6]/5 border border-transparent text-[#683ee6] rounded-xl text-xs font-[500] hover:bg-[#683ee6]/10 transition-all"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    Open
-                  </a>
+                    <label className="block text-xs font-[500] text-slate-500 uppercase tracking-widest mb-2 px-1">
+                        Scanner Link
+                    </label>
+                    <div className="flex flex-col gap-3">
+                        <div className="relative group">
+                            <input 
+                                type="text" 
+                                readOnly 
+                                value={scannerUrl}
+                                className="w-full pl-4 pr-12 py-3 bg-white border border-slate-100 rounded-xl text-slate-600 text-sm font-mono truncate focus:outline-none"
+                            />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                            <button 
+                                onClick={handleCopy}
+                                className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-[500] hover:border-[#683ee6] hover:text-[#683ee6] transition-all"
+                            >
+                                {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                                {copied ? 'Copied' : 'Copy Link'}
+                            </button>
+                            <a 
+                                href={scannerUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 px-3 py-2 bg-[#683ee6]/5 border border-transparent text-[#683ee6] rounded-xl text-xs font-[500] hover:bg-[#683ee6]/10 transition-all"
+                            >
+                                <ExternalLink className="w-3 h-3" />
+                                Open
+                            </a>
+                        </div>
+                    </div>
                 </div>
-               </div>
+
+                <div className="flex items-center gap-2 pt-2 text-[10px] text-slate-400 justify-center">
+                    <Share2 className="w-3 h-3" />
+                    <span>Share link with verification staff</span>
+                </div>
             </div>
-            
-             <div className="flex items-center gap-2 pt-2 text-[10px] text-slate-400 justify-center">
-               <Share2 className="w-3 h-3" />
-               <span>Share link with verification staff</span>
-             </div>
+
+            <div className="pt-2">
+                <DeviceList 
+                    devices={devices} 
+                    maxDevices={maxDevices}
+                    onAddDevice={onAddDevice}
+                    onRefresh={onRefresh}
+                    onDisableDevice={onDisableDevice}
+                    onEnableDevice={onEnableDevice}
+                    onForceLogout={onForceLogout}
+                />
+            </div>
           </div>
         )}
       </div>
