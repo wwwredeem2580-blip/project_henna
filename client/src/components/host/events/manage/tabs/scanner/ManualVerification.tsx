@@ -118,7 +118,7 @@ export const ManualVerification: React.FC<ManualVerificationProps> = ({
             </div>
             <VerificationResultCard 
                 ticket={verificationResult} 
-                onCheckIn={onCheckIn}
+                onCheckIn={onCheckIn as any}
                 isCheckingIn={isCheckingIn}
             />
          </div>
