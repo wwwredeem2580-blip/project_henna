@@ -14,7 +14,8 @@ import {
   forceLogoutDeviceService,
   updateDeviceStatusService,
   lookupTicketByIdService,
-  manualCheckInService
+  manualCheckInService,
+  searchTicketsService
 } from './service';
 import { syncOfflineScansService } from './syncService';
 import { handleError } from '../../utils/handleError';
@@ -352,6 +353,32 @@ router.post('/session/:sessionId/lookup-ticket', requireAuth, requireHost, async
     }
 
     const result = await lookupTicketByIdService(ticketId, sessionId as string, hostId);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * GET /api/scanner/session/:sessionId/search-tickets
+ * Search tickets by partial ticket number for autocomplete
+ * Host only
+ */
+router.get('/session/:sessionId/search-tickets', requireAuth, requireHost, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { query } = req.query;
+    const hostId = (req as any).user?.sub;
+
+    if (!hostId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    const result = await searchTicketsService(sessionId as string, query, hostId);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);

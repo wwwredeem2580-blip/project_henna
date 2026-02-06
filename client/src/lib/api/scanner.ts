@@ -261,6 +261,25 @@ class ScannerService {
   }
 
   /**
+   * Search tickets by partial ticket number for autocomplete
+   */
+  async searchTickets(sessionId: string, query: string): Promise<{
+    tickets: Array<{
+      ticketId: string;
+      ticketNumber: string;
+      ticketType: string;
+      holderName: string;
+      status: string;
+      checkInStatus: string;
+      checkedInAt?: Date;
+    }>;
+    query: string;
+    count: number;
+  }> {
+    return await apiClient.get(`/api/scanner/session/${sessionId}/search-tickets?query=${encodeURIComponent(query)}`);
+  }
+
+  /**
    * Download ticket sheet PDF for an event
    */
   async downloadTicketSheet(eventId: string): Promise<{

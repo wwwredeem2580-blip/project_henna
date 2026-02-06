@@ -92,7 +92,7 @@ export const EventCheckInTab = ({ data }: { data: HostEventDetailsResponse | nul
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-24 animate-slide-up">
     <div className="lg:col-span-2 space-y-8">
-      <div className="bg-white p-8 rounded-[38px] soft-shadow relative overflow-hidden">
+      <div className="bg-white p-8 rounded-[38px] soft-shadow relative overflow-visible">
         <div className="flex flex-col gap-10 mb-10 mt-6">
           <div className="flex items-start justify-between">
             <div>
@@ -132,6 +132,7 @@ export const EventCheckInTab = ({ data }: { data: HostEventDetailsResponse | nul
 
         {/* Manual Check-in Section - Inside white container, full width */}
         <ManualVerification 
+            sessionId={session?.session?._id || ''}
             onLookup={handleLookupTicket}
             isLookingUp={isLookingUp}
             verificationResult={verificationResult}

@@ -31,7 +31,15 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
   const eventStatus = data?.event?.status;
   const eventStartDate = data?.event?.schedule?.startDate;
 
-  // Check if event is eligible for scanner (published, live, or ended)
+  // Check if event starts within 1 hour (or has already started)
+  const isWithin1Hour = eventStartDate 
+    ? (new Date(eventStartDate).getTime() - new Date().getTime()) <= 60 * 60 * 1000
+    : false;
+
+  // Check if event is eligible for scanner:
+  // 1. Status must be published, live, or ended
+  // 2. Must be within 1 hour of start time (or already started/ended)
+  // const canUseScanner = ['published', 'live', 'ended'].includes(eventStatus || '') && isWithin1Hour;
   const canUseScanner = ['published', 'live', 'ended'].includes(eventStatus || '');
 
   // Load existing session on mount
@@ -175,11 +183,20 @@ export function EventScannerTab({ data }: EventScannerTabProps) {
         <div className="bg-slate-50 rounded-[2rem] p-12 text-center border border-slate-100">
           <QrCode className="w-16 h-16 text-slate-300 mx-auto mb-6" />
           <h3 className="text-xl font-bold text-slate-700 mb-2">Scanner Not Available</h3>
-          <p className="text-slate-500">
-            Scanner functionality is only available for published, live, or ended events.
-            <br />
-            Current Status: <span className="font-bold uppercase">{eventStatus}</span>
-          </p>
+          
+          {!isWithin1Hour && ['published', 'live', 'ended'].includes(eventStatus || '') ? (
+             <p className="text-slate-500 max-w-[480px] mx-auto">
+               Scanner functionality becomes available <strong>1 hour before</strong> the event starts.
+               <br />
+               Please check back closer to the event time.
+             </p>
+          ) : (
+            <p className="text-slate-500">
+              Scanner functionality is only available for published, live, or ended events.
+              <br />
+              Current Status: <span className="font-bold uppercase">{eventStatus}</span>
+            </p>
+          )}
         </div>
       </div>
     );

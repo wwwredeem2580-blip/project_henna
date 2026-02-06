@@ -1031,3 +1031,66 @@ export const manualCheckInService = async (
     }
   };
 };
+
+/**
+ * Search tickets by partial ticket number for autocomplete
+ */
+export const searchTicketsService = async (
+  sessionId: string,
+  query: string,
+  hostId: string
+) => {
+  if (!isValidObjectId(sessionId)) {
+    throw new CustomError('Invalid session ID', 400);
+  }
+
+  if (!query || query.length < 2) {
+    throw new CustomError('Search query must be at least 2 characters', 400);
+  }
+
+  // Sanitize query - alphanumeric and hyphens only
+  const sanitizedQuery = query.replace(/[^a-zA-Z0-9-]/g, '');
+  if (!sanitizedQuery) {
+    throw new CustomError('Invalid search query', 400);
+  }
+
+  // Find session and verify ownership
+  const session = await ScannerSession.findById(sessionId).populate('eventId');
+  if (!session) {
+    throw new CustomError('Session not found', 404);
+  }
+
+  const event = await Event.findById(session.eventId);
+  if (!event) {
+    throw new CustomError('Event not found', 404);
+  }
+
+  if (event.hostId.toString() !== hostId) {
+    throw new CustomError('Unauthorized - not event host', 403);
+  }
+
+  // Search tickets by partial match (case-insensitive)
+  const tickets = await Ticket.find({
+    eventId: session.eventId,
+    status: { $in: ['valid', 'cancelled', 'refunded'] },
+    ticketNumber: { $regex: sanitizedQuery, $options: 'i' }
+  })
+    .limit(10) // Max 10 results
+    .select('ticketNumber ticketType holderName status checkInStatus checkedInAt')
+    .sort({ ticketNumber: 1 })
+    .lean();
+
+  return {
+    tickets: tickets.map(t => ({
+      ticketId: t._id.toString(),
+      ticketNumber: t.ticketNumber,
+      ticketType: t.ticketType,
+      holderName: t.holderName || 'Guest',
+      status: t.status,
+      checkInStatus: t.checkInStatus,
+      checkedInAt: t.checkedInAt
+    })),
+    query: sanitizedQuery,
+    count: tickets.length
+  };
+};
