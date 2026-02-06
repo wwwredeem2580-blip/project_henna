@@ -33,8 +33,8 @@ export default function VerificationResultCard({ ticket, onCheckIn, isCheckingIn
   const getStatusConfig = () => {
     if (ticket.isExpired) {
       return {
-        color: 'bg-orange-50 border-orange-200',
-        icon: <Clock className="w-12 h-12 text-orange-500" />,
+        color: '',
+        icon: <Clock className="w-6 h-6 text-orange-500" />,
         badge: 'bg-orange-100 text-orange-700',
         status: 'EXPIRED',
         message: 'This ticket has expired'
@@ -43,8 +43,8 @@ export default function VerificationResultCard({ ticket, onCheckIn, isCheckingIn
 
     if (ticket.isCheckedIn) {
       return {
-        color: 'bg-blue-50 border-blue-200',
-        icon: <CheckCircle className="w-12 h-12 text-blue-500" />,
+        color: '',
+        icon: <CheckCircle className="w-6 h-6 text-blue-500" />,
         badge: 'bg-blue-100 text-blue-700',
         status: 'ALREADY CHECKED IN',
         message: 'This ticket was already used'
@@ -53,8 +53,8 @@ export default function VerificationResultCard({ ticket, onCheckIn, isCheckingIn
 
     if (ticket.status !== 'valid') {
       return {
-        color: 'bg-red-50 border-red-200',
-        icon: <XCircle className="w-12 h-12 text-red-500" />,
+        color: '',
+        icon: <XCircle className="w-6 h-6 text-red-500" />,
         badge: 'bg-red-100 text-red-700',
         status: 'INVALID',
         message: `Ticket is ${ticket.status}`
@@ -62,8 +62,8 @@ export default function VerificationResultCard({ ticket, onCheckIn, isCheckingIn
     }
 
     return {
-      color: 'bg-emerald-50 border-emerald-200',
-      icon: <CheckCircle className="w-12 h-12 text-emerald-500" />,
+      color: '',
+      icon: <CheckCircle className="w-6 h-6 text-emerald-500" />,
       badge: 'bg-emerald-100 text-emerald-700',
       status: 'VALID',
       message: 'Ready to check in'
@@ -74,17 +74,17 @@ export default function VerificationResultCard({ ticket, onCheckIn, isCheckingIn
   const canCheckIn = !ticket.isCheckedIn && !ticket.isExpired && ticket.status === 'valid';
 
   return (
-    <div className={`rounded-lg border-2 p-6 ${config.color}`}>
+    <div className={`rounded-lg border-none py-6 ${config.color}`}>
       {/* Status Header */}
       <div className="flex items-start gap-4 mb-6">
         <div className="flex-shrink-0">
           {config.icon}
         </div>
         <div className="flex-1">
-          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider mb-2 ${config.badge}`}>
+          <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-[500] tracking-wider mb-2 ${config.badge}`}>
             {config.status}
           </span>
-          <h3 className="text-xl font-[400] text-slate-800 mb-1">
+          <h3 className="text-md font-[300] text-slate-800 mb-1">
             {config.message}
           </h3>
         </div>
@@ -92,33 +92,25 @@ export default function VerificationResultCard({ ticket, onCheckIn, isCheckingIn
 
       {/* Ticket Details */}
       <div className="space-y-3 mb-6">
-        <div className="flex items-center justify-between px-4 py-3 bg-white/70 rounded-lg">
-          <span className="text-sm text-slate-500">Ticket Number</span>
-          <span className="text-sm font-mono font-[500] text-slate-800">{ticket.ticketNumber}</span>
+        <div className="flex items-center gap-4 justify-between px-4 py-3 bg-white/70 rounded-lg">
+          <span className="text-xs text-slate-500">Ticket Number</span>
+          <span className="text-xs font-mono font-[500] text-slate-800">{ticket.ticketNumber}</span>
         </div>
 
-        <div className="flex items-center justify-between px-4 py-3 bg-white/70 rounded-lg">
-          <span className="text-sm text-slate-500">Type</span>
-          <span className="text-sm font-[500] text-slate-800">{ticket.ticketType}</span>
+        <div className="flex items-center gap-4 justify-between px-4 py-3 bg-white/70 rounded-lg">
+          <span className="text-xs text-slate-500">Type</span>
+          <span className="text-xs font-[500] text-slate-800">{ticket.ticketType}</span>
         </div>
 
-        <div className="flex items-center justify-between px-4 py-3 bg-white/70 rounded-lg">
-          <span className="text-sm text-slate-500">Wristband</span>
+        <div className="flex items-center gap-4 justify-between px-4 py-3 bg-white/70 rounded-lg">
+          <span className="text-xs text-slate-500">Wristband</span>
           <div className="flex items-center gap-2">
             <div 
-              className="w-6 h-6 rounded border-2 border-white shadow-sm"
+              className="w-4 h-4 rounded border-2 border-white shadow-sm"
               style={{ backgroundColor: ticket.wristbandColor }}
             />
-            <span className="text-sm font-mono text-slate-600">{ticket.wristbandColor}</span>
+            <span className="text-xs font-mono text-slate-600">{ticket.wristbandColor}</span>
           </div>
-        </div>
-
-        <div className="flex items-center justify-between px-4 py-3 bg-white/70 rounded-lg">
-          <span className="text-sm text-slate-500">Holder</span>
-          <span className="text-sm font-[500] text-slate-800 flex items-center gap-2">
-            <User className="w-4 h-4" />
-            {ticket.holderName}
-          </span>
         </div>
       </div>
 
@@ -150,14 +142,14 @@ export default function VerificationResultCard({ ticket, onCheckIn, isCheckingIn
       {canCheckIn && (
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-[500] text-slate-700 mb-2">
-              Reason for Manual Check-in (Optional)
+            <label className="block text-xs font-[400] text-slate-700 mb-2">
+              Reason for Manual Check-in
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g., Scanner malfunction, QR code damaged..."
-              className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+              className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-[10px]"
               rows={3}
             />
           </div>
@@ -165,16 +157,16 @@ export default function VerificationResultCard({ ticket, onCheckIn, isCheckingIn
           <button
             onClick={() => onCheckIn(notes)}
             disabled={isCheckingIn}
-            className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white rounded-lg font-[500] transition-colors flex items-center justify-center gap-2"
+            className="w-full text-xs px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white rounded-lg font-[500] transition-colors flex items-center justify-center gap-2"
           >
             {isCheckingIn ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-3 h-3 border-1 border-white border-t-transparent rounded-full animate-spin" />
                 Checking In...
               </>
             ) : (
               <>
-                <CheckCircle className="w-5 h-5" />
+                <CheckCircle className="w-3 h-3" />
                 Check In Manually
               </>
             )}

@@ -1,9 +1,87 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
+import { ManualVerification } from './scanner/ManualVerification';
+import { scannerService, SessionDetailsResponse } from '@/lib/api/scanner';
+import { useNotification } from '@/lib/context/notification';
 
 export const EventCheckInTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
-  const checkInStats = data?.analytics?.checkInStats;
+  const { showNotification } = useNotification();
+  const eventId = data?.event?._id;
   const metrics = data?.event?.metrics;
+  const checkInStats = data?.analytics?.checkInStats;
+
+  // Manual Check-in State
+  const [session, setSession] = useState<SessionDetailsResponse | null>(null);
+  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+
+  // Load active session for manual check-in
+  useEffect(() => {
+    if (!eventId) return;
+
+    const loadSession = async () => {
+      try {
+        const existingSession = await scannerService.getActiveSessionByEvent(eventId);
+        if (existingSession) {
+          setSession(existingSession);
+        }
+      } catch (error) {
+        console.log('No active session for manual check-in');
+      }
+    };
+
+    loadSession();
+  }, [eventId]);
+
+  const handleLookupTicket = async (ticketId: string) => {
+    if (!session?.session?._id) {
+       showNotification('error', 'No Active Session', 'Please activate a scanner session in the Scanner tab first');
+       return;
+    }
+
+    try {
+      setIsLookingUp(true);
+      setVerificationResult(null);
+      
+      const result = await scannerService.lookupTicket(ticketId, session.session._id);
+      
+      if (!result.found) {
+        showNotification('error', 'Ticket Not Found', result.message || 'Ticket not found');
+        return;
+      }
+
+      setVerificationResult(result.ticket);
+    } catch (error: any) {
+      showNotification('error', 'Lookup Failed', error.message);
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
+  const handleManualCheckIn = async (notes?: string) => {
+    if (!verificationResult?.ticketNumber || !session?.session?._id) return;
+
+    try {
+      setIsCheckingIn(true);
+      
+      await scannerService.manualCheckIn(verificationResult.ticketNumber, session.session._id, notes);
+      
+      showNotification('success', 'Check-in Successful', 'Ticket checked in manually');
+      
+      // Refresh verification result to show new status
+      const result = await scannerService.lookupTicket(verificationResult.ticketNumber, session.session._id);
+      if (result.found) {
+         setVerificationResult(result.ticket);
+      }
+      
+    } catch (error: any) {
+      showNotification('error', 'Check-in Failed', error.message);
+    } finally {
+      setIsCheckingIn(false);
+    }
+  };
 
   const checkedIn = checkInStats?.checkedIn || metrics?.checkIns || 0;
   // If checkInStats.total is 0 or null, we might use total tickets sold as the potential pool
@@ -14,7 +92,7 @@ export const EventCheckInTab = ({ data }: { data: HostEventDetailsResponse | nul
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-24 animate-slide-up">
     <div className="lg:col-span-2 space-y-8">
-      <div className="bg-white relative overflow-hidden">
+      <div className="bg-white p-8 rounded-[38px] soft-shadow relative overflow-hidden">
         <div className="flex flex-col gap-10 mb-10 mt-6">
           <div className="flex items-start justify-between">
             <div>
@@ -40,7 +118,7 @@ export const EventCheckInTab = ({ data }: { data: HostEventDetailsResponse | nul
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="p-6 bg-slate-50 rounded-[24px] flex flex-col justify-center">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Last Check-in</p>
             <p className="text-sm font-medium text-gray-700 tracking-wider">N/A <span className="text-slate-400 whitespace-nowrap text-xs font-normal ml-1">-</span></p>
@@ -51,11 +129,20 @@ export const EventCheckInTab = ({ data }: { data: HostEventDetailsResponse | nul
             <p className="text-sm font-medium text-gray-700 tracking-wider">-- <span className="text-slate-400 whitespace-nowrap text-xs font-normal ml-1">check-ins / hr</span></p>
           </div>
         </div>
-      </div>
-    </div>
+
+        {/* Manual Check-in Section - Inside white container, full width */}
+        <ManualVerification 
+            onLookup={handleLookupTicket}
+            isLookingUp={isLookingUp}
+            verificationResult={verificationResult}
+            onCheckIn={handleManualCheckIn}
+            isCheckingIn={isCheckingIn}
+            onClearResult={() => setVerificationResult(null)}
+        />
+      </div>{/* End of bg-white container */}
+    </div>{/* End of col-span-2 */}
 
     <div className="space-y-8">
-
       <div className="bg-white p-8 rounded-[38px] soft-shadow">
         <h4 className="text-md font-medium tracking-wider text-gray-700 mb-6">Live Logs</h4>
         <div className="space-y-4">

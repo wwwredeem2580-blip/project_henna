@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+
+import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Ticket, DollarSign, ShoppingBag, Zap,
-  Pause, Play, ChevronRight, Send, ExternalLink, LayoutGrid, MessageSquare, AlertTriangle, CheckCircle
+  Pause, Play, ChevronRight, Send, ExternalLink, LayoutGrid, MessageSquare, AlertTriangle, CheckCircle, FileText
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { HostEventDetailsResponse } from '@/lib/api/host-analytics';
@@ -10,6 +11,7 @@ import { formatRelativeTime } from '@/lib/utils';
 import ActivityRow from '@/components/ui/ActivityRow';
 import { eventsService } from '@/lib/api/events';
 import { useNotification } from '@/lib/context/notification';
+import { scannerService } from '@/lib/api/scanner';
 
 interface EventOverviewProps {
   data: HostEventDetailsResponse | null;
@@ -24,6 +26,52 @@ export const EventOverview = ({ data, onUpdate, onRefetch }: EventOverviewProps)
 
   const analytics = data?.analytics;
   const event = data?.event;
+
+  // Tools & Exports State
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  const eventId = event?._id;
+  const eventStartDate = event?.schedule?.startDate;
+
+  const handleDownloadTicketSheet = async () => {
+    if (!eventId || isGeneratingPDF) return;
+
+    try {
+      setIsGeneratingPDF(true);
+
+      // Use scanner service instead of direct fetch
+      const { blob, ticketCount } = await scannerService.downloadTicketSheet(eventId);
+
+      // Download PDF
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ticket-sheet-${eventId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showNotification('success', 'Download Complete', `PDF with ${ticketCount} tickets downloaded`);
+    } catch (error: any) {
+      console.error('PDF generation error:', error);
+      
+      // Show specific error messages
+      let errorMessage = 'Failed to generate PDF';
+      if (error.message.includes('available 24 hours')) {
+        errorMessage = 'Ticket sheet only available 24 hours before event';
+      } else if (error.message.includes('No tickets')) {
+        errorMessage = 'No tickets found for this event';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Generation timed out. Please try again.';
+      }
+      
+      showNotification('error', 'Generation Failed', errorMessage + '. Contact support if issue persists.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
 
   const stats = analytics ? [
     { label: 'Tickets Sold', value: analytics.totalTicketsSold.toLocaleString(), sub: `of ${analytics.capacity?.toLocaleString() || '0'}`, icon: Ticket },
@@ -67,6 +115,10 @@ export const EventOverview = ({ data, onUpdate, onRefetch }: EventOverviewProps)
   // Get sales paused status from the correct field (with fallback for backward compatibility)
   const salesPaused = event?.moderation?.sales?.paused ?? event?.salesPaused ?? false;
 
+  const isWithin24Hours = eventStartDate 
+    ? (new Date(eventStartDate).getTime() - new Date().getTime()) <= 24 * 60 * 60 * 1000
+    : false;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-slide-up mb-24">
     <div className="lg:col-span-2 space-y-8">
@@ -104,7 +156,7 @@ export const EventOverview = ({ data, onUpdate, onRefetch }: EventOverviewProps)
           </div>
           <div className="space-y-4">
             <p className="text-sm font-normal text-slate-500">Last ticket sold: <span className="text-slate-900 font-medium">{analytics?.lastOrderDate ? formatRelativeTime(analytics.lastOrderDate) : 'No sales yet'}</span></p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
                 onClick={handleToggleSalesPause}
                 disabled={!canToggleSales || isTogglingPause}
@@ -127,6 +179,31 @@ export const EventOverview = ({ data, onUpdate, onRefetch }: EventOverviewProps)
                 </div>
                 <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </button>
+              
+              <button 
+                onClick={handleDownloadTicketSheet}
+                disabled={isGeneratingPDF || !isWithin24Hours}
+                title={!isWithin24Hours ? "Available 24 hours before event starts" : "Download PDF ticket list"}
+                className={`flex items-center justify-between p-4 rounded-2xl border transition-all group ${
+                  !isWithin24Hours 
+                    ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed' 
+                    : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <FileText size={18} strokeWidth={1} />
+                  <span className="text-xs font-[400] uppercase tracking-widest">
+                    { !isWithin24Hours 
+                        ? 'Available 24h before' 
+                        : isGeneratingPDF 
+                            ? 'Exporting...' 
+                            : 'Export Tickets' 
+                    }
+                  </span>
+                </div>
+                {isWithin24Hours && <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />}
+              </button>
+
               <button className="flex items-center justify-between p-4 bg-brand-50 rounded-2xl border border-brand-100 text-brand-600 hover:bg-brand-100 transition-all group">
                 <div className="flex items-center gap-3">
                   <Send size={18} strokeWidth={1} />
@@ -175,6 +252,7 @@ export const EventOverview = ({ data, onUpdate, onRefetch }: EventOverviewProps)
     </div>
 
     <div className="space-y-8">
+      
       <div className="bg-white p-4 rounded-[40px] soft-shadow">
         <h3 className="text-lg font-[400] tracking-wider text-gray-700 mb-6">Recent Activity</h3>
         <div className="space-y-6">
