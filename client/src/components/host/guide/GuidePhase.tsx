@@ -9,6 +9,7 @@ interface GuideItem {
   label: string;
   description?: string;
   isCritical?: boolean;
+  expandedContent?: React.ReactNode;
 }
 
 interface GuidePhaseProps {
@@ -31,6 +32,16 @@ export const GuidePhase: React.FC<GuidePhaseProps> = ({
   isLocked = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(!isLocked && phaseNumber === 1);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  const toggleItemExpansion = (itemId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (expandedItems.includes(itemId)) {
+      setExpandedItems(expandedItems.filter(id => id !== itemId));
+    } else {
+      setExpandedItems([...expandedItems, itemId]);
+    }
+  };
 
   const completedCount = items.filter(item => completedItems.includes(item.id)).length;
   const progress = (completedCount / items.length) * 100;
@@ -88,33 +99,59 @@ export const GuidePhase: React.FC<GuidePhaseProps> = ({
                   return (
                     <div 
                       key={item.id}
-                      onClick={() => onToggleItem(item.id)}
+                      onClick={(e) => toggleItemExpansion(item.id, e)}
                       className={`
-                        group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all border
+                        group flex flex-col p-3 rounded-xl cursor-pointer transition-all border
                         ${isChecked 
                           ? 'bg-green-50 border-green-200' 
                           : 'bg-white border-neutral-100 hover:border-brand-200 hover:shadow-sm'}
                       `}
                     >
-                      <div className={`mt-0.5 shrink-0 transition-colors ${isChecked ? 'text-green-500' : 'text-neutral-300 group-hover:text-brand-400'}`}>
-                        {isChecked ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-                      </div>
-                      <div>
-                        <p className={`text-sm font-medium ${isChecked ? 'text-green-800 line-through decoration-green-800/30' : 'text-neutral-700'}`}>
-                          {item.label}
-                        </p>
-                        {item.description && (
-                          <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
-                            {item.description}
-                          </p>
+                      <div className="flex items-start gap-3">
+                        <div 
+                            onClick={(e) => { e.stopPropagation(); onToggleItem(item.id); }}
+                            className={`mt-0.5 shrink-0 transition-colors ${isChecked ? 'text-green-500' : 'text-neutral-300 group-hover:text-brand-400'}`}
+                        >
+                            {isChecked ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                        </div>
+                        <div className="flex-1">
+                            <p className={`text-sm font-medium ${isChecked ? 'text-green-800 line-through decoration-green-800/30' : 'text-neutral-700'}`}>
+                            {item.label}
+                            </p>
+                            {item.description && (
+                            <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+                                {item.description}
+                            </p>
+                            )}
+                            {item.isCritical && !isChecked && (
+                                <div className="flex items-center gap-1.5 mt-2 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-md w-fit">
+                                    <AlertCircle size={12} />
+                                    CRITICAL STEP
+                                </div>
+                            )}
+                        </div>
+                        {item.expandedContent && (
+                             <div className="text-neutral-400">
+                                {expandedItems.includes(item.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                             </div>
                         )}
-                        {item.isCritical && !isChecked && (
-                            <div className="flex items-center gap-1.5 mt-2 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-md w-fit">
-                                <AlertCircle size={12} />
-                                CRITICAL STEP
-                            </div>
-                        )}
                       </div>
+
+                      {/* Expanded Content Area */}
+                      <AnimatePresence>
+                        {item.expandedContent && expandedItems.includes(item.id) && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
+                                exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                className="overflow-hidden pl-8"
+                            >
+                                <div className="pt-2 border-t border-dashed border-neutral-200/60 w-full" onClick={(e) => e.stopPropagation()}>
+                                    {item.expandedContent}
+                                </div>
+                            </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   );
                 })}
