@@ -7,6 +7,7 @@ export interface GuideItem {
   label: string;
   description?: string;
   isCritical?: boolean;
+  isUpcoming?: boolean;
   expandedContent?: React.ReactNode;
 }
 
@@ -78,6 +79,66 @@ const ScannerSetupVisual = () => (
                     </div>
                 </div>
             </div>
+        </div>
+     </div>
+  </div>
+);
+
+const ExportPDFVisual = () => (
+  <div className="mt-4 space-y-4">
+     <div className="text-sm text-neutral-600 space-y-2">
+        <ol className="list-decimal pl-5 space-y-1 text-neutral-700">
+            <li>Go to <Link href="/host/events" target="_blank" className="text-brand-600 hover:underline font-medium inline-flex items-center gap-1">Manage Event <ArrowRight size={12} /></Link>.</li>
+            <li>In the <strong>Overview</strong> tab, look for "Event Status" card.</li>
+            <li>Click the <strong>Export Tickets</strong> button (available 24h before event).</li>
+        </ol>
+     </div>
+
+     {/* Mock UI: Event Status Card */}
+     <div className="bg-white rounded-[24px] border border-neutral-100 shadow-sm p-4 max-w-[380px] select-none relative overflow-hidden">
+        <div className="flex items-center justify-between mb-4">
+           <h3 className="text-sm font-normal tracking-wider text-neutral-700">Event Status</h3>
+           <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="text-[8px] uppercase tracking-widest text-emerald-600 font-medium">Live & On Sale</span>
+           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+           <div className="p-3 rounded-xl border border-neutral-100 bg-neutral-50 flex items-center justify-between opacity-50">
+              <div className="flex items-center gap-2">
+                 <div className="w-4 h-4 rounded-full border-2 border-neutral-300"></div>
+                 <span className="text-[8px] uppercase tracking-widest text-neutral-500">Pause Sales</span>
+              </div>
+           </div>
+           
+           <div className="relative group cursor-pointer">
+               <div className="absolute -inset-0.5 bg-brand-200 rounded-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+               <div className="relative p-3 rounded-xl border border-brand-100 bg-brand-50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                     <div className="text-brand-600"><MousePointer2 size={14} className="-rotate-90" /></div>
+                     <span className="text-[8px] uppercase tracking-widest text-brand-700 font-bold">Export Tickets</span>
+                  </div>
+                  <ArrowRight size={10} className="text-brand-400" />
+               </div>
+               
+               {/* Tooltip */}
+               <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-neutral-800 text-white text-[9px] py-1 px-2 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                   Download PDF Ticket Sheet
+                   <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-neutral-800"></div>
+               </div>
+           </div>
+        </div>
+        
+        <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center gap-2">
+            <div className="p-1.5 bg-brand-100 text-brand-600 rounded-lg">
+                <MousePointer2 size={12} /> 
+            </div>
+            <div className="flex-1">
+                <div className="h-1.5 bg-brand-100 rounded w-1/3 mb-1"></div>
+                <div className="h-1 bg-neutral-100 rounded w-1/2"></div>
+            </div>
+             <ArrowRight size={12} className="text-neutral-300" />
         </div>
      </div>
   </div>
@@ -199,8 +260,20 @@ export const GUIDE_PHASES: Phase[] = [
         description: "Generate pairing codes and connect your physical scanning devices.",
         expandedContent: <AddDeviceVisual />
       },
-      { id: "p1_assign_roles", label: "Assign Entry Staff Roles", description: "Designate Scanner Operators, Gate Supervisors, and Queue Managers.", isCritical: true },
-      { id: "p1_fallback_prep", label: "Prepare Fallback Verification System", description: "Export Ticket Verification Sheet and save multiple offline copies (Print + Digital).", isCritical: true },
+      { 
+        id: "p1_assign_roles", 
+        label: "Assign Entry Staff Roles", 
+        description: "Designate Scanner Operators, Gate Supervisors, and Queue Managers.", 
+        isCritical: true,
+        isUpcoming: true 
+      },
+      { 
+        id: "p1_fallback_prep", 
+        label: "Prepare Fallback Verification System", 
+        description: "Export Ticket Verification Sheet and save multiple offline copies (Print + Digital).", 
+        isCritical: true,
+        expandedContent: <ExportPDFVisual />
+      },
       { id: "p1_venue_setup", label: "Confirm Venue Entry Setup", description: "Finalize gate layout, signage, and power backup." },
       { id: "p1_verify_rules", label: "Verify Ticket Rules", description: "Double-check tier limits, entry times, and transfer policies." }
     ]

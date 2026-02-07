@@ -9,6 +9,7 @@ interface GuideItem {
   label: string;
   description?: string;
   isCritical?: boolean;
+  isUpcoming?: boolean;
   expandedContent?: React.ReactNode;
 }
 
@@ -127,6 +128,11 @@ export const GuidePhase: React.FC<GuidePhaseProps> = ({
                                 <div className="flex items-center gap-1.5 mt-2 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-md w-fit">
                                     <AlertCircle size={12} />
                                     CRITICAL STEP
+                                </div>
+                            )}
+                            {item.isUpcoming && (
+                                <div className="flex items-center gap-1.5 mt-2 text-xs font-medium text-brand-600 bg-brand-50 px-2 py-1 rounded-md w-fit">
+                                    COMING SOON
                                 </div>
                             )}
                         </div>
