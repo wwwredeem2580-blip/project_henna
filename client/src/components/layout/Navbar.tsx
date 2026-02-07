@@ -27,6 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLogin, onGetStarted }) => {
     { label: 'Events', href: '/events' },
     { label: 'Learn', href: '/learn' },
     { label: 'About', href: '/about' },
+    { label: 'Contact', href: '/contact' },
   ];
 
   return (
