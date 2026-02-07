@@ -7,7 +7,7 @@ import {
   Wallet, ShieldCheck, Zap, Activity, MessageCircle, ArrowRight,
   Globe, Fingerprint, Lock, Layers, BarChart3, Ticket,
   ShieldAlert, RefreshCcw, Bell, Star, X, Send, Palette, FileText,
-  CreditCard, Clock10
+  CreditCard, Clock10, Music, Mic, Disc, Headphones, Speaker, PartyPopper
 } from 'lucide-react';
 import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
@@ -163,6 +163,74 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 overflow-hidden px-6">
+        {/* Background Cover Image */}
+        <div className="absolute inset-0 z-0 select-none">
+            <img 
+              src="/cover/cover.png" 
+              alt="Background" 
+              className="w-full h-full object-cover opacity-90"
+            />
+            {/* Gradient Overlay for Text Readability and Blending */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/80 to-neutral-0" />
+        </div>
+
+        {/* Decorative Floating Icons */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
+               animate={{ opacity: 1, scale: 1, rotate: -10, y: [0, -20, 0] }}
+               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+               className="absolute top-20 left-[10%] text-brand-500/20"
+             >
+               <Music size={64} strokeWidth={1} />
+             </motion.div>
+
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.5, rotate: 15 }}
+               animate={{ opacity: 1, scale: 1, rotate: 25, y: [0, 20, 0] }}
+               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+               className="absolute top-32 right-[15%] text-brand-600/20"
+             >
+               <Ticket size={80} strokeWidth={1} />
+             </motion.div>
+
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.5, rotate: -15 }}
+               animate={{ opacity: 1, scale: 1, rotate: -5, y: [0, -15, 0] }}
+               transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+               className="absolute bottom-32 left-[15%] text-purple-500/20"
+             >
+               <Mic size={56} strokeWidth={1} />
+             </motion.div>
+
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.5, rotate: 30 }}
+               animate={{ opacity: 1, scale: 1, rotate: 40, y: [0, 25, 0] }}
+               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+               className="absolute bottom-20 right-[10%] text-pink-500/20 "
+             >
+               <Disc size={72} strokeWidth={1} />
+             </motion.div>
+
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.5 }}
+               animate={{ opacity: 1, scale: 1, y: [0, -10, 0] }}
+               transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+               className="absolute top-1/3 left-[5%] text-orange-500/10 hidden md:block"
+             >
+               <PartyPopper size={48} strokeWidth={1} />
+             </motion.div>
+
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.5, rotate: -30 }}
+               animate={{ opacity: 1, scale: 1, rotate: -45, y: [0, 15, 0] }}
+               transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
+               className="absolute top-1/4 right-[5%] text-blue-500/10 hidden md:block"
+             >
+               <Headphones size={52} strokeWidth={1} />
+             </motion.div>
+        </div>
+
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-[radial-gradient(ellipse_at_top,_rgba(103,61,230,0.06)_0%,_transparent_70%)] pointer-events-none" />
 
         <div className="max-w-5xl mx-auto text-center relative space-y-8">
