@@ -12,6 +12,7 @@
     "seed:events": "ts-node src/scripts/seedEvents.ts",
     "seed:payouts": "ts-node src/scripts/seedPayouts.ts",
     "seed:users": "ts-node src/scripts/seedUsers.ts",
+    "delete:users": "ts-node src/scripts/deleteSeedUsers.ts",
     "test": "vitest"
   },
   "keywords": [],
