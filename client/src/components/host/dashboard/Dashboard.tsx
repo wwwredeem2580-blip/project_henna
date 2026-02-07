@@ -24,6 +24,10 @@ import { useAuth } from '@/lib/context/auth';
 import { useRouter } from 'next/navigation';
 import { hostAnalyticsService, DashboardMetrics, HostOrder } from '@/lib/api/host-analytics';
 import { hostEventsService } from '@/lib/api/host';
+import { Scale } from 'lucide-react';
+import Link from 'next/link';
+import { apiClient } from '@/lib/api/client';
+import { TOTAL_ITEMS } from '@/app/(public)/learn/host-guide/content';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -45,6 +49,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [recentOrders, setRecentOrders] = useState<HostOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showGuideRecommendation, setShowGuideRecommendation] = useState(false);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -53,16 +58,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         setLoading(true);
         setError(null);
 
-        // Fetch metrics, events, and recent orders in parallel
-        const [metricsData, eventsData, ordersData] = await Promise.all([
+        // Fetch metrics, events, recent orders, and guide progress in parallel
+        const [metricsData, eventsData, ordersData, guideData] = await Promise.all([
           hostAnalyticsService.getDashboardMetrics(),
           hostEventsService.getHostEvents({ limit: 5, page: 1, filters: { status: 'published,live' } }),
-          hostAnalyticsService.getHostOrders(1, 3)
+          hostAnalyticsService.getHostOrders(1, 3),
+          apiClient.get<any>('/api/host/guide').catch(() => ({ completedItems: [] })) // Handle guide fetch error gracefully
         ]);
 
         setMetrics(metricsData);
         setEvents(eventsData.events || []);
         setRecentOrders(ordersData.orders || []);
+
+        // Check guide progress
+        const completedCount = guideData.completedItems?.length || 0;
+        if (completedCount < TOTAL_ITEMS) {
+            setShowGuideRecommendation(true);
+        }
+
       } catch (err: any) {
         console.error('Failed to fetch dashboard data:', err);
         setError(err.message || 'Failed to load dashboard data');
@@ -96,6 +109,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             </div>
           </div>
         </header>
+
+        {/* Guidebook Recommendation Banner */}
+        {showGuideRecommendation && !loading && (
+            <div className="flex items-start sm:items-center gap-4 p-4 bg-brand-50/50 rounded-xl border border-brand-100 mb-8">
+                <div className="p-2 bg-brand-100 rounded-lg shrink-0">
+                    <Scale className="text-brand-600 w-5 h-5" />
+                </div>
+                <div className="text-xs sm:text-sm text-neutral-700 leading-relaxed">
+                    <span className="font-bold text-brand-900 block sm:inline sm:mr-1">Highly Suggested:</span> 
+                    We recommend completing the <Link href="/learn/host-guide" className="text-brand-600 hover:underline font-medium">Host Operational Guide</Link>, <Link href="/learn/how-to-host-event" className="text-brand-600 hover:underline font-medium">How to Host</Link>, and <Link href="/learn/organizer-guidelines" className="text-brand-600 hover:underline font-medium">Organizer Guidelines</Link> before creating an event.
+                    <div className="mt-1 font-medium text-brand-800 opacity-70">- Zenvy Team</div>
+                </div>
+            </div>
+        )}
 
         {/* Stats Grid */}
         {loading ? (
