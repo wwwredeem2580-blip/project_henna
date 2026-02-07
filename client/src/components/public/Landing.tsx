@@ -8,7 +8,7 @@ import {
   Globe, Fingerprint, Lock, Layers, BarChart3, Ticket,
   ShieldAlert, RefreshCcw, Bell, Star, X, Send, Palette, FileText,
   CreditCard, Clock10, Music, Mic, Disc, Headphones, Speaker, PartyPopper,
-  Users, Image, Rocket, Clapperboard, Trophy, Briefcase, Heart
+  Users, Image, Rocket, Clapperboard, Trophy, Briefcase, Heart, PenTool, LayoutDashboard
 } from 'lucide-react';
 import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
@@ -143,6 +143,16 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
 
   const { user } = useAuth();
   const router = useRouter();
+
+  const [activeStep, setActiveStep] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveStep((prev) => (prev + 1) % 3);
+    }, 3000); // Change step every 3 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
 
   useEffect(() => {
@@ -385,10 +395,10 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
                         <Zap size={12} />
                         Live Now
                     </motion.div>
-                    <h2 className="text-3xl md:text-4xl font-light text-neutral-950 tracking-tight">
+                    <h2 className="text-2xl md:text-3xl font-light text-neutral-950 tracking-tight">
                       Featured on Zenvy
                     </h2>
-                    <p className="text-neutral-500 font-light text-lg">Curated experiences happening across the country.</p>
+                    <p className="text-neutral-500 font-light text-base">Curated experiences happening across the country.</p>
                 </div>
                 <Button onClick={onExploreEvents} variant="outline" className="hidden md:flex rounded-xl border-neutral-200 text-neutral-600 hover:text-brand-600 hover:border-brand-200">
                     View All Events
@@ -482,9 +492,9 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
             viewport={{ once: true }}
             className="relative"
           >
-            <div className="aspect-[4/3] bg-brand-600 rounded-[2.5rem] relative overflow-hidden shadow-2xl group">
+            <div className="aspect-[4/3] bg-brand-600 rounded-tr-3xl rounded-bl-3xl relative overflow-hidden shadow-2xl group">
               {/* Mock Dashboard UI */}
-              <div className="absolute top-8 left-8 right-8 bottom-[-20%] bg-neutral-0 rounded-t-3xl shadow-2xl overflow-hidden p-6 space-y-6">
+              <div className="absolute top-4 left-4 right-4 bottom-[-20%] bg-neutral-0 rounded-tr-3xl rounded-bl-3xl shadow-2xl overflow-hidden p-6 space-y-6">
                 <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded flex items-center justify-center text-brand-600"><Logo className="w-4 h-4" strokeWidth="3"/></div>
@@ -531,10 +541,10 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
           >
             <div className="space-y-4">
               <span className="px-3 py-1 bg-neutral-100 text-neutral-600 text-[10px] font-bold uppercase tracking-widest rounded-full">Event Builder</span>
-              <h2 className="text-4xl md:text-5xl font-light text-neutral-950 tracking-tight leading-tight">
+              <h2 className="text-3xl md:text-4xl font-light text-neutral-950 tracking-tight leading-tight">
                 Host your event <br /> in minutes
               </h2>
-              <p className="text-neutral-500 font-[300] text-md leading-relaxed">
+              <p className="text-neutral-500 font-[300] text-base leading-relaxed">
                 Just describe your idea – Our Event Builder will handle the layout, ticketing, and verification. Then use the drag-and-drop editor to customize. Whether it's a physical concert or a global hybrid summit, you'll be live in moments.
               </p>
             </div>
@@ -547,14 +557,147 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
         </div>
       </section>
 
+      {/* Event Creation Flow Section */}
+      <section className="py-24 px-6 border-t border-neutral-100 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16 space-y-4">
+             <h2 className="text-3xl md:text-4xl font-light text-neutral-950 tracking-tight">From Idea to Sold Out</h2>
+             <p className="text-neutral-500 font-light text-base">Simple, transparent, and powerful tools for organizers.</p>
+          </div>
+
+          <div className="relative">
+            {/* Background Line (Desktop) */}
+            <div className="hidden lg:block absolute top-8 left-[15%] right-[15%] h-0.5 bg-neutral-100 z-0">
+               {/* Animated Spark (Desktop) */}
+               <motion.div 
+                 className="absolute top-0 bottom-0 bg-gradient-to-r from-transparent via-brand-500 to-transparent w-1/3 blur-sm"
+                 animate={{ 
+                   left: ["-20%", "120%"],
+                   opacity: [0, 1, 0]
+                 }}
+                 transition={{ 
+                   duration: 3, 
+                   ease: "easeInOut", 
+                   repeat: Infinity,
+                   repeatDelay: 0.5
+                 }}
+               />
+            </div>
+            
+            {/* Background Line (Mobile) */}
+            <div className="lg:hidden absolute left-8 top-8 bottom-8 w-0.5 bg-neutral-100 z-0">
+               {/* Animated Spark (Mobile) */}
+               <motion.div 
+                 className="absolute left-0 right-0 bg-gradient-to-b from-transparent via-brand-500 to-transparent h-1/3 blur-sm"
+                 animate={{ 
+                   top: ["-20%", "120%"],
+                   opacity: [0, 1, 0]
+                 }}
+                 transition={{ 
+                   duration: 3, 
+                   ease: "easeInOut", 
+                   repeat: Infinity,
+                   repeatDelay: 0.5
+                 }}
+               />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8 relative z-10">
+              {[
+                { 
+                  id: 0,
+                  icon: <PenTool size={28} strokeWidth={1.5} />, 
+                  title: "Create & Draft",
+                  subtitle: "Build your Event",
+                  desc: "Use the \"Create Event\" wizard to set up your basic details: Title, Schedule, and Venue. You can save as Draft at any stage and come back later."
+                },
+                { 
+                  id: 1,
+                  icon: <ShieldCheck size={28} strokeWidth={1.5} />, 
+                  title: "Verification & Submission",
+                  subtitle: "Required Documents",
+                  desc: "Before publishing, upload verification proofs: Identity (NID), Venue Booking, and Safety Plan. Documents are stored in our secure private vault."
+                },
+                { 
+                  id: 2,
+                  icon: <LayoutDashboard size={28} strokeWidth={1.5} />, 
+                  title: "Publishing & Management",
+                  subtitle: "The Dashboard",
+                  desc: "Once approved and published, the full power of the dashboard unlocks. Track revenue, page views, and conversion rates in real-time."
+                }
+              ].map((step, idx) => {
+                const isActive = activeStep === idx;
+                return (
+                  <div key={idx} className="flex lg:flex-col items-start lg:items-center gap-6 lg:gap-8 group">
+                    <div className="relative">
+                       <motion.div 
+                         animate={{ 
+                           scale: isActive ? 1.1 : 1,
+                           borderColor: isActive ? 'rgb(103 61 230 / 0.3)' : 'rgb(229 229 229)',
+                           backgroundColor: isActive ? 'rgb(255 255 255)' : 'rgb(255 255 255)',
+                           boxShadow: isActive ? '0 0 20px rgba(103, 61, 230, 0.15)' : 'none'
+                         }}
+                         className={`w-16 h-16 rounded-2xl border flex items-center justify-center transition-all duration-500 relative z-10 ${isActive ? 'text-brand-600' : 'text-neutral-300'}`}
+                       >
+                          {/* Processing Micro-animation */}
+                          {isActive && (
+                             <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                               <motion.div 
+                                 className="absolute inset-0 bg-gradient-to-tr from-brand-50 to-transparent opacity-50"
+                                 animate={{ rotate: 360 }}
+                                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                               />
+                             </div>
+                          )}
+                          <div className="relative z-20">
+                            {step.icon}
+                          </div>
+                          
+                          {/* Step Number Badge */}
+                          <motion.span 
+                            animate={{ backgroundColor: isActive ? '#6d28d9' : '#e5e5e5', scale: isActive ? 1.1 : 1 }}
+                            className="absolute -top-2 -right-2 w-6 h-6 text-white rounded-full text-xs font-bold flex items-center justify-center border-2 border-white transition-colors duration-500"
+                          >
+                            {idx + 1}
+                          </motion.span>
+                       </motion.div>
+                       
+                       {/* Connection Pulse */}
+                       {isActive && (
+                         <motion.div
+                           initial={{ opacity: 0, scale: 0.8 }}
+                           animate={{ opacity: [0, 0.4, 0], scale: 1.5 }}
+                           transition={{ duration: 1.5, repeat: Infinity }}
+                           className="absolute inset-0 bg-brand-400/20 rounded-2xl -z-10"
+                         />
+                       )}
+                    </div>
+
+                     <div className="space-y-3 lg:text-center pt-2 lg:pt-0">
+                        <motion.div animate={{ opacity: isActive ? 1 : 0.5, y: isActive ? 0 : 5 }}>
+                          <h3 className={`text-lg font-medium transition-colors duration-500 ${isActive ? 'text-neutral-900' : 'text-neutral-400'}`}>{step.title}</h3>
+                          <p className={`text-sm font-semibold uppercase tracking-wider text-[10px] transition-colors duration-500 ${isActive ? 'text-brand-600' : 'text-neutral-400'}`}>{step.subtitle}</p>
+                        </motion.div>
+                        <p className={`text-sm font-[300] leading-relaxed transition-colors duration-500 ${isActive ? 'text-neutral-500' : 'text-neutral-300'}`}>
+                          {step.desc}
+                        </p>
+                     </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Why Zenvy / Features Section */}
       <section className="py-24 px-6 bg-brand-50/50">
         <div className="max-w-7xl mx-auto space-y-16">
           <div className="text-center space-y-4 max-w-[1080px] mx-auto">
-            <h2 className="text-3xl md:text-5xl font-light text-neutral-950 tracking-tight leading-tight">
+            <h2 className="text-2xl md:text-4xl font-light text-neutral-950 tracking-tight leading-tight">
               Freedom meets <br /> <span className="text-brand-600 font-normal">Uncompromising Security</span>
             </h2>
-            <p className="text-neutral-500 font-[300] text-lg leading-relaxed">
+            <p className="text-neutral-500 font-[300] text-base leading-relaxed">
               We bridged the trust gap. A platform where anyone can host, but strict protocols protect every attendee.
             </p>
           </div>
@@ -591,7 +734,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
                   {React.cloneElement(feature.icon as React.ReactElement<any>, { size: 28, strokeWidth: 1.5 })}
                 </div>
                 <div className="space-y-3">
-                  <h3 className="text-xl font-medium text-neutral-900 tracking-tight">{feature.title}</h3>
+                  <h3 className="text-lg font-medium text-neutral-900 tracking-tight">{feature.title}</h3>
                   <p className="text-neutral-500 text-sm font-[300] leading-relaxed">{feature.desc}</p>
                 </div>
               </motion.div>
