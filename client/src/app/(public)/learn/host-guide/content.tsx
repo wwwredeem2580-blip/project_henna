@@ -83,6 +83,104 @@ const ScannerSetupVisual = () => (
   </div>
 );
 
+const AddDeviceVisual = () => (
+  <div className="mt-4 space-y-8">
+     {/* Step 1: Copy Link */}
+    <div className="text-sm text-neutral-600 space-y-2">
+       <div className="flex gap-3">
+          <div className="flex flex-col items-center gap-1">
+             <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold">1</div>
+             <div className="w-0.5 h-full bg-brand-50"></div>
+          </div>
+          <div className="pb-4">
+             <p className="font-medium text-neutral-800">Copy Scanner Link</p>
+             <p className="text-xs text-neutral-500 mb-3">From the <strong>Scanner Session</strong> panel, copy the unique link.</p>
+             
+             {/* Mock Session Manager Link UI */}
+             <div className="bg-brand-50 rounded-xl border border-neutral-100 p-4 max-w-[320px] select-none">
+                 <div className="mb-2 text-[10px] font-medium text-neutral-500 uppercase tracking-wider">Scanner Session</div>
+                 <div className="bg-white border border-neutral-200 rounded-lg p-2.5 flex items-center justify-between mb-2">
+                     <span className="text-xs text-neutral-400 font-mono truncate max-w-[180px]">https://scanner.zenvy...</span>
+                     <div className="p-1.5 bg-neutral-100 rounded hover:bg-neutral-200 text-neutral-500">
+                         <MousePointer2 size={12} />
+                     </div>
+                 </div>
+                 <div className="flex gap-2">
+                     <div className="flex-1 py-1.5 bg-white border border-neutral-200 text-neutral-600 text-[10px] font-medium rounded-lg text-center shadow-sm">Copy Link</div>
+                     <div className="flex-1 py-1.5 bg-brand-600 text-white text-[10px] font-medium rounded-lg text-center shadow-sm">Open</div>
+                 </div>
+             </div>
+          </div>
+       </div>
+
+       {/* Step 2: Visit URL */}
+       <div className="flex gap-3">
+          <div className="flex flex-col items-center gap-1">
+             <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold">2</div>
+             <div className="w-0.5 h-full bg-brand-50"></div>
+          </div>
+          <div className="pb-4">
+             <p className="font-medium text-neutral-800">Visit Link on Device</p>
+             <p className="text-xs text-neutral-500">Open the copied URL on your phone or scanning device. It will look like:</p>
+             <div className="mt-2 inline-block px-3 py-1.5 bg-neutral-100 text-neutral-600 font-mono text-xs rounded border border-neutral-200">
+                 scanner.zenvy.com.bd?token=...
+             </div>
+          </div>
+       </div>
+
+       {/* Step 3: Click Add Device */}
+       <div className="flex gap-3">
+          <div className="flex flex-col items-center gap-1">
+             <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold">3</div>
+             <div className="w-0.5 h-full bg-brand-50"></div>
+          </div>
+          <div className="pb-4">
+             <p className="font-medium text-neutral-800">Generate OTP</p>
+             <p className="text-xs text-neutral-500 mb-3">On your main dashboard (NOT the device), click "Add Device" in the device list.</p>
+             
+             {/* Mock Device List Header */}
+             <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-4 max-w-[320px] select-none">
+                 <div className="flex justify-between items-center">
+                     <div>
+                         <div className="text-xs font-medium text-neutral-900">Connected Devices</div>
+                         <div className="text-[10px] text-neutral-400">0 / 5 Devices Online</div>
+                     </div>
+                     <div className="flex items-center gap-1 pl-3 pr-2 py-1.5 bg-white border border-neutral-200 rounded-lg shadow-sm hover:bg-neutral-50">
+                         <div className="w-3 h-3 text-neutral-800"><MousePointer2 size={12} className="-rotate-90" /></div>
+                         <span className="text-[10px] font-bold text-neutral-800">Add Device</span>
+                     </div>
+                 </div>
+             </div>
+          </div>
+       </div>
+
+       {/* Step 4: OTP & Pair */}
+       <div className="flex gap-3">
+          <div className="flex flex-col items-center gap-1">
+             <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold">4</div>
+          </div>
+          <div className="pb-4">
+             <p className="font-medium text-neutral-800">Enter OTP to Pair</p>
+             <p className="text-xs text-neutral-500 mb-3">Enter the code shown on the dashboard into your device.</p>
+             
+             {/* Mock OTP Modal */}
+             <div className="bg-white rounded-xl border border-neutral-200 shadow-lg p-5 max-w-[280px] select-none relative">
+                <div className="absolute top-2 right-2 text-neutral-300"><MousePointer2 size={12} /></div>
+                <div className="text-center mb-4">
+                   <div className="text-xs font-semibold text-neutral-900 mb-1">Device Pairing Code</div>
+                   <div className="bg-brand-50 rounded-lg p-3">
+                      <div className="text-xl font-mono font-bold text-brand-600 tracking-wider">928 412</div>
+                      <div className="text-[8px] text-neutral-400 mt-1">Expires in 4:32</div>
+                   </div>
+                </div>
+                <div className="w-full py-1.5 bg-brand-600 text-white text-[10px] font-medium rounded text-center">Copy Code</div>
+             </div>
+          </div>
+       </div>
+    </div>
+  </div>
+);
+
 export const GUIDE_PHASES: Phase[] = [
   {
     id: 1,
@@ -92,8 +190,14 @@ export const GUIDE_PHASES: Phase[] = [
       { 
         id: "p1_scanner_setup", 
         label: "Setup Your Scanner System", 
-        description: "Go to Event Dashboard > Scanner Tab. Activate Scanner Session and add scanner devices.",
+        description: "Go to Event Dashboard > Scanner Tab. Activate Scanner Session to see the configuration dashboard.",
         expandedContent: <ScannerSetupVisual />
+      },
+      { 
+        id: "p1_add_devices", 
+        label: "Add / Pair Scanner Devices", 
+        description: "Generate pairing codes and connect your physical scanning devices.",
+        expandedContent: <AddDeviceVisual />
       },
       { id: "p1_assign_roles", label: "Assign Entry Staff Roles", description: "Designate Scanner Operators, Gate Supervisors, and Queue Managers.", isCritical: true },
       { id: "p1_fallback_prep", label: "Prepare Fallback Verification System", description: "Export Ticket Verification Sheet and save multiple offline copies (Print + Digital).", isCritical: true },
