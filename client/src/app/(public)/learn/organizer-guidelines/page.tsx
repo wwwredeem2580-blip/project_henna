@@ -98,6 +98,25 @@ export default function OrganizerGuidelinesPage() {
             </ul>
         </div>
       </LearnSection>
+
+      <LearnSection title="Practical Implementation">
+        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-6">
+            <div className="flex flex-col sm:flex-row gap-6 items-center justify-between">
+                <div>
+                    <h3 className="text-base font-semibold text-neutral-900 mb-1">Looking for the operational checklist?</h3>
+                    <p className="text-neutral-600 text-sm">
+                        These guidelines set the rules. The <strong>Host Operational Guide</strong> shows you how to execute them on event day.
+                    </p>
+                </div>
+                <a 
+                    href="/learn/host-guide" 
+                    className="px-5 py-2.5 bg-white border border-neutral-300 hover:border-brand-300 hover:text-brand-600 text-neutral-700 font-medium rounded-lg transition-all shadow-sm flex items-center gap-2 whitespace-nowrap"
+                >
+                    Go to Host Guide
+                </a>
+            </div>
+        </div>
+      </LearnSection>
     </div>
   );
 }

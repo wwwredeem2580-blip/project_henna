@@ -88,6 +88,27 @@ export default function HowToHostPage() {
             </div>
         </div>
       </LearnSection>
+
+      <LearnSection title="Ready for Event Day?">
+        <div className="bg-brand-50 border border-brand-100 rounded-xl p-6 flex flex-col sm:flex-row gap-6 items-center">
+            <div className="flex-1">
+                <h3 className="text-lg font-semibold text-brand-900 mb-2">Host Operational Guide</h3>
+                <p className="text-brand-800 text-sm mb-4">
+                    Once your event is published, use our interactive checklist to manage everything from scanner setup to entry staff.
+                </p>
+                <div className="flex gap-2">
+                    <span className="px-3 py-1 bg-white rounded-full text-xs font-medium text-brand-600 border border-brand-100">Step-by-step</span>
+                    <span className="px-3 py-1 bg-white rounded-full text-xs font-medium text-brand-600 border border-brand-100">Interactive</span>
+                </div>
+            </div>
+            <a 
+                href="/learn/host-guide" 
+                className="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg transition-colors whitespace-nowrap shadow-sm shadow-brand-200"
+            >
+                Open Host Guide
+            </a>
+        </div>
+      </LearnSection>
     </div>
   );
 }
