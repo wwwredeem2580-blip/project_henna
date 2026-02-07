@@ -662,6 +662,59 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
         </div>
       </section>
 
+      {/* Why Zenvy / Features Section */}
+      <section className="py-24 px-6 bg-brand-50/50">
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="text-center space-y-4 max-w-[1080px] mx-auto">
+            <h2 className="text-2xl md:text-4xl font-light text-neutral-950 tracking-tight leading-tight">
+              Freedom meets <br /> <span className="text-brand-600 font-normal">Uncompromising Security</span>
+            </h2>
+            <p className="text-neutral-500 font-[300] text-base leading-relaxed">
+              We bridged the trust gap. A platform where anyone can host, but strict protocols protect every attendee.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { 
+                icon: <ShieldCheck className="text-emerald-500" />, 
+                title: 'Verified Identity', 
+                desc: 'Every organizer bypasses a rigorous identity audit. We don\'t just check emails; we verify legal docs & authenticity.' 
+              },
+              { 
+                icon: <RefreshCcw className="text-blue-500" />, 
+                title: '7-Day Refund', 
+                desc: 'Automated 100% refunds for cancellations or unsafe events. No organizer approval needed.' 
+              },
+              { 
+                icon: <Lock className="text-rose-500" />, 
+                title: 'Locked Integrity', 
+                desc: 'Organizers cannot secretly delete tiers, reduce quotas, or downgrade benefits once a ticket is sold.' 
+              },
+              { 
+                icon: <Ticket className="text-amber-500" />, 
+                title: 'Secure Booking', 
+                desc: 'Anti-scalping limits, 15-min reservation locks, and dynamic QR codes that prevent duplicate entry.' 
+              },
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ y: -5 }}
+                className="bg-neutral-0 p-8 rounded-[2rem] border border-neutral-100 hover:shadow-xl hover:shadow-brand-100/50 transition-all space-y-6 group"
+              >
+                <div className="w-14 h-14 bg-neutral-50 rounded-2xl flex items-center justify-center group-hover:bg-brand-50 transition-colors">
+                  {React.cloneElement(feature.icon as React.ReactElement<any>, { size: 28, strokeWidth: 1.5 })}
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-lg font-medium text-neutral-900 tracking-tight">{feature.title}</h3>
+                  <p className="text-neutral-500 text-sm font-[300] leading-relaxed">{feature.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Ticket Booking Flow Section */}
       <section className="py-24 px-6 border-t border-neutral-100 overflow-hidden relative bg-neutral-50/50">
         <div className="max-w-7xl mx-auto">
@@ -829,61 +882,8 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
         </div>
       </section>
 
-      {/* Why Zenvy / Features Section */}
-      <section className="py-24 px-6 bg-brand-50/50">
-        <div className="max-w-7xl mx-auto space-y-16">
-          <div className="text-center space-y-4 max-w-[1080px] mx-auto">
-            <h2 className="text-2xl md:text-4xl font-light text-neutral-950 tracking-tight leading-tight">
-              Freedom meets <br /> <span className="text-brand-600 font-normal">Uncompromising Security</span>
-            </h2>
-            <p className="text-neutral-500 font-[300] text-base leading-relaxed">
-              We bridged the trust gap. A platform where anyone can host, but strict protocols protect every attendee.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { 
-                icon: <ShieldCheck className="text-emerald-500" />, 
-                title: 'Verified Identity', 
-                desc: 'Every organizer bypasses a rigorous identity audit. We don\'t just check emails; we verify legal docs & authenticity.' 
-              },
-              { 
-                icon: <RefreshCcw className="text-blue-500" />, 
-                title: '7-Day Refund', 
-                desc: 'Automated 100% refunds for cancellations or unsafe events. No organizer approval needed.' 
-              },
-              { 
-                icon: <Lock className="text-rose-500" />, 
-                title: 'Locked Integrity', 
-                desc: 'Organizers cannot secretly delete tiers, reduce quotas, or downgrade benefits once a ticket is sold.' 
-              },
-              { 
-                icon: <Ticket className="text-amber-500" />, 
-                title: 'Secure Booking', 
-                desc: 'Anti-scalping limits, 15-min reservation locks, and dynamic QR codes that prevent duplicate entry.' 
-              },
-            ].map((feature, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ y: -5 }}
-                className="bg-neutral-0 p-8 rounded-[2rem] border border-neutral-100 hover:shadow-xl hover:shadow-brand-100/50 transition-all space-y-6 group"
-              >
-                <div className="w-14 h-14 bg-neutral-50 rounded-2xl flex items-center justify-center group-hover:bg-brand-50 transition-colors">
-                  {React.cloneElement(feature.icon as React.ReactElement<any>, { size: 28, strokeWidth: 1.5 })}
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-lg font-medium text-neutral-900 tracking-tight">{feature.title}</h3>
-                  <p className="text-neutral-500 text-sm font-[300] leading-relaxed">{feature.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Engineering Privacy Section */}
-      <section className="py-24 px-6">
+      {/* <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto bg-brand-50 rounded-[3rem] p-12 lg:p-20 flex flex-col lg:flex-row items-center gap-20 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-100/20 rounded-full blur-[100px] -z-10 translate-x-1/2 -translate-y-1/2" />
 
@@ -917,7 +917,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
             </motion.div>
           </div>
         </div>
-      </section>
+      </section> */}
 
 
     </div>

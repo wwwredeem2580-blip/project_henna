@@ -364,6 +364,11 @@ export const updatePublishedEventService = async (hostId: string, eventId: strin
         );
       }
 
+      // Update basic info
+      if (ticketUpdate.name) updatedTicket.name = ticketUpdate.name;
+      if (ticketUpdate.tier) updatedTicket.tier = ticketUpdate.tier;
+      if (ticketUpdate.salesWindow) updatedTicket.salesWindow = ticketUpdate.salesWindow;
+
       // Validate limits structure if provided
       if (ticketUpdate.limits) {
         if (ticketUpdate.limits.maxPerOrder < ticketUpdate.limits.minPerOrder) {
@@ -487,6 +492,12 @@ export const updateLiveEventService = async (hostId: string, eventId: string, da
       if (ticketUpdate.glassMode !== undefined) updated.glassMode = ticketUpdate.glassMode;
       if (ticketUpdate.cornerRadius !== undefined) updated.cornerRadius = ticketUpdate.cornerRadius;
       if (ticketUpdate.perforationStyle) updated.perforationStyle = ticketUpdate.perforationStyle;
+
+      // Update basic info
+      if (ticketUpdate.name) updated.name = ticketUpdate.name;
+      if (ticketUpdate.tier) updated.tier = ticketUpdate.tier;
+      if (ticketUpdate.salesWindow) updated.salesWindow = ticketUpdate.salesWindow;
+      if (ticketUpdate.benefits) updated.benefits = ticketUpdate.benefits;
 
       return updated;
     });
