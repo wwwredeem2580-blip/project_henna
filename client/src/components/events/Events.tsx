@@ -309,7 +309,15 @@ export default function Events() {
                         {event.venue?.address?.city || 'Location TBA'}
                       </span>
                       <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                        <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{minPrice}
+                        <span className="text-xs">From</span> {minPrice === 0 ? (
+                          <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
+                            FREE
+                          </span>
+                        ) : (
+                          <>
+                            <BDTIcon className="text-xs"/>{minPrice}
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -389,7 +397,15 @@ export default function Events() {
                           {event.venue?.address?.city || 'Location TBA'}
                         </span>
                         <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                          <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{minPrice}
+                          <span className="text-xs">From</span> {minPrice === 0 ? (
+                            <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
+                              FREE
+                            </span>
+                          ) : (
+                            <>
+                              <BDTIcon className="text-xs"/>{minPrice}
+                            </>
+                          )}
                         </span>
                       </div>
                     </div>
@@ -466,7 +482,15 @@ export default function Events() {
                           {event.venue?.address?.city || 'Location TBA'}
                         </span>
                         <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                          <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{minPrice}
+                          <span className="text-xs">From</span> {minPrice === 0 ? (
+                            <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
+                              FREE
+                            </span>
+                          ) : (
+                            <>
+                              <BDTIcon className="text-xs"/>{minPrice}
+                            </>
+                          )}
                         </span>
                       </div>
                     </div>

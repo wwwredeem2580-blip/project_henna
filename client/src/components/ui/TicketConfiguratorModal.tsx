@@ -509,7 +509,15 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                                 </span>
                                 <span className="flex items-center text-md gap-1 mt-2 text-slate-500 font-[300]">
                                   <span className="text-xs">For </span>
-                                  <BDTIcon className="text-xs"/>{ticketData.price}
+                                  {ticketData.price === 0 ? (
+                                    <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
+                                      FREE
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <BDTIcon className="text-xs"/>{ticketData.price}
+                                    </>
+                                  )}
                                 </span>
                                 </>
                               )}
@@ -625,7 +633,7 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                   {step === 'details' ? (
                     <button
                       onClick={() => {setStep('benefits'); setIsFlipped(true)}}
-                      disabled={!ticketData.name || !ticketData.tier || ticketData.price <= 0 || ticketData.quantity <= 0}
+                      disabled={!ticketData.name || !ticketData.tier || ticketData.price < 0 || ticketData.quantity <= 0}
                       className="px-4 py-2 text-xs bg-brand-500 text-white rounded-tr-md rounded-bl-md hover:bg-brand-600 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next: Benefits

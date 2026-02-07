@@ -86,7 +86,15 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 </span>
                 <span className="flex items-center text-md gap-1 mt-2 text-slate-500 font-[300]">
                   <span className="text-xs">For </span>
-                  <BDTIcon className="text-xs"/>{ticket.price}
+                  {ticket.price === 0 ? (
+                    <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
+                      FREE
+                    </span>
+                  ) : (
+                    <>
+                      <BDTIcon className="text-xs"/>{ticket.price}
+                    </>
+                  )}
                 </span>
                 </>
               )}
