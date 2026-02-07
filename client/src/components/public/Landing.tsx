@@ -8,7 +8,7 @@ import {
   Globe, Fingerprint, Lock, Layers, BarChart3, Ticket,
   ShieldAlert, RefreshCcw, Bell, Star, X, Send, Palette, FileText,
   CreditCard, Clock10, Music, Mic, Disc, Headphones, Speaker, PartyPopper,
-  Users, Image, Rocket, Clapperboard, Trophy, Briefcase, Heart, PenTool, LayoutDashboard
+  Users, Image, Rocket, Clapperboard, Trophy, Briefcase, Heart, PenTool, LayoutDashboard, Hammer
 } from 'lucide-react';
 import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
@@ -483,79 +483,6 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
         </section>
       )}
 
-      {/* Feature Walkthrough - 'Idea to Hosted' Style Section */}
-      <section className="py-24 px-6 overflow-hidden">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="relative"
-          >
-            <div className="aspect-[4/3] bg-brand-600 rounded-tr-3xl rounded-bl-3xl relative overflow-hidden shadow-2xl group">
-              {/* Mock Dashboard UI */}
-              <div className="absolute top-4 left-4 right-4 bottom-[-20%] bg-neutral-0 rounded-tr-3xl rounded-bl-3xl shadow-2xl overflow-hidden p-6 space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded flex items-center justify-center text-brand-600"><Logo className="w-4 h-4" strokeWidth="3"/></div>
-                    <span className="text-xs font-light text-neutral-900">Event Builder</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="h-2 w-12 bg-neutral-100 rounded-full" />
-                    <button className="px-3 py-1 bg-brand-600 text-[10px] text-white font-bold rounded">Publish</button>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-8 w-2/3 bg-neutral-50 rounded-lg" />
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="h-20 bg-neutral-50 rounded-xl border border-dashed border-neutral-200 flex items-center justify-center"><Palette size={16} className="text-neutral-300"/></div>
-                    <div className="h-20 bg-neutral-50 rounded-xl border border-dashed border-neutral-200 flex items-center justify-center"><FileText size={16} className="text-neutral-300"/></div>
-                    <div className="h-20 bg-neutral-50 rounded-xl border border-dashed border-neutral-200 flex items-center justify-center"><Calendar size={16} className="text-neutral-300"/></div>
-                  </div>
-                  <div className="p-4 bg-brand-50 border border-brand-100 rounded-xl space-y-2">
-                    <div className="h-2 w-full bg-brand-200 rounded-full" />
-                    <div className="h-2 w-2/3 bg-brand-200 rounded-full" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Floating Accents */}
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4, repeat: Infinity }}
-              className="absolute -top-6 -right-6 p-4 bg-neutral-0 rounded-2xl shadow-xl border border-brand-200 flex items-center gap-3 z-10"
-            >
-              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-white"><CheckCircle2 size={16}/></div>
-              <div>
-                <p className="text-[10px] text-neutral-400 font-bold">Status</p>
-                <p className="text-xs font-light text-neutral-900">Live in Moments</p>
-              </div>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="space-y-8"
-          >
-            <div className="space-y-4">
-              <span className="px-3 py-1 bg-neutral-100 text-neutral-600 text-[10px] font-bold uppercase tracking-widest rounded-full">Event Builder</span>
-              <h2 className="text-3xl md:text-4xl font-light text-neutral-950 tracking-tight leading-tight">
-                Host your event <br /> in minutes
-              </h2>
-              <p className="text-neutral-500 font-[300] text-base leading-relaxed">
-                Just describe your idea – Our Event Builder will handle the layout, ticketing, and verification. Then use the drag-and-drop editor to customize. Whether it's a physical concert or a global hybrid summit, you'll be live in moments.
-              </p>
-            </div>
-
-            <div className="pt-4 group cursor-pointer border-b border-brand-200 pb-4 flex items-center justify-between hover:border-brand-600 transition-colors">
-              <span className="text-lg font-light text-neutral-900">Create with Event Builder</span>
-              <ArrowRight className="text-neutral-400 group-hover:text-brand-600 group-hover:translate-x-1 transition-all" />
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Event Creation Flow Section */}
       <section className="py-24 px-6 border-t border-neutral-100 overflow-hidden relative">
@@ -607,6 +534,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
                 { 
                   id: 0,
                   icon: <PenTool size={28} strokeWidth={1.5} />, 
+                  activeIcon: <Hammer size={28} strokeWidth={1.5} />,
                   title: "Create & Draft",
                   subtitle: "Build your Event",
                   desc: "Use the \"Create Event\" wizard to set up your basic details: Title, Schedule, and Venue. You can save as Draft at any stage and come back later."
@@ -614,6 +542,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
                 { 
                   id: 1,
                   icon: <ShieldCheck size={28} strokeWidth={1.5} />, 
+                  activeIcon: <ShieldCheck size={28} strokeWidth={1.5} />,
                   title: "Verification & Submission",
                   subtitle: "Required Documents",
                   desc: "Before publishing, upload verification proofs: Identity (NID), Venue Booking, and Safety Plan. Documents are stored in our secure private vault."
@@ -621,6 +550,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
                 { 
                   id: 2,
                   icon: <LayoutDashboard size={28} strokeWidth={1.5} />, 
+                  activeIcon: <Rocket size={28} strokeWidth={1.5} />,
                   title: "Publishing & Management",
                   subtitle: "The Dashboard",
                   desc: "Once approved and published, the full power of the dashboard unlocks. Track revenue, page views, and conversion rates in real-time."
@@ -649,8 +579,41 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
                                />
                              </div>
                           )}
+                          
                           <div className="relative z-20">
-                            {step.icon}
+                            {isActive ? (
+                                <>
+                                    {idx === 0 && (
+                                        <motion.div
+                                            animate={{ rotate: [0, -45, 0, -15, 0] }}
+                                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                                        >
+                                            {step.activeIcon}
+                                        </motion.div>
+                                    )}
+                                    {idx === 1 && (
+                                         <div className="relative">
+                                            {step.activeIcon}
+                                            <motion.div
+                                                className="absolute inset-0 bg-brand-400/30"
+                                                initial={{ height: "0%" }}
+                                                animate={{ height: "100%", opacity: [0, 1, 0] }}
+                                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                            />
+                                         </div>
+                                    )}
+                                    {idx === 2 && (
+                                        <motion.div
+                                            animate={{ y: [0, -3, 0], scale: [1, 1.1, 1] }}
+                                            transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                                        >
+                                            {step.activeIcon}
+                                        </motion.div>
+                                    )}
+                                </>
+                            ) : (
+                                step.icon
+                            )}
                           </div>
                           
                           {/* Step Number Badge */}
