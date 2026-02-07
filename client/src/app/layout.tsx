@@ -20,20 +20,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Zenvy - Event Management Platform",
   description: "Create, manage, and sell tickets for your events with Zenvy - the all-in-one event management platform",
-  icons: {
-    icon: [
-      { url: '/logo/logo.png', sizes: '32x32', type: 'image/png' },
-      { url: '/logo/logo.png', sizes: '16x16', type: 'image/png' },
-    ],
-    shortcut: '/logo/logo.png',
-    apple: '/logo/logo.png',
-    other: [
-      {
-        rel: 'apple-touch-icon-precomposed',
-        url: '/logo/logo.png',
-      },
-    ],
-  },
 };
 
 export default function RootLayout({

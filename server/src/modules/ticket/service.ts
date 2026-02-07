@@ -72,6 +72,7 @@ export const getTicketsService = async (userId: string) => {
           perforationStyle: '$ticketTheme.perforationStyle',
           benefits: '$ticketTheme.benefits',
           tier: '$ticketTheme.tier',
+          name: '$ticketTheme.name',
         }
       }
     },

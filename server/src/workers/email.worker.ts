@@ -180,6 +180,7 @@ const classifyError = (error: any): 'HARD_FAIL' | 'SOFT_FAIL' => {
     statusCode === 422, // Unprocessable Entity
     statusCode === 450, // Mailbox unavailable (blocked)
     statusCode === 550, // Mailbox rejected (blocked)
+    statusCode === 429, // Rate limit
     
     // Message-based detection
     message.includes('invalid recipient'),
@@ -192,12 +193,15 @@ const classifyError = (error: any): 'HARD_FAIL' | 'SOFT_FAIL' => {
     message.includes('account disabled'),
     message.includes('email address not found'),
     message.includes('mailbox unavailable'),
+    // Rate limiting
+    message.includes('rate limit'),
+    message.includes('too many requests'),
+    message.includes('429'),
   ];
 
   // Soft Fail conditions - temporary errors that may resolve with retry
   const softFailConditions = [
     // HTTP status codes
-    statusCode === 429, // Rate limit
     statusCode === 500, // Internal Server Error
     statusCode === 502, // Bad Gateway
     statusCode === 503, // Service Unavailable
@@ -208,11 +212,6 @@ const classifyError = (error: any): 'HARD_FAIL' | 'SOFT_FAIL' => {
     message.includes('timeout'),
     message.includes('ETIMEDOUT'),
     message.includes('ENOTFOUND'),
-    
-    // Rate limiting
-    message.includes('rate limit'),
-    message.includes('too many requests'),
-    message.includes('429'),
     
     // Temporary server issues
     message.includes('temporary'),

@@ -264,8 +264,8 @@ export default function WalletPage() {
                                     <div key={ticket._id} className="min-w-[300px] w-[300px]">
                                       <TicketCard ticket={{
                                         _id: ticket._id,
-                                        tier: ticket.ticketType,
-                                        name: ticket?.name || 'Ticket Name',
+                                        tier: ticket.ticketTheme.tier,
+                                        name: ticket?.ticketTheme.name || 'Ticket Name',
                                         controls: false,
                                         startDate: ticketEventDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
                                         endDate: ticketEndDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
