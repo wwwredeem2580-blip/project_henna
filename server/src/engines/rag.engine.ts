@@ -1,5 +1,6 @@
 import { ChromaClient, Collection } from 'chromadb';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import axios from 'axios';
 
 interface CachedAnswer {
   id: string;
@@ -22,6 +23,7 @@ class RAGService {
   private collection: Collection | null = null;
   private genAI?: GoogleGenerativeAI;
   private embeddingModel?: any;
+  private ollamaBaseUrl: string = '';
   private similarityThreshold: number;
   private cacheTTLDays: number;
 
@@ -40,16 +42,13 @@ class RAGService {
     this.similarityThreshold = similarityThreshold;
     this.cacheTTLDays = cacheTTLDays;
 
-    // Initialize Gemini for embeddings (free tier)
-    if (geminiApiKey) {
-      this.genAI = new GoogleGenerativeAI(geminiApiKey);
-      // Use the correct embedding model name for v1beta API
-      this.embeddingModel = this.genAI.getGenerativeModel({ 
-        model: "gemini-embedding-001" 
-      });
-      console.log('[RAG] Using Gemini embedding-001 (free tier)');
+    // Initialize Ollama for embeddings (local, no API key needed)
+    if (process.env.OLLAMA_BASE_URL) {
+      this.ollamaBaseUrl = process.env.OLLAMA_BASE_URL;
+      this.embeddingModel = 'qllama/bge-large-en-v1.5:q8_0'; // Using Ollama embedding model
+      console.log('[RAG] Using Ollama embeddings with qllama/bge-large-en-v1.5:q8_0');
     } else {
-      console.warn('[RAG] No Gemini API key provided - embeddings disabled');
+      console.warn('[RAG] No Ollama URL provided - embeddings disabled');
     }
   }
 
@@ -58,13 +57,13 @@ class RAGService {
       // Try to get existing collection
       try {
         this.collection = await this.client.getCollection({
-          name: 'support_qa'
+          name: 'support_qa_v2'
         });
         console.log('[RAG] Found existing ChromaDB collection');
       } catch (error) {
         // Collection doesn't exist, create new one
         this.collection = await this.client.createCollection({
-          name: 'support_qa',
+          name: 'support_qa_v2',
           metadata: {
             description: 'Support chatbot Q&A cache',
             'hnsw:space': 'cosine' // Use cosine similarity
@@ -232,12 +231,27 @@ class RAGService {
     }
 
     try {
-      // Simple embedContent call without taskType
-      const result = await this.embeddingModel.embedContent(text);
-      const embedding = result.embedding.values;
+      // Use Ollama embeddings API
+      const response = await axios.post(
+        `${this.ollamaBaseUrl}/api/embed`,
+        {
+          model: this.embeddingModel,
+          input: text
+        },
+        { timeout: 30000 }
+      );
       
-      // Debug: log embedding info
-      console.log(`[RAG] Generated embedding for "${text.substring(0, 50)}..." - Length: ${embedding.length}, First 3 values: [${embedding.slice(0, 3).join(', ')}]`);
+      // Debug: log full response data to understand structure
+      // console.log('[RAG] Ollama response data keys:', Object.keys(response.data));
+      
+      // Ollama returns { embedding: [...] } for single input
+      // Support both structure just in case, but response.data.embedding is standard for /api/embed
+      const embedding = response.data.embedding || response.data.embeddings?.[0]; 
+      
+      if (embedding) {
+          // Debug: log embedding info (concise)
+          console.log(`[RAG] Generated embedding for "${text.substring(0, 30)}..." - Length: ${embedding.length}`);
+      }
       
       return embedding;
     } catch (error) {
