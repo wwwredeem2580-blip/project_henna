@@ -232,7 +232,11 @@ class RAGService {
     }
 
     try {
-      const result = await this.embeddingModel.embedContent(text);
+      // Use embedContent with proper content structure and taskType
+      const result = await this.embeddingModel.embedContent({
+        content: { parts: [{ text }] },
+        taskType: "RETRIEVAL_DOCUMENT"
+      });
       const embedding = result.embedding.values;
       
       // Debug: log embedding info

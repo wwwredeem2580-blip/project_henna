@@ -50,7 +50,7 @@ class HybridChatbotImproved {
 
   // Routing decision thresholds
   private readonly RAG_SIMILARITY_THRESHOLD = 0.88; // Higher threshold for RAG cache
-  private readonly LOW_CONFIDENCE_THRESHOLD = 0.6;
+  private readonly LOW_CONFIDENCE_THRESHOLD = 0.45; // Reduced from 0.6 to prevent premature escalation
   private readonly ESCALATION_SCORE_THRESHOLD = 0.7;
 
   constructor(

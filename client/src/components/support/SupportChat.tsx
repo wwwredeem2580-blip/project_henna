@@ -4,11 +4,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, MessageSquare, MoreHorizontal, ArrowLeft } from 'lucide-react';
 import { useSupport } from '@/lib/context/support';
+import { useAuth } from '@/lib/context/auth';
 import { Logo } from '@/components/shared/Logo';
 import { TypingIndicator } from './TypingIndicator';
 
 export const SupportChat = () => {
   const { isOpen, toggleChat } = useSupport();
+  const { user } = useAuth();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<any[]>([
     { id: 1, text: "Hi there! I'm Zenny. Welcome to Zenvy! 👋", sender: 'bot', time: 'Just now' },
@@ -37,13 +39,47 @@ export const SupportChat = () => {
         import('socket.io-client').then(({ io }) => {
             const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
             
+            // Pass user credentials for conversation persistence
+            const userId = user?.sub || 'anonymous';
+            const userName = user ? `${user.firstName} ${user.lastName}` : 'Guest';
+            
             socketRef.current = io(`${socketUrl}/support`, {
                 withCredentials: true,
-                transports: ['websocket', 'polling'] 
+                transports: ['websocket', 'polling'],
+                query: {
+                    userId,
+                    userName
+                }
             });
 
             socketRef.current.on('connect', () => {
                 console.log('Connected to support chat');
+            });
+
+            // Handle conversation history on connection/reconnection
+            socketRef.current.on('conversation_history', (data: any) => {
+                console.log('Received conversation history:', data);
+                if (data.messages && data.messages.length > 0) {
+                    // Map server messages to client format
+                    const formattedMessages = data.messages.map((msg: any, index: number) => ({
+                        id: index + 1,
+                        text: msg.text,
+                        sender: msg.role === 'user' ? 'user' : msg.role === 'agent' ? 'bot' : 'bot',
+                        time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    }));
+                    setMessages(formattedMessages);
+                    
+                    // Update admin active status if conversation is active
+                    if (data.status === 'active') {
+                        setIsAdminActive(true);
+                    }
+                } else {
+                    // New conversation - show welcome messages
+                    setMessages([
+                        { id: 1, text: "Hi there! I'm Zenny. Welcome to Zenvy! 👋", sender: 'bot', time: 'Just now' },
+                        { id: 2, text: "I'm here to help you get started or answer any questions you might have.", sender: 'bot', time: 'Just now' },
+                    ]);
+                }
             });
 
             socketRef.current.on('message', (data: any) => {

@@ -43,6 +43,11 @@ class SituationalAwarenessEngine {
       /\b(real\s+person|actual\s+person|human\s+support)\b/i,
       /\b(not\s+helping|can't\s+help|won't\s+help)\b/i,
       /\b(give\s+up|forget\s+it|never\s+mind)\b/i,
+    ],
+    greetings: [
+      /^(hi|hello|hey|yo|sup|wassup|what's\s+up|whats\s+up)$/i,
+      /^(good\s+(morning|afternoon|evening|day))$/i,
+      /^(howdy|greetings|salutations)$/i,
     ]
   };
 
@@ -147,6 +152,16 @@ class SituationalAwarenessEngine {
   private calculateFrustration(context: ConversationContext, message: string): number {
     let score = 0;
 
+    // Don't calculate frustration for simple greetings
+    const trimmedMessage = message.trim();
+    if (this.frustrationPatterns.greetings.some(p => p.test(trimmedMessage))) {
+      return 0;
+    }
+
+    // Reduce frustration scoring for very short messages (likely casual)
+    const wordCount = message.trim().split(/\s+/).length;
+    const isCasualMessage = wordCount <= 3;
+
     // Repeated questions (max +4)
     const maxRepetitions = Math.max(...Array.from(context.repeatedQuestions.values()));
     if (maxRepetitions >= 3) score += 4;
@@ -161,16 +176,19 @@ class SituationalAwarenessEngine {
     else if (context.capsLockCount === 1) score += 1;
 
     // Current message frustration indicators (max +3)
+    // Reduce weight for casual messages
+    const frustrationWeight = isCasualMessage ? 0.5 : 1;
+    
     for (const pattern of this.frustrationPatterns.negative) {
       if (pattern.test(message)) {
-        score += 1;
+        score += 1 * frustrationWeight;
         break;
       }
     }
 
     for (const pattern of this.frustrationPatterns.escalation) {
       if (pattern.test(message)) {
-        score += 2;
+        score += 2 * frustrationWeight;
         break;
       }
     }
@@ -209,6 +227,24 @@ class SituationalAwarenessEngine {
     message: string,
     history: ConversationMessage[]
   ): boolean {
+    // NEVER escalate on simple greetings
+    const trimmedMessage = message.trim();
+    if (this.frustrationPatterns.greetings.some(p => p.test(trimmedMessage))) {
+      return false;
+    }
+
+    // Don't escalate on first 1-2 messages unless explicit escalation request
+    const userMessageCount = history.filter(m => m.role === 'user').length;
+    if (userMessageCount <= 2) {
+      // Only escalate if explicit request or critical urgency
+      const hasExplicitRequest = this.frustrationPatterns.escalation.some(p => p.test(message));
+      const urgency = this.determineUrgency(context, message);
+      
+      if (!hasExplicitRequest && urgency !== 'critical') {
+        return false;
+      }
+    }
+
     // Explicit escalation request
     if (this.frustrationPatterns.escalation.some(p => p.test(message))) {
       return true;
