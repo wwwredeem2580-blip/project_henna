@@ -8,7 +8,7 @@ import {
   Globe, Fingerprint, Lock, Layers, BarChart3, Ticket,
   ShieldAlert, RefreshCcw, Bell, Star, X, Send, Palette, FileText,
   CreditCard, Clock10, Music, Mic, Disc, Headphones, Speaker, PartyPopper,
-  Users, Image, Rocket, Clapperboard, Trophy, Briefcase, Heart, PenTool, LayoutDashboard, Hammer
+  Users, Image, Rocket, Clapperboard, Trophy, Briefcase, Heart, PenTool, LayoutDashboard, Hammer, QrCode
 } from 'lucide-react';
 import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
@@ -149,6 +149,15 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % 3);
+    }, 3000); // Change step every 3 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const [activeBookingStep, setActiveBookingStep] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveBookingStep((prev) => (prev + 1) % 3);
     }, 3000); // Change step every 3 seconds
     return () => clearInterval(interval);
   }, []);
@@ -640,6 +649,173 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
                         <motion.div animate={{ opacity: isActive ? 1 : 0.5, y: isActive ? 0 : 5 }}>
                           <h3 className={`text-lg font-medium transition-colors duration-500 ${isActive ? 'text-neutral-900' : 'text-neutral-400'}`}>{step.title}</h3>
                           <p className={`text-sm font-semibold uppercase tracking-wider text-[10px] transition-colors duration-500 ${isActive ? 'text-brand-600' : 'text-neutral-400'}`}>{step.subtitle}</p>
+                        </motion.div>
+                        <p className={`text-sm font-[300] leading-relaxed transition-colors duration-500 ${isActive ? 'text-neutral-500' : 'text-neutral-300'}`}>
+                          {step.desc}
+                        </p>
+                     </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Ticket Booking Flow Section */}
+      <section className="py-24 px-6 border-t border-neutral-100 overflow-hidden relative bg-neutral-50/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16 space-y-4">
+             <h2 className="text-3xl md:text-4xl font-light text-neutral-950 tracking-tight">Seamless Ticket Booking</h2>
+             <p className="text-neutral-500 font-light text-base">Secure, fast, and guaranteed delivery for attendees.</p>
+          </div>
+
+          <div className="relative">
+            {/* Background Line (Desktop) */}
+            <div className="hidden lg:block absolute top-8 left-[15%] right-[15%] h-0.5 bg-neutral-200 z-0">
+               {/* Animated Spark (Desktop) */}
+               <motion.div 
+                 className="absolute top-0 bottom-0 bg-gradient-to-r from-transparent via-blue-500 to-transparent w-1/3 blur-sm"
+                 animate={{ 
+                   left: ["-20%", "120%"],
+                   opacity: [0, 1, 0]
+                 }}
+                 transition={{ 
+                   duration: 3, 
+                   ease: "easeInOut", 
+                   repeat: Infinity,
+                   repeatDelay: 0.5
+                 }}
+               />
+            </div>
+            
+            {/* Background Line (Mobile) */}
+            <div className="lg:hidden absolute left-8 top-8 bottom-8 w-0.5 bg-neutral-200 z-0">
+               {/* Animated Spark (Mobile) */}
+               <motion.div 
+                 className="absolute left-0 right-0 bg-gradient-to-b from-transparent via-blue-500 to-transparent h-1/3 blur-sm"
+                 animate={{ 
+                   top: ["-20%", "120%"],
+                   opacity: [0, 1, 0]
+                 }}
+                 transition={{ 
+                   duration: 3, 
+                   ease: "easeInOut", 
+                   repeat: Infinity,
+                   repeatDelay: 0.5
+                 }}
+               />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8 relative z-10">
+              {[
+                { 
+                  id: 0,
+                  icon: <Lock size={28} strokeWidth={1.5} />, 
+                  activeIcon: <Lock size={28} strokeWidth={1.5} />,
+                  title: "Reservation",
+                  subtitle: "Locked & Secured",
+                  desc: "When you add tickets to cart, our system instantly locks them for you. This prevents 'overselling', guaranteeing your spot."
+                },
+                { 
+                  id: 1,
+                  icon: <CreditCard size={28} strokeWidth={1.5} />, 
+                  activeIcon: <CreditCard size={28} strokeWidth={1.5} />,
+                  title: "Secure Payment",
+                  subtitle: "Encrypted Processing",
+                  desc: "We use industry-leading payment gateways with encrypted processing. Your financial data never touches our servers directly."
+                },
+                { 
+                  id: 2,
+                  icon: <Ticket size={28} strokeWidth={1.5} />, 
+                  activeIcon: <QrCode size={28} strokeWidth={1.5} />,
+                  title: "Instant Delivery",
+                  subtitle: "Wallet + Email",
+                  desc: "Tickets are instantly delivered to your Zenvy Wallet. You also receive a PDF copy via email with a high-resolution QR code."
+                }
+              ].map((step, idx) => {
+                const isActive = activeBookingStep === idx;
+                return (
+                  <div key={idx} className="flex lg:flex-col items-start lg:items-center gap-6 lg:gap-8 group">
+                    <div className="relative">
+                       <motion.div 
+                         animate={{ 
+                           scale: isActive ? 1.1 : 1,
+                           borderColor: isActive ? 'rgb(59 130 246 / 0.3)' : 'rgb(229 229 229)',
+                           backgroundColor: isActive ? 'rgb(255 255 255)' : 'rgb(255 255 255)',
+                           boxShadow: isActive ? '0 0 20px rgba(59, 130, 246, 0.15)' : 'none'
+                         }}
+                         className={`w-16 h-16 rounded-2xl border flex items-center justify-center transition-all duration-500 relative z-10 ${isActive ? 'text-blue-600' : 'text-neutral-300'}`}
+                       >
+                          {/* Processing Micro-animation */}
+                          {isActive && (
+                             <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                               <motion.div 
+                                 className="absolute inset-0 bg-gradient-to-tr from-blue-50 to-transparent opacity-50"
+                                 animate={{ rotate: 360 }}
+                                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                               />
+                             </div>
+                          )}
+                          
+                          <div className="relative z-20">
+                            {isActive ? (
+                                <>
+                                    {idx === 0 && (
+                                        <motion.div
+                                            animate={{ scale: [1, 1.2, 1] }}
+                                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                                        >
+                                            {step.activeIcon}
+                                        </motion.div>
+                                    )}
+                                    {idx === 1 && (
+                                         <motion.div
+                                            animate={{ x: [-2, 2, -2] }}
+                                            transition={{ duration: 0.5, repeat: Infinity, ease: "easeInOut" }}
+                                         >
+                                            {step.activeIcon}
+                                         </motion.div>
+                                    )}
+                                    {idx === 2 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.5 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ duration: 0.5 }}
+                                        >
+                                            {step.activeIcon}
+                                        </motion.div>
+                                    )}
+                                </>
+                            ) : (
+                                step.icon
+                            )}
+                          </div>
+                          
+                          {/* Step Number Badge */}
+                          <motion.span 
+                            animate={{ backgroundColor: isActive ? '#2563eb' : '#e5e5e5', scale: isActive ? 1.1 : 1 }}
+                            className="absolute -top-2 -right-2 w-6 h-6 text-white rounded-full text-xs font-bold flex items-center justify-center border-2 border-white transition-colors duration-500"
+                          >
+                            {idx + 1}
+                          </motion.span>
+                       </motion.div>
+                       
+                       {/* Connection Pulse */}
+                       {isActive && (
+                         <motion.div
+                           initial={{ opacity: 0, scale: 0.8 }}
+                           animate={{ opacity: [0, 0.4, 0], scale: 1.5 }}
+                           transition={{ duration: 1.5, repeat: Infinity }}
+                           className="absolute inset-0 bg-blue-400/20 rounded-2xl -z-10"
+                         />
+                       )}
+                    </div>
+
+                     <div className="space-y-3 lg:text-center pt-2 lg:pt-0">
+                        <motion.div animate={{ opacity: isActive ? 1 : 0.5, y: isActive ? 0 : 5 }}>
+                          <h3 className={`text-lg font-medium transition-colors duration-500 ${isActive ? 'text-neutral-900' : 'text-neutral-400'}`}>{step.title}</h3>
+                          <p className={`text-sm font-semibold uppercase tracking-wider text-[10px] transition-colors duration-500 ${isActive ? 'text-blue-600' : 'text-neutral-400'}`}>{step.subtitle}</p>
                         </motion.div>
                         <p className={`text-sm font-[300] leading-relaxed transition-colors duration-500 ${isActive ? 'text-neutral-500' : 'text-neutral-300'}`}>
                           {step.desc}
