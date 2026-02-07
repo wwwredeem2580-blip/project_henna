@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, MousePointer2 } from 'lucide-react';
+import { ArrowRight, MousePointer2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 export interface GuideItem {
@@ -242,6 +242,111 @@ const AddDeviceVisual = () => (
   </div>
 );
 
+const ManualCheckInVisual = () => (
+  <div className="mt-4 space-y-6">
+    <div className="text-sm text-neutral-600 space-y-2">
+       <div className="flex gap-3">
+          <div className="flex flex-col items-center gap-1">
+             <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold">1</div>
+             <div className="w-0.5 h-full bg-brand-50"></div>
+          </div>
+          <div className="pb-4">
+             <p className="font-medium text-neutral-800">Go to Manual Check-in</p>
+             <p className="text-xs text-neutral-500 mb-2">Events Dashboard &gt; Check-in Tab. <strong>Scanner Session MUST be active.</strong></p>
+             
+             {/* Mock Header */}
+             <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-3 max-w-[320px] select-none">
+                 <div className="flex justify-between items-center">
+                    <div>
+                        <div className="text-[10px] uppercase tracking-widest text-neutral-400 font-bold">Manual Action</div>
+                        <div className="text-sm font-medium text-neutral-700">Verify & Check-in</div>
+                    </div>
+                    <div className="w-8 h-8 bg-neutral-50 rounded-lg flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-neutral-300 rounded-full"></div>
+                    </div>
+                 </div>
+             </div>
+          </div>
+       </div>
+
+       <div className="flex gap-3 pb-28">
+          <div className="flex flex-col items-center gap-1">
+             <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold">2</div>
+             <div className="w-0.5 h-full bg-brand-50"></div>
+          </div>
+          <div className="pb-4">
+             <p className="font-medium text-neutral-800">Search Ticket</p>
+             <p className="text-xs text-neutral-500 mb-2">Enter the last 4 digits of the ticket number.</p>
+             
+             {/* Mock Search & Dropdown */}
+             <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-4 max-w-[320px] select-none relative">
+                 <div className="relative mb-2">
+                     <div className="absolute left-3 top-2.5 text-neutral-400"><MousePointer2 size={12} className="-rotate-90" /></div>
+                     <div className="w-full pl-8 pr-3 py-2 bg-white border border-brand-200 rounded-lg text-sm text-neutral-800 shadow-[0_0_0_2px_rgba(100,50,250,0.1)]">
+                        A1B2
+                     </div>
+                 </div>
+                 
+                 {/* Dropdown */}
+                 <div className="absolute top-[60px] left-0 right-0 bg-white border border-neutral-200 rounded-lg shadow-lg z-10 overflow-hidden">
+                     <div className="px-3 py-2 bg-neutral-50 hover:bg-neutral-100 border-l-4 border-brand-500 flex justify-between items-center cursor-pointer">
+                         <div>
+                             <div className="text-xs font-mono font-bold text-neutral-800">T-8294-A1B2</div>
+                             <div className="text-[10px] text-neutral-500">John Doe • VIP</div>
+                         </div>
+                         <div className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[8px] font-bold rounded uppercase">Not Checked In</div>
+                     </div>
+                     <div className="px-3 py-2 hover:bg-neutral-50 flex justify-between items-center cursor-pointer border-t border-neutral-50 opacity-50">
+                         <div>
+                             <div className="text-xs font-mono font-bold text-neutral-800">T-9921-A1B2</div>
+                             <div className="text-[10px] text-neutral-500">Jane Smith • GA</div>
+                         </div>
+                         <div className="px-1.5 py-0.5 bg-green-50 text-green-600 text-[8px] font-bold rounded uppercase">Checked In</div>
+                     </div>
+                 </div>
+             </div>
+          </div>
+       </div>
+
+       <div className="flex gap-3">
+          <div className="flex flex-col items-center gap-1">
+             <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold">3</div>
+          </div>
+          <div className="pb-4">
+             <p className="font-medium text-neutral-800">Verify & Check-in</p>
+             <p className="text-xs text-neutral-500 mb-2">Confirm details and click "Check In Manually".</p>
+             
+             {/* Mock Result Card */}
+             <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-4 max-w-[320px] select-none">
+                 <div className="flex gap-3 mb-3">
+                     <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600"><CheckCircle2 size={16} /></div>
+                     <div>
+                         <div className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded uppercase w-fit mb-1">Valid</div>
+                         <div className="text-xs font-medium text-neutral-800">Ready to check in</div>
+                     </div>
+                 </div>
+                 
+                 <div className="space-y-2 mb-3">
+                     <div className="flex justify-between items-center p-2 bg-neutral-50 rounded border border-neutral-100">
+                         <span className="text-[10px] text-neutral-500">Ticket</span>
+                         <span className="text-[10px] font-mono font-bold text-neutral-700">T-8294-A1B2</span>
+                     </div>
+                     <div className="flex justify-between items-center p-2 bg-neutral-50 rounded border border-neutral-100">
+                         <span className="text-[10px] text-neutral-500">Holder</span>
+                         <span className="text-[10px] font-medium text-neutral-700">John Doe</span>
+                     </div>
+                 </div>
+                 
+                 <div className="w-full py-2 bg-emerald-600 text-white text-xs font-medium rounded-lg text-center shadow-sm flex items-center justify-center gap-1.5">
+                     <CheckCircle2 size={12} /> Check In Manually
+                 </div>
+             </div>
+          </div>
+       </div>
+    </div>
+  </div>
+);
+
 export const GUIDE_PHASES: Phase[] = [
   {
     id: 1,
@@ -308,6 +413,12 @@ export const GUIDE_PHASES: Phase[] = [
     items: [
       { id: "p4_scanning", label: "Scanner Staff: Scan & Verify", description: "Scan every ticket. Redirect failed scans to supervisor." },
       { id: "p4_supervision", label: "Supervisor: Handle Exceptions", description: "Resolve duplicate scans, invalid tickets, and device failures." },
+      { 
+        id: "p4_manual_lookup", 
+        label: "Manual Verification / Lookup", 
+        description: "Use the Check-in Tab to manually search and verify tickets if scanning fails.",
+        expandedContent: <ManualCheckInVisual />
+      },
       { id: "p4_fallback_exec", label: "Execute Fallback Procedure (If Needed)", description: "For network/device failure: Check ID on sheet, mark used, log manually." }
     ]
   },
