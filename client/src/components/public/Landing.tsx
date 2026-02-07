@@ -7,7 +7,8 @@ import {
   Wallet, ShieldCheck, Zap, Activity, MessageCircle, ArrowRight,
   Globe, Fingerprint, Lock, Layers, BarChart3, Ticket,
   ShieldAlert, RefreshCcw, Bell, Star, X, Send, Palette, FileText,
-  CreditCard, Clock10, Music, Mic, Disc, Headphones, Speaker, PartyPopper
+  CreditCard, Clock10, Music, Mic, Disc, Headphones, Speaker, PartyPopper,
+  Users, Image, Rocket, Clapperboard, Trophy, Briefcase, Heart
 } from 'lucide-react';
 import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
@@ -314,6 +315,53 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
             </Button>
           </motion.div>
           )}
+        </div>
+      </section>
+
+      {/* Category Infinite Scroll Section */}
+      <section className="py-10 border-b border-neutral-100 bg-neutral-0 overflow-hidden">
+        <div className="max-w-[100vw] mx-auto">
+           <div className="relative flex overflow-hidden">
+             {/* Gradient Masks for smooth fade out at edges */}
+             <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10" />
+             <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10" />
+
+             <motion.div 
+               className="flex gap-16 items-center whitespace-nowrap px-8"
+               animate={{ x: ["0%", "-50%"] }}
+               transition={{ 
+                 repeat: Infinity, 
+                 ease: "linear", 
+                 duration: 30 
+               }}
+             >
+               {[...Array(2)].map((_, i) => (
+                 <React.Fragment key={i}>
+                    {[
+                      { icon: <Users size={24} strokeWidth={1.5} />, label: "Seminars" },
+                      { icon: <Briefcase size={24} strokeWidth={1.5} />, label: "Business" },
+                      { icon: <Image size={24} strokeWidth={1.5} />, label: "Exhibitions" },
+                      { icon: <Rocket size={24} strokeWidth={1.5} />, label: "Launching" },
+                      { icon: <Mic size={24} strokeWidth={1.5} />, label: "Stand-up" },
+                      { icon: <PartyPopper size={24} strokeWidth={1.5} />, label: "Party" },
+                      { icon: <Heart size={24} strokeWidth={1.5} />, label: "Pop Culture" },
+                      { icon: <Clapperboard size={24} strokeWidth={1.5} />, label: "Movie / Drama" },
+                      { icon: <Music size={24} strokeWidth={1.5} />, label: "Concert" },
+                      { icon: <Trophy size={24} strokeWidth={1.5} />, label: "Sports" },
+                      { icon: <Palette size={24} strokeWidth={1.5} />, label: "Arts" },
+                      { icon: <Globe size={24} strokeWidth={1.5} />, label: "Festivals" },
+                    ].map((cat, idx) => (
+                      <div key={idx} className="flex flex-col items-center gap-3 text-neutral-400 hover:text-brand-600 transition-colors cursor-pointer group">
+                         <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-100 group-hover:border-brand-200 group-hover:bg-brand-50 transition-all">
+                            {cat.icon}
+                         </div>
+                         <span className="text-sm font-light tracking-wide">{cat.label}</span>
+                      </div>
+                    ))}
+                 </React.Fragment>
+               ))}
+             </motion.div>
+           </div>
         </div>
       </section>
 
