@@ -411,7 +411,7 @@ export default function Events() {
               (ticket.isVisible && ticket.isActive) && <TicketCard ticket={{
                 _id: ticket._id || i.toString(),
                 tier: ticket.tier || ticket.name,
-                name: event?.title || 'Event Name',
+                name: ticket?.name || 'Event Name',
                 controls: true,
                 startDate: event?.schedule?.startDate ? new Date(event.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '25 Jan, 2026',
                 endDate: event?.schedule?.endDate ? new Date(event.schedule.endDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '26 Jan, 2026',
