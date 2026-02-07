@@ -29,6 +29,7 @@ const sidebarLinks = [
   { href: '/learn/organizer-guidelines', label: 'Organizer Guidelines', icon: FileCheck },
   { href: '/learn/refund-policy-explained', label: 'Refund Policy', icon: RefreshCcw },
   { href: '/learn/how-to-host-event', label: 'How to Host', icon: Zap },
+  { href: '/learn/host-guide', label: 'Host Operational Guide', icon: FileCheck },
 ];
 
 export const LearnLayout: React.FC<LearnLayoutProps> = ({ children }) => {
