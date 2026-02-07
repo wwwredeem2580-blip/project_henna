@@ -456,7 +456,7 @@ export default function Events() {
               )}
               <button 
                 onClick={handleBookNow}
-                disabled={creatingOrder || grandTotal === 0}
+                disabled={creatingOrder || getTotalTickets() === 0}
                 className="py-2 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {creatingOrder ? (
