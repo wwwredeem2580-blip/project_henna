@@ -254,7 +254,7 @@ export default function AdminTickets() {
             </button>
             <button
               title="Help"
-              onClick={() => router.push('/admin/help')}
+              onClick={() => router.push('/contact')}
               className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"
             >
               <HelpCircle size={18} />
