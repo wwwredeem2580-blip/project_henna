@@ -168,8 +168,13 @@ export const createOrderService = async (data: any) => {
           );
       }
       
-      // Complete Order (Generate tickets, email, metrics)
-      await completeOrder(order);
+      // Queue ticket generation (non-blocking)
+      const { addTicketGenerationJob } = await import('../../workers/ticketGeneration.queue');
+      await addTicketGenerationJob({
+        orderId: order._id.toString(),
+        orderNumber: order.orderNumber,
+        tickets: order.tickets,
+      });
       
       // Invalidate PDF cache (new tickets added)
       await invalidatePDFCache(data.eventId);
@@ -418,83 +423,28 @@ export const handleBkashCallbackService = async (
     );
   }
 
-  // 12. GENERATE TICKETS
-  const ticketIds: any[] = [];
+  // 12. QUEUE TICKET GENERATION (NON-BLOCKING)
   try {
-    for (const item of order.tickets) {
-      for (let i = 0; i < item.quantity; i++) {
-        const ticket = await createTicket(order, item, i);
-        ticketIds.push(ticket._id);
-      }
-    }
-    console.log(`[TICKETS_GENERATED] Order: ${orderId}, Count: ${ticketIds.length}`);
+    const { addTicketGenerationJob } = await import('../../workers/ticketGeneration.queue');
+    
+    await addTicketGenerationJob({
+      orderId: order._id.toString(),
+      orderNumber: order.orderNumber,
+      tickets: order.tickets,
+    });
+    
+    console.log(`[TICKET_QUEUE] Queued ticket generation for order: ${orderId}`);
   } catch (err) {
-    console.error('[CRITICAL] Ticket generation failed:', err);
-    // Don't fail the payment - tickets can be regenerated manually
-    // Mark order for manual review
+    console.error('[CRITICAL] Failed to queue ticket generation:', err);
     order.requiresManualReview = true;
-    order.manualReviewReason = 'ticket_generation_failed';
+    order.manualReviewReason = 'ticket_queue_failed';
     await order.save();
-  }
-
-  // 13. LINK TICKETS TO ORDER
-  if (ticketIds.length > 0) {
-    order.ticketIds = ticketIds;
-    await order.save();
-  }
-  await updateEventMetrics(order._id.toString());
-  
-  // Invalidate PDF cache (new tickets added)
-  await invalidatePDFCache(order.eventId.toString());
-  // 14. SEND ORDER CONFIRMATION EMAIL
-  try {
-    const { addEmailJob } = await import('../../workers/email.queue');
-
-    // Fetch event details for email
-    const event = await Event.findById(order.eventId);
-    if (event && event.schedule) {
-      // Prepare tickets array for email
-      const tickets = order.tickets.map((item: any) => ({
-        ticketType: item.variantName,
-        quantity: item.quantity,
-        price: item.pricePerTicket
-      }));
-
-      await addEmailJob('ORDER_CONFIRMATION', {
-        orderNumber: order.orderNumber,
-        buyerName: order.buyerEmail.split('@')[0],
-        buyerEmail: order.buyerEmail,
-        eventTitle: event.title,
-        eventDate: new Date(event.schedule.startDate).toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
-        eventTime: new Date(event.schedule.startDate).toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-        }),
-        venue: event.venue?.name || 'TBA',
-        venueAddress: event.venue?.address || 'Address TBA',
-        tickets,
-        totalAmount: order.pricing?.total || 0,
-        paymentMethod: order.paymentMethod || 'bKash',
-        transactionId: payment.transactionId,
-      });
-
-      console.log(`[EMAIL_QUEUED] Order confirmation for ${order.orderNumber}`);
-    }
-  } catch (emailError) {
-    console.error('[EMAIL_ERROR] Failed to queue order confirmation:', emailError);
-    // Don't fail the order if email fails
   }
 
   return { 
     success: true, 
-    message: 'Payment succeeded', 
+    message: 'Payment succeeded. Tickets are being generated.', 
     orderId: order._id,
-    ticketCount: ticketIds.length
   };
 };
 

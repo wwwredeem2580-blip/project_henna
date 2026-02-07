@@ -48,12 +48,19 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
 # Copy only the build output and package files
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 
 # Install only production dependencies
 RUN npm install --omit=dev
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3001/health || exit 1
 
 # Ensure files are readable by the non-root user
 RUN chown -R node:node /app

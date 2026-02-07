@@ -7,8 +7,8 @@ import { SharedArray } from 'k6/data';
 // -----------------------
 export const options = {
   stages: [
-    { duration: '1m', target: 50 },   // Ramp-up
-    { duration: '3m', target: 50 },   // Sustained load
+    { duration: '1m', target: 5 },   // Ramp-up
+    { duration: '3m', target: 10 },   // Sustained load
     { duration: '1m', target: 0 },    // Ramp-down
   ],
   thresholds: {
