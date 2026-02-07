@@ -547,30 +547,53 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
         </div>
       </section>
 
-      {/* Feature Highlights Section */}
-      <section className="py-24 px-6 bg-brand-50">
+      {/* Why Zenvy / Features Section */}
+      <section className="py-24 px-6 bg-brand-50/50">
         <div className="max-w-7xl mx-auto space-y-16">
-          <div className="text-center space-y-1">
-            <h2 className="text-3xl font-light text-neutral-950 tracking-tight">Features Engineered for Success</h2>
-            <p className="text-neutral-500 font-[300] leading-relaxed">Professional tools without the professional complexity.</p>
+          <div className="text-center space-y-4 max-w-[1080px] mx-auto">
+            <h2 className="text-3xl md:text-5xl font-light text-neutral-950 tracking-tight leading-tight">
+              Freedom meets <br /> <span className="text-brand-600 font-normal">Uncompromising Security</span>
+            </h2>
+            <p className="text-neutral-500 font-[300] text-lg leading-relaxed">
+              We bridged the trust gap. A platform where anyone can host, but strict protocols protect every attendee.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: <Wallet />, title: 'Engraved Wallet', desc: 'Custom invitations with your name engraved, QR validation, and high-res PDF downloads.' },
-              { icon: <ShieldCheck />, title: 'Verified Hosts', desc: 'Every organizer undergoes a multi-stage audit before their listing goes live.' },
-              { icon: <BarChart3 />, title: 'Deep Analytics', desc: 'Real-time dashboards tracking orders, conversion rates, and check-in velocity.' },
+              { 
+                icon: <ShieldCheck className="text-emerald-500" />, 
+                title: 'Verified Identity', 
+                desc: 'Every organizer bypasses a rigorous identity audit. We don\'t just check emails; we verify legal docs & authenticity.' 
+              },
+              { 
+                icon: <RefreshCcw className="text-blue-500" />, 
+                title: '7-Day Refund', 
+                desc: 'Automated 100% refunds for cancellations or unsafe events. No organizer approval needed.' 
+              },
+              { 
+                icon: <Lock className="text-rose-500" />, 
+                title: 'Locked Integrity', 
+                desc: 'Organizers cannot secretly delete tiers, reduce quotas, or downgrade benefits once a ticket is sold.' 
+              },
+              { 
+                icon: <Ticket className="text-amber-500" />, 
+                title: 'Secure Booking', 
+                desc: 'Anti-scalping limits, 15-min reservation locks, and dynamic QR codes that prevent duplicate entry.' 
+              },
             ].map((feature, i) => (
               <motion.div
                 key={i}
                 whileHover={{ y: -5 }}
-                className="bg-neutral-0 p-8 rounded-[2rem] border border-brand-200 shadow-sm hover:shadow-xl transition-all space-y-4"
+                className="bg-neutral-0 p-8 rounded-[2rem] border border-neutral-100 hover:shadow-xl hover:shadow-brand-100/50 transition-all space-y-6 group"
               >
-                <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600">
-                  {React.cloneElement(feature.icon as React.ReactElement<any>, { size: 24 })}
+                <div className="w-14 h-14 bg-neutral-50 rounded-2xl flex items-center justify-center group-hover:bg-brand-50 transition-colors">
+                  {React.cloneElement(feature.icon as React.ReactElement<any>, { size: 28, strokeWidth: 1.5 })}
                 </div>
-                <h3 className="text-xl font-light text-neutral-950 tracking-tight">{feature.title}</h3>
-                <p className="text-neutral-500 text-sm font-medium leading-relaxed">{feature.desc}</p>
+                <div className="space-y-3">
+                  <h3 className="text-xl font-medium text-neutral-900 tracking-tight">{feature.title}</h3>
+                  <p className="text-neutral-500 text-sm font-[300] leading-relaxed">{feature.desc}</p>
+                </div>
               </motion.div>
             ))}
           </div>
