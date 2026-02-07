@@ -43,11 +43,11 @@ class RAGService {
     // Initialize Gemini for embeddings (free tier)
     if (geminiApiKey) {
       this.genAI = new GoogleGenerativeAI(geminiApiKey);
-      // Use the correct embedding model name
+      // Use the correct embedding model name for v1beta API
       this.embeddingModel = this.genAI.getGenerativeModel({ 
-        model: "text-embedding-004" 
+        model: "gemini-embedding-001" 
       });
-      console.log('[RAG] Using Gemini text-embedding-004 (free tier)');
+      console.log('[RAG] Using Gemini embedding-001 (free tier)');
     } else {
       console.warn('[RAG] No Gemini API key provided - embeddings disabled');
     }
@@ -232,11 +232,8 @@ class RAGService {
     }
 
     try {
-      // Use embedContent with proper content structure and taskType
-      const result = await this.embeddingModel.embedContent({
-        content: { parts: [{ text }] },
-        taskType: "RETRIEVAL_DOCUMENT"
-      });
+      // Simple embedContent call without taskType
+      const result = await this.embeddingModel.embedContent(text);
       const embedding = result.embedding.values;
       
       // Debug: log embedding info
