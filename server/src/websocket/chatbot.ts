@@ -3,6 +3,7 @@ import HybridChatbotImproved from '../engines/hybrid.engine';
 import SituationalAwarenessEngine from '../engines/situational.engine';
 import { Support } from '../database/support/support';
 import { ConversationMessage } from '../engines/chatbot.engine';
+import { QueueTimeoutService } from '../services/queue-timeout.service';
 
 // Initialize engines
 const hybridBot = new HybridChatbotImproved(
@@ -57,21 +58,35 @@ const notifyQueuePositions = async (io: Server) => {
 export const initChatbotSocket = (io: Server) => {
   const supportNamespace = io.of('/support');
 
+  // Initialize and start queue timeout service
+  const timeoutService = new QueueTimeoutService(io, () => userSockets);
+  timeoutService.start();
+
   supportNamespace.on('connection', async (socket: Socket) => {
     console.log(`🔌 User connected to support chat: ${socket.id}`);
 
     const userId = (socket.handshake.query.userId as string) || null;
+    const anonymousId = (socket.handshake.query.anonymousId as string) || null;
     const userName = (socket.handshake.query.userName as string) || 'Guest';
     let conversationId: string | null = null;
     let conversation: any = null;
 
     try {
-      // Only find existing conversation if user is authenticated
-      if (userId && userId !== 'anonymous') {
+      // Find existing conversation by userId or anonymousId
+      if (userId && userId !== 'anonymous' && !userId.startsWith('guest_')) {
+        // Authenticated user
         conversation = await Support.findOne({
           userId,
           status: { $in: ['bot', 'escalated', 'active'] }
         }).sort({ createdAt: -1 });
+        console.log(`[Support] Looking for conversation by userId: ${userId}`);
+      } else if (anonymousId) {
+        // Anonymous user
+        conversation = await Support.findOne({
+          anonymousId,
+          status: { $in: ['bot', 'escalated', 'active'] }
+        }).sort({ createdAt: -1 });
+        console.log(`[Support] Looking for conversation by anonymousId: ${anonymousId}`);
       }
 
       if (!conversation) {
@@ -81,25 +96,63 @@ export const initChatbotSocket = (io: Server) => {
           status: 'bot',
           messages: [],
           urgent: false,
+          lastActivityAt: new Date(),
           metadata: {
             source: 'web',
-            userAgent: socket.handshake.headers['user-agent']
+            userAgent: socket.handshake.headers['user-agent'],
+            sessionId: anonymousId || userId
           }
         };
 
-        // Only add userId if user is authenticated
-        if (userId && userId !== 'anonymous') {
+        // Add userId or anonymousId
+        if (userId && userId !== 'anonymous' && !userId.startsWith('guest_')) {
           conversationData.userId = userId;
+        } else if (anonymousId) {
+          conversationData.anonymousId = anonymousId;
         }
 
         conversation = await Support.create(conversationData);
-        console.log(`[Support] Created new conversation: ${conversation._id}`);
+        console.log(`[Support] Created new conversation: ${conversation._id} (anonymous: ${!!anonymousId})`);
       } else {
-        console.log(`[Support] Resumed conversation: ${conversation._id}`);
+        console.log(`[Support] Resumed conversation: ${conversation._id} (status: ${conversation.status})`);
       }
 
       conversationId = conversation._id.toString();
       userSockets.set(conversationId!, socket); // conversationId is guaranteed to be string here
+
+      // Check if user was in queue and handle rejoin logic
+      if (conversation.status === 'escalated') {
+        const timeSinceLastActivity = Date.now() - (conversation.lastActivityAt?.getTime() || Date.now());
+        const FIVE_MINUTES = 5 * 60 * 1000;
+        
+        if (timeSinceLastActivity > FIVE_MINUTES) {
+          // Too long offline - close conversation
+          console.log(`[Support] Conversation ${conversationId} expired (offline > 5 min)`);
+          conversation.status = 'closed';
+          conversation.closedReason = 'user_left';
+          conversation.closedAt = new Date();
+          await conversation.save();
+          
+          socket.emit('conversation_closed', {
+            message: 'Your previous session expired due to inactivity. Please start a new conversation.'
+          });
+          
+          // Clear from queue
+          if (conversationId) {
+            userSockets.delete(conversationId);
+          }
+          notifyQueuePositions(io);
+        } else {
+          // Rejoin queue at back (fair to those waiting)
+          console.log(`[Support] User rejoining queue (was offline ${Math.round(timeSinceLastActivity / 1000)}s)`);
+          conversation.queueJoinedAt = new Date(); // Reset queue time (back of queue)
+          conversation.lastActivityAt = new Date();
+          await conversation.save();
+          
+          // Notify queue position
+          notifyQueuePositions(io);
+        }
+      }
 
       // Send conversation history to user
       socket.emit('conversation_history', {
@@ -139,6 +192,9 @@ export const initChatbotSocket = (io: Server) => {
 
           const userMessage = data.text.trim();
           if (!userMessage) return;
+
+          // Update last activity time
+          conversation.lastActivityAt = new Date();
 
           // Add user message to conversation
           const userMsgObj: ConversationMessage = {
@@ -187,6 +243,7 @@ export const initChatbotSocket = (io: Server) => {
         if (analysis.shouldEscalate && conversation.status === 'bot') {
           conversation.status = 'escalated';
           conversation.escalatedAt = new Date();
+          conversation.queueJoinedAt = new Date(); // Track queue join time
           conversation.urgent = analysis.urgency === 'critical' || analysis.urgency === 'high';
           await conversation.save();
 
@@ -266,6 +323,7 @@ export const initChatbotSocket = (io: Server) => {
           if (botResponse.escalate && conversation.status === 'bot') {
             conversation.status = 'escalated';
             conversation.escalatedAt = new Date();
+            conversation.queueJoinedAt = new Date(); // Track queue join time
             conversation.urgent = botResponse.urgent;
             await conversation.save();
 
@@ -307,6 +365,20 @@ export const initChatbotSocket = (io: Server) => {
       // This can be used to improve RAG quality
       console.log(`[Support] User feedback: ${data.helpful ? '👍' : '👎'} for message ${data.messageId}`);
       // TODO: Implement RAG quality tracking
+    });
+
+    // Handle user leaving queue
+    socket.on('leave_queue', async () => {
+      if (conversationId && conversation) {
+        console.log(`[Support] User leaving queue: ${conversationId}`);
+        conversation.status = 'closed';
+        conversation.closedReason = 'user_left';
+        conversation.closedAt = new Date();
+        await conversation.save();
+        
+        userSockets.delete(conversationId);
+        notifyQueuePositions(io);
+      }
     });
 
     // Handle disconnect

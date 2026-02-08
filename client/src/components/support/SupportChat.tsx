@@ -19,6 +19,7 @@ export const SupportChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [showTimeout, setShowTimeout] = useState(false);
   const [queuePos, setQueuePos] = useState<number | null>(null);
+  const [isInQueue, setIsInQueue] = useState(false); // NEW: Track if user is in queue
   const [isClosed, setIsClosed] = useState(false);
   const [isAdminActive, setIsAdminActive] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -32,6 +33,22 @@ export const SupportChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen, isTyping, showTimeout]);
 
+  // Utility to get or create anonymous ID
+  const getOrCreateAnonymousId = (): string => {
+    const key = 'zenvy_support_session_id';
+    let sessionId = localStorage.getItem(key);
+    
+    if (!sessionId) {
+      sessionId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem(key, sessionId);
+      console.log('🆔 Created new anonymous ID:', sessionId);
+    } else {
+      console.log('🆔 Using existing anonymous ID:', sessionId);
+    }
+    
+    return sessionId;
+  };
+
   // Connect to WebSocket
   useEffect(() => {
     if (isOpen && !socketRef.current) {
@@ -39,16 +56,20 @@ export const SupportChat = () => {
         import('socket.io-client').then(({ io }) => {
             const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
             
-            // Pass user credentials for conversation persistence
-            const userId = user?.sub || 'anonymous';
+            // Pass user credentials or anonymous ID for conversation persistence
+            const anonymousId = !user ? getOrCreateAnonymousId() : null;
+            const userId = user?.sub || anonymousId;
             const userName = user ? `${user.firstName} ${user.lastName}` : 'Guest';
+            
+            console.log('🔌 Connecting to support chat:', { userId, userName, isAnonymous: !user });
             
             socketRef.current = io(`${socketUrl}/support`, {
                 withCredentials: true,
                 transports: ['websocket', 'polling'],
                 query: {
                     userId,
-                    userName
+                    userName,
+                    anonymousId: anonymousId || undefined
                 }
             });
 
@@ -102,21 +123,44 @@ export const SupportChat = () => {
 
             socketRef.current.on('queue_update', (data: { position: number, total: number }) => {
                 setQueuePos(data.position);
+                setIsInQueue(true); // User is in queue
             });
             
              socketRef.current.on('admin_joined', (data: any) => {
                  setQueuePos(null); // Clear queue when admin joins
+                 setIsInQueue(false); // Re-enable input
                  setIsAdminActive(true); 
                  // Also stop any typing indicators from bot
                  setIsTyping(false);
                  setShowTimeout(false);
                  if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
                  if (longWaitTimeoutRef.current) clearTimeout(longWaitTimeoutRef.current);
+                 
+                 // Add message to chat
+                 setMessages(prev => [...prev, {
+                     id: Date.now(),
+                     text: `${data.agentName} has joined the chat`,
+                     sender: 'bot',
+                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                 }]);
              });
+
+            socketRef.current.on('escalated', (data: any) => {
+                setIsInQueue(true); // Disable input
+                setQueuePos(data.position || 1);
+                // Add message to chat
+                setMessages(prev => [...prev, {
+                    id: Date.now(),
+                    text: data.message || "I've placed you in our support queue. Please wait for an agent.",
+                    sender: 'bot',
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }]);
+            });
 
             socketRef.current.on('conversation_closed', (data: any) => {
                 setIsClosed(true);
                 setQueuePos(null);
+                setIsInQueue(false);
                 setIsTyping(false);
                 setShowTimeout(false);
                 setMessages(prev => [...prev, {
@@ -190,6 +234,8 @@ export const SupportChat = () => {
     ]);
     setIsClosed(false);
     setIsAdminActive(false);
+    setIsInQueue(false);
+    setQueuePos(null);
     setMessage('');
     
     // Slight delay to allow re-connection logic in useEffect to trigger if needed
@@ -201,6 +247,28 @@ export const SupportChat = () => {
     // For now, toggling isOpen quickly is a hack, but let's just use the effect dependency.
     // Actually, we can just reload the window for a full clear, simpler for "Start New".
     window.location.reload(); 
+  };
+
+  const handleCloseAndRestart = () => {
+    // Emit leave_queue event to close conversation on server
+    if (socketRef.current) {
+      socketRef.current.emit('leave_queue');
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+    
+    // Reset state
+    setMessages([
+      { id: Date.now(), text: "Starting a new conversation... 👋", sender: 'bot', time: 'Just now' }
+    ]);
+    setIsClosed(false);
+    setIsAdminActive(false);
+    setIsInQueue(false);
+    setQueuePos(null);
+    setMessage('');
+    
+    // Reload to get fresh connection
+    window.location.reload();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -372,6 +440,18 @@ export const SupportChat = () => {
                         Start New Chat
                      </button>
                  </div>
+              ) : isInQueue ? (
+                  <div className="flex flex-col items-center gap-3 py-2">
+                      <p className="text-xs text-slate-500 text-center">
+                          Please wait for an agent to join. You're #{queuePos} in queue.
+                      </p>
+                      <button 
+                         onClick={handleCloseAndRestart}
+                         className="px-6 py-2 border border-slate-300 text-slate-700 text-xs font-medium rounded-xl hover:bg-slate-50 transition-colors"
+                      >
+                         Close Chat & Start New
+                      </button>
+                  </div>
               ) : (
                   <>
                   <div className="flex gap-4">
