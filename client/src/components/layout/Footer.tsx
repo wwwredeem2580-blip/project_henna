@@ -49,7 +49,7 @@ export const Footer: React.FC = () => {
          <p>© 2026 Zenvy Inc.</p>
          <div className="flex gap-8 mt-4 sm:mt-0">
            <a href="/legal/privacy" className="hover:text-brand-600">Privacy</a>
-           <a href="/legal/security" className="hover:text-brand-600">Security</a>
+           {/* <a href="/legal/security" className="hover:text-brand-600">Security</a> */}
            <a href="/legal/terms" className="hover:text-brand-600">Terms</a>
          </div>
       </div>

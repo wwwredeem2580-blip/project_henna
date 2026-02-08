@@ -14,7 +14,7 @@ export default function TermsOfServicePage() {
     <div className="min-h-screen bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
       <Navbar onLogin={handleLogin} onGetStarted={handleGetStarted} />
 
-      <main className="pt-32 pb-24 px-6 max-w-4xl mx-auto">
+      <main className="pt-32 pb-24 px-6 max-w-[896px] mx-auto">
         <div className="space-y-4 mb-16 text-center">
             <h1 className="text-4xl md:text-5xl font-light text-neutral-950 tracking-tight">Terms of Service</h1>
             <p className="text-neutral-500 font-light text-lg">Effective Date: February 9, 2026</p>
@@ -83,8 +83,6 @@ export default function TermsOfServicePage() {
           </p>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
