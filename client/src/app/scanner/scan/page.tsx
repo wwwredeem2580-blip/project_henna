@@ -57,14 +57,14 @@ export default function ScannerPage() {
   
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerInitialized = useRef(false);
-  const dbInitialized = useRef(false);
+  const [dbInitialized, setDbInitialized] = useState(false); // Changed from ref to state
 
   // Initialize IndexedDB and load session
   useEffect(() => {
     const initDB = async () => {
       try {
         await scannerDB.init();
-        dbInitialized.current = true;
+        setDbInitialized(true); // Changed from ref to state setter
         console.log('IndexedDB initialized');
       } catch (error) {
         console.error('Failed to initialize IndexedDB:', error);
@@ -95,10 +95,10 @@ export default function ScannerPage() {
 
   // Cache tickets when session is loaded
   useEffect(() => {
-    if (!session || !dbInitialized.current) {
+    if (!session || !dbInitialized) {
       console.log('⏸️ Caching skipped:', { 
         hasSession: !!session, 
-        dbInitialized: dbInitialized.current 
+        dbInitialized: dbInitialized 
       });
       return;
     }
@@ -168,7 +168,7 @@ export default function ScannerPage() {
 
   // Check for pending syncs
   useEffect(() => {
-    if (!dbInitialized.current) return;
+    if (!dbInitialized) return;
 
     const checkPendingSyncs = async () => {
       try {
@@ -203,7 +203,7 @@ export default function ScannerPage() {
 
   // Auto-sync when connection is restored
   useEffect(() => {
-    if (!isOnline || !dbInitialized.current || pendingSyncs === 0 || isSyncing) return;
+    if (!isOnline || !dbInitialized || pendingSyncs === 0 || isSyncing) return;
 
     const syncOfflineScans = async () => {
       // Prevent concurrent syncs
