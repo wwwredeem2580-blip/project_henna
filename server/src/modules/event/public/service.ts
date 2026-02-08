@@ -82,13 +82,17 @@ function escapeRegExp(str: string): string {
 
 // --- Get Event Details ---
 export const getEventDetailsService = async (identifier: string, userId?: string) => {
-  let event = await Event.findOne({ slug: identifier }).select('_id hostId slug title type moderation.sales categories description tagline highlights media status venue organizer schedule tickets features');
+  let event = await Event.findOne({ slug: identifier })
+    .select('_id hostId slug title type moderation.sales categories description tagline highlights media status venue organizer schedule tickets features')
+    .lean();
 
   if (!event) {
     if(!isValidObjectId(identifier)){
       throw new CustomError('Event not found', 404);
     }
-    event = await Event.findById(identifier).select('_id hostId slug title type moderation.sales.paused categories description tagline highlights media status venue organizer schedule tickets features');
+    event = await Event.findById(identifier)
+      .select('_id hostId slug title type moderation.sales.paused categories description tagline highlights media status venue organizer schedule tickets features')
+      .lean();
   }
 
   if (event?.flags?.suspended || event?.moderation?.visibility === 'private') {
@@ -118,7 +122,8 @@ export const getFeaturedEventsService = async (limit: number) => {
   })
     .select('_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate tickets metrics.views status')
     .sort({ 'moderation.features.featuredPriority': -1, 'moderation.features.featuredAt': -1 })
-    .limit(limit);
+    .limit(limit)
+    .lean(); // Add lean for performance
   
   return events;
 };

@@ -184,4 +184,22 @@ orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ eventId: 1, status: 1 });
 orderSchema.index({ status: 1, expiresAt: 1 });
 
+// =====================
+// PERFORMANCE INDEXES (Phase 1)
+// =====================
+
+// Payment status queries (for payment verification)
+orderSchema.index({
+  paymentStatus: 1,
+  status: 1,
+  createdAt: -1
+});
+
+// Host revenue queries (event orders)
+orderSchema.index({
+  eventId: 1,
+  paymentStatus: 1,
+  paidAt: -1
+});
+
 export default orderSchema;

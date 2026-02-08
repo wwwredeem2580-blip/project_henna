@@ -29,7 +29,9 @@ async function validateTicketLimits(userId: string, eventId: string, requestedTi
     userId,
     eventId,
     status: { $in: ['confirmed', 'pending'] }
-  });
+  })
+    .select('tickets')
+    .lean(); // Performance optimization
 
   // Calculate total tickets bought for this event
   const currentTotalTickets = existingOrders.reduce((sum, order) => {
@@ -482,7 +484,9 @@ async function validateFreeTicketBooking(userId: string, eventId: string, quanti
     eventId,
     'pricing.total': 0,
     status: { $in: ['confirmed', 'pending'] } // Count pending too to prevent race conditions
-  });
+  })
+    .select('tickets')
+    .lean(); // Performance optimization
   
   const currentEventFreeTickets = existingOrders.reduce((sum, order) => {
       return sum + order.tickets.reduce((tSum: number, t: any) => tSum + t.quantity, 0);

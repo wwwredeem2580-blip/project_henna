@@ -91,4 +91,42 @@ ticketSchema.methods.transfer = function(newOwnerId: string) {
   return this.save();
 };
 
+// =====================
+// PERFORMANCE INDEXES (Phase 1)
+// =====================
+
+// Scanner operations - bulk ticket lookup by event
+// Critical for scanner dashboard and ticket sheet generation
+ticketSchema.index({
+  eventId: 1,
+  status: 1,
+  checkInStatus: 1
+});
+
+// User's tickets for specific event (wallet view)
+ticketSchema.index({
+  userId: 1,
+  eventId: 1,
+  status: 1
+});
+
+// Order tickets lookup (for order details page)
+ticketSchema.index({
+  orderId: 1,
+  status: 1
+});
+
+// Check-in history queries
+ticketSchema.index({
+  eventId: 1,
+  checkInStatus: 1,
+  checkedInAt: -1
+});
+
+// Ticket expiry cleanup job
+ticketSchema.index({
+  validUntil: 1,
+  status: 1
+});
+
 export default ticketSchema;

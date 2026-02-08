@@ -278,4 +278,53 @@ eventSchema.index({
   status: 1,
 });
 
+// =====================
+// PERFORMANCE OPTIMIZATIONS (Phase 1)
+// =====================
+
+// Public event listing (most frequent query - 60% of traffic)
+// Covers: status='live' + featured + sorted by date
+eventSchema.index({
+  status: 1,
+  'moderation.features.isFeatured': 1,
+  'schedule.startDate': 1
+});
+
+// Public event listing with visibility filter
+eventSchema.index({
+  status: 1,
+  'moderation.visibility': 1,
+  'moderation.features.isFeatured': 1,
+  'schedule.startDate': 1
+});
+
+// Text search for event discovery (search bar queries)
+eventSchema.index({
+  title: 'text',
+  description: 'text',
+  tagline: 'text',
+  'venue.address.city': 'text'
+}, {
+  weights: {
+    title: 10,
+    tagline: 5,
+    'venue.address.city': 3,
+    description: 1
+  },
+  name: 'event_text_search'
+});
+
+// Category browsing (filtered by status)
+eventSchema.index({
+  category: 1,
+  status: 1,
+  'schedule.startDate': 1
+});
+
+// Sales status queries (for paused/active filtering)
+eventSchema.index({
+  'moderation.sales.paused': 1,
+  status: 1
+});
+
 export default eventSchema;
