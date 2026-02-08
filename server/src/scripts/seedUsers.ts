@@ -9,7 +9,7 @@ import fs from 'fs';
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const USER_COUNT = 200;
+const USER_COUNT = 100;
 const CSV_FILE = 'dummy_users.csv';
 
 const seedUsers = async () => {

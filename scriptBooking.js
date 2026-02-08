@@ -24,8 +24,9 @@ const users = new SharedArray('users', function () {
   return open('./dummy_users.csv')
     .split('\n')
     .slice(1) // skip header
+    .filter(line => line.trim()) // remove empty lines
     .map(line => {
-      const [email, password] = line.split(',');
+      const [email, password] = line.split(',').map(s => s.trim());
       return { email, password };
     });
 });
@@ -53,60 +54,94 @@ export default function () {
   const token = loginRes.json('token');
   if (!token) return;
 
-  const authHeaders = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } };
+  const authHeaders = { 
+    headers: { 
+      Authorization: `Bearer ${token}`, 
+      'Content-Type': 'application/json' 
+    } 
+  };
 
   sleep(Math.random() * 2 + 1); // human-like think time
 
   // -----------------------
   // 2️⃣ Fetch Public Events
   // -----------------------
-  const eventsRes = http.get(`${BASE_URL}/api/event/public`, authHeaders);
+  const eventsRes = http.get(`${BASE_URL}/api/event/public?page=1&limit=20`, authHeaders);
   check(eventsRes, { 'events fetched': r => r.status === 200 });
 
-  const events = eventsRes.json();
-  if (!events || events.length === 0) return;
+  const eventsData = eventsRes.json();
+  if (!eventsData || !eventsData.events || eventsData.events.length === 0) return;
 
   // Pick random event
-  const event = events[Math.floor(Math.random() * events.length)];
+  const event = eventsData.events[Math.floor(Math.random() * eventsData.events.length)];
 
   sleep(Math.random() * 2 + 1);
 
   // -----------------------
-  // 3️⃣ Fetch Tickets for Event
+  // 3️⃣ Fetch Event Details (includes tickets)
   // -----------------------
-  const ticketsRes = http.get(`${BASE_URL}/api/event/${event.id}/tickets`, authHeaders);
-  check(ticketsRes, { 'tickets fetched': r => r.status === 200 });
+  const eventDetailsRes = http.get(
+    `${BASE_URL}/api/event/public/${event.slug || event._id}`, 
+    authHeaders
+  );
+  check(eventDetailsRes, { 'event details fetched': r => r.status === 200 });
 
-  const tickets = ticketsRes.json();
-  if (!tickets || tickets.length === 0) return;
+  const eventDetails = eventDetailsRes.json();
+  if (!eventDetails || !eventDetails.tickets || eventDetails.tickets.length === 0) return;
 
-  // Pick random ticket variant
-  const ticket = tickets[Math.floor(Math.random() * tickets.length)];
+  // Pick random available ticket variant
+  const availableTickets = eventDetails.tickets.filter(t => 
+    t.isActive && t.quantity > t.sold
+  );
+  
+  if (availableTickets.length === 0) return;
+  
+  const ticketVariant = availableTickets[Math.floor(Math.random() * availableTickets.length)];
 
   sleep(Math.random() * 1 + 1);
 
   // -----------------------
-  // 4️⃣ Create Order
+  // 4️⃣ Create Order (FIXED PAYLOAD)
   // -----------------------
   const orderPayload = {
-    eventId: event.id,
-    ticketId: ticket.id,
-    quantity: 1 // can randomize if needed
+    eventId: eventDetails._id,
+    tickets: [
+      {
+        ticketVariantId: ticketVariant._id,
+        variantName: ticketVariant.name,
+        quantity: 1,
+        pricePerTicket: ticketVariant.price?.amount || 0
+      }
+    ],
+    paymentMethod: ticketVariant.price?.amount === 0 ? 'free' : 'bkash'
   };
 
-  const orderRes = http.post(`${BASE_URL}/api/order`, JSON.stringify(orderPayload), authHeaders);
-  check(orderRes, { 'order created': r => r.status === 200 });
+  const orderRes = http.post(
+    `${BASE_URL}/api/order`, 
+    JSON.stringify(orderPayload), 
+    authHeaders
+  );
+  check(orderRes, { 'order created': r => r.status === 201 });
 
   const order = orderRes.json();
-  if (!order || !order.id) return;
+  if (!order || !order.orderId) return;
 
   sleep(Math.random() * 2 + 1);
 
   // -----------------------
-  // 5️⃣ Simulate Payment (Dummy/Free Ticket)
+  // 5️⃣ Simulate Payment (FIXED CALLBACK)
   // -----------------------
-  const paymentRes = http.get(`${BASE_URL}/api/order/${order.id}/bkash/callback`, authHeaders);
-  check(paymentRes, { 'payment simulated': r => r.status === 200 });
+  if (order.isFree) {
+    // Free ticket - already confirmed
+    console.log(`Free ticket order ${order.orderId} confirmed`);
+  } else if (order.paymentId) {
+    // Simulate bKash payment callback
+    const paymentRes = http.get(
+      `${BASE_URL}/api/order/bkash/callback?orderId=${order.orderId}&paymentId=${order.paymentId}`, 
+      authHeaders
+    );
+    check(paymentRes, { 'payment processed': r => r.status === 200 });
+  }
 
   sleep(Math.random() * 2 + 1);
 
