@@ -55,6 +55,10 @@ app.get("/", (req, res) => {
   res.json({ message: "Server is Running!" });
 });
 
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 app.use((err: any, req: any, res: any, next: any) => {
   if (err instanceof SyntaxError) {
     return res.status(400).json({ error: 'Malformed JSON' })

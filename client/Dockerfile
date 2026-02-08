@@ -50,6 +50,22 @@ FROM node:20-alpine AS production
 
 WORKDIR /src
 
+# Install curl and dumb-init for health checks and proper signal handling
+RUN apk add --no-cache curl dumb-init
+
+# Install Chromium and dependencies for Puppeteer (BEFORE copying files)
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Tell Puppeteer to skip installing Chrome and use the installed package
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
 # Copy necessary files from builder
 COPY --from=builder /src/.next ./.next
 COPY --from=builder /src/public ./public
@@ -61,22 +77,21 @@ COPY --from=builder /src/next.config.* ./
 # Install only production dependencies
 RUN npm install --omit=dev
 
-# Install Chromium and dependencies for Puppeteer
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont
-
-# Tell Puppeteer to skip installing Chrome v. and use the installed package
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Change ownership to node user (IMPORTANT: Do this AFTER installing packages)
+RUN chown -R node:node /src
 
 EXPOSE 3000
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
 # Run as non-root user
 USER node
 
+# Use dumb-init to handle signals properly (prevents zombie processes)
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start Next.js
 CMD ["npm", "start"]

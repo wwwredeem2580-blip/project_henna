@@ -10,10 +10,12 @@ services:
       context: ./client
       dockerfile: Dockerfile
       target: production
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     environment:
       - NODE_ENV=production
-      - CHOKIDAR_USEPOLLING=true
-      - NEXT_TELEMETRY_DISABLED=1
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
     env_file:
       - ./client/.env.production
     networks:
@@ -21,19 +23,20 @@ services:
     deploy:
       replicas: 2
       update_config:
-        parallelism: 1      # Update 1 container at a time
-        delay: 15s          # Wait 15s between updates
+        parallelism: 1
+        delay: 15s
         failure_action: rollback
-        order: start-first  # Start new before stopping old
+        order: start-first
       rollback_config:
         parallelism: 1
         delay: 10s
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 5s
         max_attempts: 3
+        window: 120s
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
