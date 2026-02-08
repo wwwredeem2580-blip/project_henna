@@ -3,7 +3,7 @@ import HybridChatbotImproved from '../engines/hybrid.engine';
 import SituationalAwarenessEngine from '../engines/situational.engine';
 import { Support } from '../database/support/support';
 import { ConversationMessage } from '../engines/chatbot.engine';
-import { QueueTimeoutService } from '../services/queue-timeout.service';
+import { QueueTimeoutService } from '../modules/support/queue-timeout';
 
 // Initialize engines
 const hybridBot = new HybridChatbotImproved(

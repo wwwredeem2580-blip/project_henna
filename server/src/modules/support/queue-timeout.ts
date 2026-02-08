@@ -1,4 +1,4 @@
-import { Support } from '../database/support/support';
+import { Support } from '../../database/support/support';
 import { Server } from 'socket.io';
 
 export class QueueTimeoutService {
