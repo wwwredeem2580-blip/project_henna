@@ -98,17 +98,28 @@ export const getActiveSessionByEventService = async (eventId: string, hostId: st
  * Get all tickets for offline caching
  */
 export const getTicketsForOfflineCacheService = async (sessionId: string, deviceId: string) => {
+  console.log('📥 Ticket cache request received:', { sessionId, deviceId });
+  
   if (!isValidObjectId(sessionId)) {
+    console.error('❌ Invalid session ID:', sessionId);
     throw new CustomError('Invalid session ID', 400);
   }
 
   // Find session
   const session = await ScannerSession.findById(sessionId);
   if (!session) {
+    console.error('❌ Session not found:', sessionId);
     throw new CustomError('Session not found', 404);
   }
 
+  console.log('✅ Session found:', { 
+    sessionId: session._id, 
+    eventId: session.eventId,
+    status: session.sessionStatus 
+  });
+
   if (session.sessionStatus !== 'active') {
+    console.error('❌ Session is not active:', session.sessionStatus);
     throw new CustomError('Session is not active', 400);
   }
 
@@ -119,16 +130,35 @@ export const getTicketsForOfflineCacheService = async (sessionId: string, device
   });
 
   if (!device) {
+    console.error('❌ Device not authorized:', { deviceId, sessionId });
     throw new CustomError('Device not authorized for this session', 403);
   }
 
+  console.log('✅ Device authorized:', { 
+    deviceId: device._id, 
+    deviceName: device.deviceName 
+  });
+
   // Get all valid tickets for this event
+  console.log('🔍 Fetching tickets for event:', session.eventId);
   const tickets = await Ticket.find({
     eventId: session.eventId,
     status: { $in: ['valid', 'cancelled', 'refunded'] } // Include all for proper offline validation
   }).select('ticketNumber ticketType status holderName qrCode');
 
-  return {
+  console.log(`✅ Found ${tickets.length} tickets for caching`);
+  
+  if (tickets.length > 0) {
+    console.log('Sample tickets:', tickets.slice(0, 2).map(t => ({
+      ticketNumber: t.ticketNumber,
+      ticketType: t.ticketType,
+      status: t.status,
+      hasQrCode: !!t.qrCode,
+      qrCodePreview: t.qrCode?.substring(0, 16) + '...'
+    })));
+  }
+
+  const result = {
     tickets: tickets.map(t => ({
       ticketId: t._id.toString(),
       ticketNumber: t.ticketNumber,
@@ -141,6 +171,13 @@ export const getTicketsForOfflineCacheService = async (sessionId: string, device
     eventId: session.eventId.toString(),
     cachedAt: new Date()
   };
+
+  console.log('📤 Sending cache response:', { 
+    ticketCount: result.tickets.length,
+    eventId: result.eventId 
+  });
+
+  return result;
 };
 
 /**

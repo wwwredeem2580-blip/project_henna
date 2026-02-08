@@ -95,16 +95,42 @@ export default function ScannerPage() {
 
   // Cache tickets when session is loaded
   useEffect(() => {
-    if (!session || !dbInitialized.current) return;
+    if (!session || !dbInitialized.current) {
+      console.log('⏸️ Caching skipped:', { 
+        hasSession: !!session, 
+        dbInitialized: dbInitialized.current 
+      });
+      return;
+    }
 
     const cacheTickets = async () => {
       try {
         setIsCaching(true);
-        console.log('Caching tickets for offline use...');
+        console.log('🔄 Starting ticket caching process...');
+        console.log('Session data:', { 
+          sessionId: session.sessionId, 
+          deviceId: session.deviceId,
+          eventId: session.eventId,
+          eventTitle: session.eventTitle
+        });
         
-        const { tickets } = await scannerService.getTicketsForCache(session.sessionId, session.deviceId);
+        console.log('📡 Calling API: /api/scanner/tickets/' + session.sessionId);
+        const response = await scannerService.getTicketsForCache(session.sessionId, session.deviceId);
+        console.log('📦 API Response received:', { 
+          ticketCount: response.tickets?.length || 0,
+          eventId: response.eventId,
+          cachedAt: response.cachedAt
+        });
         
-        console.log(`Fetched ${tickets.length} tickets from server for caching`);
+        const { tickets } = response;
+        
+        if (!tickets || tickets.length === 0) {
+          console.warn('⚠️ No tickets returned from server');
+          showNotification('error', 'No Tickets', 'No tickets found for this event');
+          return;
+        }
+        
+        console.log(`✅ Fetched ${tickets.length} tickets from server for caching`);
         
         const cachedTickets: CachedTicket[] = tickets.map(t => ({
           ...t,
@@ -113,12 +139,25 @@ export default function ScannerPage() {
           cachedAt: Date.now()
         }));
 
+        console.log('💾 Storing tickets in IndexedDB...');
         await scannerDB.cacheTickets(cachedTickets);
         console.log(`✅ Successfully cached ${tickets.length} tickets in IndexedDB`);
-        console.log('Sample QR hashes:', tickets.slice(0, 2).map(t => t.qrHash?.substring(0, 16) + '...'));
-      } catch (error) {
-        console.error('❌ Failed to cache tickets:', error);
-        showNotification('error', 'Caching Failed', 'Could not cache tickets for offline use');
+        console.log('Sample cached tickets:', tickets.slice(0, 2).map(t => ({
+          ticketNumber: t.ticketNumber,
+          qrHash: t.qrHash?.substring(0, 16) + '...',
+          status: t.status
+        })));
+        
+        showNotification('success', 'Cache Ready', `${tickets.length} tickets cached for offline use`);
+      } catch (error: any) {
+        console.error('❌ Failed to cache tickets - Full error:', error);
+        console.error('Error details:', {
+          message: error?.message,
+          status: error?.status,
+          response: error?.response?.data,
+          stack: error?.stack
+        });
+        showNotification('error', 'Caching Failed', error?.message || 'Could not cache tickets for offline use');
       } finally {
         setIsCaching(false);
       }
