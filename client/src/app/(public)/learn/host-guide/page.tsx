@@ -107,7 +107,7 @@ export default function HostGuidePage() {
           earnedBadges={earnedBadges}
         />
       ) : (
-        <div className="bg-brand-50 border border-brand-100 rounded-2xl p-6 mb-8 flex items-center gap-4">
+        <div className="bg-brand-50 border border-brand-100 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center gap-4">
            <div className="bg-brand-100 p-3 rounded-full text-brand-600">
               <Lock size={24} />
            </div>
