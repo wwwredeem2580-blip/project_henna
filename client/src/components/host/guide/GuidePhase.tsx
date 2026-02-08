@@ -56,23 +56,23 @@ export const GuidePhase: React.FC<GuidePhaseProps> = ({
       {/* Header */}
       <div 
         onClick={() => !isLocked && setIsExpanded(!isExpanded)}
-        className="p-6 cursor-pointer flex items-start gap-4"
+        className="p-4 md:p-6 cursor-pointer flex items-start gap-3 md:gap-4"
       >
         <div className={`
-          w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 transition-colors
+          w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs md:text-sm shrink-0 transition-colors
           ${isComplete ? 'bg-green-500 text-white' : 'bg-neutral-100 text-neutral-500'}
         `}>
-          {isComplete ? <CheckCircle2 size={20} /> : phaseNumber}
+          {isComplete ? <CheckCircle2 size={16} className="md:w-5 md:h-5" /> : phaseNumber}
         </div>
 
         <div className="flex-1">
           <div className="flex justify-between items-center mb-1">
-            <h3 className={`font-semibold text-lg ${isComplete ? 'text-green-800' : 'text-neutral-800'}`}>
+            <h3 className={`font-semibold text-base md:text-lg ${isComplete ? 'text-green-800' : 'text-neutral-800'}`}>
               {title}
             </h3>
-            {isExpanded ? <ChevronUp size={20} className="text-neutral-400" /> : <ChevronDown size={20} className="text-neutral-400" />}
+            {isExpanded ? <ChevronUp size={20} className="text-neutral-400 shrink-0" /> : <ChevronDown size={20} className="text-neutral-400 shrink-0" />}
           </div>
-          <p className="text-sm text-neutral-500 mb-3">{description}</p>
+          <p className="text-xs md:text-sm text-neutral-500 mb-3 leading-relaxed">{description}</p>
           
           {/* Progress Bar in Header (Visible when collapsed or expanded) */}
           <div className="w-full h-1.5 bg-neutral-100 rounded-full overflow-hidden">
@@ -93,8 +93,8 @@ export const GuidePhase: React.FC<GuidePhaseProps> = ({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="px-6 pb-6 pt-0 pl-[4.5rem]">
-              <div className="space-y-4">
+            <div className="px-3 pb-4 md:px-6 md:pb-6 pt-0 md:pl-[4.5rem]">
+              <div className="space-y-3 md:space-y-4">
                 {items.map((item) => {
                   const isChecked = completedItems.includes(item.id);
                   return (
@@ -115,8 +115,8 @@ export const GuidePhase: React.FC<GuidePhaseProps> = ({
                         >
                             {isChecked ? <CheckCircle2 size={20} /> : <Circle size={20} />}
                         </div>
-                        <div className="flex-1">
-                            <p className={`text-sm font-medium ${isChecked ? 'text-green-800 line-through decoration-green-800/30' : 'text-neutral-700'}`}>
+                        <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-medium break-words ${isChecked ? 'text-green-800 line-through decoration-green-800/30' : 'text-neutral-700'}`}>
                             {item.label}
                             </p>
                             {item.description && (
@@ -125,19 +125,19 @@ export const GuidePhase: React.FC<GuidePhaseProps> = ({
                             </p>
                             )}
                             {item.isCritical && !isChecked && (
-                                <div className="flex items-center gap-1.5 mt-2 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-md w-fit">
+                                <div className="flex items-center gap-1.5 mt-2 text-[10px] md:text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-md w-fit">
                                     <AlertCircle size={12} />
                                     CRITICAL STEP
                                 </div>
                             )}
                             {item.isUpcoming && (
-                                <div className="flex items-center gap-1.5 mt-2 text-xs font-medium text-brand-600 bg-brand-50 px-2 py-1 rounded-md w-fit">
+                                <div className="flex items-center gap-1.5 mt-2 text-[10px] md:text-xs font-medium text-brand-600 bg-brand-50 px-2 py-1 rounded-md w-fit">
                                     COMING SOON
                                 </div>
                             )}
                         </div>
                         {item.expandedContent && (
-                             <div className="text-neutral-400">
+                             <div className="text-neutral-400 shrink-0">
                                 {expandedItems.includes(item.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                              </div>
                         )}
@@ -150,7 +150,7 @@ export const GuidePhase: React.FC<GuidePhaseProps> = ({
                                 initial={{ height: 0, opacity: 0, marginTop: 0 }}
                                 animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
                                 exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                                className="overflow-hidden pl-8"
+                                className="overflow-hidden md:pl-8"
                             >
                                 <div className="pt-2 border-t border-dashed border-neutral-200/60 w-full" onClick={(e) => e.stopPropagation()}>
                                     {item.expandedContent}
