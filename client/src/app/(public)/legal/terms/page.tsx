@@ -1,88 +1,255 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { 
+  ArrowLeft, CheckCircle2, User, Calendar, Ticket, 
+  AlertTriangle, FileText, ShieldAlert, Scale, RefreshCw, Mail 
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+
+const sections = [
+  { id: 'acceptance', label: 'Acceptance', icon: <CheckCircle2 size={16} /> },
+  { id: 'account', label: 'Account', icon: <User size={16} /> },
+  { id: 'hosting', label: 'Hosting Events', icon: <Calendar size={16} /> },
+  { id: 'tickets', label: 'Ticket Purchases', icon: <Ticket size={16} /> },
+  { id: 'prohibited', label: 'Prohibited Conduct', icon: <AlertTriangle size={16} /> },
+  { id: 'ip', label: 'Intellectual Property', icon: <FileText size={16} /> },
+  { id: 'liability', label: 'Liability', icon: <ShieldAlert size={16} /> },
+  { id: 'law', label: 'Governing Law', icon: <Scale size={16} /> },
+];
 
 export default function TermsOfServicePage() {
   const router = useRouter();
+  const [activeSection, setActiveSection] = useState('acceptance');
+
   const handleLogin = () => router.push('/auth?tab=login');
   const handleGetStarted = () => router.push('/onboarding');
+  
+  const scrollTo = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveSection(id);
+    }
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 200;
+      for (const section of sections) {
+        const element = document.getElementById(section.id);
+        if (element && element.offsetTop <= scrollPosition && (element.offsetTop + element.offsetHeight) > scrollPosition) {
+          setActiveSection(section.id);
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
       <Navbar onLogin={handleLogin} onGetStarted={handleGetStarted} />
 
-      <main className="pt-32 pb-24 px-6 max-w-[896px] mx-auto">
-        <div className="space-y-4 mb-16 text-center">
-            <h1 className="text-4xl md:text-5xl font-light text-neutral-950 tracking-tight">Terms of Service</h1>
-            <p className="text-neutral-500 font-light text-lg">Effective Date: February 9, 2026</p>
+      {/* Hero Header */}
+      <div className="pt-12 pb-16 px-6 bg-radial-gradient from-brand-50/50 to-transparent">
+        <div className="max-w-[1080px] mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+             <Button 
+               variant="ghost" 
+               onClick={() => router.back()} 
+               className="pl-0 hover:bg-transparent hover:text-brand-600 text-neutral-400 font-light"
+             >
+               <ArrowLeft size={16} className="mr-2" /> Back
+             </Button>
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-6xl font-[250] text-neutral-950 tracking-tighter mb-6"
+          >
+            Terms of Service
+          </motion.h1>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-3 text-neutral-500 font-light text-sm"
+          >
+            <span className="px-3 py-1 rounded-full bg-brand-50 text-brand-700 font-medium text-xs uppercase tracking-wider">Legal</span>
+            <span>•</span>
+            <span>Effective Date: February 9, 2026</span>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="max-w-[1080px] mx-auto px-6 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Sticky Sidebar */}
+        <div className="hidden lg:block lg:col-span-3 relative">
+          <div className="sticky top-32 space-y-1">
+             <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4 pl-3">Sections</p>
+             {sections.map((section) => (
+               <button
+                 key={section.id}
+                 onClick={() => scrollTo(section.id)}
+                 className={cn(
+                   "w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-3",
+                   activeSection === section.id 
+                     ? "bg-brand-50 text-brand-700" 
+                     : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900"
+                 )}
+               >
+                 {section.icon}
+                 {section.label}
+               </button>
+             ))}
+          </div>
         </div>
 
-        <div className="prose prose-neutral max-w-none prose-headings:font-light prose-headings:tracking-tight prose-a:text-brand-600 hover:prose-a:text-brand-700">
-          <p className="lead text-xl text-neutral-600 font-light">
-            Welcome to Zenvy! These Terms of Service ("Terms") outline the rules and regulations for using the Zenvy website and platform. By accessing Zenvy, you agree to be bound by these Terms. If you disagree with any part of these terms, please do not use our services.
-          </p>
+        {/* Content Area */}
+        <div className="lg:col-span-8 lg:col-start-5 space-y-20">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ delay: 0.3 }}
+            className="prose prose-neutral prose-lg max-w-none prose-headings:font-[300] prose-headings:tracking-tight prose-p:font-[300] prose-p:text-neutral-600 prose-li:font-[300] prose-li:text-neutral-600 prose-strong:font-medium prose-strong:text-neutral-900"
+          >
+            <p className="lead text-2xl font-[250] text-neutral-800 leading-relaxed">
+              Welcome to Zenvy. These Terms of Service constitute a legally binding agreement between you and Zenvy Inc. regarding your use of our platform.
+            </p>
+          </motion.div>
 
-          <hr className="my-12 border-neutral-200" />
+          <div id="acceptance" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6">
+                <CheckCircle2 size={24} />
+             </div>
+             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">1. Acceptance of Terms</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed">
+               By accessing or using Zenvy, you confirm that you have read, understood, and agreed to be bound by these Terms. If you do not agree, you are not authorized to use the Services.
+             </p>
+          </div>
 
-          <h3>1. Acceptance of Terms</h3>
-          <p>By registering for an account, hosting an event, or purchasing a ticket through Zenvy, you agree to comply with these Terms and our Privacy Policy.</p>
+          <div id="account" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6">
+                <User size={24} />
+             </div>
+             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">2. Account Registration</h2>
+             <ul className="space-y-4">
+                <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                  <div className="w-1.5 h-1.5 rounded-full bg-neutral-300 mt-2.5 shrink-0" />
+                  You must be at least 18 years old to register.
+                </li>
+                <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                  <div className="w-1.5 h-1.5 rounded-full bg-neutral-300 mt-2.5 shrink-0" />
+                  You are responsible for maintaining the security of your account credentials.
+                </li>
+                <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                  <div className="w-1.5 h-1.5 rounded-full bg-neutral-300 mt-2.5 shrink-0" />
+                  We reserve the right to suspend accounts that violate our community standards.
+                </li>
+             </ul>
+          </div>
 
-          <h3>2. Account Registration</h3>
-          <ul>
-            <li>You must be at least 18 years old to use Zenvy.</li>
-            <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
-            <li>We reserve the right to suspend or terminate accounts that violate our community guidelines or terms.</li>
-          </ul>
+          <div id="hosting" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 mb-6">
+                <Calendar size={24} />
+             </div>
+             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">3. Hosting Events</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed">
+               Hosts are the architects of the Zenvy ecosystem. As a host, you warrant that:
+             </p>
+             <div className="bg-neutral-50 p-6 rounded-2xl border border-neutral-100 mt-4 space-y-4">
+                <p className="text-neutral-700 font-[350]">
+                   You possess the legal right to organize the event.
+                </p>
+                <p className="text-neutral-700 font-[350]">
+                   You will accurately represent the venue, schedule, and pricing.
+                </p>
+                <p className="text-neutral-700 font-[350]">
+                   You will comply with all local laws regarding safety and capacity.
+                </p>
+             </div>
+          </div>
 
-          <h3>3. Hosting Events</h3>
-          <p>As an Event Host, you agree that:</p>
-          <ul>
-            <li>You are solely responsible for the event you organize, including safety, legality, and execution.</li>
-            <li>You will provide accurate event descriptions and ticketing information.</li>
-            <li>You will comply with all applicable laws and regulations in your jurisdiction.</li>
-            <li>Zenvy is not liable for any issues arising from your event (cancellations, accidents, etc.), except for platform-related technical failures.</li>
-          </ul>
+          <div id="tickets" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-6">
+                <Ticket size={24} />
+             </div>
+             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">4. Ticket Purchases</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed">
+               Zenvy acts as the agent for the Event Organizer. When you purchase a ticket, you are entering into a contract with the Organizer.
+             </p>
+             <p className="text-neutral-500 font-light text-sm italic">
+               *Refunds are subject to the specific policy set by the Organizer or our default 7-day guarantee for cancelled events.
+             </p>
+          </div>
 
-          <h3>4. Ticket Purchases</h3>
-          <p>As an Attendee, you agree that:</p>
-          <ul>
-            <li>Tickets purchased are generally non-refundable unless the event is cancelled or as specified by the event organizer's refund policy.</li>
-            <li>Zenvy acts as a ticketing agent and is not the organizer of the events listed on the platform.</li>
-            <li>We may charge a service fee for ticket processing, which is non-refundable.</li>
-          </ul>
+          <div id="prohibited" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6">
+                <AlertTriangle size={24} />
+             </div>
+             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">5. Prohibited Conduct</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed">
+               We have zero tolerance for:
+             </p>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {['Fraudulent Events', 'Scalping / Resale', 'Harassment', 'Illegal Content'].map((item) => (
+                   <div key={item} className="px-4 py-3 bg-red-50 text-red-700 rounded-lg border border-red-100 font-medium text-sm">
+                      {item}
+                   </div>
+                ))}
+             </div>
+          </div>
 
-          <h3>5. Prohibited Conduct</h3>
-          <p>You agree not to use the platform for:</p>
-          <ul>
-            <li>Posting false, misleading, or fraudulent content.</li>
-            <li>Selling tickets to illegal events or prohibited items.</li>
-            <li>Interfering with the security or proper functioning of the site.</li>
-            <li>Harassing other users or violating their privacy.</li>
-          </ul>
+          <div id="ip" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-neutral-100 rounded-2xl flex items-center justify-center text-neutral-600 mb-6">
+                <FileText size={24} />
+             </div>
+             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">6. Intellectual Property</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed">
+               The Zenvy platform, including its code, design, and "Zenvy" trademark, is owned by Zenvy Inc. Content uploaded by Hosts remains their property, but they grant Zenvy a license to display it for the purpose of selling tickets.
+             </p>
+          </div>
 
-          <h3>6. Intellectual Property</h3>
-          <p>All content, trademarks, and data on Zenvy (excluding user-generated content) are the property of Zenvy Inc. and are protected by intellectual property laws. You may not reproduce or distribute any content without our permission.</p>
+          <div id="liability" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600 mb-6">
+                <ShieldAlert size={24} />
+             </div>
+             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">7. Limitation of Liability</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed">
+               Zenvy provides the platform "as is". We are not liable for the actions of Event Organizers or Attendees, including personal injury or property damage occurred at an event.
+             </p>
+          </div>
 
-          <h3>7. Limitation of Liability</h3>
-          <p>To the maximum extent permitted by law, Zenvy shall not be liable for any indirect, incidental, special, or consequential damages arising out of or in connection with your use of the platform.</p>
+          <div id="law" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-600 mb-6">
+                <Scale size={24} />
+             </div>
+             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">8. Governing Law</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed">
+               These Terms are governed by the laws of Bangladesh. Exclusive jurisdiction for any dispute resides in the courts of Dhaka.
+             </p>
+          </div>
 
-          <h3>8. Governing Law</h3>
-          <p>These Terms are governed by the laws of Bangladesh. Any disputes arising from these Terms will be resolved in the courts of Dhaka, Bangladesh.</p>
+          <div className="pt-12 border-t border-neutral-200">
+             <div className="flex items-center gap-4 text-neutral-500 font-[300]">
+                <Mail size={18} />
+                <span>Contact Legal: <a href="mailto:legal@zenvy.com" className="text-brand-600 hover:underline">legal@zenvy.com</a></span>
+             </div>
+          </div>
 
-          <h3>9. Changes to Terms</h3>
-          <p>We may update these Terms from time to time. We will notify you of any significant changes by posting the new Terms on this page.</p>
-
-          <h3>10. Contact Us</h3>
-          <p>If you have any questions about these Terms, please contact us at:</p>
-          <p>
-            <strong>Zenvy Inc.</strong><br />
-            Email: legal@zenvy.com
-          </p>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
