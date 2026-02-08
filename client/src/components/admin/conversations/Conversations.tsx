@@ -56,10 +56,35 @@ export default function Conversations() {
       console.log('Connected to admin support');
     });
 
-    newSocket.on('new_escalation', (data) => {
-        // Add to list if not exists
+    // Listen for new conversations (status: 'bot')
+    newSocket.on('new_conversation', (data) => {
+        console.log('New conversation created:', data);
         setConversations(prev => {
             if (prev.find(c => c._id === data.conversationId)) return prev;
+            return [{
+                _id: data.conversationId,
+                userName: data.userName,
+                userId: data.userId,
+                status: 'bot',
+                urgent: false,
+                messages: [],
+                createdAt: data.createdAt || new Date().toISOString()
+            } as any, ...prev];
+        });
+    });
+
+    newSocket.on('new_escalation', (data) => {
+        // Add to list if not exists, or update status if exists
+        setConversations(prev => {
+            const existing = prev.find(c => c._id === data.conversationId);
+            if (existing) {
+                // Update existing conversation to escalated
+                return prev.map(c => c._id === data.conversationId 
+                    ? { ...c, status: 'escalated', urgent: data.urgency === 'high' || data.urgency === 'critical', escalatedAt: new Date().toISOString() }
+                    : c
+                );
+            }
+            // Add new escalated conversation
             return [{
                 _id: data.conversationId,
                 userName: data.userName,
@@ -100,6 +125,47 @@ export default function Conversations() {
         if (selectedChat?._id === data.conversationId && data.action === 'joined') {
              setSelectedChat(prev => prev ? { ...prev, status: 'active', agentName: data.agentName } : null);
         }
+    });
+
+    // Real-time queue list updates (like WhatsApp/Messenger)
+    newSocket.on('queue_list_update', (data: { queue: any[] }) => {
+        console.log('Queue list updated:', data.queue.length, 'conversations');
+        
+        setConversations(prev => {
+            // Create a map of existing conversations
+            const existingMap = new Map(prev.map(c => [c._id, c]));
+            
+            // Update or add escalated conversations from queue
+            data.queue.forEach(q => {
+                existingMap.set(q._id, {
+                    _id: q._id,
+                    userName: q.userName,
+                    userId: q.userId,
+                    status: 'escalated' as const,
+                    urgent: q.urgent,
+                    messages: q.messages || existingMap.get(q._id)?.messages || [],
+                    escalatedAt: q.escalatedAt,
+                    createdAt: existingMap.get(q._id)?.createdAt || q.escalatedAt
+                });
+            });
+            
+            // Remove conversations that are no longer in escalated queue
+            const escalatedIds = new Set(data.queue.map(q => q._id));
+            const updated = Array.from(existingMap.values()).map(c => {
+                // If it was escalated but not in new queue, it might have been claimed/closed
+                if (c.status === 'escalated' && !escalatedIds.has(c._id)) {
+                    return null; // Will be filtered out
+                }
+                return c;
+            }).filter(Boolean) as any[];
+            
+            // Sort: escalated first (by urgency/time), then others
+            return updated.sort((a, b) => {
+                if (a.status === 'escalated' && b.status !== 'escalated') return -1;
+                if (a.status !== 'escalated' && b.status === 'escalated') return 1;
+                return 0;
+            });
+        });
     });
 
     newSocket.on('message_sent', () => {

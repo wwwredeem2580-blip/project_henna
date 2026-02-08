@@ -34,13 +34,49 @@ const notifyQueuePositions = async (io: Server) => {
       status: 'escalated' 
     }).sort({ urgent: -1, escalatedAt: 1 });
 
+    // Calculate average wait time from recent conversations
+    const recentConversations = await Support.find({
+      agentJoinedAt: { 
+        $exists: true,
+        $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+      },
+      escalatedAt: { $exists: true }
+    }).limit(20);
+
+    let avgWaitTimeMs = 2 * 60 * 1000; // Default 2 minutes
+    if (recentConversations.length > 0) {
+      // Calculate wait times and filter outliers
+      const waitTimes = recentConversations.map(conv => {
+        return conv.agentJoinedAt!.getTime() - conv.escalatedAt!.getTime();
+      }).filter(time => time > 0 && time < 10 * 60 * 1000); // Filter: 0-10 minutes only
+      
+      if (waitTimes.length > 0) {
+        const totalWaitTime = waitTimes.reduce((sum, time) => sum + time, 0);
+        avgWaitTimeMs = totalWaitTime / waitTimes.length;
+      }
+    }
+
+    // Cap at 5 minutes maximum
+    avgWaitTimeMs = Math.min(avgWaitTimeMs, 5 * 60 * 1000);
+
     escalatedConversations.forEach((conv, index) => {
       const convId = conv._id.toString();
       const userSocket = userSockets.get(convId);
       if (userSocket) {
+        let estimatedWaitMinutes;
+        
+        if (index === 0) {
+          // Position 1: Show in seconds (30-60 seconds typically)
+          estimatedWaitMinutes = 1; // Show "~1 min" for first position
+        } else {
+          // Other positions: Use average wait time
+          estimatedWaitMinutes = Math.ceil(avgWaitTimeMs / 60000);
+        }
+        
         userSocket.emit('queue_update', {
           position: index + 1,
-          total: escalatedConversations.length
+          total: escalatedConversations.length,
+          estimatedWaitMinutes
         });
       }
     });
@@ -48,6 +84,20 @@ const notifyQueuePositions = async (io: Server) => {
     // Also notify admins about valid queue count
     io.of('/support/admin').to('admin_room').emit('queue_stats', {
       count: escalatedConversations.length
+    });
+
+    // Send full queue list to admins for real-time updates
+    io.of('/support/admin').to('admin_room').emit('queue_list_update', {
+      queue: escalatedConversations.map((conv, index) => ({
+        _id: conv._id.toString(),
+        userName: conv.userName,
+        userId: conv.userId,
+        position: index + 1,
+        urgent: conv.urgent,
+        status: conv.status,
+        escalatedAt: conv.escalatedAt,
+        messages: conv.messages
+      }))
     });
 
   } catch (error) {
@@ -113,6 +163,17 @@ export const initChatbotSocket = (io: Server) => {
 
         conversation = await Support.create(conversationData);
         console.log(`[Support] Created new conversation: ${conversation._id} (anonymous: ${!!anonymousId})`);
+        
+        // Notify admins about new conversation
+        io.of('/support/admin').to('admin_room').emit('new_conversation', {
+          conversationId: conversation._id.toString(),
+          userId: userId || 'anonymous',
+          userName,
+          status: 'bot',
+          urgent: false,
+          preview: 'New conversation started',
+          createdAt: conversation.createdAt
+        });
       } else {
         console.log(`[Support] Resumed conversation: ${conversation._id} (status: ${conversation.status})`);
       }

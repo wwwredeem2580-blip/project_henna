@@ -19,6 +19,7 @@ export const SupportChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [showTimeout, setShowTimeout] = useState(false);
   const [queuePos, setQueuePos] = useState<number | null>(null);
+  const [estimatedWait, setEstimatedWait] = useState<number | null>(null); // in minutes
   const [isInQueue, setIsInQueue] = useState(false); // NEW: Track if user is in queue
   const [isClosed, setIsClosed] = useState(false);
   const [isAdminActive, setIsAdminActive] = useState(false);
@@ -121,8 +122,9 @@ export const SupportChat = () => {
                 ]);
             });
 
-            socketRef.current.on('queue_update', (data: { position: number, total: number }) => {
+            socketRef.current.on('queue_update', (data: { position: number, total: number, estimatedWaitMinutes?: number }) => {
                 setQueuePos(data.position);
+                setEstimatedWait(data.estimatedWaitMinutes || null);
                 setIsInQueue(true); // User is in queue
             });
             
@@ -385,6 +387,9 @@ export const SupportChat = () => {
                     >
                         <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
                         Waiting for agent • Position {queuePos}
+                        {estimatedWait && (
+                            <span className="text-blue-500">• ~{estimatedWait} min wait</span>
+                        )}
                     </motion.div>
                  </div>
             )}
