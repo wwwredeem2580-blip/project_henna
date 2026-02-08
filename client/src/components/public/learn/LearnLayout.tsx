@@ -44,7 +44,7 @@ export const LearnLayout: React.FC<LearnLayoutProps> = ({ children }) => {
     <div className="min-h-screen max-w-[1280px] mx-auto bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
       <Navbar onLogin={handleLogin} onGetStarted={handleGetStarted} />
       
-      <div className="w-full px-6 py-6 flex flex-col lg:flex-row gap-2 relative">
+      <div className="w-full px-4 py-4 md:px-6 md:py-6 flex flex-col lg:flex-row gap-2 relative">
         {/* Mobile Sidebar Toggle */}
         <div className="lg:hidden flex items-center justify-between bg-white p-4 rounded-2xl border border-neutral-100 mb-6 sticky top-24 z-20">
              <span className="text-sm font-medium text-neutral-600">Documentation Menu</span>
