@@ -269,6 +269,66 @@ export const verifyPairingOTPService = async (accessToken: string, otpCode: stri
 };
 
 /**
+ * Check if a device can rejoin without OTP
+ */
+export const checkDeviceCanRejoinService = async (accessToken: string, userAgent: string) => {
+  console.log('🔍 Checking device rejoin eligibility:', { userAgent: userAgent.substring(0, 50) + '...' });
+  
+  // Find session by access token
+  const session = await ScannerSession.findOne({ accessToken });
+  if (!session) {
+    console.log('❌ Session not found');
+    throw new CustomError('Invalid session', 404);
+  }
+
+  if (session.sessionStatus !== 'active') {
+    console.log('❌ Session is not active:', session.sessionStatus);
+    throw new CustomError('Session is not active', 400);
+  }
+
+  console.log('✅ Session found:', { sessionId: session._id, status: session.sessionStatus });
+
+  // Check if a device with this userAgent exists in this session
+  const existingDevice = await ScannerDevice.findOne({
+    sessionId: session._id,
+    userAgent: userAgent
+  });
+
+  if (!existingDevice) {
+    console.log('❌ No existing device found for this userAgent');
+    return {
+      canSkipOTP: false,
+      message: 'New device - OTP required'
+    };
+  }
+
+  // Check if device is disabled
+  if (existingDevice.status === 'disabled') {
+    console.log('❌ Device is disabled:', existingDevice._id);
+    return {
+      canSkipOTP: false,
+      message: 'Device disabled - OTP required'
+    };
+  }
+
+  console.log('✅ Existing device found:', { 
+    deviceId: existingDevice._id, 
+    deviceName: existingDevice.deviceName,
+    status: existingDevice.status
+  });
+
+  return {
+    canSkipOTP: true,
+    message: 'Welcome back!',
+    device: {
+      deviceId: existingDevice._id.toString(),
+      deviceName: existingDevice.deviceName,
+      totalScans: existingDevice.totalScans
+    }
+  };
+};
+
+/**
  * Disable a device
  */
 export const disableDeviceService = async (deviceId: string, sessionId: string, hostId: string) => {

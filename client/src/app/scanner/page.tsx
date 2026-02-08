@@ -32,14 +32,53 @@ function ScannerJoinContent() {
   const [deviceName, setDeviceName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [checkingDevice, setCheckingDevice] = useState(true);
+  const [existingDevice, setExistingDevice] = useState<{
+    deviceId: string;
+    deviceName: string;
+    totalScans: number;
+  } | null>(null);
+
+  // Check if device can rejoin without OTP
+  useEffect(() => {
+    if (!token) {
+      setCheckingDevice(false);
+      return;
+    }
+
+    const checkDevice = async () => {
+      try {
+        console.log('🔍 Checking if device can skip OTP...');
+        const result = await scannerService.checkDeviceCanRejoin(token);
+        
+        if (result.canSkipOTP && result.device) {
+          console.log('✅ Device can skip OTP:', result.device);
+          setExistingDevice(result.device);
+          setDeviceName(result.device.deviceName);
+          setStep('device'); // Skip OTP step
+        } else {
+          console.log('❌ Device needs OTP:', result.message);
+        }
+      } catch (error: any) {
+        console.log('❌ Device check failed, proceeding with OTP:', error.message);
+        // Device not found or error, proceed with OTP
+      } finally {
+        setCheckingDevice(false);
+      }
+    };
+
+    checkDevice();
+  }, [token]);
 
   useEffect(() => {
-    // Auto-generate device name suggestion
+    // Auto-generate device name suggestion only if not an existing device
+    if (existingDevice) return;
+    
     const browserInfo = navigator.userAgent.includes('iPhone') ? 'iPhone' :
                        navigator.userAgent.includes('Android') ? 'Android' :
                        navigator.userAgent.includes('iPad') ? 'iPad' : 'Device';
     setDeviceName(`${browserInfo} Scanner`);
-  }, []);
+  }, [existingDevice]);
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +167,23 @@ function ScannerJoinContent() {
     );
   }
 
+  // Show loading while checking device
+  if (checkingDevice) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-brand-50 rounded-2xl p-8 max-w-[480px] w-full text-center">
+          <div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Loader2 className="w-10 h-10 text-brand-600 animate-spin" />
+          </div>
+          <h1 className="text-2xl font-[500] text-slate-800 mb-2">Checking Device...</h1>
+          <p className="text-sm text-slate-600">
+            Please wait while we verify your device
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-brand-50 rounded-2xl p-8 max-w-[480px] w-full">
@@ -136,10 +192,12 @@ function ScannerJoinContent() {
             <Smartphone className="w-10 h-10 text-brand-600" />
           </div>
           <h1 className="text-2xl font-[500] text-slate-800 mb-2">
-            {step === 'otp' ? 'Enter Pairing Code' : 'Join Scanner Session'}
+            {existingDevice ? 'Welcome Back!' : 
+             step === 'otp' ? 'Enter Pairing Code' : 'Join Scanner Session'}
           </h1>
           <p className="text-sm text-slate-600">
-            {step === 'otp' 
+            {existingDevice ? `You've scanned ${existingDevice.totalScans} tickets so far` :
+             step === 'otp' 
               ? 'Enter the 6-digit code provided by your event host'
               : 'Enter a name for this device to start scanning tickets'
             }
@@ -227,10 +285,10 @@ function ScannerJoinContent() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Joining Session...
+                  {existingDevice ? 'Rejoining Session...' : 'Joining Session...'}
                 </>
               ) : (
-                'Join Session'
+                existingDevice ? 'Rejoin Session' : 'Join Session'
               )}
             </button>
           </form>
@@ -240,7 +298,9 @@ function ScannerJoinContent() {
           <p className="text-xs text-slate-500 text-center">
             {step === 'otp' 
               ? '🔒 Secure pairing ensures only authorized devices can scan tickets'
-              : 'By joining, you agree to scan tickets only for this event session'
+              : existingDevice
+                ? '✨ Your previous device settings have been restored'
+                : 'By joining, you agree to scan tickets only for this event session'
             }
           </p>
         </div>

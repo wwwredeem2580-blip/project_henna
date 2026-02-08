@@ -9,6 +9,7 @@ import {
   getTicketsForOfflineCacheService,
   generatePairingOTPService,
   verifyPairingOTPService,
+  checkDeviceCanRejoinService,
   disableDeviceService,
   enableDeviceService,
   forceLogoutDeviceService,
@@ -123,6 +124,27 @@ router.post('/session/verify-otp', async (req, res) => {
     }
 
     const result = await verifyPairingOTPService(accessToken, otpCode);
+    res.status(200).json(result);
+  } catch (error: any) {
+    return handleError(error, res);
+  }
+});
+
+/**
+ * POST /api/scanner/session/check-device
+ * Check if device can rejoin without OTP (Public)
+ * Body: { accessToken }
+ */
+router.post('/session/check-device', async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+
+    if (!accessToken) {
+      return res.status(400).json({ error: 'Access token required' });
+    }
+
+    const result = await checkDeviceCanRejoinService(accessToken, userAgent);
     res.status(200).json(result);
   } catch (error: any) {
     return handleError(error, res);

@@ -168,6 +168,23 @@ class ScannerService {
   }
 
   /**
+   * Check if device can rejoin without OTP
+   */
+  async checkDeviceCanRejoin(accessToken: string): Promise<{
+    canSkipOTP: boolean;
+    message: string;
+    device?: {
+      deviceId: string;
+      deviceName: string;
+      totalScans: number;
+    };
+  }> {
+    return await apiClient.post('/api/scanner/session/check-device', {
+      accessToken
+    });
+  }
+
+  /**
    * Disable a device
    */
   async disableDevice(deviceId: string, sessionId: string): Promise<{
