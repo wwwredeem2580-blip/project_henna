@@ -39,6 +39,7 @@ import Sidebar from "../layout/Sidebar";
 export default function Events() {
   // Configuration
   const MAX_TICKETS_PER_ORDER = 5; // Easy to change - maximum total tickets per order
+  const PLATFORM_FEE = 0; // 0% platform fee
   
   const [checkoutStep, setCheckoutStep] = useState<'selection' | 'checkout' | 'success'>('selection');
   const [event, setEvent] = useState<any>(null);
@@ -151,7 +152,7 @@ export default function Events() {
   };
 
   const totalAmount = calculateTotal();
-  const platformFee = Math.ceil(totalAmount * 0.05); // 5% platform fee
+  const platformFee = Math.ceil(totalAmount * PLATFORM_FEE); // 5% platform fee
   const paymentProcessingFee = Math.ceil(totalAmount * 0.015); // 1.5% processing fee
   const grandTotal = totalAmount + platformFee + paymentProcessingFee;
 
@@ -437,14 +438,14 @@ export default function Events() {
                 <p className="text-sm text-slate-600">Subtotal</p>
                 <p className="text-sm text-slate-600"><BDTIcon className="text-sm"/>{totalAmount}</p>
               </div>
-              <div className="flex items-center justify-between w-full gap-2">
-                <p className="text-xs text-slate-500">Platform Fee (5%)</p>
+              {platformFee > 0 && <div className="flex items-center justify-between w-full gap-2">
+                <p className="text-xs text-slate-500">Platform Fee ({PLATFORM_FEE * 100}%)</p>
                 <p className="text-xs text-slate-500"><BDTIcon className="text-xs"/>{platformFee}</p>
-              </div>
-              <div className="flex items-center justify-between w-full gap-2">
+              </div>}
+              {paymentProcessingFee > 0 && <div className="flex items-center justify-between w-full gap-2">
                 <p className="text-xs text-slate-500">Payment Processing Fee (1.5%)</p>
                 <p className="text-xs text-slate-500"><BDTIcon className="text-xs"/>{paymentProcessingFee}</p>
-              </div>
+              </div>}
               <div className="flex items-center justify-between w-full gap-2 pt-2 border-t border-slate-200">
                 <p className="text-base font-[400] text-slate-900">Total Amount</p>
                 <p className="text-base font-[400] text-slate-900"><BDTIcon className="text-sm"/>{grandTotal}</p>

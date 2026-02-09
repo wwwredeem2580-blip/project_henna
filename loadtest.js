@@ -86,7 +86,7 @@ export default function () {
 
   const loginSuccess = check(loginRes, {
     'login: status 200': (r) => r.status === 200,
-    'login: has token': (r) => r.json('token') !== undefined,
+    // 'login: has token': (r) => r.json('token') !== undefined, // Removed: Token is in cookie, not body
   });
 
   if (!loginSuccess) {
@@ -94,10 +94,10 @@ export default function () {
     return;
   }
 
-  const token = loginRes.json('token');
+  // const token = loginRes.json('token'); // Removed
   const authHeaders = {
     headers: {
-      'Authorization': `Bearer ${token}`,
+      // 'Authorization': `Bearer ${token}`, // Removed: Cookie handled automatically
       'Content-Type': 'application/json',
     },
   };
@@ -295,9 +295,12 @@ export function browseOnly() {
 
   if (loginRes.status !== 200) return;
 
-  const token = loginRes.json('token');
+  // const token = loginRes.json('token'); // Removed
   const authHeaders = {
-    headers: { 'Authorization': `Bearer ${token}` },
+    headers: { 
+      // 'Authorization': `Bearer ${token}` // Removed
+      'Content-Type': 'application/json'
+    },
   };
 
   randomSleep(1, 2);
