@@ -66,7 +66,7 @@ function VerifyEmailContent() {
   useEffect(() => {
     if (user?.emailVerified && !token) {
       if (isHost) {
-        router.push('/dashboard');
+        router.push('/host/dashboard');
       } else {
         router.push('/events');
       }
@@ -76,7 +76,7 @@ function VerifyEmailContent() {
   const handleVerificationSuccess = () => {
     // Redirect based on role
     if (isHost) {
-      router.push('/dashboard');
+      router.push('/host/dashboard');
     } else {
       router.push('/');
     }

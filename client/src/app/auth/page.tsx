@@ -29,13 +29,13 @@ function AuthContent() {
 
   const handleLoginSuccess = () => {
     // Redirect will be handled by backend based on role
-    router.push('/dashboard');
+    router.push('/host/dashboard');
   };
 
   const handleRegisterSuccess = () => {
     showNotification('success', 'Registration Successful!', 'Please check your email to verify your account');
     // Redirect will be handled by backend based on role
-    router.push('/dashboard');
+    router.push('/host/dashboard');
   };
 
   const handleGoBack = () => {

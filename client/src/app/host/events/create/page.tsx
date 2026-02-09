@@ -17,7 +17,7 @@ function CreateEventContent() {
   };
 
   const onSuccess = () => {
-    router.push('/dashboard');
+    router.push('/host/dashboard');
   };
 
   return <CreateEvent onGoBack={handleGoBack} onSuccess={onSuccess} />;

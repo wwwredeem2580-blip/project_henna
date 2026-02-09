@@ -18,11 +18,11 @@ function DashboardContent() {
   useEffect(() => {
     if (login === 'success') {
       showNotification('success', 'Welcome back!', 'Successfully logged in');
-      router.replace('/dashboard');
+      router.replace('/host/dashboard');
     }
     if (registered === 'true') {
       showNotification('success', 'Registration Successful!', 'Welcome to Zenny! Please check your email to verify your account.');
-      router.replace('/dashboard');
+      router.replace('/host/dashboard');
     }
   }, [login, registered, router, showNotification]);
 

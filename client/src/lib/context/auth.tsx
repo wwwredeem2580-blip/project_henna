@@ -36,6 +36,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // Route configuration for role-based access control
+  const PROTECTED_ROUTES: Record<string, string[]> = {
+    '/host/*': ['host', 'admin'],
+    '/admin/*': ['admin'],
+    '/wallet': ['user', 'admin'],
+  };
+
+  // Helper function to get required roles for a route
+  const getRequiredRoles = (pathname: string): string[] | null => {
+    // Check exact match first
+    if (PROTECTED_ROUTES[pathname]) {
+      return PROTECTED_ROUTES[pathname];
+    }
+    
+    // Check wildcard matches
+    for (const [route, roles] of Object.entries(PROTECTED_ROUTES)) {
+      if (route.endsWith('/*') && pathname.startsWith(route.replace('/*', ''))) {
+        return roles;
+      }
+    }
+    
+    return null; // Public route or no role restriction
+  };
+
+  // Helper function to get role-specific error message
+  const getRoleMessage = (pathname: string): string => {
+    if (pathname.startsWith('/host')) {
+      return 'This page is only accessible to event hosts';
+    }
+    if (pathname.startsWith('/admin')) {
+      return 'This page requires admin privileges';
+    }
+    if (pathname === '/wallet') {
+      return 'This page is only accessible to users';
+    }
+    return 'You do not have permission to access this page';
+  };
+
   // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -48,6 +86,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           router.push('/verify-email');
           return;
         }
+
+        // Role-based authorization check
+        const requiredRoles = getRequiredRoles(pathname);
+        if (requiredRoles && !requiredRoles.includes(response.role)) {
+          showNotification('error', 'Access Denied', getRoleMessage(pathname));
+          // Delay redirect to allow notification to be seen
+          setTimeout(() => {
+            router.back();
+          }, 1000);
+          return;
+        }
+
       } catch (error) {
         setUser(null);
 

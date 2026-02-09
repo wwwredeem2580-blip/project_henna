@@ -31,7 +31,7 @@ export default function Sidebar() {
   let menuItems = [
     { icon: <Globe size={18} strokeWidth={1} />, label: 'Explore', path: '/events', active: pathname === '/events' },
     { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Wallet', path: '/wallet', active: pathname === '/wallet', requireRole: 'user' },
-    { icon: <LayoutDashboard size={18} strokeWidth={1} />, label: 'Dashboard', path: '/dashboard', active: pathname === '/dashboard', requireRole: 'host' },
+    { icon: <LayoutDashboard size={18} strokeWidth={1} />, label: 'Dashboard', path: '/host/dashboard', active: pathname === '/host/dashboard', requireRole: 'host' },
     { icon: <Calendar size={18} strokeWidth={1} />, label: 'My Events', path: '/host/events', active: pathname === '/host/events', requireRole: 'host' },
     { icon: <Plus size={18} strokeWidth={1} />, label: 'Create Event', path: '/host/events/create', active: pathname === '/host/events/create', requireRole: 'host' },
     { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Orders', path: '/host/orders', active: pathname === '/host/orders', requireRole: 'host' },
