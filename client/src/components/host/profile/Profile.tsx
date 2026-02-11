@@ -219,7 +219,7 @@ export default function Profile() {
             <p className="text-sm text-red-600">{error}</p>
           </div>
         ) : 
-          <div className="flex flex-col h-[calc(100vh-180px)]">
+          <div className="flex flex-col ">
             
             {/* Eligibility Banner */}
             <div className="mb-6">
@@ -318,27 +318,29 @@ export default function Profile() {
             <div className={`flex-1 overflow-y-auto bg-slate-50/30 ${isMobileDetailOpen ? 'flex flex-col' : 'hidden md:flex flex-col'}`}>
               <AnimatePresence mode="wait">
                 {activeSettingsSection === 'Phone Verification' && (
-                  <motion.div key="phone" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 md:p-10 max-w-[600px] space-y-10">
-                    <div className="space-y-4 flex gap-4">
+                  <motion.div key="phone" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-0 md:p-10 max-w-[600px] space-y-10">
+                    <div className="space-y-4 flex flex-col gap-4">
                       <button 
                         onClick={() => setIsMobileDetailOpen(false)}
                         className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all h-fit"
                       >
                         <ArrowLeft size={18} strokeWidth={1.5}/>
                       </button>
-                      <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 flex-shrink-0">
-                        <Smartphone size={16}/>
-                      </div>
-                      <div className="space-y-1">
-                        <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Phone Verification</h2>
-                        <p className="text-[12px] text-neutral-500 font-[300]">To complete your host profile, we need to verify your phone number.</p>
+                      <div className='flex gap-6'>
+                        <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 flex-shrink-0">
+                          <Smartphone size={16}/>
+                        </div>
+                        <div className="space-y-1">
+                          <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Phone Verification</h2>
+                          <p className="text-[12px] text-neutral-500 font-[300]">To complete your host profile, we need to verify your phone number.</p>
+                        </div>
                       </div>
                     </div>
                     
                     <div className="bg-white px-2 rounded-[2rem]">
                       {profile?.phoneVerified ? (
                          <div className="space-y-6">
-                            <div className="bg-brand-900 rounded-tr-lg rounded-bl-lg p-6 text-white overflow-hidden relative group">
+                            <div className="bg-brand-50 rounded-xl p-6 text-white overflow-hidden relative group">
                               <div className="relative z-10">
                                 <div className='flex gap-3'>
                                   <ShieldCheck size={20} className="text-brand-500 mt-1" />
@@ -351,8 +353,6 @@ export default function Profile() {
                                   Edit <ArrowUpRight size={16} />
                                 </button>
                               </div>
-                              <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-                              <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
                             </div>
                          </div>
                       ) : (
@@ -387,20 +387,22 @@ export default function Profile() {
                 )}
 
                 {activeSettingsSection === 'KYC Documents' && (
-                  <motion.div key="kyc" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 md:p-10 max-w-[600px] space-y-10">
-                    <div className="space-y-4 flex gap-4">
+                  <motion.div key="kyc" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-0 md:p-10 max-w-[600px] space-y-10">
+                    <div className="space-y-4 flex flex-col gap-2">
                       <button 
                         onClick={() => setIsMobileDetailOpen(false)}
                         className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all h-fit"
                       >
                         <ArrowLeft size={18} strokeWidth={1.5}/>
                       </button>
-                      <div className="w-10 h-10 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-500 flex-shrink-0">
-                        <ShieldCheck size={20}/>
-                      </div>
-                      <div className="space-y-1">
-                        <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">KYC coming soon</h2>
-                        <p className="text-[12px] text-neutral-500 font-[300]">Soon you'll be able to upload NID and Passport documents.</p>
+                      <div className='flex gap-6'>
+                        <div className="w-10 h-10 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-500 flex-shrink-0">
+                          <ShieldCheck size={20}/>
+                        </div>
+                        <div className="space-y-1">
+                          <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">KYC coming soon</h2>
+                          <p className="text-[12px] text-neutral-500 font-[300]">Soon you'll be able to upload NID and Passport documents.</p>
+                        </div>
                       </div>
                     </div>
                     <div className="border-2 border-dashed border-slate-100 rounded-[2rem] p-10 md:p-16 flex flex-col items-center justify-center text-center space-y-4 bg-white/50">
@@ -416,20 +418,22 @@ export default function Profile() {
                 )}
 
                 {activeSettingsSection === 'Payout Methods' && (
-                  <motion.div key="payout" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 md:p-10 max-w-[600px] space-y-10">
-                    <div className="space-y-4 flex gap-4">
+                  <motion.div key="payout" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-0 md:p-10 max-w-[600px] space-y-10">
+                    <div className="space-y-4 flex flex-col gap-2">
                       <button 
                          onClick={() => setIsMobileDetailOpen(false)}
                          className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all h-fit"
                       >
                         <ArrowLeft size={18} strokeWidth={1.5}/>
                       </button>
-                      <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 flex-shrink-0">
-                        <Landmark size={20} strokeWidth={1.5}/>
-                      </div>
-                      <div className="space-y-1">
-                        <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Payout Management</h2>
-                        <p className="text-[12px] text-neutral-500 font-[300]">Manage how you receive your earnings. Select one primary method.</p>
+                      <div className='flex gap-6'>
+                        <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 flex-shrink-0">
+                          <Landmark size={20} strokeWidth={1.5}/>
+                        </div>
+                        <div className="space-y-1">
+                          <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Payout Management</h2>
+                          <p className="text-[12px] text-neutral-500 font-[300]">Manage how you receive your earnings. Select one primary method.</p>
+                        </div>
                       </div>
                     </div>
 

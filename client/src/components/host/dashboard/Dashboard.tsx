@@ -276,7 +276,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
 
           {/* Right Column: Transactions */}
-          <section className="space-y-6">
+          <section className="space-y-6 bg-slate-50 p-6 rounded-xl">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Recent Sales</h2>
