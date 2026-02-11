@@ -219,7 +219,7 @@ export default function Profile() {
             <p className="text-sm text-red-600">{error}</p>
           </div>
         ) : 
-          <div className="flex flex-col ">
+          <div className="flex flex-col">
             
             {/* Eligibility Banner */}
             <div className="mb-6">

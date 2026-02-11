@@ -310,7 +310,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
         showNotification('success', 'Draft Created', 'Your event draft has been saved successfully');
       }
     } catch (error: any) {
-      showNotification('error', 'Save Failed', error.message || 'Failed to save draft');
+      showNotification('error', 'Save Failed', error?.response?.data?.message || 'Failed to save draft');
     } finally {
       setLoading(false);
     }

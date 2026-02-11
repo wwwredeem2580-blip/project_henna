@@ -260,7 +260,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
                         <td className="px-6 py-4 text-right">
                           <button
-                            onClick={() => router.push(`/host/events/manage/${event.eventId}`)}
+                            onClick={() => event?.status === 'draft' ? router.push(`/host/events/create?draftId=${event.eventId}`) : router.push(`/host/events/manage/${event.eventId}`)}
                             className="p-2 text-gray-400 hover:text-brand-600 transition-colors"
                           >
                             <MoreHorizontal size={18} />
@@ -282,7 +282,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                 <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Recent Sales</h2>
                 <p className="text-xs text-slate-500 font-[300]">Latest incoming ticket orders</p>
               </div>
-              <button className="text-[12px] font-[300] text-slate-400 hover:text-slate-900 transition-colors tracking-tight">See more</button>
+              <button onClick={() => router.push('/host/orders')} className="text-[12px] font-[300] text-slate-600 hover:text-brand-600 transition-colors tracking-tight">See more</button>
             </div>
 
             <div className="space-y-2">
@@ -302,7 +302,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                       <ShoppingBag size={18} />
                     </div>
                     <div>
-                      <p className="text-[12px] font-[300] text-slate-900 uppercase tracking-wider">{order.eventTitle}</p>
+                      <p className="text-[12px] font-[300] text-slate-900 uppercase tracking-wider line-clamp-2">{order.eventTitle}</p>
                       <p className="text-[10px] font-[300] text-slate-400">{order.orderNumber}</p>
                     </div>
                   </div>

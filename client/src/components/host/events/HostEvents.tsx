@@ -292,7 +292,7 @@ export default function HostEvents() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.1 }}
-                      className="p-4 bg-slate-50 border rounded-bl-lg rounded-tr-lg border-slate-100 relative group overflow-hidden cursor-pointer"
+                      className={`p-4 bg-slate-50 border rounded-bl-lg rounded-tr-lg border-slate-100 relative group overflow-hidden cursor-pointer}`}
                     >
                       <div className="grid grid-cols-[1fr_minmax(14vw,14vw)] md:grid-cols-[1fr_minmax(7vw,7vw)] lg:grid-cols-[1fr_minmax(5vw,5vw)] xl:grid-cols-[1fr_minmax(6vw,6vw)] 2xl:grid-cols-[1fr_minmax(2vw,2vw)] gap-4">
                         {/* Main Image */}
