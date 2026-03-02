@@ -246,6 +246,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [error, setError] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAllEvents, setShowAllEvents] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -270,9 +271,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     fetchData();
   }, []);
 
-  const filteredEvents = events.filter(e =>
+  // Filter out ended events, apply search, then cap at 5 unless expanded
+  const activeEvents = events.filter(e =>
+    e.status !== 'ended' && e.status !== 'cancelled'
+  );
+  const searchedEvents = activeEvents.filter(e =>
     !searchQuery || e.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const filteredEvents = showAllEvents ? searchedEvents : searchedEvents.slice(0, 5);
 
   // Build KPI cards from real metrics
   const kpiCards = metrics ? [
@@ -439,13 +445,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           <EventTable events={filteredEvents} loading={loading} router={router} />
 
           <div className="mt-6 flex justify-between items-center pt-4 border-t border-wix-border-light">
-            <span className="text-[12px] text-wix-text-muted">{events.length} events loaded</span>
-            <button
-              onClick={() => router.push('/host/events')}
-              className="text-[13px] font-bold text-wix-text-dark border-b border-wix-text-dark pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors"
-            >
-              View all events →
-            </button>
+            <span className="text-[12px] text-wix-text-muted">
+              {showAllEvents ? searchedEvents.length : Math.min(searchedEvents.length, 5)} of {searchedEvents.length} events
+            </span>
+            {searchedEvents.length > 5 && (
+              <button
+                onClick={() => setShowAllEvents(v => !v)}
+                className="text-[13px] font-bold text-wix-text-dark border-b border-wix-text-dark pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors"
+              >
+                {showAllEvents ? 'Show less ↑' : `View all ${searchedEvents.length} events ↓`}
+              </button>
+            )}
           </div>
         </div>
 
