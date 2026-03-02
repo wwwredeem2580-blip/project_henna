@@ -434,7 +434,7 @@ export default function EventDetails() {
                 </span>
               )}
             </div>
-            <h1 className="text-[32px] sm:text-[42px] font-semibold tracking-tight text-wix-text-dark leading-none mb-3">
+            <h1 className="text-[32px] sm:text-[42px] font-medium tracking-tight text-wix-text-dark leading-none mb-3">
               {event.title}
             </h1>
             <p className="text-[15px] text-wix-text-muted leading-relaxed">
@@ -659,7 +659,7 @@ export default function EventDetails() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-6"
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-6"
           >
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
             <motion.div

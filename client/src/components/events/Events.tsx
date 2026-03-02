@@ -230,11 +230,11 @@ export default function Events() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2, ease: 'easeOut' }}
-                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-2 z-50"
+                      className="absolute right-0 mt-2 w-64 bg-white rounded-sm shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-2 z-50"
                     >
                       {/* User info */}
                       <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-[13px] font-medium text-[#161616] truncate">{user.email}</p>
+                        <p className="text-[13px] font-medium text-[#161616] truncate">{user.firstName} {user.lastName}</p>
                         <p className="text-[11px] text-gray-400 capitalize">{user.role}</p>
                       </div>
                       {user.role === 'host' && (
