@@ -135,24 +135,34 @@ const OverviewTab = ({ setActiveTab, data }: { setActiveTab: (t: string) => void
 };
 
 const AttendeesTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
-  const breakdown = data?.analytics?.ticketBreakdown ?? [];
-  // Build mock attendee rows from ticket breakdown for display
-  const attendeesData = breakdown.flatMap((b, bi) =>
-    Array.from({ length: Math.min(b.sold, 4) }, (_, i) => ({
-      id: `${bi}-${i}`,
-      name: ['Alice Freeman', 'Bob Smith', 'Charlie Davis', 'Diana Prince'][i % 4],
-      email: ['alice.f@example.com', 'bsmith@company.co', 'charlie.d@studio.net', 'diana@amazon.org'][i % 4],
-      ticket: b.variantName,
-      order: `#${10042 + bi * 10 + i}`,
-      date: new Date(Date.now() - (i + 1) * 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      status: i % 3 === 2 ? 'Pending' : 'Confirmed',
-    }))
-  );
-
+  const { id: eventId } = useParams();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const rows = attendeesData.filter(a =>
-    !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.ticket.toLowerCase().includes(search.toLowerCase())
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!eventId) return;
+      try {
+        setOrdersLoading(true);
+        const res = await hostAnalyticsService.getHostOrders(1, 100, { eventId: eventId as string });
+        setOrders(res.orders || []);
+      } catch {
+        setOrders([]);
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+    fetchOrders();
+  }, [eventId]);
+
+  const filtered = orders.filter(o =>
+    !search ||
+    o.buyerEmail?.toLowerCase().includes(search.toLowerCase()) ||
+    o.orderNumber?.toLowerCase().includes(search.toLowerCase())
   );
+  const displayed = showAll ? filtered : filtered.slice(0, 10);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
@@ -161,50 +171,79 @@ const AttendeesTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative flex-grow md:flex-grow-0">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search attendees..." className="w-full md:w-[250px] border border-wix-border-light pl-9 pr-4 py-2 text-[13px] outline-none focus:border-black transition-colors" />
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by email or order..." className="w-full md:w-[250px] border border-wix-border-light pl-9 pr-4 py-2 text-[13px] outline-none focus:border-black transition-colors" />
           </div>
           <button className="border border-wix-border-light p-2 hover:border-black transition-colors bg-white"><Filter className="w-4 h-4" /></button>
           <button className="flex items-center gap-2 border border-wix-border-light px-4 py-2 text-[13px] font-medium hover:border-black transition-colors bg-white"><Download className="w-4 h-4" /> Export CSV</button>
         </div>
       </div>
+
       <div className="bg-white border border-wix-border-light overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="border-b border-black text-[12px] uppercase tracking-wider text-gray-500 bg-gray-50">
-              <th className="py-4 pl-6 font-semibold">Attendee Info</th>
-              <th className="py-4 font-semibold">Ticket Type</th>
+              <th className="py-4 pl-6 font-semibold">Buyer</th>
+              <th className="py-4 font-semibold">Tickets</th>
               <th className="py-4 font-semibold">Order #</th>
-              <th className="py-4 font-semibold">Date Registered</th>
+              <th className="py-4 font-semibold">Date</th>
+              <th className="py-4 font-semibold">Total</th>
               <th className="py-4 font-semibold">Status</th>
               <th className="py-4 pr-6 font-semibold text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
-              <tr><td colSpan={6} className="py-12 text-center text-[14px] text-wix-text-muted">No attendee data yet</td></tr>
-            ) : rows.map(a => (
-              <tr key={a.id} className="border-b border-wix-border-light hover:bg-gray-50 transition-colors group">
+            {ordersLoading ? (
+              <tr><td colSpan={7} className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-wix-purple" /></td></tr>
+            ) : displayed.length === 0 ? (
+              <tr><td colSpan={7} className="py-12 text-center text-[14px] text-wix-text-muted">No orders for this event yet</td></tr>
+            ) : displayed.map((o: any) => (
+              <tr key={o.orderNumber} className="border-b border-wix-border-light hover:bg-gray-50 transition-colors group">
                 <td className="py-4 pl-6">
-                  <div className="font-semibold text-[14px]">{a.name}</div>
-                  <div className="text-[13px] text-gray-500 mt-0.5">{a.email}</div>
+                  <div className="font-semibold text-[14px]">{o.buyerEmail?.split('@')[0] || '—'}</div>
+                  <div className="text-[13px] text-gray-500 mt-0.5">{o.buyerEmail}</div>
                 </td>
-                <td className="py-4 text-[14px]">{a.ticket}</td>
-                <td className="py-4 text-[14px] font-mono">{a.order}</td>
-                <td className="py-4 text-[14px] text-gray-500">{a.date}</td>
+                <td className="py-4 text-[14px] font-medium">{o.ticketCount}</td>
+                <td className="py-4 text-[14px] font-mono">#{o.orderNumber}</td>
+                <td className="py-4 text-[14px] text-gray-500">
+                  {o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                </td>
+                <td className="py-4 text-[14px] font-mono">{o.total?.toLocaleString()} BDT</td>
                 <td className="py-4">
-                  <span className={`text-[11px] font-bold px-2 py-1 uppercase tracking-widest border ${a.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-300'}`}>{a.status}</span>
+                  <span className={`text-[11px] font-bold px-2 py-1 uppercase tracking-widest border ${
+                    o.status === 'completed' || o.status === 'confirmed'
+                      ? 'bg-green-50 text-green-700 border-green-200'
+                      : o.status === 'pending'
+                      ? 'bg-amber-50 text-amber-600 border-amber-200'
+                      : 'bg-gray-100 text-gray-600 border-gray-300'
+                  }`}>{o.status}</span>
                 </td>
                 <td className="py-4 pr-6 text-right">
-                  <button className="text-[13px] font-medium text-black border border-transparent px-3 py-1.5 hover:border-black transition-colors opacity-0 group-hover:opacity-100">Manage</button>
+                  <button className="text-[13px] font-medium text-black border border-transparent px-3 py-1.5 hover:border-black transition-colors opacity-0 group-hover:opacity-100">View</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Show more / less footer */}
+      {filtered.length > 10 && (
+        <div className="flex justify-between items-center pt-4 border-t border-wix-border-light">
+          <span className="text-[12px] text-wix-text-muted">
+            {showAll ? filtered.length : Math.min(filtered.length, 10)} of {filtered.length} orders
+          </span>
+          <button
+            onClick={() => setShowAll(v => !v)}
+            className="text-[13px] font-bold text-wix-text-dark border-b border-wix-text-dark pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors"
+          >
+            {showAll ? 'Show less ↑' : `View all ${filtered.length} orders ↓`}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
+
 
 const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
   const stats = data?.analytics?.checkInStats;

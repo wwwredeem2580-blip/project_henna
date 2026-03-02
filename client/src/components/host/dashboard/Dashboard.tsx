@@ -254,7 +254,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         setLoading(true);
         const [metricsData, eventsData, ordersData, guideData] = await Promise.all([
           hostAnalyticsService.getDashboardMetrics(),
-          hostEventsService.getHostEvents({ limit: 8, page: 1, filters: { status: 'published,live' } }),
+          hostEventsService.getHostEvents({ limit: 50, page: 1, filters: {} }),
           hostAnalyticsService.getHostOrders(1, 5),
           apiClient.get<any>('/api/host/guide').catch(() => ({ completedItems: [] })),
         ]);
