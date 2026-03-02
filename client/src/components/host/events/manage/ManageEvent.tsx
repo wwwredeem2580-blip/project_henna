@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   BarChart2, Users, CheckCircle, Ticket,
   Image as ImageIcon, Megaphone, Settings,
@@ -266,23 +266,35 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
   const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
   const [otpCountdown, setOtpCountdown] = useState('');
 
-  // ── Attendee search state ──
-  const [searchQuery, setSearchQuery] = useState('');
+  // ── Manual check-in state ──
+  const [manualQuery, setManualQuery] = useState('');
+  const [manualResults, setManualResults] = useState<any[]>([]);
+  const [manualLoading, setManualLoading] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [showManualDropdown, setShowManualDropdown] = useState(false);
+  const manualDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const { showNotification } = useNotification();
 
-  const demoList = data?.event?.tickets?.map((t, i) => ({
-    id: String(i), name: ['Alice Freeman', 'Bob Smith', 'Charlie Davis', 'Diana Prince', 'Evan Wright'][i % 5], ticket: t.name, checkedIn: i % 2 === 0,
-  })) ?? [
-    { id: '1', name: 'Alice Freeman', ticket: 'VIP Pass', checkedIn: true },
-    { id: '2', name: 'Bob Smith', ticket: 'General Admission', checkedIn: false },
-    { id: '3', name: 'Charlie Davis', ticket: 'Early Bird', checkedIn: false },
-    { id: '4', name: 'Diana Prince', ticket: 'VIP Pass', checkedIn: true },
-    { id: '5', name: 'Evan Wright', ticket: 'General Admission', checkedIn: false },
-  ];
-  const [attendees, setAttendees] = useState(demoList);
-  const toggleCheckin = (id: string) => setAttendees(prev => prev.map(a => a.id === id ? { ...a, checkedIn: !a.checkedIn } : a));
-  const filteredAttendees = attendees.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.ticket.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Debounced autocomplete search for manual check-in
+  useEffect(() => {
+    if (manualQuery.length < 2 || !session?.session?._id) {
+      setManualResults([]);
+      setShowManualDropdown(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setManualLoading(true);
+      try {
+        const res = await scannerService.searchTickets(session.session._id, manualQuery);
+        setManualResults(res.tickets);
+        setShowManualDropdown(true);
+      } catch { setManualResults([]); setShowManualDropdown(false); }
+      finally { setManualLoading(false); }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [manualQuery, session?.session?._id]);
 
   // Load existing session on mount
   useEffect(() => {
@@ -397,7 +409,7 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
   const devices: any[] = session?.devices ?? [];
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in max-w-[1280px] duration-300">
+    <div className="flex flex-col gap-6 animate-in fade-in max-w-[1280px] pb-[30vh] duration-300">
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white border border-black p-6 flex flex-col justify-center items-center text-center">
@@ -532,36 +544,125 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
         </div>
       )}
 
-      {/* Attendee List */}
-      <div className="bg-white border border-wix-border-light p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h3 className="text-[18px] font-medium">Attendee Check-in</h3>
-          <div className="relative w-full md:w-[300px]">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-            <input type="text" placeholder="Search by name or ticket..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full border border-wix-border-light pl-9 pr-4 py-2 text-[13px] outline-none focus:border-black transition-colors" />
+      {/* Manual Check-in */}
+      <div className="bg-white border border-wix-border-light">
+        <div className="p-6 border-b border-wix-border-light flex justify-between items-center bg-gray-50">
+          <div>
+            <h3 className="text-[16px] font-bold text-black">Manual Check-in</h3>
+            <p className="text-[13px] text-gray-500 mt-0.5">Look up a ticket by number and check in the attendee manually.</p>
           </div>
+          {verificationResult && (
+            <button
+              onClick={() => { setVerificationResult(null); setManualQuery(''); }}
+              className="text-[12px] font-bold text-gray-500 border border-gray-300 px-3 py-1.5 hover:border-black hover:text-black transition-colors flex items-center gap-1"
+            >
+              <X className="w-3.5 h-3.5" /> Clear
+            </button>
+          )}
         </div>
-        <div className="flex flex-col gap-2">
-          {filteredAttendees.length === 0 ? (
-            <div className="py-8 text-center text-[14px] text-gray-500 border border-dashed border-gray-300">No attendees found.</div>
-          ) : filteredAttendees.map(a => (
-            <div key={a.id} className="flex justify-between items-center p-4 border border-wix-border-light hover:border-black transition-colors">
-              <div>
-                <div className="font-semibold text-[14px] text-wix-text-dark">{a.name}</div>
-                <div className="text-[12px] text-gray-500">{a.ticket}</div>
-              </div>
-              <div>
-                {a.checkedIn ? (
-                  <button onClick={() => toggleCheckin(a.id)} className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 border border-green-200 text-[13px] font-bold tracking-widest uppercase hover:bg-red-50 hover:text-red-600 hover:border-red-600 transition-colors group">
-                    <CheckCircle className="w-4 h-4 group-hover:hidden" /><X className="w-4 h-4 hidden group-hover:block" />
-                    <span className="group-hover:hidden">Checked In</span><span className="hidden group-hover:block">Undo</span>
+
+        <div className="p-6">
+          {!session?.session?._id && (
+            <div className="mb-4 p-3 border border-amber-200 bg-amber-50 text-amber-700 text-[13px] font-medium">
+              ⚠ No active scanner session. Activate a session above to enable check-in.
+            </div>
+          )}
+
+          {!verificationResult ? (
+            <div className="relative" ref={manualDropdownRef}>
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+              <input
+                type="text"
+                value={manualQuery}
+                onChange={e => setManualQuery(e.target.value.toUpperCase())}
+                placeholder="Type ticket number (e.g. A1B2)..."
+                disabled={!session?.session?._id}
+                className="w-full border border-wix-border-light pl-9 pr-10 py-2 text-[13px] outline-none focus:border-black transition-colors font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              {manualLoading && <Loader2 className="w-4 h-4 animate-spin absolute right-3 top-2.5 text-gray-400" />}
+
+              {showManualDropdown && manualResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-black shadow-lg z-50 max-h-[280px] overflow-y-auto">
+                  {manualResults.map((t: any) => (
+                    <button
+                      key={t.ticketId}
+                      onClick={async () => {
+                        setShowManualDropdown(false);
+                        setManualQuery('');
+                        if (!session?.session?._id) return;
+                        try {
+                          const res = await scannerService.lookupTicket(t.ticketNumber, session.session._id);
+                          if (res.found) setVerificationResult(res.ticket);
+                          else showNotification('error', 'Not Found', res.message || 'Ticket not found');
+                        } catch (err: any) { showNotification('error', 'Lookup Failed', err.message); }
+                      }}
+                      className="w-full px-4 py-3 hover:bg-gray-50 flex items-center justify-between border-b last:border-0 text-left transition-colors"
+                    >
+                      <div>
+                        <div className="font-mono text-[13px] font-bold text-black">{t.ticketNumber}</div>
+                        <div className="text-[12px] text-gray-500 mt-0.5">{t.holderName} · {t.ticketType}</div>
+                      </div>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 border uppercase tracking-widest ${
+                        t.checkInStatus === 'checked_in' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-300'
+                      }`}>{t.checkInStatus === 'checked_in' ? 'Checked In' : 'Pending'}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {showManualDropdown && manualResults.length === 0 && manualQuery.length >= 2 && !manualLoading && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-wix-border-light shadow-sm p-4 z-50 text-center text-[13px] text-gray-500">
+                  No tickets found matching &quot;{manualQuery}&quot;
+                </div>
+              )}
+            </div>
+          ) : (
+            // Verification Result Card
+            <div className="border border-wix-border-light">
+              <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-[15px] font-bold text-black">{verificationResult.ticketNumber}</span>
+                    <span className={`text-[11px] font-bold px-2 py-0.5 border uppercase tracking-widest ${
+                      verificationResult.isCheckedIn ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-300'
+                    }`}>{verificationResult.isCheckedIn ? 'Already Checked In' : 'Not Checked In'}</span>
+                  </div>
+                  <div className="text-[13px] text-gray-700">
+                    {verificationResult.holderName && <span className="font-semibold">{verificationResult.holderName}</span>}
+                    {verificationResult.holderName && <span className="text-gray-400 mx-1.5">·</span>}
+                    <span>{verificationResult.ticketType}</span>
+                  </div>
+                  {verificationResult.isCheckedIn && verificationResult.checkedInAt && (
+                    <div className="text-[12px] text-gray-400">
+                      Checked in at {new Date(verificationResult.checkedInAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
+                </div>
+                {!verificationResult.isCheckedIn && (
+                  <button
+                    onClick={async () => {
+                      if (!session?.session?._id) return;
+                      try {
+                        setCheckingIn(true);
+                        await scannerService.manualCheckIn(verificationResult.ticketNumber, session.session._id);
+                        showNotification('success', 'Checked In!', `${verificationResult.ticketNumber} has been checked in`);
+                        // Refresh result
+                        const res = await scannerService.lookupTicket(verificationResult.ticketNumber, session.session._id);
+                        if (res.found) setVerificationResult(res.ticket);
+                      } catch (err: any) {
+                        showNotification('error', 'Check-in Failed', err.message);
+                      } finally { setCheckingIn(false); }
+                    }}
+                    disabled={checkingIn}
+                    className="bg-black text-white px-6 py-3 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2 shrink-0"
+                  >
+                    {checkingIn && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {checkingIn ? 'Checking in...' : 'Confirm Check-in'}
                   </button>
-                ) : (
-                  <button onClick={() => toggleCheckin(a.id)} className="px-6 py-2 bg-black text-white border border-black text-[13px] font-bold tracking-widest uppercase hover:bg-gray-800 transition-colors">Check In</button>
                 )}
               </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
