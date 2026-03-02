@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { hostAnalyticsService, HostEventDetailsResponse } from '@/lib/api/host-analytics';
+import { scannerService } from '@/lib/api/scanner';
 import { useNotification } from '@/lib/context/notification';
 
 /* ─── Shared UI ─── */
@@ -47,7 +48,7 @@ const OverviewTab = ({ setActiveTab, data }: { setActiveTab: (t: string) => void
   const an = data?.analytics;
   const soldPct = an?.ticketsSoldPercentage ?? 0;
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-in fade-in duration-300">
+    <div className="grid grid-cols-1 xl:grid-cols-3 max-w-[1280px] gap-8 animate-in fade-in duration-300">
       <div className="xl:col-span-2 flex flex-col gap-8">
         <div className="bg-white border border-wix-border-light p-8">
           <div className="flex items-center justify-between mb-6">
@@ -165,7 +166,7 @@ const AttendeesTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
   const displayed = showAll ? filtered : filtered.slice(0, 10);
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+    <div className="flex flex-col gap-6 animate-in fade-in max-w-[1280px] duration-300">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-[20px] font-medium text-wix-text-dark">Attendee List</h2>
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -250,19 +251,25 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
   const checkedIn = stats?.checkedIn ?? 0;
   const total = stats?.total ?? 0;
   const remaining = total - checkedIn;
+  const eventId = data?.event?._id;
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [scannerSessionActive, setScannerSessionActive] = useState(false);
+  // ── Scanner session state ──
+  const [session, setSession] = useState<any>(null);
+  const [scannerUrl, setScannerUrl] = useState('');
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  // ── OTP modal state ──
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [devices, setDevices] = useState([
-    { id: 1, name: 'iPhone 15 Pro - Staff 01', status: 'online', scans: 42 },
-    { id: 2, name: 'iPad Air - Entrance A', status: 'offline', scans: 128 },
-  ]);
+  const [otp, setOtp] = useState('');
+  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
+  const [otpCountdown, setOtpCountdown] = useState('');
 
-  const copyLink = () => {
-    navigator.clipboard.writeText('https://scanner.zenvy.com.bd?token=eyJhbGciOiJIUzI1NiIsInR...');
-  };
-  const toggleDevice = (id: number) => setDevices(prev => prev.map(d => d.id === id ? { ...d, status: d.status === 'online' ? 'offline' : 'online' } : d));
+  // ── Attendee search state ──
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const { showNotification } = useNotification();
 
   const demoList = data?.event?.tickets?.map((t, i) => ({
     id: String(i), name: ['Alice Freeman', 'Bob Smith', 'Charlie Davis', 'Diana Prince', 'Evan Wright'][i % 5], ticket: t.name, checkedIn: i % 2 === 0,
@@ -275,10 +282,122 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
   ];
   const [attendees, setAttendees] = useState(demoList);
   const toggleCheckin = (id: string) => setAttendees(prev => prev.map(a => a.id === id ? { ...a, checkedIn: !a.checkedIn } : a));
-  const filtered = attendees.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.ticket.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredAttendees = attendees.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.ticket.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Load existing session on mount
+  useEffect(() => {
+    if (!eventId) { setSessionLoading(false); return; }
+    (async () => {
+      try {
+        setSessionLoading(true);
+        const existing = await scannerService.getActiveSessionByEvent(eventId);
+        if (existing) {
+          setSession(existing);
+          if ((existing as any).scannerUrl) setScannerUrl((existing as any).scannerUrl);
+        }
+      } catch { /* no active session */ } finally { setSessionLoading(false); }
+    })();
+  }, [eventId]);
+
+  // Auto-refresh every 3s while session is active
+  useEffect(() => {
+    if (!session?.session?._id) return;
+    const iv = setInterval(async () => {
+      try {
+        const fresh = await scannerService.getSessionDetails(session.session._id);
+        setSession(fresh);
+      } catch { /* ignore */ }
+    }, 3000);
+    return () => clearInterval(iv);
+  }, [session?.session?._id]);
+
+  // OTP countdown timer
+  useEffect(() => {
+    if (!otpExpiry) return;
+    const iv = setInterval(() => {
+      const diff = Math.max(0, Math.floor((otpExpiry.getTime() - Date.now()) / 1000));
+      const m = String(Math.floor(diff / 60)).padStart(2, '0');
+      const s = String(diff % 60).padStart(2, '0');
+      setOtpCountdown(`${m}:${s}`);
+      if (diff === 0) { clearInterval(iv); setShowOtpModal(false); }
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [otpExpiry]);
+
+  const handleCreateSession = async () => {
+    if (!eventId) return;
+    try {
+      setCreating(true);
+      const result = await scannerService.createSession(eventId);
+      setScannerUrl(result.scannerUrl);
+      const details = await scannerService.getSessionDetails(result.session._id);
+      setSession(details);
+      showNotification('success', 'Session Created', 'Share the scanner link with your staff');
+    } catch (err: any) {
+      showNotification('error', 'Failed', err.message);
+    } finally { setCreating(false); }
+  };
+
+  const handleCloseSession = async () => {
+    if (!session?.session?._id) return;
+    if (!confirm('Close this scanner session? All devices will lose access.')) return;
+    try {
+      setClosing(true);
+      await scannerService.closeSession(session.session._id);
+      const fresh = await scannerService.getSessionDetails(session.session._id);
+      setSession(fresh);
+      showNotification('success', 'Session Closed', 'Scanner session has been closed');
+    } catch (err: any) {
+      showNotification('error', 'Failed', err.message);
+    } finally { setClosing(false); }
+  };
+
+  const handleAddDevice = async () => {
+    if (!session?.session?._id) return;
+    try {
+      const res = await scannerService.generateOTP(session.session._id);
+      setOtp(res.otp);
+      setOtpExpiry(new Date(res.expiresAt));
+      setShowOtpModal(true);
+    } catch (err: any) {
+      showNotification('error', 'Failed to generate OTP', err.message);
+    }
+  };
+
+  const handleDisableDevice = async (deviceId: string) => {
+    if (!session?.session?._id) return;
+    try {
+      await scannerService.disableDevice(deviceId, session.session._id);
+      const fresh = await scannerService.getSessionDetails(session.session._id);
+      setSession(fresh);
+      showNotification('success', 'Device Disabled', 'Device access has been revoked');
+    } catch (err: any) {
+      showNotification('error', 'Failed', err.message);
+    }
+  };
+
+  const handleEnableDevice = async (deviceId: string) => {
+    if (!session?.session?._id) return;
+    try {
+      await scannerService.enableDevice(deviceId, session.session._id);
+      const fresh = await scannerService.getSessionDetails(session.session._id);
+      setSession(fresh);
+      showNotification('success', 'Device Enabled', 'Device usage restored');
+    } catch (err: any) {
+      showNotification('error', 'Failed', err.message);
+    }
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(scannerUrl);
+    showNotification('success', 'Copied!', 'Scanner link copied to clipboard');
+  };
+
+  const isSessionActive = session?.session?.sessionStatus === 'active';
+  const devices: any[] = session?.devices ?? [];
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+    <div className="flex flex-col gap-6 animate-in fade-in max-w-[1280px] duration-300">
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white border border-black p-6 flex flex-col justify-center items-center text-center">
@@ -299,15 +418,24 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
       <div className="flex flex-col gap-4">
         <h2 className="text-[20px] font-bold text-black">Scanner Session Management</h2>
 
-        {!scannerSessionActive ? (
+        {sessionLoading ? (
+          <div className="border border-wix-border-light bg-white p-12 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-wix-purple" />
+          </div>
+        ) : !isSessionActive ? (
           <div className="border border-black bg-white p-12 flex flex-col items-center justify-center text-center">
             <div className="w-16 h-16 bg-gray-100 flex items-center justify-center border border-gray-300 mb-4">
               <Scan className="w-8 h-8 text-gray-400" />
             </div>
             <h3 className="text-[18px] font-medium text-black mb-2">Scanner Session is Inactive</h3>
-            <p className="text-[14px] text-wix-text-muted max-w-md mb-8">Activate a session to generate a shareable scanner link and authorize devices to scan tickets for this event.</p>
-            <button onClick={() => setScannerSessionActive(true)} className="bg-black text-white px-8 py-4 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">
-              Activate Session
+            <p className="text-[14px] text-wix-text-muted max-w-[480px] mb-8">Activate a session to generate a shareable scanner link and authorize devices to scan tickets for this event.</p>
+            <button
+              onClick={handleCreateSession}
+              disabled={creating || !eventId}
+              className="bg-black text-white px-8 py-4 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {creating && <Loader2 className="w-4 h-4 animate-spin" />}
+              {creating ? 'Activating...' : 'Activate Session'}
             </button>
           </div>
         ) : (
@@ -323,12 +451,17 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
                   <h3 className="text-[18px] font-medium text-black">Scanner Link</h3>
                   <p className="text-[13px] text-gray-500 mt-1">Share this link with your staff to open the scanner web-app.</p>
                 </div>
-                <button onClick={() => setScannerSessionActive(false)} className="border border-black px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-red-600 hover:bg-red-50 hover:border-red-600 transition-colors shrink-0">
+                <button
+                  onClick={handleCloseSession}
+                  disabled={closing}
+                  className="border border-black px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-red-600 hover:bg-red-50 hover:border-red-600 transition-colors shrink-0 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {closing && <Loader2 className="w-3 h-3 animate-spin" />}
                   Close Session
                 </button>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
-                <input readOnly value="https://scanner.zenvy.com.bd?token=eyJhbGciOiJIUzI1NiIsInR..." className="flex-1 border border-black bg-gray-50 p-3 text-[14px] font-mono text-gray-600 outline-none select-all" />
+                <input readOnly value={scannerUrl} className="flex-1 border border-black bg-gray-50 p-3 text-[14px] font-mono text-gray-600 outline-none select-all" />
                 <button onClick={copyLink} className="bg-black text-white px-6 py-3 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
                   <Copy className="w-4 h-4" /> Copy
                 </button>
@@ -338,29 +471,39 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
             {/* Connected Devices */}
             <div className="border border-black bg-white">
               <div className="p-6 border-b border-black flex justify-between items-center bg-gray-50">
-                <h3 className="text-[16px] font-bold text-black">Connected Devices</h3>
-                <button onClick={() => setShowOtpModal(true)} className="border border-black bg-white px-4 py-2 text-[12px] font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors flex items-center gap-2">
+                <h3 className="text-[16px] font-bold text-black">Connected Devices ({devices.length}/{session?.session?.maxDevices ?? 5})</h3>
+                <button onClick={handleAddDevice} className="border border-black bg-white px-4 py-2 text-[12px] font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors flex items-center gap-2">
                   <Plus className="w-4 h-4" /> Add Device
                 </button>
               </div>
               <div className="flex flex-col">
-                {devices.map((device, idx) => (
-                  <div key={device.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4 ${idx !== devices.length - 1 ? 'border-b border-gray-200' : ''}`}>
+                {devices.length === 0 ? (
+                  <div className="p-8 text-center text-[14px] text-gray-500">No devices connected yet. Click "Add Device" to generate an OTP.</div>
+                ) : devices.map((device: any, idx: number) => (
+                  <div key={device._id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4 ${idx !== devices.length - 1 ? 'border-b border-gray-200' : ''}`}>
                     <div className="flex items-center gap-4">
-                      <div className={`w-2.5 h-2.5 rounded-full ${device.status === 'online' ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      <div className={`w-2.5 h-2.5 rounded-full ${device.isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
                       <div>
-                        <div className="text-[14px] font-bold text-black">{device.name}</div>
-                        <div className="text-[12px] text-gray-500 capitalize">{device.status}</div>
+                        <div className="text-[14px] font-bold text-black">{device.deviceName}</div>
+                        <div className="text-[12px] text-gray-500">{device.isOnline ? 'Online' : 'Offline'} · {device.status === 'disabled' ? 'Disabled' : 'Active'}</div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between w-full sm:w-auto gap-8">
+                    <div className="flex items-center justify-between w-full sm:w-auto gap-6">
                       <div className="text-right">
-                        <div className="text-[18px] font-mono font-medium text-black">{device.scans}</div>
+                        <div className="text-[18px] font-mono font-medium text-black">{device.totalScans}</div>
                         <div className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Scans</div>
                       </div>
-                      <button onClick={() => toggleDevice(device.id)} className={`px-4 py-2 text-[11px] font-bold uppercase tracking-widest border transition-colors ${device.status === 'online' ? 'border-gray-300 text-gray-600 hover:bg-gray-100' : 'border-black text-black bg-white hover:bg-black hover:text-white'}`}>
-                        {device.status === 'online' ? 'Deactivate' : 'Activate'}
-                      </button>
+                      <div className="flex gap-2">
+                        {device.status === 'disabled' ? (
+                          <button onClick={() => handleEnableDevice(device._id)} className="px-4 py-2 text-[11px] font-bold uppercase tracking-widest border border-black text-black bg-white hover:bg-black hover:text-white transition-colors">
+                            Enable
+                          </button>
+                        ) : (
+                          <button onClick={() => handleDisableDevice(device._id)} className="px-4 py-2 text-[11px] font-bold uppercase tracking-widest border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors">
+                            Disable
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -377,10 +520,14 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
             <button onClick={() => setShowOtpModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors"><X className="w-5 h-5" /></button>
             <h3 className="text-[20px] font-bold text-black text-center mb-2">Authorize Device</h3>
             <p className="text-[14px] text-gray-500 text-center mb-8 px-4">Enter this OTP on the scanner device to securely connect it to this session.</p>
-            <div className="border border-black bg-gray-50 p-6 flex justify-center mb-8">
-              <div className="text-[48px] font-mono font-bold tracking-[0.2em] text-black leading-none">842 915</div>
+            <div className="border border-black bg-gray-50 p-6 flex justify-center mb-4">
+              <div className="text-[48px] font-mono font-bold tracking-[0.2em] text-black leading-none">
+                {otp ? `${otp.slice(0, 3)} ${otp.slice(3)}` : '— —'}
+              </div>
             </div>
-            <div className="text-[12px] text-center text-gray-400 font-medium">OTP valid for 04:59</div>
+            <div className="text-[12px] text-center text-gray-400 font-medium">
+              OTP valid for {otpCountdown || '—'}
+            </div>
           </div>
         </div>
       )}
@@ -395,9 +542,9 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          {filtered.length === 0 ? (
+          {filteredAttendees.length === 0 ? (
             <div className="py-8 text-center text-[14px] text-gray-500 border border-dashed border-gray-300">No attendees found.</div>
-          ) : filtered.map(a => (
+          ) : filteredAttendees.map(a => (
             <div key={a.id} className="flex justify-between items-center p-4 border border-wix-border-light hover:border-black transition-colors">
               <div>
                 <div className="font-semibold text-[14px] text-wix-text-dark">{a.name}</div>
@@ -420,6 +567,7 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
     </div>
   );
 };
+
 
 const TicketsTab = ({ setSidePanelOpen, data }: { setSidePanelOpen: (v: boolean) => void; data: HostEventDetailsResponse | null }) => {
   const tickets = data?.event?.tickets ?? [];
