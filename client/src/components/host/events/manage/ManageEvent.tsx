@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/lib/context/auth';
 import { hostAnalyticsService, HostEventDetailsResponse } from '@/lib/api/host-analytics';
 import { scannerService } from '@/lib/api/scanner';
+import { eventsService } from '@/lib/api/events';
 import { useNotification } from '@/lib/context/notification';
 
 /* ─── Shared UI ─── */
@@ -670,59 +671,285 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
 };
 
 
-const TicketsTab = ({ setSidePanelOpen, data }: { setSidePanelOpen: (v: boolean) => void; data: HostEventDetailsResponse | null }) => {
-  const tickets = data?.event?.tickets ?? [];
+/* ─── Advanced Ticket Side Panel ─── */
+const TicketSidePanel = ({
+  isOpen, onClose, editingTicket, editingIndex, data, onUpdate
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  editingTicket: any;
+  editingIndex: number | null;
+  data: HostEventDetailsResponse | null;
+  onUpdate: (d: HostEventDetailsResponse) => void;
+}) => {
+  const { showNotification } = useNotification();
+  const colorPresets = ['#4a2bed', '#161616', '#116d42', '#c5221f', '#f27d26', '#ffd33d'];
+  const [form, setForm] = useState({ name: '', price: '', quantity: '', description: '', wristbandColor: '#4a2bed', isVisible: true, limitPerOrder: false });
+  const [benefits, setBenefits] = useState<string[]>([]);
+  const [newBenefit, setNewBenefit] = useState('');
+
+  useEffect(() => {
+    if (editingTicket) {
+      setForm({ name: editingTicket.name || '', price: String(editingTicket.price ?? ''), quantity: String(editingTicket.quantity ?? ''), description: editingTicket.description || '', wristbandColor: editingTicket.wristbandColor || '#4a2bed', isVisible: editingTicket.isVisible ?? true, limitPerOrder: editingTicket.limitPerOrder ?? false });
+      setBenefits(editingTicket.benefits || []);
+    } else {
+      setForm({ name: '', price: '', quantity: '', description: '', wristbandColor: '#4a2bed', isVisible: true, limitPerOrder: false });
+      setBenefits([]);
+    }
+    setNewBenefit('');
+  }, [isOpen, editingTicket]);
+
+  const addBenefit = () => { if (newBenefit.trim()) { setBenefits(p => [...p, newBenefit.trim()]); setNewBenefit(''); } };
+
+  const handleSave = () => {
+    if (!form.name.trim()) { showNotification('error', 'Required', 'Ticket name is required'); return; }
+    if (!form.price || isNaN(Number(form.price))) { showNotification('error', 'Required', 'Valid price is required'); return; }
+    if (!data?.event) return;
+    const ticketData = { name: form.name.trim(), price: Number(form.price), quantity: Number(form.quantity) || 0, wristbandColor: form.wristbandColor, benefits, isVisible: form.isVisible, limitPerOrder: form.limitPerOrder };
+    if (editingIndex !== null) {
+      const existing = data.event.tickets[editingIndex];
+      const committed = (existing.sold || 0) + (existing.reserved || 0);
+      if ((['published', 'live'].includes(data.event.status)) && committed > 0 && ticketData.price < existing.price.amount) {
+        if (!confirm(`Price reduction will trigger refunds to ${committed} buyers (BDT ${(existing.price.amount - ticketData.price) * committed}). Continue?`)) return;
+      }
+      const updated = data.event.tickets.map((t, i) => i === editingIndex ? { ...t, name: ticketData.name, price: { amount: ticketData.price, currency: 'BDT' }, quantity: ticketData.quantity, wristbandColor: ticketData.wristbandColor, benefits: ticketData.benefits, isVisible: ticketData.isVisible, isActive: true } : t);
+      onUpdate({ ...data, event: { ...data.event, tickets: updated } });
+      showNotification('success', 'Updated', 'Ticket updated');
+    } else {
+      const totalAllocated = data.event.tickets.reduce((s, t) => s + t.quantity, 0);
+      const capacity = data.event.venue?.capacity || 0;
+      if (capacity > 0 && totalAllocated + ticketData.quantity > capacity) { showNotification('error', 'Capacity Exceeded', `Would exceed venue capacity (${capacity})`); return; }
+      const newTicket = { name: ticketData.name, tier: 'general', price: { amount: ticketData.price, currency: 'BDT' }, quantity: ticketData.quantity, limits: { minPerOrder: 1, maxPerOrder: ticketData.limitPerOrder ? 5 : 10 }, sold: 0, reserved: 0, wristbandColor: ticketData.wristbandColor, benefits: ticketData.benefits, isVisible: ticketData.isVisible, isActive: true };
+      onUpdate({ ...data, event: { ...data.event, tickets: [...data.event.tickets, newTicket] } });
+      showNotification('success', 'Created', 'New ticket added');
+    }
+    onClose();
+  };
+
+  if (!isOpen) return null;
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-      <div className="flex justify-between items-center">
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 bg-black/40 animate-in fade-in duration-200" onClick={onClose} />
+      <div className="relative w-[450px] max-w-full h-full bg-white border-l border-black flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="px-6 py-5 border-b border-black flex justify-between items-center bg-gray-50">
+          <h2 className="text-[18px] font-medium">{editingIndex !== null ? 'Edit Ticket' : 'Create New Ticket'}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-black transition-colors"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Ticket Name <span className="text-red-500">*</span></label>
+            <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} type="text" placeholder="e.g. Early Bird" className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Price (BDT) <span className="text-red-500">*</span></label>
+              <input value={form.price} onChange={e => setForm(p => ({ ...p, price: e.target.value }))} type="number" placeholder="0" min="0" className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Capacity</label>
+              <input value={form.quantity} onChange={e => setForm(p => ({ ...p, quantity: e.target.value }))} type="number" placeholder="Unlimited" min="0" className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Description</label>
+            <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Tell attendees what's included..." className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors resize-none" />
+          </div>
+          <div className="border-t border-wix-border-light pt-6">
+            <h3 className="text-[14px] font-bold uppercase tracking-widest text-black mb-4">Ticket Configuration</h3>
+            <div className="mb-6">
+              <label className="text-[12px] font-bold uppercase tracking-widest text-wix-text-muted mb-2 block">Wristband / Badge Color <span className="font-normal normal-case text-gray-400 ml-1">(Internal Metadata)</span></label>
+              <div className="flex items-center gap-2 flex-wrap">
+                {colorPresets.map(c => (
+                  <button key={c} onClick={() => setForm(p => ({ ...p, wristbandColor: c }))} className={`w-8 h-8 border transition-all ${form.wristbandColor === c ? 'border-black ring-2 ring-black ring-offset-2' : 'border-gray-300 hover:border-black'}`} style={{ backgroundColor: c }} title={c} />
+                ))}
+                <div className="w-px h-8 bg-gray-300 mx-1" />
+                <div className="relative group">
+                  <input type="color" value={form.wristbandColor} onChange={e => setForm(p => ({ ...p, wristbandColor: e.target.value }))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <div className="w-8 h-8 border border-gray-300 group-hover:border-black flex items-center justify-center transition-colors" style={{ backgroundColor: form.wristbandColor }}>
+                    <span className="text-white mix-blend-difference opacity-50"><Plus className="w-4 h-4" /></span>
+                  </div>
+                </div>
+                <span className="ml-2 text-[13px] font-mono text-gray-500 uppercase">{form.wristbandColor}</span>
+              </div>
+            </div>
+            <div>
+              <label className="text-[12px] font-bold uppercase tracking-widest text-wix-text-muted mb-2 block">Ticket Benefits</label>
+              <div className="flex gap-2 mb-3">
+                <input value={newBenefit} onChange={e => setNewBenefit(e.target.value)} onKeyDown={e => e.key === 'Enter' && addBenefit()} type="text" placeholder="e.g. Backstage Access" className="flex-1 border border-black p-2 text-[13px] focus:outline-none" />
+                <button onClick={addBenefit} className="bg-black text-white px-4 py-2 text-[12px] font-bold uppercase tracking-widest hover:bg-gray-800">Add</button>
+              </div>
+              <ul className="flex flex-col gap-2">
+                {benefits.length === 0 && <li className="text-[13px] text-gray-500 italic">No benefits added.</li>}
+                {benefits.map((b, i) => (
+                  <li key={i} className="flex justify-between items-center p-3 border border-gray-200 bg-gray-50">
+                    <span className="text-[13px] text-black">{b}</span>
+                    <button onClick={() => setBenefits(p => p.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-wix-border-light pt-6 flex flex-col gap-4">
+            <h3 className="text-[14px] font-semibold uppercase tracking-wider text-gray-800">Advanced Options</h3>
+            <div className="border border-wix-border-light p-4 bg-gray-50 flex justify-between items-center">
+              <div>
+                <div className="font-semibold text-[14px] text-wix-text-dark">Ticket Visibility</div>
+                <div className="text-[12px] text-wix-text-muted mt-1">Show on public event page</div>
+              </div>
+              <SharpToggle checked={form.isVisible} onChange={(v: boolean) => setForm(p => ({ ...p, isVisible: v }))} />
+            </div>
+            <div className="border border-wix-border-light p-4 bg-gray-50 flex justify-between items-center">
+              <div>
+                <div className="font-semibold text-[14px] text-wix-text-dark">Limit Per Order</div>
+                <div className="text-[12px] text-wix-text-muted mt-1">Restrict to max 5 tickets per user</div>
+              </div>
+              <SharpToggle checked={form.limitPerOrder} onChange={(v: boolean) => setForm(p => ({ ...p, limitPerOrder: v }))} />
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-black p-6 shrink-0 flex gap-4 bg-white">
+          <button onClick={onClose} className="flex-1 border border-black px-4 py-3 text-[13px] font-bold tracking-widest uppercase hover:bg-gray-100 transition-colors text-black">Cancel</button>
+          <button onClick={handleSave} className="flex-1 bg-black text-white px-4 py-3 text-[13px] font-bold tracking-widest uppercase hover:bg-gray-800 transition-colors border border-black">
+            {editingIndex !== null ? 'Update Ticket' : 'Save Ticket'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Tickets Tab ─── */
+const TicketsTab = ({ data, onUpdate, onRefetch }: { data: HostEventDetailsResponse | null; onUpdate: (d: HostEventDetailsResponse) => void; onRefetch: () => Promise<void> }) => {
+  const { showNotification } = useNotification();
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [initialTickets, setInitialTickets] = useState<any[] | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const tickets = data?.event?.tickets ?? [];
+
+  useEffect(() => {
+    if (data?.event?.tickets !== undefined && initialTickets === null) setInitialTickets(JSON.parse(JSON.stringify(data.event.tickets)));
+  }, [data?.event?.tickets, initialTickets]);
+
+  useEffect(() => {
+    if (!data?.event?.tickets || initialTickets === null) { setHasChanges(false); return; }
+    setHasChanges(JSON.stringify(data.event.tickets) !== JSON.stringify(initialTickets));
+  }, [data?.event?.tickets, initialTickets]);
+
+  const handleSave = async () => {
+    if (!data?.event || !hasChanges) return;
+    try {
+      setSaving(true);
+      const result = await eventsService.updateEventByStatus(data.event._id, data.event.status, { tickets: data.event.tickets });
+      if (result.warnings?.length) result.warnings.forEach((w: string) => showNotification('info', 'Notice', w));
+      if (result.refundsRequired?.length) { const total = result.refundsRequired.reduce((s: number, r: any) => s + (r.refundAmount || 0), 0); showNotification('info', 'Refunds', `BDT ${total} in refunds deducted from next payout.`); }
+      showNotification('success', 'Saved', result.message || 'Tickets updated successfully');
+      setInitialTickets(null); await onRefetch(); setHasChanges(false);
+    } catch (err: any) { showNotification('error', 'Save Failed', err?.response?.data?.message || err?.message || 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = (idx: number) => {
+    if (!data?.event) return;
+    const t = data.event.tickets[idx];
+    if (['published', 'live'].includes(data.event.status) && (t.sold || 0) > 0) { showNotification('error', 'Cannot Delete', `This ticket has ${t.sold} sales.`); return; }
+    onUpdate({ ...data, event: { ...data.event, tickets: data.event.tickets.filter((_, i) => i !== idx) } });
+    showNotification('success', 'Deleted', 'Ticket removed');
+  };
+
+  const totalAllocated = tickets.reduce((s, t) => s + t.quantity, 0);
+  const capacity = data?.event?.venue?.capacity || 0;
+  const pctCapacity = capacity > 0 ? Math.min((totalAllocated / capacity) * 100, 100) : 0;
+
+  return (
+    <div className="flex flex-col gap-6 animate-in fade-in max-w-[1280px] duration-300">
+      <div className="flex justify-between items-start">
         <div>
-          <h2 className="text-[20px] font-medium text-wix-text-dark">Tickets & Pricing</h2>
+          <h2 className="text-[20px] font-medium text-wix-text-dark">Tickets &amp; Pricing</h2>
           <p className="text-[13px] text-gray-500 mt-1">Manage ticket tiers, capacity, and pricing rules.</p>
         </div>
-        <button onClick={() => setSidePanelOpen(true)} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[14px] font-medium hover:bg-gray-800 transition-colors border border-black">
+        <button onClick={() => { setEditingIndex(null); setPanelOpen(true); }} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[14px] font-medium hover:bg-gray-800 transition-colors border border-black">
           <Plus className="w-4 h-4" /> Create Ticket
         </button>
       </div>
+      {capacity > 0 && (
+        <div className="bg-white border border-wix-border-light p-5">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[13px] font-semibold text-wix-text-dark">Venue Capacity</span>
+            <span className="text-[13px] font-mono">{totalAllocated} / {capacity} ({Math.round(pctCapacity)}%)</span>
+          </div>
+          <div className="w-full h-1.5 bg-gray-100 border border-gray-200">
+            <div className={`h-full transition-all duration-500 ${pctCapacity >= 100 ? 'bg-red-500' : 'bg-black'}`} style={{ width: `${pctCapacity}%` }} />
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-4">
         {tickets.length === 0 ? (
           <div className="py-12 text-center text-[14px] text-wix-text-muted border border-dashed border-wix-border-light">No tickets created yet</div>
         ) : tickets.map((t, i) => {
           const pct = t.quantity > 0 ? Math.round((t.sold / t.quantity) * 100) : 0;
-          const isSoldOut = t.sold >= t.quantity;
+          const isSoldOut = t.sold >= t.quantity && t.quantity > 0;
           return (
-            <div key={i} className="bg-white border border-wix-border-light p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-black transition-colors cursor-pointer group">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-[16px] font-semibold text-wix-text-dark">{t.name}</h3>
-                  <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border ${isSoldOut ? 'bg-gray-100 text-gray-500 border-gray-300' : t.isActive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-300'}`}>
-                    {isSoldOut ? 'Sold Out' : t.isActive ? 'Active' : 'Inactive'}
-                  </span>
+            <div key={i} className="bg-white border border-wix-border-light p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-black transition-colors group">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-4 h-4 rounded-full border border-gray-300 shrink-0" style={{ backgroundColor: t.wristbandColor || '#161616' }} />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-3 mb-0.5">
+                    <h3 className="text-[16px] font-semibold text-wix-text-dark truncate">{t.name}</h3>
+                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border shrink-0 ${isSoldOut ? 'bg-gray-100 text-gray-500 border-gray-300' : t.isActive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-300'}`}>{isSoldOut ? 'Sold Out' : t.isActive ? 'Active' : 'Inactive'}</span>
+                  </div>
+                  <div className="text-[13px] text-gray-500">{t.sold} / {t.quantity} sold</div>
+                  {(t.benefits?.length ?? 0) > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {t.benefits!.slice(0, 3).map((b: string, bi: number) => <span key={bi} className="text-[11px] text-gray-500 border border-gray-200 px-1.5 py-0.5">{b}</span>)}
+                      {t.benefits!.length > 3 && <span className="text-[11px] text-gray-400">+{t.benefits!.length - 3} more</span>}
+                    </div>
+                  )}
                 </div>
-                <div className="text-[13px] text-gray-500">Capacity: {t.sold} / {t.quantity} sold</div>
               </div>
               <div className="flex-1 w-full max-w-[200px] hidden md:block">
                 <div className="w-full h-1.5 bg-gray-100 border border-gray-200">
                   <div className={`h-full ${isSoldOut ? 'bg-gray-400' : 'bg-black'}`} style={{ width: `${pct}%` }} />
                 </div>
               </div>
-              <div className="w-[120px] text-right">
+              <div className="w-[130px] text-right">
                 <div className="text-[18px] font-mono font-medium text-black">{t.price.amount.toLocaleString()} <span className="text-[13px] font-normal">{t.price.currency}</span></div>
               </div>
-              <div className="w-[80px] text-right">
-                <button className="text-[13px] text-black font-medium opacity-0 group-hover:opacity-100 transition-opacity border-b border-black pb-0.5">Edit</button>
+              <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => { setEditingIndex(i); setPanelOpen(true); }} className="text-[13px] text-black font-medium border-b border-black pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors">Edit</button>
+                <button onClick={() => handleDelete(i)} className="text-[13px] text-red-500 font-medium border-b border-red-400 pb-0.5 hover:text-red-700 hover:border-red-700 transition-colors">Delete</button>
               </div>
             </div>
           );
         })}
       </div>
+      <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-wix-border-light p-4 flex justify-between items-center">
+        <div className="text-[12px]">
+          {hasChanges ? <span className="flex items-center gap-2 text-amber-600"><div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />Unsaved changes</span>
+           : <span className="flex items-center gap-2 text-green-600"><div className="w-2 h-2 bg-green-500 rounded-full" />All changes saved</span>}
+        </div>
+        <button onClick={handleSave} disabled={!hasChanges || saving}
+          className="bg-black text-white px-6 py-2.5 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 border border-black"
+        >
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+      <TicketSidePanel isOpen={panelOpen} onClose={() => { setPanelOpen(false); setEditingIndex(null); }}
+        editingIndex={editingIndex}
+        editingTicket={editingIndex !== null && tickets[editingIndex] ? { name: tickets[editingIndex].name, price: tickets[editingIndex].price.amount, quantity: tickets[editingIndex].quantity, wristbandColor: tickets[editingIndex].wristbandColor, benefits: tickets[editingIndex].benefits, isVisible: tickets[editingIndex].isVisible } : null}
+        data={data} onUpdate={onUpdate}
+      />
     </div>
   );
 };
 
+
 const GalleryTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
   const gallery = data?.event?.media?.gallery ?? [];
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+    <div className="flex flex-col gap-6 animate-in fade-in max-w-[1280px] duration-300">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-[20px] font-medium text-wix-text-dark">Event Gallery</h2>
@@ -914,65 +1141,6 @@ const SettingsTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
   );
 };
 
-/* ─── Ticket Side Panel ─── */
-const TicketSidePanel = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const [isVisible, setIsVisible] = useState(true);
-  const [limitPerOrder, setLimitPerOrder] = useState(false);
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-[450px] max-w-full h-full bg-white border-l border-black flex flex-col">
-        <div className="px-6 py-5 border-b border-black flex justify-between items-center bg-gray-50">
-          <h2 className="text-[18px] font-medium">Create New Ticket</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-black transition-colors"><X className="w-5 h-5" /></button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Ticket Name <span className="text-red-500">*</span></label>
-            <input type="text" placeholder="e.g. Early Bird" className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Price (BDT) <span className="text-red-500">*</span></label>
-              <input type="number" placeholder="0" className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Capacity</label>
-              <input type="number" placeholder="Unlimited" className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors" />
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Description</label>
-            <textarea rows={3} placeholder="Tell attendees what's included..." className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors resize-none" />
-          </div>
-          <div className="border-t border-wix-border-light pt-6 flex flex-col gap-4">
-            <h3 className="text-[14px] font-semibold uppercase tracking-wider text-gray-800">Advanced Options</h3>
-            <div className="border border-wix-border-light p-4 bg-gray-50 flex justify-between items-center">
-              <div>
-                <div className="font-semibold text-[14px] text-wix-text-dark">Ticket Visibility</div>
-                <div className="text-[12px] text-wix-text-muted mt-1">Show on public event page</div>
-              </div>
-              <SharpToggle checked={isVisible} onChange={setIsVisible} />
-            </div>
-            <div className="border border-wix-border-light p-4 bg-gray-50 flex justify-between items-center">
-              <div>
-                <div className="font-semibold text-[14px] text-wix-text-dark">Limit Per Order</div>
-                <div className="text-[12px] text-wix-text-muted mt-1">Restrict number of tickets per user</div>
-              </div>
-              <SharpToggle checked={limitPerOrder} onChange={setLimitPerOrder} />
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-black p-6 shrink-0 flex gap-4 bg-white">
-          <button onClick={onClose} className="flex-1 border border-black px-4 py-3 text-[13px] font-bold tracking-widest uppercase hover:bg-gray-100 transition-colors text-black">Cancel</button>
-          <button onClick={onClose} className="flex-1 bg-black text-white px-4 py-3 text-[13px] font-bold tracking-widest uppercase hover:bg-gray-800 transition-colors border border-black">Save Ticket</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 /* ─── Mobile Tab Strip ─── */
 const MobileTabStrip = ({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) => {
   const tabs = [
@@ -997,7 +1165,9 @@ export default function ManageEvent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeKey, setActiveKey] = useState('Overview');
-  const [sidePanelOpen, setSidePanelOpen] = useState(false);
+  const [sidePanelOpen, setSidePanelOpen] = useState(false); // kept for legacy ref
+  // sidePanelOpen is now managed inside TicketsTab itself
+  void sidePanelOpen; void setSidePanelOpen;
 
   const router = useRouter();
   const { id } = useParams();
@@ -1119,7 +1289,7 @@ export default function ManageEvent() {
                 {activeKey === 'Overview' && <OverviewTab setActiveTab={setActiveKey} data={data} />}
                 {activeKey === 'Attendees' && <AttendeesTab data={data} />}
                 {activeKey === 'Checkin' && <CheckinTab data={data} />}
-                {activeKey === 'Tickets' && <TicketsTab setSidePanelOpen={setSidePanelOpen} data={data} />}
+                {activeKey === 'Tickets' && <TicketsTab data={data} onUpdate={setData} onRefetch={fetchEventData} />}
                 {activeKey === 'Gallery' && <GalleryTab data={data} />}
                 {activeKey === 'Marketing' && <MarketingTab />}
                 {activeKey === 'Settings' && <SettingsTab data={data} />}
@@ -1129,7 +1299,7 @@ export default function ManageEvent() {
         </main>
       </div>
 
-      <TicketSidePanel isOpen={sidePanelOpen} onClose={() => setSidePanelOpen(false)} />
+
     </div>
   );
 }
