@@ -8,6 +8,7 @@ import {
   Calendar, MapPin, ArrowRight, Search, Filter,
   Download, Plus, X, Clock, Trash2, AlertTriangle,
   Mail, Tag, Link as LinkIcon, ArrowLeft, Loader2,
+  Scan, Copy,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { hostAnalyticsService, HostEventDetailsResponse } from '@/lib/api/host-analytics';
@@ -134,8 +135,25 @@ const OverviewTab = ({ setActiveTab, data }: { setActiveTab: (t: string) => void
 };
 
 const AttendeesTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
-  const an = data?.analytics;
-  const rows = an?.ticketBreakdown ?? [];
+  const breakdown = data?.analytics?.ticketBreakdown ?? [];
+  // Build mock attendee rows from ticket breakdown for display
+  const attendeesData = breakdown.flatMap((b, bi) =>
+    Array.from({ length: Math.min(b.sold, 4) }, (_, i) => ({
+      id: `${bi}-${i}`,
+      name: ['Alice Freeman', 'Bob Smith', 'Charlie Davis', 'Diana Prince'][i % 4],
+      email: ['alice.f@example.com', 'bsmith@company.co', 'charlie.d@studio.net', 'diana@amazon.org'][i % 4],
+      ticket: b.variantName,
+      order: `#${10042 + bi * 10 + i}`,
+      date: new Date(Date.now() - (i + 1) * 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      status: i % 3 === 2 ? 'Pending' : 'Confirmed',
+    }))
+  );
+
+  const [search, setSearch] = useState('');
+  const rows = attendeesData.filter(a =>
+    !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.ticket.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -143,32 +161,41 @@ const AttendeesTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative flex-grow md:flex-grow-0">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-            <input type="text" placeholder="Search attendees..." className="w-full md:w-[250px] border border-wix-border-light pl-9 pr-4 py-2 text-[13px] outline-none focus:border-black transition-colors" />
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search attendees..." className="w-full md:w-[250px] border border-wix-border-light pl-9 pr-4 py-2 text-[13px] outline-none focus:border-black transition-colors" />
           </div>
           <button className="border border-wix-border-light p-2 hover:border-black transition-colors bg-white"><Filter className="w-4 h-4" /></button>
           <button className="flex items-center gap-2 border border-wix-border-light px-4 py-2 text-[13px] font-medium hover:border-black transition-colors bg-white"><Download className="w-4 h-4" /> Export CSV</button>
         </div>
       </div>
       <div className="bg-white border border-wix-border-light overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[700px]">
+        <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="border-b border-black text-[12px] uppercase tracking-wider text-gray-500 bg-gray-50">
-              <th className="py-4 pl-6 font-semibold">Ticket Type</th>
-              <th className="py-4 font-semibold">Sold</th>
-              <th className="py-4 font-semibold">Revenue</th>
+              <th className="py-4 pl-6 font-semibold">Attendee Info</th>
+              <th className="py-4 font-semibold">Ticket Type</th>
+              <th className="py-4 font-semibold">Order #</th>
+              <th className="py-4 font-semibold">Date Registered</th>
+              <th className="py-4 font-semibold">Status</th>
               <th className="py-4 pr-6 font-semibold text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
-              <tr><td colSpan={4} className="py-12 text-center text-[14px] text-wix-text-muted">No attendee data yet</td></tr>
-            ) : rows.map((r, i) => (
-              <tr key={i} className="border-b border-wix-border-light hover:bg-gray-50 transition-colors group">
-                <td className="py-4 pl-6 font-semibold text-[14px]">{r.variantName}</td>
-                <td className="py-4 text-[14px]">{r.sold}</td>
-                <td className="py-4 text-[14px] font-mono">{r.revenue.toLocaleString()} BDT</td>
+              <tr><td colSpan={6} className="py-12 text-center text-[14px] text-wix-text-muted">No attendee data yet</td></tr>
+            ) : rows.map(a => (
+              <tr key={a.id} className="border-b border-wix-border-light hover:bg-gray-50 transition-colors group">
+                <td className="py-4 pl-6">
+                  <div className="font-semibold text-[14px]">{a.name}</div>
+                  <div className="text-[13px] text-gray-500 mt-0.5">{a.email}</div>
+                </td>
+                <td className="py-4 text-[14px]">{a.ticket}</td>
+                <td className="py-4 text-[14px] font-mono">{a.order}</td>
+                <td className="py-4 text-[14px] text-gray-500">{a.date}</td>
+                <td className="py-4">
+                  <span className={`text-[11px] font-bold px-2 py-1 uppercase tracking-widest border ${a.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-300'}`}>{a.status}</span>
+                </td>
                 <td className="py-4 pr-6 text-right">
-                  <button className="text-[13px] font-medium text-black border border-transparent px-3 py-1.5 hover:border-black transition-colors opacity-0 group-hover:opacity-100">View</button>
+                  <button className="text-[13px] font-medium text-black border border-transparent px-3 py-1.5 hover:border-black transition-colors opacity-0 group-hover:opacity-100">Manage</button>
                 </td>
               </tr>
             ))}
@@ -186,15 +213,34 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
   const remaining = total - checkedIn;
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [scannerSessionActive, setScannerSessionActive] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [devices, setDevices] = useState([
+    { id: 1, name: 'iPhone 15 Pro - Staff 01', status: 'online', scans: 42 },
+    { id: 2, name: 'iPad Air - Entrance A', status: 'offline', scans: 128 },
+  ]);
+
+  const copyLink = () => {
+    navigator.clipboard.writeText('https://scanner.zenvy.com.bd?token=eyJhbGciOiJIUzI1NiIsInR...');
+  };
+  const toggleDevice = (id: number) => setDevices(prev => prev.map(d => d.id === id ? { ...d, status: d.status === 'online' ? 'offline' : 'online' } : d));
+
   const demoList = data?.event?.tickets?.map((t, i) => ({
-    id: String(i), name: `Ticket Holder ${i + 1}`, ticket: t.name, checkedIn: false,
-  })) ?? [];
+    id: String(i), name: ['Alice Freeman', 'Bob Smith', 'Charlie Davis', 'Diana Prince', 'Evan Wright'][i % 5], ticket: t.name, checkedIn: i % 2 === 0,
+  })) ?? [
+    { id: '1', name: 'Alice Freeman', ticket: 'VIP Pass', checkedIn: true },
+    { id: '2', name: 'Bob Smith', ticket: 'General Admission', checkedIn: false },
+    { id: '3', name: 'Charlie Davis', ticket: 'Early Bird', checkedIn: false },
+    { id: '4', name: 'Diana Prince', ticket: 'VIP Pass', checkedIn: true },
+    { id: '5', name: 'Evan Wright', ticket: 'General Admission', checkedIn: false },
+  ];
   const [attendees, setAttendees] = useState(demoList);
-  const toggle = (id: string) => setAttendees(prev => prev.map(a => a.id === id ? { ...a, checkedIn: !a.checkedIn } : a));
+  const toggleCheckin = (id: string) => setAttendees(prev => prev.map(a => a.id === id ? { ...a, checkedIn: !a.checkedIn } : a));
   const filtered = attendees.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.ticket.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white border border-black p-6 flex flex-col justify-center items-center text-center">
           <div className="text-[36px] font-bold leading-none mb-1">{checkedIn}</div>
@@ -210,9 +256,100 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
         </div>
       </div>
 
+      {/* Scanner Session */}
+      <div className="flex flex-col gap-4">
+        <h2 className="text-[20px] font-bold text-black">Scanner Session Management</h2>
+
+        {!scannerSessionActive ? (
+          <div className="border border-black bg-white p-12 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-gray-100 flex items-center justify-center border border-gray-300 mb-4">
+              <Scan className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-[18px] font-medium text-black mb-2">Scanner Session is Inactive</h3>
+            <p className="text-[14px] text-wix-text-muted max-w-md mb-8">Activate a session to generate a shareable scanner link and authorize devices to scan tickets for this event.</p>
+            <button onClick={() => setScannerSessionActive(true)} className="bg-black text-white px-8 py-4 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">
+              Activate Session
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6">
+            {/* Active Session Link */}
+            <div className="border border-black bg-white p-6 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-green-500" />
+              <div className="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-widest text-green-600 mb-1 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> Active Session
+                  </div>
+                  <h3 className="text-[18px] font-medium text-black">Scanner Link</h3>
+                  <p className="text-[13px] text-gray-500 mt-1">Share this link with your staff to open the scanner web-app.</p>
+                </div>
+                <button onClick={() => setScannerSessionActive(false)} className="border border-black px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-red-600 hover:bg-red-50 hover:border-red-600 transition-colors shrink-0">
+                  Close Session
+                </button>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input readOnly value="https://scanner.zenvy.com.bd?token=eyJhbGciOiJIUzI1NiIsInR..." className="flex-1 border border-black bg-gray-50 p-3 text-[14px] font-mono text-gray-600 outline-none select-all" />
+                <button onClick={copyLink} className="bg-black text-white px-6 py-3 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+                  <Copy className="w-4 h-4" /> Copy
+                </button>
+              </div>
+            </div>
+
+            {/* Connected Devices */}
+            <div className="border border-black bg-white">
+              <div className="p-6 border-b border-black flex justify-between items-center bg-gray-50">
+                <h3 className="text-[16px] font-bold text-black">Connected Devices</h3>
+                <button onClick={() => setShowOtpModal(true)} className="border border-black bg-white px-4 py-2 text-[12px] font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors flex items-center gap-2">
+                  <Plus className="w-4 h-4" /> Add Device
+                </button>
+              </div>
+              <div className="flex flex-col">
+                {devices.map((device, idx) => (
+                  <div key={device.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4 ${idx !== devices.length - 1 ? 'border-b border-gray-200' : ''}`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`w-2.5 h-2.5 rounded-full ${device.status === 'online' ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      <div>
+                        <div className="text-[14px] font-bold text-black">{device.name}</div>
+                        <div className="text-[12px] text-gray-500 capitalize">{device.status}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between w-full sm:w-auto gap-8">
+                      <div className="text-right">
+                        <div className="text-[18px] font-mono font-medium text-black">{device.scans}</div>
+                        <div className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Scans</div>
+                      </div>
+                      <button onClick={() => toggleDevice(device.id)} className={`px-4 py-2 text-[11px] font-bold uppercase tracking-widest border transition-colors ${device.status === 'online' ? 'border-gray-300 text-gray-600 hover:bg-gray-100' : 'border-black text-black bg-white hover:bg-black hover:text-white'}`}>
+                        {device.status === 'online' ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white border border-black p-8 max-w-[400px] w-full relative">
+            <button onClick={() => setShowOtpModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors"><X className="w-5 h-5" /></button>
+            <h3 className="text-[20px] font-bold text-black text-center mb-2">Authorize Device</h3>
+            <p className="text-[14px] text-gray-500 text-center mb-8 px-4">Enter this OTP on the scanner device to securely connect it to this session.</p>
+            <div className="border border-black bg-gray-50 p-6 flex justify-center mb-8">
+              <div className="text-[48px] font-mono font-bold tracking-[0.2em] text-black leading-none">842 915</div>
+            </div>
+            <div className="text-[12px] text-center text-gray-400 font-medium">OTP valid for 04:59</div>
+          </div>
+        </div>
+      )}
+
+      {/* Attendee List */}
       <div className="bg-white border border-wix-border-light p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h3 className="text-[18px] font-medium">Attendee Scanner</h3>
+          <h3 className="text-[18px] font-medium">Attendee Check-in</h3>
           <div className="relative w-full md:w-[300px]">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
             <input type="text" placeholder="Search by name or ticket..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full border border-wix-border-light pl-9 pr-4 py-2 text-[13px] outline-none focus:border-black transition-colors" />
@@ -229,12 +366,12 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
               </div>
               <div>
                 {a.checkedIn ? (
-                  <button onClick={() => toggle(a.id)} className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 border border-green-200 text-[13px] font-bold tracking-widest uppercase hover:bg-red-50 hover:text-red-600 hover:border-red-600 transition-colors group">
+                  <button onClick={() => toggleCheckin(a.id)} className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 border border-green-200 text-[13px] font-bold tracking-widest uppercase hover:bg-red-50 hover:text-red-600 hover:border-red-600 transition-colors group">
                     <CheckCircle className="w-4 h-4 group-hover:hidden" /><X className="w-4 h-4 hidden group-hover:block" />
                     <span className="group-hover:hidden">Checked In</span><span className="hidden group-hover:block">Undo</span>
                   </button>
                 ) : (
-                  <button onClick={() => toggle(a.id)} className="px-6 py-2 bg-black text-white border border-black text-[13px] font-bold tracking-widest uppercase hover:bg-gray-800 transition-colors">Check In</button>
+                  <button onClick={() => toggleCheckin(a.id)} className="px-6 py-2 bg-black text-white border border-black text-[13px] font-bold tracking-widest uppercase hover:bg-gray-800 transition-colors">Check In</button>
                 )}
               </div>
             </div>
