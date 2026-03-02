@@ -479,7 +479,7 @@ export default function EventDetails() {
 
               <div ref={galleryRef} className="flex-1 overflow-y-auto pt-9 pb-9 flex flex-col">
                 {/* Real gallery images or pattern fallbacks */}
-                {galleryImages
+                {galleryImages && galleryImages.length > 0
                   ? galleryImages.map((img: any, idx: number) => (
                     <div
                       key={idx}
@@ -490,16 +490,18 @@ export default function EventDetails() {
                       <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all" />
                     </div>
                   ))
-                  : galleryLabels.map((label, idx) => (
-                    <div
-                      key={idx}
-                      className={`w-full min-h-[110px] border-b border-black ${idx === galleryLabels.length - 1 ? 'border-b-0' : ''} ${galleryPatterns[idx % galleryPatterns.length]} relative cursor-pointer group flex items-center justify-center`}
-                      onClick={() => setSelectedImage({ url: null, label, pattern: galleryPatterns[idx % galleryPatterns.length] })}
-                    >
-                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all" />
-                      <span className="z-10 text-white font-bold tracking-widest uppercase text-[11px]">{label}</span>
+                  : (
+                    /* No gallery images state */
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 text-center select-none">
+                      <svg className="w-8 h-8 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                      </svg>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        No Gallery<br />Images
+                      </p>
                     </div>
-                  ))
+                  )
                 }
               </div>
 
