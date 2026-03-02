@@ -1,612 +1,752 @@
 'use client';
 
-import { useRouter, useParams } from "next/navigation";
-import { useState, useEffect } from "react";
-import { publicService } from "@/lib/api/public";
-import { orderService } from "@/lib/api/order";
-import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, Music, ShieldCheck, Building, Building2, Minus, QrCode, ArrowDown, Rotate3D, CheckCircle2, Loader2, LogIn, UserPlus, ArrowLeft } from "lucide-react";
-
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { publicService } from '@/lib/api/public';
+import { orderService } from '@/lib/api/order';
+import { useAuth } from '@/lib/context/auth';
+import { useNotification } from '@/lib/context/notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckoutBKash } from './CheckoutBKash';
 import {
-  LayoutDashboard,
-  MessageSquare,
+  ArrowLeft,
+  MapPin,
   Calendar,
-  ShoppingBag,
-  BarChart3,
-  Settings,
-  LogOut,
-  Bell,
-  Star,
-  Trash2,
-  UserCircle,
-  HelpCircle,
-  Plus,
-  ArrowUpRight,
-  MoreHorizontal,
-  Menu,
+  Clock,
+  ChevronUp,
+  ChevronDown,
+  X,
+  Loader2,
+  CheckCircle2,
 } from 'lucide-react';
-import { useAuth } from "@/lib/context/auth";
-import { authService } from "@/lib/api/auth";
-import { BDTIcon, LightningIcon, LocationIcon } from "../ui/Icons";
-import { TicketCard } from "../ui/TicketCard";
-import { useNotification } from '@/lib/context/notification';
+import { BDTIcon } from '../ui/Icons';
 
-import Sidebar from "../layout/Sidebar";
+const MAX_TICKETS_PER_ORDER = 5;
+const PLATFORM_FEE = 0;
 
-export default function Events() {
-  // Configuration
-  const MAX_TICKETS_PER_ORDER = 5; // Easy to change - maximum total tickets per order
-  const PLATFORM_FEE = 0; // 0% platform fee
-  
-  const [checkoutStep, setCheckoutStep] = useState<'selection' | 'checkout' | 'success'>('selection');
+/* ─── SVG Icons ─── */
+const ChipIcon = () => (
+  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1" y="1" width="38" height="28" rx="4" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M1 10H10V20H1" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M39 10H30V20H39" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M15 1V30" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M25 1V30" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M15 15H25" stroke="currentColor" strokeWidth="1.5"/>
+  </svg>
+);
+
+const ContactlessIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8.5 5.5a10 10 0 0 1 0 13"/>
+    <path d="M12.5 7.5a6 6 0 0 1 0 9"/>
+    <path d="M16.5 9.5a2 2 0 0 1 0 5"/>
+  </svg>
+);
+
+/* ─── Minimal Styled Map ─── */
+const MinimalMap = ({ venue, coordinates }: { venue?: string; coordinates?: number[] }) => {
+  const handleOpenMaps = () => {
+    if (coordinates?.length === 2) {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${coordinates[1]},${coordinates[0]}`, '_blank');
+    }
+  };
+
+  return (
+    <div
+      className="w-full h-[220px] bg-[#f0f0f0] relative overflow-hidden flex items-center justify-center border border-wix-border-light group cursor-pointer"
+      onClick={handleOpenMaps}
+    >
+      <svg className="absolute inset-0 w-full h-full opacity-40 transition-transform duration-700 group-hover:scale-105" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="map-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#161616" strokeWidth="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#map-grid)" />
+        <path d="M -50 150 Q 150 150 200 50 T 500 100" fill="none" stroke="#161616" strokeWidth="6" />
+        <path d="M 150 -50 L 150 300" fill="none" stroke="#161616" strokeWidth="4" />
+        <path d="M 350 -50 L 300 300" fill="none" stroke="#161616" strokeWidth="3" />
+      </svg>
+      <div className="z-10 bg-black text-white p-2.5 rounded-full absolute shadow-md" style={{ top: '40%', left: '42%' }}>
+        <MapPin className="w-5 h-5" />
+      </div>
+      {venue && (
+        <div
+          className="z-10 absolute bg-white border border-black px-4 py-2 text-[11px] font-bold tracking-widest uppercase shadow-sm whitespace-nowrap"
+          style={{ top: '55%', left: '42%', transform: 'translateX(-20%)' }}
+        >
+          {venue}
+        </div>
+      )}
+      <div className="absolute bottom-2 right-3 text-[10px] text-gray-400 uppercase tracking-widest">
+        Click for directions
+      </div>
+    </div>
+  );
+};
+
+/* ─── Credit-Card Style Ticket ─── */
+function TicketCardNew({
+  ticket,
+  quantity,
+  onIncrement,
+  onDecrement,
+  eventDate,
+}: {
+  ticket: any;
+  quantity: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+  eventDate: string;
+}) {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const price = ticket.price?.amount ?? ticket.price ?? 0;
+  const tierName: string = ticket.tier || ticket.name || 'Standard';
+  const benefits: string[] = ticket.benefits || ['Event access', 'Dedicated entrance'];
+
+  const isVIP = true
+  const isPremium = tierName.toLowerCase().includes('premium') || tierName.toLowerCase().includes('early');
+
+  const frontBg = isVIP
+    ? 'bg-[#1a1a1a] text-white'
+    : isPremium
+    ? 'bg-wix-purple text-white'
+    : 'bg-white text-wix-text-dark border-2 border-black';
+
+  const accentText = isVIP || isPremium ? 'text-gray-300' : 'text-wix-text-muted';
+
+  // Generate a display code from ticket id
+  const displayCode = (ticket._id || ticket.name || '0000')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .padEnd(16, '0')
+    .toUpperCase()
+    .match(/.{1,4}/g)
+    ?.join(' ') ?? '•••• •••• •••• ••••';
+
+  const sold = ticket.sold ?? 0;
+  const reserved = ticket.reserved ?? 0;
+  const totalQty = ticket.quantity ?? 999;
+  const available = Math.max(0, totalQty - sold - reserved);
+  const isSoldOut = available === 0;
+
+  return (
+    <div className="flex flex-col gap-5 items-center w-full max-w-[380px]">
+      {/* 3D flip card */}
+      <div
+        className="perspective-1000 w-full aspect-[1.586/1] cursor-pointer"
+        onClick={() => !isSoldOut && setIsFlipped(f => !f)}
+        title="Click to flip and see benefits"
+      >
+        <div className={`relative w-full h-full preserve-3d transition-transform duration-700 ease-in-out ${isFlipped ? 'rotate-y-180' : ''}`}>
+
+          {/* FRONT */}
+          <div className={`absolute inset-0 w-full h-full backface-hidden rounded-2xl p-5 sm:p-6 flex flex-col justify-between ${frontBg} ${!isVIP && !isPremium ? '' : ''}`}>
+            {isSoldOut && (
+              <div className="absolute inset-0 rounded-2xl bg-black/60 flex items-center justify-center z-10">
+                <span className="text-white text-[16px] font-black uppercase tracking-widest">Sold Out</span>
+              </div>
+            )}
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col gap-1.5">
+                <ChipIcon />
+                <div className="opacity-70"><ContactlessIcon /></div>
+              </div>
+              <div className="text-right flex flex-col items-end">
+                <h3 className="text-[15px] font-black uppercase tracking-widest">{tierName}</h3>
+                <span className={`text-[10px] font-medium uppercase tracking-wider ${accentText}`}>Event Ticket</span>
+              </div>
+            </div>
+
+            <div className={`text-[16px] sm:text-[20px] font-mono tracking-widest mt-auto mb-3 ${accentText}`}>
+              Powered by Zenvy
+            </div>
+
+            <div className="flex justify-between items-end">
+              <div className="flex flex-col">
+                <span className={`text-[9px] uppercase tracking-widest ${accentText} mb-0.5`}>Valid for</span>
+                <span className="text-[13px] font-mono font-bold tracking-wide uppercase">Admit One</span>
+              </div>
+              <div className="flex flex-col text-right">
+                <span className={`text-[9px] uppercase tracking-widest ${accentText} mb-0.5`}>Price</span>
+                <span className="text-[16px] font-bold font-mono">
+                  {price === 0 ? 'FREE' : <><BDTIcon className="inline text-[13px]" />{price.toLocaleString()}</>}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* BACK */}
+          <div className={`absolute inset-0 w-full h-full backface-hidden rounded-2xl border-2 border-black ${frontBg} flex flex-col rotate-y-180 overflow-hidden`}>
+            <div className="px-5 py-4 flex flex-col flex-1">
+              <div className="bg-gray-100 h-8 w-full flex items-center justify-end px-4 font-mono text-[11px] mb-4 text-gray-500">
+                VALID: {eventDate}
+              </div>
+              <div className={`text-[10px] ${accentText} uppercase tracking-widest mb-2 border-b border-black pb-3`}>
+                Included Benefits
+              </div>
+              <ul className={`flex flex-col gap-1.5 text-[12px] font-medium leading-snug ${accentText}`}>
+                {benefits.slice(0, 5).map((b: string, i: number) => (
+                  <li key={i}>• {b}</li>
+                ))}
+                {benefits.length > 5 && <li className={accentText}>• +{benefits.length - 5} more</li>}
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Quantity controls */}
+      {!isSoldOut && (
+        <div className="flex items-center justify-between border-2 border-black rounded-full w-[152px] bg-white h-[46px] overflow-hidden">
+          <button
+            onClick={onDecrement}
+            className="w-12 h-full flex items-center justify-center hover:bg-black hover:text-white transition-colors text-xl font-medium"
+          >
+            −
+          </button>
+          <span className="font-mono text-[15px] font-bold">{quantity}</span>
+          <button
+            onClick={onIncrement}
+            className="w-12 h-full flex items-center justify-center hover:bg-black hover:text-white transition-colors text-xl font-medium"
+          >
+            +
+          </button>
+        </div>
+      )}
+      {isSoldOut && (
+        <span className="text-[12px] text-red-500 font-bold uppercase tracking-widest">Sold Out</span>
+      )}
+    </div>
+  );
+}
+
+/* ─── Main EventDetails Component ─── */
+export default function EventDetails() {
+  const router = useRouter();
+  const params = useParams();
+  const eventId = params?.id as string;
+  const { user } = useAuth();
+  const { showNotification } = useNotification();
+
+  // Core state
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [ticketQuantities, setTicketQuantities] = useState<Record<string, number>>({});
-  const [recommendedEvents, setRecommendedEvents] = useState<any[]>([]);
+  const [checkoutStep, setCheckoutStep] = useState<'selection' | 'checkout' | 'success'>('selection');
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const params = useParams();
-  const eventId = params?.id as string;
 
-  const onGoToWallet = () => {
-    router.push('/wallet');
+  // Gallery modal
+  const [selectedImage, setSelectedImage] = useState<any>(null);
+
+  // Gallery scroll ref
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const scrollGallery = (dir: 'up' | 'down') => {
+    galleryRef.current?.scrollBy({ top: dir === 'up' ? -140 : 140, behavior: 'smooth' });
   };
-  const [filters, setFilters] = useState<any>({});
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [allLocations, setAllLocations] = useState<any[]>([]);
-  const ticketSectionRef = React.useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
-  const router = useRouter();
-  const { showNotification } = useNotification();
 
-  // Fetch event data
+  // Fetch event
   useEffect(() => {
-    const fetchEvent = async () => {
-      if (!eventId) return;
-      
+    if (!eventId) return;
+    const fetch = async () => {
       try {
         setLoading(true);
-        const eventData = await publicService.getEventDetails(eventId);
-        setEvent(eventData);
-        // Initialize ticket quantities to 0
-        const initialQuantities: Record<string, number> = {};
-        eventData?.tickets?.forEach((ticket: any) => {
-          initialQuantities[ticket._id || ticket.name] = 0;
-        });
-        setTicketQuantities(initialQuantities);
-
-        // Fetch recommendations based on current event
-        try {
-          const recommendations = await publicService.getRecommendedEvents({
-            eventId: eventData._id,
-            category: eventData.category,
-            location: eventData.venue?.address?.city,
-            limit: 5
-          });
-          setRecommendedEvents(recommendations);
-        } catch (recError) {
-          console.error('Failed to fetch recommendations:', recError);
-        }
-      } catch (error) {
-        console.error('Failed to fetch event:', error);
+        const data = await publicService.getEventDetails(eventId);
+        setEvent(data);
+        const init: Record<string, number> = {};
+        data?.tickets?.forEach((t: any) => { init[t._id || t.name] = 0; });
+        setTicketQuantities(init);
+      } catch (e) {
+        console.error('Failed to fetch event', e);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchEvent();
+    fetch();
   }, [eventId]);
 
-  // Check for payment success from URL
+  // Check payment success from URL
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const paymentStatus = searchParams.get('payment');
-    
-    if (paymentStatus === 'success') {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get('payment') === 'success') {
       setCheckoutStep('success');
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
 
-  // Ticket quantity handlers with validation
-  const getTotalTickets = () => {
-    return Object.values(ticketQuantities).reduce((sum, qty) => sum + qty, 0);
-  };
+  // Body scroll lock for modal
+  useEffect(() => {
+    document.body.style.overflow = selectedImage || checkoutStep === 'success' ? 'hidden' : 'auto';
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [selectedImage, checkoutStep]);
 
-  const handleIncrement = (ticketId: string, maxQuantity: number) => {
+  // Ticket helpers
+  const getTotalTickets = () => Object.values(ticketQuantities).reduce((s, q) => s + q, 0);
+
+  const handleIncrement = (id: string, max: number) => {
     setTicketQuantities(prev => {
-      const current = prev[ticketId] || 0;
-      const totalTickets = getTotalTickets();
-      
-      // Cannot exceed MAX_TICKETS_PER_ORDER total across all types
-      if (totalTickets >= MAX_TICKETS_PER_ORDER) return prev;
-      // Cannot exceed available quantity for this ticket
-      if (current >= maxQuantity) return prev;
-      
-      return { ...prev, [ticketId]: current + 1 };
+      const cur = prev[id] || 0;
+      if (getTotalTickets() >= MAX_TICKETS_PER_ORDER || cur >= max) return prev;
+      return { ...prev, [id]: cur + 1 };
     });
   };
 
-  const handleDecrement = (ticketId: string) => {
+  const handleDecrement = (id: string) => {
     setTicketQuantities(prev => {
-      const current = prev[ticketId] || 0;
-      // Cannot go below 0
-      if (current <= 0) return prev;
-      return { ...prev, [ticketId]: current - 1 };
+      const cur = prev[id] || 0;
+      if (cur <= 0) return prev;
+      return { ...prev, [id]: cur - 1 };
     });
   };
 
-  // Calculate total price
-  const calculateTotal = () => {
-    if (!event?.tickets) return 0;
-    return event.tickets.reduce((total: number, ticket: any) => {
-      const quantity = ticketQuantities[ticket._id || ticket.name] || 0;
-      const price = ticket.price?.amount || 0;
-      return total + (quantity * price);
-    }, 0);
-  };
+  // Price calculation
+  const totalAmount = event?.tickets?.reduce((sum: number, t: any) => {
+    return sum + ((t.price?.amount ?? 0) * (ticketQuantities[t._id || t.name] || 0));
+  }, 0) ?? 0;
 
-  const totalAmount = calculateTotal();
-  const platformFee = Math.ceil(totalAmount * PLATFORM_FEE); // 5% platform fee
-  const paymentProcessingFee = Math.ceil(totalAmount * 0.015); // 1.5% processing fee
-  const grandTotal = totalAmount + platformFee + paymentProcessingFee;
+  const paymentProcessingFee = Math.ceil(totalAmount * 0.015);
+  const grandTotal = totalAmount + paymentProcessingFee;
+  const totalItems = getTotalTickets();
 
-  // Handle Book Now button click
+  // Book now
   const handleBookNow = async () => {
+    if (!user) {
+      showNotification('error', 'Login required', 'Please login to book tickets');
+      router.push('/auth?tab=login');
+      return;
+    }
+    if (totalItems === 0) { setOrderError('Please select at least one ticket'); return; }
+
     try {
       setCreatingOrder(true);
       setOrderError(null);
 
-      // Validate ticket selection
-      const totalTickets = getTotalTickets();
-      if (totalTickets === 0) {
-        setOrderError('Please select at least one ticket');
-        setCreatingOrder(false);
-        return;
-      }
-
-      if(!user){
-        showNotification('error', 'Login', 'Please login to book tickets');
-        router.push('/auth?tab=login');
-        return;
-      }
-
-      // Prepare order payload
       const orderTickets = event.tickets
-        .filter((ticket: any) => {
-          const quantity = ticketQuantities[ticket._id || ticket.name] || 0;
-          return quantity > 0;
-        })
-        .map((ticket: any) => ({
-          ticketVariantId: ticket._id,
-          variantName: ticket.tier || ticket.name,
-          quantity: ticketQuantities[ticket._id || ticket.name],
-          pricePerTicket: ticket.price?.amount || 0,
+        .filter((t: any) => (ticketQuantities[t._id || t.name] || 0) > 0)
+        .map((t: any) => ({
+          ticketVariantId: t._id,
+          variantName: t.tier || t.name,
+          quantity: ticketQuantities[t._id || t.name],
+          pricePerTicket: t.price?.amount || 0,
         }));
 
-      // Determine payment method
       const paymentMethod = grandTotal === 0 ? 'free' : 'bkash';
-
-      // Create order
       const orderResponse = await orderService.createOrder({
         eventId: event._id,
         tickets: orderTickets,
         paymentMethod,
       });
 
-      // Handle response
       if (orderResponse.isFree) {
-        // Free tickets - show success immediately
         setCheckoutStep('success');
       } else if (orderResponse.paymentUrl) {
-        // Paid tickets - redirect to checkout
         router.push(orderResponse.paymentUrl);
       } else {
         throw new Error('Invalid order response');
       }
-    } catch (error: any) {
-      console.error('Order creation failed:', error);
-      setOrderError(error.message || 'Failed to create order. Please try again.');
+    } catch (err: any) {
+      setOrderError(err.message || 'Failed to create order. Please try again.');
     } finally {
       setCreatingOrder(false);
     }
   };
 
-  const scrollToTickets = () => {
-    if (ticketSectionRef.current) {
-      ticketSectionRef.current.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
-  };
+  // Build gallery items from real event or fallback patterns
+  const galleryPatterns = ['gallery-pattern-1', 'gallery-pattern-2', 'gallery-pattern-3', 'gallery-pattern-4'];
+  const galleryLabels = ['Stage A', 'Lounge', 'Workshop', 'VIP Area', 'Exterior'];
 
-  const handleSignOut = async () => {
-    await authService.logout()
-    router.push('/auth?tab=login')
-  }
+  const coverImageUrl = event?.media?.coverImage?.url;
+  const galleryImages = event?.media?.gallery?.length > 0
+    ? event.media.gallery
+    : null;
 
+  const startDate = event?.schedule?.startDate ? new Date(event.schedule.startDate) : null;
+  const endDate = event?.schedule?.endDate ? new Date(event.schedule.endDate) : null;
+
+  const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const fmtTime = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  const dateStr = startDate
+    ? endDate && fmtDate(startDate) !== fmtDate(endDate)
+      ? `${fmtDate(startDate)} – ${fmtDate(endDate)}`
+      : fmtDate(startDate)
+    : 'TBA';
+
+  const timeStr = startDate && endDate
+    ? `${fmtTime(startDate)} – ${fmtTime(endDate)}`
+    : 'TBA';
+
+  const eventDateShort = startDate
+    ? startDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'TBA';
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white font-sans text-slate-950">
-      <Sidebar />
+    <div className="min-h-screen bg-wix-gray-bg text-wix-text-dark font-sans">
 
-      {/* Main Content */}
-      <main className="flex-1 min-w-0 lg:ml-64 p-4 lg:p-8 ">
-        <button onClick={() => router.back()} className="text-sm mb-6 font-[300] text-neutral-400 hover:text-brand-500 transition-colors flex items-center gap-1 group">
-          <ArrowLeft size={16} strokeWidth={1} className="group-hover:-translate-x-1 transition-transform" />
-          Back
-        </button>
-        {/* Header */}
-        <header className="flex items-center justify-between mb-10">
-          
+      {/* ─── Loading ─── */}
+      {loading && (
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-wix-purple" />
+        </div>
+      )}
+
+      {/* ─── Not found ─── */}
+      {!loading && !event && (
+        <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+          <p className="text-wix-text-muted">Event not found</p>
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-widest hover:text-wix-purple transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Events
+          </button>
+        </div>
+      )}
+
+      {/* ─── Main Content ─── */}
+      {!loading && event && (
+        <main className="max-w-[1200px] mx-auto w-full px-4 sm:px-6 py-8 flex flex-col gap-10 pb-36">
+
+          {/* Breadcrumb / Back */}
           <div>
-            <h1 className="text-2xl font-[400] tracking-normal text-slate-900">Event Details</h1>
-            <p className="text-sm text-slate-500 font-[300]">Comprehensive details about this event</p>
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 text-[13px] font-bold tracking-widest uppercase text-wix-text-dark hover:text-wix-purple transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Events
+            </button>
           </div>
-          {user ? (
-            <div className="hidden lg:flex items-center gap-3">
-                <button onClick={() => user?.role === 'host' ? router.push('/host/wallet') : router.push('/wallet')} title="Wallet" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Wallet size={18}/></button>
-                {user?.role === 'host' && (
-                  <button onClick={() => router.push('/host/events')} title="My Events" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Calendar size={18}/></button>
-                )}
-                <button onClick={() => router.push('/contact')} title="Help" className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
-                <div title={user?.email} className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
-                <img onClick={() => {user?.role === 'host' ? router.push('/host/profile') : router.push('/wallet')}} src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover cursor-pointer" />
+
+          {/* Title & Tagline */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              {event.status === 'live' && (
+                <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest border border-emerald-500 text-emerald-600 px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Live
+                </span>
+              )}
+              {event.category && (
+                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-text-muted border border-wix-border-light px-2.5 py-1 rounded-full">
+                  {event.category}
+                </span>
+              )}
+            </div>
+            <h1 className="text-[32px] sm:text-[42px] font-semibold tracking-tight text-wix-text-dark leading-none mb-3">
+              {event.title}
+            </h1>
+            <p className="text-[15px] text-wix-text-muted leading-relaxed">
+              {event.tagline || event.description}
+            </p>
+          </div>
+
+          {/* ─── Image Section ─── */}
+          <div className="flex flex-col md:flex-row gap-3 h-[280px] sm:h-[420px] w-full">
+
+            {/* Cover Image */}
+            <div
+              className="w-full md:w-3/4 h-full border border-black relative overflow-hidden group cursor-pointer bg-[#161616] flex items-center justify-center"
+              onClick={() => setSelectedImage({ url: coverImageUrl, label: event.title })}
+            >
+              {coverImageUrl ? (
+                <img
+                  src={coverImageUrl}
+                  alt={event.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              ) : (
+                <div className="cover-pattern absolute inset-0" />
+              )}
+              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-all duration-500" />
+              {/* Expand hint */}
+              <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full text-white">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                </svg>
               </div>
             </div>
-          ) : (
-            <div className="hidden lg:flex items-center gap-3">
-              <button onClick={() => router.push('/auth?tab=login')} title="Login" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><LogIn size={18}/></button>
-              <button onClick={() => router.push('/onboarding')} title="Register" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><UserPlus size={18}/></button>
-            </div>
-          )}
-        </header>
-        
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-slate-500">Loading event details...</p>
-          </div>
-        ) : !event ? (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-slate-500">Event not found</p>
-          </div>
-        ) : (
 
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6">
-        <section className="space-y-6 2xl:col-span-2">
-          <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="p-0 bg-slate-50 max-w-[600px] border border-slate-100 relative group overflow-hidden"
+            {/* Gallery Stack */}
+            <div className="hidden md:flex w-1/4 h-full border border-black relative flex-col bg-white">
+              <button
+                className="absolute top-0 left-0 w-full h-9 bg-white border-b border-black flex items-center justify-center z-10 hover:bg-gray-50 transition-colors"
+                onClick={() => scrollGallery('up')}
               >
-                <div className="grid grid-cols-[1fr_minmax(14vw,14vw)] md:grid-cols-[1fr_minmax(7vw,7vw)] lg:grid-cols-[1fr_minmax(5vw,5vw)] xl:grid-cols-[1fr_minmax(6vw,6vw)] 2xl:grid-cols-[1fr_minmax(7vw,7vw)] gap-4">
-                  {/* Main Image */}
-                  <div className="relative aspect-[2/1] overflow-hidden rounded-tr-lg rounded-bl-lg">
-                    <img
-                      src={event?.media?.coverImage?.url || "https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60"}
-                      alt={event?.media?.coverImage?.alt || "Event Cover Image"}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    />
+                <ChevronUp className="w-4 h-4" />
+              </button>
 
-                    {event?.status === 'live' && (
-                    <div className="absolute top-4 left-4 flex items-center gap-2">
-                      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-light text-slate-900 border border-slate-100">
-                        <span className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full" />
-                        Live
-                      </div>
+              <div ref={galleryRef} className="flex-1 overflow-y-auto pt-9 pb-9 flex flex-col">
+                {/* Real gallery images or pattern fallbacks */}
+                {galleryImages
+                  ? galleryImages.map((img: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="w-full min-h-[110px] border-b border-black relative cursor-pointer group overflow-hidden"
+                      onClick={() => setSelectedImage({ url: img.url, label: img.caption || `Gallery ${idx + 1}` })}
+                    >
+                      <img src={img.url} alt={img.caption || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all" />
                     </div>
+                  ))
+                  : galleryLabels.map((label, idx) => (
+                    <div
+                      key={idx}
+                      className={`w-full min-h-[110px] border-b border-black ${idx === galleryLabels.length - 1 ? 'border-b-0' : ''} ${galleryPatterns[idx % galleryPatterns.length]} relative cursor-pointer group flex items-center justify-center`}
+                      onClick={() => setSelectedImage({ url: null, label, pattern: galleryPatterns[idx % galleryPatterns.length] })}
+                    >
+                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all" />
+                      <span className="z-10 text-white font-bold tracking-widest uppercase text-[11px]">{label}</span>
+                    </div>
+                  ))
+                }
+              </div>
+
+              <button
+                className="absolute bottom-0 left-0 w-full h-9 bg-white border-t border-black flex items-center justify-center z-10 hover:bg-gray-50 transition-colors"
+                onClick={() => scrollGallery('down')}
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* ─── Details Grid ─── */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 border-b border-wix-border-light pb-14">
+
+            {/* Left: Meta + Map */}
+            <div className="col-span-1 lg:col-span-5 flex flex-col gap-8">
+              <div className="flex flex-col gap-6">
+                <div className="flex gap-4">
+                  <div className="mt-1 shrink-0"><Calendar className="w-5 h-5" /></div>
+                  <div>
+                    <div className="text-[11px] font-black uppercase tracking-widest text-wix-text-muted mb-1">Date</div>
+                    <div className="text-[16px] font-medium text-wix-text-dark">{dateStr}</div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="mt-1 shrink-0"><Clock className="w-5 h-5" /></div>
+                  <div>
+                    <div className="text-[11px] font-black uppercase tracking-widest text-wix-text-muted mb-1">Time</div>
+                    <div className="text-[16px] font-medium text-wix-text-dark">{timeStr}</div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="mt-1 shrink-0"><MapPin className="w-5 h-5" /></div>
+                  <div>
+                    <div className="text-[11px] font-black uppercase tracking-widest text-wix-text-muted mb-1">Venue</div>
+                    <div className="text-[16px] font-medium text-wix-text-dark">{event.venue?.name || 'TBA'}</div>
+                    {event.venue?.address && (
+                      <div className="text-[14px] text-wix-text-muted mt-0.5">
+                        {[event.venue.address.street, event.venue.address.city, event.venue.address.country].filter(Boolean).join(', ')}
+                      </div>
+                    )}
+                    {event.organizer && (
+                      <div className="mt-3 pt-3 border-t border-wix-border-light">
+                        <div className="text-[11px] font-black uppercase tracking-widest text-wix-text-muted mb-1">Organizer</div>
+                        <div className="text-[14px] font-medium">{event.organizer?.companyName || event.organizer?.name}</div>
+                        {event.organizer?.companyEmail && (
+                          <div className="text-[13px] text-wix-purple mt-0.5">{event.organizer.companyEmail}</div>
+                        )}
+                      </div>
                     )}
                   </div>
-
-                  {/* Vertical Gallery */}
-                  <div className="flex flex-col gap-2 overflow-hidden">
-                    {(event?.media?.gallery || []).slice(0, 4).map((img: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className="aspect-[2/1] overflow-hidden rounded-tr-sm rounded-bl-sm"
-                      >
-                        <img
-                          src={img?.url || `https://picsum.photos/id/${101 + idx}/200/120.jpg`}
-                          alt={img?.caption || "Gallery image"}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    ))}
-                  </div>
                 </div>
-
-                <div className="p-6">
-                  <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                    <div className="flex items-center gap-2 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-[300] text-slate-900 border border-slate-100">
-                      <Music size={16} className="text-brand-500" strokeWidth={1}/>
-                      {event?.category || 'Concert'}
-                    </div>
-                  </div>
-                  <h2 className="text-lg font-[300] text-slate-700 tracking-tight">{event?.title || 'Event Name'}</h2>
-                  <p className="text-sm text-neutral-500 font-[300] line-clamp-2">{event?.tagline || 'Lorem ipsum dolor sit amet consectetur adipisicing elit.'}</p>
-                  <div className="flex flex-col gap-2 mt-4 font-[300] text-slate-700">
-                    <span className="flex items-center gap-2 text-sm ">
-                      <Calendar className="text-neutral-600" size={14} strokeWidth={1}/>
-                      {event?.schedule?.startDate ? new Date(event.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '26th Jan 2026'}
-                    </span>
-                    <span className="flex items-center gap-2 text-sm">
-                      <Clock10 className="text-neutral-600" size={14} strokeWidth={1}/>
-                      {event?.schedule?.startDate && event?.schedule?.endDate 
-                        ? `${new Date(event.schedule.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${new Date(event.schedule.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
-                        : '9:00 AM - 5:00 PM'
-                      }
-                    </span>
-                  </div>
-                  <section className="p-2 max-w-[400px] bg-brand-card rounded-tr-lg rounded-bl-lg border border-brand-divider flex items-center justify-between mt-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-2xl bg-white border border-brand-divider overflow-hidden flex items-center justify-center">
-                        <Building2 className="w-5 h-5 text-brand-400" strokeWidth={1}/>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-[500] uppercase tracking-widest text-neutral-600 mb-1">Venue</p>
-                        <div className="flex flex-col items-start">
-                          <p className="text-xs text-neutral-500 font-[300]">{event?.venue?.name || 'Rose View Hotel'}</p>
-                          <p className="text-xs text-neutral-500 mt-[-4px] font-[300]">{event?.venue?.address?.city || 'Dhaka'}, {event?.venue?.address?.country || 'Bangladesh'}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${event?.venue?.coordinates?.coordinates[1]},${event?.venue?.coordinates?.coordinates[0]}`, '_blank')} className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all">
-                      Get Directions
-                    </button>
-                  </section>
-                  <div className="flex flex-col gap-2 mt-6">
-                    <p className="text-md font-[300] text-slate-700">
-                      The Experience
-                    </p>
-                    <p className="text-sm font-[300] text-neutral-500">
-                      {event?.description || 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis quibusdam inventore quaerat alias commodi dignissimos laborum tenetur esse atque! Obcaecati magnam qui amet neque quia labore non, porro sunt. Dolores.'}
-                    </p>
-                  </div>
-
-                  <section className="p-2 max-w-[400px] bg-brand-card rounded-tr-lg rounded-bl-lg border border-brand-divider flex items-center justify-between mt-4">
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <p className="text-[10px] font-[500] uppercase tracking-widest text-neutral-600 mb-1">Organizer</p>
-                        <div className="flex flex-col items-start">
-                          <p className="text-xs text-neutral-500 font-[300]">{event?.organizer?.companyName || 'Zenvy Studios'}</p>
-                          <p className="text-xs text-brand-400 mt-[-4px] font-[300]">{event?.organizer?.companyEmail || 'support@zenvystudios.com'}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <button onClick={() => window.open(`/profile/host/${event?.hostId}`, '_blank')} className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all">
-                      Profile
-                    </button>
-                  </section>
-                </div>
-                <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                <div className="absolute top-36 left-0 w-24 h-24 bg-brand-500/5 rounded-full -ml-8 -mt-8 transition-transform group-hover:scale-110" />
-              </motion.div>
-        </section>
-        {/* Tickets */}
-        <section ref={ticketSectionRef} className="space-y-6 2xl:col-span-1">
-          <div className="">
-            <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Event Tickets</h2>
-            <p className="text-xs text-slate-500 font-[300]">What are you doing! Book yours right now.</p>
-          </div>
-
-          {/* Tickets Grid */}
-          <div className="flex flex-col gap-6 mb-10">
-            {event?.moderation?.sales?.paused && <div className="w-full max-w-[350px] p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-xs text-red-600 font-[400]">Event sales are paused. Please come back later</p>
-            </div>}
-            {(event?.tickets || []).map((ticket: any, i: number) => {
-              // Calculate available quantity: total - sold - reserved
-              const sold = ticket.sold || 0;
-              const reserved = ticket.reserved || 0;
-              const totalQuantity = ticket.quantity || 0;
-              const availableQuantity = Math.max(0, totalQuantity - sold - reserved);
-              
-              return (
-              (ticket.isVisible && ticket.isActive) && <TicketCard ticket={{
-                _id: ticket._id || i.toString(),
-                tier: ticket.tier || ticket.name,
-                name: ticket?.name || 'Event Name',
-                controls: true,
-                startDate: event?.schedule?.startDate ? new Date(event.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '25 Jan, 2026',
-                endDate: event?.schedule?.endDate ? new Date(event.schedule.endDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '26 Jan, 2026',
-                startTime: event?.schedule?.startDate ? new Date(event.schedule.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '10:00 AM',
-                endTime: event?.schedule?.endDate ? new Date(event.schedule.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '4:00 PM',
-                price: ticket.price?.amount || 0,
-                quantity: availableQuantity,
-                benefits: ticket.benefits || [
-                  'Access to event',
-                  'Dedicated entrance',
-                  'Premium experience',
-                ],
-                venue: `${event?.venue?.name || 'Venue'}, ${event?.venue?.address?.city || 'City'}`,
-                onClick: () => {},
-                selectedQuantity: ticketQuantities[ticket._id || ticket.name] || 0,
-                onIncrement: () => handleIncrement(ticket._id || ticket.name, availableQuantity),
-                onDecrement: () => handleDecrement(ticket._id || ticket.name),
-              }} key={i}/>
-              );
-            })}
-            <div className="flex flex-col gap-2 pt-4 w-full max-w-[350px] border-t-2 border-brand-400 items-end justify-end">
-              <div className="flex items-center justify-between w-full gap-2">
-                <p className="text-sm text-slate-600">Subtotal</p>
-                <p className="text-sm text-slate-600"><BDTIcon className="text-sm"/>{totalAmount}</p>
               </div>
-              {platformFee > 0 && <div className="flex items-center justify-between w-full gap-2">
-                <p className="text-xs text-slate-500">Platform Fee ({PLATFORM_FEE * 100}%)</p>
-                <p className="text-xs text-slate-500"><BDTIcon className="text-xs"/>{platformFee}</p>
-              </div>}
-              {paymentProcessingFee > 0 && <div className="flex items-center justify-between w-full gap-2">
-                <p className="text-xs text-slate-500">Payment Processing Fee (1.5%)</p>
-                <p className="text-xs text-slate-500"><BDTIcon className="text-xs"/>{paymentProcessingFee}</p>
-              </div>}
-              <div className="flex items-center justify-between w-full gap-2 pt-2 border-t border-slate-200">
-                <p className="text-base font-[400] text-slate-900">Total Amount</p>
-                <p className="text-base font-[400] text-slate-900"><BDTIcon className="text-sm"/>{grandTotal}</p>
-              </div>
-              {orderError && (
-                <div className="w-full max-w-[350px] p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-xs text-red-600 font-[400]">{orderError}</p>
-                </div>
+              <MinimalMap
+                venue={event.venue?.address?.city}
+                coordinates={event.venue?.coordinates?.coordinates}
+              />
+            </div>
+
+            {/* Right: About */}
+            <div className="col-span-1 lg:col-span-7 flex flex-col gap-5 pt-1">
+              <h3 className="text-[22px] font-semibold tracking-tight">About This Event</h3>
+              {(event.description || event.tagline) && (
+                <p className="text-[15px] text-wix-text-dark leading-relaxed">
+                  {event.description}
+                </p>
               )}
-              <button 
-                onClick={handleBookNow}
-                disabled={creatingOrder || getTotalTickets() === 0}
-                className="py-2 w-full bg-brand-500 rounded-sm text-[14px] font-[400] text-white hover:bg-brand-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {creatingOrder ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating Order...
-                  </>
-                ) : (
-                  'Book Now'
-                )}
-              </button>
-              <p className="text-xs text-slate-500 font-[300]">Includes: 5% Platform Fee</p>
-              <div className="p-6 w-full bg-slate-50 rounded-[2rem] flex items-center gap-4">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-500 shadow-sm">
-                  <ShieldCheck size={20} strokeWidth={1}/>
-                </div>
-                <div>
-                  <p className="text-[12px] font-[400] text-slate-700">7-Day Safety Net Refund</p>
-                  <p className="text-[10px] text-neutral-500 font-[400]">Platform guaranteed authenticity</p>
-                </div>
-              </div>
+              {event.highlights?.length > 0 && (
+                <ul className="flex flex-col gap-2 mt-2">
+                  {event.highlights.map((h: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-[14px] text-wix-text-muted">
+                      <span className="text-wix-purple mt-1">•</span> {h}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
-        </section>
 
-        <section className="space-y-6 md:col-span-2 lg:col-span-2 2xl:col-span-1 2xl:items-end 2xl:place-items-end">
-          <div className="flex items-center justify-between">
+          {/* ─── Tickets Section ─── */}
+          <div className="flex flex-col gap-8">
             <div>
-              <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Suggested For You</h2>
-              <p className="text-xs text-slate-500 font-[300]">Choose what's best for you</p>
+              <h2 className="text-[24px] font-semibold tracking-tight text-wix-text-dark">Select Tickets</h2>
+              <p className="text-[14px] text-wix-text-muted mt-1">Flip the card to view benefits. Select your quantity below each ticket.</p>
             </div>
-          </div>
 
-          <div className="grid pb-4 2xl:pr-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10 2xl:grid-cols-1 2xl:grid-flow-row 2xl:max-h-[70vh]">
-            {recommendedEvents.map((recEvent: any, i: number) => {
-              const minPrice = recEvent.tickets?.length > 0 
-                ? Math.min(...recEvent.tickets.map((t: any) => t.price?.amount || 0))
-                : 0;
-              const startDate = new Date(recEvent.schedule?.startDate);
-              const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-              const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-              
-              return (
-              <motion.div
-                key={recEvent._id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                onClick={() => router.push(`/events/${recEvent.slug || recEvent._id}`)}
-                className="p-0 bg-slate-50 2xl:max-w-[250px] border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
-              >
-                <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                  <img
-                    src={recEvent.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                    alt={recEvent.media?.coverImage?.alt || 'Event Cover Image'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            {event.moderation?.sales?.paused && (
+              <div className="p-4 bg-red-50 border border-red-200 text-sm text-red-600 rounded-lg">
+                Ticket sales are currently paused. Please check back later.
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 justify-items-center">
+              {(event.tickets || []).filter((t: any) => t.isVisible && t.isActive).map((ticket: any) => {
+                const available = Math.max(0, (ticket.quantity || 0) - (ticket.sold || 0) - (ticket.reserved || 0));
+                return (
+                  <TicketCardNew
+                    key={ticket._id || ticket.name}
+                    ticket={ticket}
+                    quantity={ticketQuantities[ticket._id || ticket.name] || 0}
+                    onIncrement={() => handleIncrement(ticket._id || ticket.name, available)}
+                    onDecrement={() => handleDecrement(ticket._id || ticket.name)}
+                    eventDate={eventDateShort}
                   />
-                  {recEvent.status === 'live' && (
-                  <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                    <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                      <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                      Live
-                    </div>
-                  </div>
-                  )}
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                  </div>
-                  <h2 className="text-lg font-[300] text-slate-900 tracking-tight">{recEvent.title}</h2>
-                  <p className="text-xs text-slate-500 font-[300] line-clamp-2">{recEvent.tagline || 'Join us for an amazing experience'}</p>
-                  <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                    <span className="flex items-center gap-1 text-xs ">
-                      <Calendar size={12} strokeWidth={1}/>
-                      {formatDate(startDate)}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs">
-                      <Clock10 size={12} strokeWidth={1}/>
-                      {formatTime(startDate)}
-                    </span>
-                  </div>
-                  {/* Price */}
-                  <div className="flex justify-between items-center gap-2 mt-2">
-                    <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                      <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{minPrice}
-                    </span>
-                  </div>
-                </div>
-                <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-              </motion.div>
-            )})}
+                );
+              })}
+            </div>
+
+            {/* Order error */}
+            {orderError && (
+              <div className="p-4 bg-red-50 border border-red-200 text-sm text-red-600 rounded-lg max-w-md">
+                {orderError}
+              </div>
+            )}
           </div>
-        </section>
-        </div>
-        )}
 
-        {/* Scroll to Tickets Button - Hidden on md and larger screens */}
-        <motion.button
-          onClick={scrollToTickets}
-          className="fixed bottom-6 right-6 md:hidden p-3 bg-brand-500 text-white rounded-full shadow-lg hover:bg-brand-400 transition-all z-50"
-          animate={{
-            y: [0, -10, 0], // Reverse jumping animation (up then down)
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ArrowDown size={24} />
-        </motion.button>
-        
-        
-      </main>
+        </main>
+      )}
 
-      {/* Checkout Modal Mockup */}
+      {/* ─── Image Modal ─── */}
       <AnimatePresence>
-        {checkoutStep === 'checkout' && (
-          <CheckoutBKash 
-            amount={grandTotal}
-            eventName={event?.title || 'Event'}
-            tierName={`${Object.values(ticketQuantities).reduce((sum, qty) => sum + qty, 0)} Ticket(s)`}
-            onClose={() => setCheckoutStep('selection')}
-            onSuccess={() => setCheckoutStep('success')}
-          />
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1000] bg-white/95 backdrop-blur-sm flex items-center justify-center p-4 sm:p-10 cursor-pointer"
+            onClick={() => setSelectedImage(null)}
+          >
+            <button
+              className="absolute top-5 right-5 bg-white rounded-full p-2 border-2 border-black hover:scale-110 transition-transform z-10"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div
+              className={`w-full max-w-5xl h-[55vh] sm:h-[75vh] border border-black flex items-center justify-center overflow-hidden cursor-default ${!selectedImage.url ? selectedImage.pattern || 'cover-pattern' : ''}`}
+              onClick={e => e.stopPropagation()}
+            >
+              {selectedImage.url ? (
+                <img src={selectedImage.url} alt={selectedImage.label} className="w-full h-full object-contain" />
+              ) : (
+                <h2 className="text-wix-text-dark font-bold text-5xl sm:text-8xl tracking-widest bg-white/60 px-8 py-5 border border-black">
+                  {selectedImage.label}
+                </h2>
+              )}
+            </div>
+          </motion.div>
         )}
+      </AnimatePresence>
 
+      {/* ─── Success Modal ─── */}
+      <AnimatePresence>
         {checkoutStep === 'success' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-[450px] bg-slate-50 rounded-tr-lg rounded-bl-lg shadow-4xl p-12 text-center space-y-8">
-              <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-green-500 mx-auto shadow-inner">
-                <CheckCircle2 size={48} />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6"
+          >
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="relative w-full max-w-[440px] bg-white border-2 border-black p-10 text-center space-y-8"
+            >
+              <div className="w-20 h-20 border-2 border-emerald-500 rounded-full flex items-center justify-center text-emerald-500 mx-auto">
+                <CheckCircle2 size={44} />
               </div>
-              <div className="space-y-3">
-                <h3 className="text-2xl font-[400] text-slate-950 tracking-tight">Awesome!</h3>
-                <p className="text-slate-500 text-sm font-[300] leading-relaxed">Your ticket is now safe in your Engraved Wallet. Check your email for confirmation.</p>
+              <div className="space-y-2">
+                <h3 className="text-[24px] font-semibold text-wix-text-dark tracking-tight">You're In!</h3>
+                <p className="text-[14px] text-wix-text-muted leading-relaxed">
+                  Your ticket is confirmed. Check your email or visit your wallet for the details.
+                </p>
               </div>
-              <button 
-                onClick={onGoToWallet}
-                className="w-full bg-brand-500 text-white py-3 rounded-tr-lg rounded-bl-lg font-[500] text-md hover:bg-brand-600 transition-all"
-              >
-                Go to My Wallet
-              </button>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => router.push('/wallet')}
+                  className="w-full bg-black text-white py-3.5 text-[13px] font-black uppercase tracking-widest hover:bg-wix-purple transition-colors border-2 border-black"
+                >
+                  View My Wallet
+                </button>
+                <button
+                  onClick={() => { setCheckoutStep('selection'); }}
+                  className="w-full py-3.5 text-[13px] font-bold uppercase tracking-widest border-2 border-black hover:bg-gray-50 transition-colors"
+                >
+                  Back to Event
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ─── Sticky Checkout Bar ─── */}
+      <div
+        className={`fixed bottom-0 left-0 w-full bg-white border-t-2 border-black px-4 sm:px-8 py-4 z-50 transition-transform duration-500 flex flex-col sm:flex-row items-center justify-between gap-4 ${totalItems > 0 ? 'translate-y-0' : 'translate-y-full'}`}
+      >
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted">Selection</span>
+            <span className="text-[20px] font-bold text-wix-text-dark">
+              {totalItems} Ticket{totalItems !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="h-10 w-px bg-wix-border-light hidden sm:block" />
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted">Total Due</span>
+            <span className="text-[22px] font-mono font-bold text-wix-text-dark leading-none flex items-center gap-0.5">
+              {grandTotal === 0 ? 'FREE' : <><BDTIcon className="text-[18px]" />{grandTotal.toLocaleString()}</>}
+            </span>
+          </div>
+          {paymentProcessingFee > 0 && (
+            <div className="hidden sm:flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted">Incl. fees</span>
+              <span className="text-[12px] text-wix-text-muted">
+                <BDTIcon className="text-[11px]" />{paymentProcessingFee} processing
+              </span>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleBookNow}
+          disabled={creatingOrder}
+          className="w-full sm:w-auto bg-black text-white px-10 py-4 text-[13px] font-black uppercase tracking-widest hover:bg-wix-purple transition-colors border-2 border-black hover:border-wix-purple disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {creatingOrder ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+          ) : grandTotal === 0 ? 'Get Free Tickets' : 'Proceed to Checkout'}
+        </button>
+      </div>
+
+      {/* ─── CheckoutBKash modal ─── */}
+      <AnimatePresence>
+        {checkoutStep === 'checkout' && (
+          <CheckoutBKash
+            amount={grandTotal}
+            eventName={event?.title || 'Event'}
+            tierName={`${totalItems} Ticket(s)`}
+            onClose={() => setCheckoutStep('selection')}
+            onSuccess={() => setCheckoutStep('success')}
+          />
+        )}
+      </AnimatePresence>
+
     </div>
   );
-};
+}
