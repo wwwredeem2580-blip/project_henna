@@ -1,510 +1,688 @@
 'use client';
 
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { publicService } from "@/lib/api/public";
-import { Logo } from "../shared/Logo";
-import { Search, X, ChevronDown, User, Wallet, Clock, Clock10, LogIn, UserPlus, Plus } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { publicService } from '@/lib/api/public';
+import { useAuth } from '@/lib/context/auth';
+import { authService } from '@/lib/api/auth';
+import {
+  Search, ChevronDown, Menu, X, Globe,
+  Wallet as WalletIcon, Users as UsersIcon,
+  LayoutDashboard, Home, Calendar, Clock, MapPin,
+  LogIn, UserPlus, Plus, HelpCircle, Tag,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { BDTIcon } from '../ui/Icons';
+import { Logo } from '../shared/Logo';
 
 interface EventFilters {
   category?: string;
   location?: string;
-  date?: string;
   search?: string;
 }
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import {
-  Calendar,
-  HelpCircle,
-} from 'lucide-react';
-import { useAuth } from "@/lib/context/auth";
-import { BDTIcon } from "../ui/Icons";
-import Sidebar from "../layout/Sidebar";
+const categoryOptions = [
+  { value: 'concert', label: 'Concert' },
+  { value: 'sports', label: 'Sports' },
+  { value: 'conference', label: 'Conference' },
+  { value: 'festival', label: 'Festival' },
+  { value: 'theater', label: 'Theater' },
+  { value: 'comedy', label: 'Comedy' },
+  { value: 'networking', label: 'Networking' },
+  { value: 'workshop', label: 'Workshop' },
+  { value: 'other', label: 'Other' },
+];
+
+const tagFilters = ['All', 'Concerts', 'Sports & Outdoors', 'Conferences', 'Festivals', 'Workshops'];
 
 export default function Events() {
-  const [filters, setFilters] = useState<any>({});
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [allLocations, setAllLocations] = useState<any[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
-  const [trendingEvents, setTrendingEvents] = useState<any[]>([]);
-  const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
   const router = useRouter();
   const { user } = useAuth();
 
+  // Nav state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  // Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<EventFilters>({});
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState('All');
+  const [currentPage] = useState(1);
 
-  const handleFilterChange = (key: keyof EventFilters, value: string) => {
-    const newFilters = { ...filters };
-    if (value) {
-      newFilters[key] = value;
-    } else {
-      delete newFilters[key];
-    }
-    setFilters(newFilters);
-    setCurrentPage(1); // Reset to first page when filters change
-  };
+  // Data state
+  const [allLocations, setAllLocations] = useState<string[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [trendingEvents, setTrendingEvents] = useState<any[]>([]);
+  const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
 
-  const handleSearch = () => {
-    handleFilterChange('search', searchQuery.trim());
-  };
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isMobileMenuOpen]);
 
-  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  const clearFilter = (key: keyof EventFilters) => {
-    handleFilterChange(key, '');
-    if (key === 'search') {
-      setSearchQuery('');
-    }
-  };
-
-  const categoryOptions = [
-    { value: 'concert', label: 'Concert' },
-    { value: 'sports', label: 'Sports' },
-    { value: 'conference', label: 'Conference' },
-    { value: 'festival', label: 'Festival' },
-    { value: 'theater', label: 'Theater' },
-    { value: 'comedy', label: 'Comedy' },
-    { value: 'networking', label: 'Networking' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'other', label: 'Other' }
-  ];
-
-  const activeFilters = Object.entries(filters).filter(([_, value]) => value);
-
-  // Fetch all locations, trending, and featured events initially
+  // Fetch initial data
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Fetch all events for location extraction
         const allEventsData = await publicService.getEvents({ page: 1, limit: 1000 });
         if (allEventsData?.events) {
-          const locations = [...new Set(allEventsData.events.map((event: any) => event.venue.address.city))].sort();
-          setAllLocations(locations);
+          const locs = [...new Set<string>(allEventsData.events.map((e: any) => e.venue?.address?.city).filter(Boolean))].sort();
+          setAllLocations(locs);
         }
-
-        // Fetch trending events
         const trending = await publicService.getTrendingEvents(10);
         setTrendingEvents(trending);
-
-        // Fetch featured events
         const featured = await publicService.getFeaturedEvents(10);
         setFeaturedEvents(featured);
       } catch (err) {
-        console.error("Failed to fetch initial data", err);
+        console.error('Failed to fetch initial data', err);
       }
     };
-
     fetchInitialData();
   }, []);
 
-  // Fetch filtered events when filters change
+  // Fetch filtered events
   useEffect(() => {
-    const fetchFilteredEvents = async () => {
+    const fetchEvents = async () => {
       try {
         const params: any = { page: currentPage, limit: 100 };
-        
         if (filters.category) params.category = filters.category;
         if (filters.location) params.location = filters.location;
         if (filters.search) params.search = filters.search;
-
-        const eventsData = await publicService.getEvents(params);
-        setEvents(eventsData?.events || []);
+        const data = await publicService.getEvents(params);
+        setEvents(data?.events || []);
       } catch (err) {
-        console.error("Failed to fetch filtered events", err);
+        console.error('Failed to fetch events', err);
       }
     };
-
-    fetchFilteredEvents();
+    fetchEvents();
   }, [filters, currentPage]);
 
+  const handleFilterChange = (key: keyof EventFilters, value: string) => {
+    setFilters(prev => {
+      const next = { ...prev };
+      if (value) next[key] = value;
+      else delete next[key];
+      return next;
+    });
+  };
+
+  const handleSearch = () => handleFilterChange('search', searchQuery.trim());
+  const handleSearchKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') handleSearch(); };
+
+  const handleLogout = async () => {
+    await authService.logout();
+    router.push('/auth?tab=login');
+  };
+
+  const activeFilters = Object.entries(filters).filter(([, v]) => v);
+  const selectedCategory = filters.category
+    ? categoryOptions.find(o => o.value === filters.category)?.label ?? 'Category'
+    : 'Category';
+  const selectedLocation = filters.location || 'Location';
+
+  const formatDate = (d: Date) => d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  const formatTime = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  const avatarSeed = user?.email ?? 'default';
+  const avatarInitial = user?.email?.[0]?.toUpperCase() ?? 'G';
+
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white font-sans text-slate-950">
-      <Sidebar />
+    <div className="min-h-screen bg-white font-sans text-[#161616]">
 
-      {/* Main Content */}
-      <main className="flex-1 min-w-0 lg:ml-64 p-4 lg:p-8 ">
-
-        {/* Header */}
-        <header className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="text-2xl font-[400] tracking-normal text-slate-900">Explore Events</h1>
-            <p className="text-sm text-slate-500 font-[300]">Browse all the events handpicked for you</p>
+      {/* ─── Header ─── */}
+      <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-gray-200 sticky top-0 bg-white z-30">
+        <div className="flex items-center gap-4 md:gap-8">
+          {/* Logo */}
+          <div
+            onClick={() => router.push('/')}
+            className="flex items-center cursor-pointer"
+          >
+            <Logo variant="full" className="h-6 text-brand-600" strokeWidth="2" />
           </div>
-          {user ? (
-            <div className="hidden lg:flex items-center gap-3">
-                {user?.role === 'host' && (
-                  <>
-                  <button onClick={() => router.push('/host/events/create')} title="Create Event" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Plus size={18}/></button>
-                  <button onClick={() => router.push('/host/events')} title="My Events" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Calendar size={18}/></button>
-                  <button onClick={() => router.push('/contact')} title="Help" className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
-                  </>
-                )}
-                {user?.role === 'user' && (
-                  <>
-                  <button onClick={() => router.push('/wallet')} title="Wallet" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Wallet size={18}/></button>
-                  <button onClick={() => router.push('/contact')} title="Help" className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
-                  </>
-                )}
-                <div title={user?.email} className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
-                <img onClick={() => {user?.role === 'host' ? router.push('/host/profile') : router.push('/wallet')}} src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover cursor-pointer" />
-              </div>
-            </div>
-          ) : (
-            <div className="hidden lg:flex items-center gap-3">
-              <button onClick={() => router.push('/auth?tab=login')} title="Login" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><LogIn size={18}/></button>
-              <button onClick={() => router.push('/onboarding')} title="Register" className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><UserPlus size={18}/></button>
-            </div>
-          )}
-        </header>
-        <div className="rounded-[24px] mb-16">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-            {/* Search */}
-            <div className="flex-1 min-w-full md:min-w-[350px] flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Search by event name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={handleSearchKeyPress}
-                  className="w-full font-[300] text-[14px] pl-4 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 outline-none"
-                />
-              {/* Search Button */}
-              <button onClick={handleSearch} className="p-2 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-gray-900 transition-colors">
-                <Search size={18} strokeWidth={1.5} />
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-6 text-[15px]">
+            <button
+              onClick={() => router.push('/')}
+              className="hover:text-[#4d33de] transition-colors font-medium text-[#4d33de]"
+            >
+              Events
+            </button>
+            {user?.role === 'host' && (
+              <>
+                <button
+                  onClick={() => router.push('/host/dashboard')}
+                  className="hover:text-[#4d33de] transition-colors"
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => router.push('/host/events')}
+                  className="hover:text-[#4d33de] transition-colors"
+                >
+                  My Events
+                </button>
+              </>
+            )}
+            {user?.role === 'user' && (
+              <button
+                onClick={() => router.push('/wallet')}
+                className="hover:text-[#4d33de] transition-colors"
+              >
+                Wallet
+              </button>
+            )}
+            <div className="w-px h-4 bg-gray-300 mx-1" />
+            <a href="/contact" className="hover:text-[#4d33de] transition-colors">Contact Us</a>
+          </nav>
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-3 relative">
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden text-gray-700 hover:text-black z-50 relative"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+
+          {/* Auth buttons when not logged in */}
+          {!user && (
+            <div className="hidden md:flex items-center gap-2">
+              <button
+                onClick={() => router.push('/auth?tab=login')}
+                className="flex items-center gap-1.5 px-4 py-1.5 text-[14px] text-gray-600 hover:text-[#4d33de] transition-colors"
+              >
+                <LogIn className="w-4 h-4" /> Sign In
+              </button>
+              <button
+                onClick={() => router.push('/onboarding')}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-[#4d33de] text-white text-[14px] rounded-lg hover:bg-[#3d26c0] transition-colors"
+              >
+                <UserPlus className="w-4 h-4" /> Get Started
               </button>
             </div>
+          )}
 
-            {/* Status Filter */}
-            <div className="flex gap-2 ">
-              <div className="relative">
-                <select
-                  value={filters.category || ''}
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="appearance-none bg-white border border-gray-100 text-neutral-600 text-xs sm:text-sm font-[300] py-1 sm:py-2 pl-4 pr-8 sm:pr-10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/10"
-                >
-                  <option value="">All Categories</option>
-                  {categoryOptions.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+          {/* Profile avatar */}
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="w-9 h-9 rounded-full bg-[#7b1fa2] text-white flex items-center justify-center text-sm font-medium hover:opacity-90 transition-opacity overflow-hidden border-2 border-transparent hover:border-[#4d33de]"
+              >
+                <img
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              </button>
 
-              {/* Location Filter */}
-              <div className="relative">
-                <select
-                  value={filters.location || ''}
-                  onChange={(e) => handleFilterChange('location', e.target.value)}
-                  className="appearance-none bg-white border border-gray-100 text-gray-600 text-xs sm:text-sm font-normal py-1 sm:py-2 pl-4 pr-8 sm:pr-10 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/10"
-                >
-                  <option value="">All Locations</option>
-                  {allLocations.map(location => (
-                    <option key={location} value={location}>{location}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-            </div>
-          </div>
-
-        {/* Active Filters Chips */}
-        {activeFilters.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {activeFilters.map(([key, value]) => {
-              let label = value;
-              if (key === 'category') {
-                label = categoryOptions.find(opt => opt.value === value)?.label || value;
-              } else if (key === 'location') {
-                label = `Location: ${value}`;
-              } else if (key === 'search') {
-                label = `Search: ${value}`;
-              }
-
-              return (
-                <div key={key} className="flex items-center gap-1 px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-sm">
-                  <span>{label as string}</span>
-                  <button
-                    onClick={() => clearFilter(key as keyof EventFilters)}
-                    className="hover:bg-brand-100 rounded-full p-0.5"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-        {/* Trending */}
-        {trendingEvents.length > 0 && activeFilters.length === 0 && (
-        <section className="space-y-6">
-          <div>
-            <h2 className="text-lg font-[300] text-slate-900 tracking-tight">🔥 Trending</h2>
-            <p className="text-xs text-slate-500 font-[300]">Events everybody's hooking up right now!</p>
-          </div>
-
-          <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
-            {trendingEvents.length > 0 && trendingEvents.map((event: any, i: number) => {
-              const minPrice = event.tickets?.length > 0 
-                  ? Math.min(...event.tickets.map((t: any) => t.price?.amount))
-                  : 0;
-              const startDate = new Date(event.schedule?.startDate);
-              const endDate = new Date(event.schedule?.endDate);
-              const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-              const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-              return (
-                <motion.div
-                  key={event._id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  onClick={() => router.push(`/events/${event.slug || event._id}`)}
-                  className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
-                >
-                  <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                    <img
-                      src={event.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                      alt={event.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    {event.status === 'live' && (
-                      <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                        <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                          <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                          Live
-                        </div>
+              <AnimatePresence>
+                {isProfileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-2 z-50"
+                    >
+                      {/* User info */}
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-[13px] font-medium text-[#161616] truncate">{user.email}</p>
+                        <p className="text-[11px] text-gray-400 capitalize">{user.role}</p>
                       </div>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                      <div className="flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                        🔥 Trending
-                      </div>
-                    </div>
-                    <h2 className="text-lg font-[300] text-slate-900 tracking-tight truncate">{event.title}</h2>
-                    <p className="text-xs text-slate-500 font-[300] line-clamp-2">{event.tagline || event.description}</p>
-                    <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                      <span className="flex items-center gap-1 text-xs ">
-                        <Calendar size={12} strokeWidth={1}/>
-                        {formatDate(startDate)}
-                      </span>
-                      <span className="flex items-center gap-1 text-xs">
-                        <Clock10 size={12} strokeWidth={1}/>
-                        {formatTime(startDate)} - {formatTime(endDate)}
-                      </span>
-                    </div>
-                    {/* Price */}
-                    <div className="flex justify-between items-center gap-2 mt-2">
-                      <span className="text-xs text-slate-500 font-[300]">
-                        {event.venue?.address?.city || 'Location TBA'}
-                      </span>
-                      <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                        <span className="text-xs">From</span> {minPrice === 0 ? (
-                          <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
-                            FREE
-                          </span>
-                        ) : (
-                          <>
-                            <BDTIcon className="text-xs"/>{minPrice}
-                          </>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                </motion.div>
-              );
-            })}
-          </div>
-        </section>
-        )}
-        {/* Featured */}
-        {featuredEvents.length > 0 && activeFilters.length === 0 && (
-        <section className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="flex items-center gap-1 text-lg font-[300] text-slate-900 tracking-tight"><Logo className="w-6 text-brand-500" /> Featured</h2>
-                <p className="text-xs text-slate-500 font-[300]">Featured by Zenvy team</p>
-              </div>
-              <button className="text-[12px] font-[300] text-slate-400 hover:text-slate-900 transition-colors tracking-tight">See more</button>
-            </div>
-
-            <div className="grid pb-4 grid-flow-col auto-cols-[250px] gap-6 overflow-x-scroll scroll-smooth mb-10">
-              {featuredEvents.length > 0 && featuredEvents.map((event: any, i: number) => {
-                const minPrice = event.tickets?.length > 0 
-                  ? Math.min(...event.tickets.map((t: any) => t.price?.amount))
-                  : 0;
-                const startDate = new Date(event.schedule?.startDate);
-                const endDate = new Date(event.schedule?.endDate);
-                const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-                const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-                return (
-                  <motion.div
-                    key={event._id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    onClick={() => router.push(`/events/${event.slug || event._id}`)}
-                    className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
-                  >
-                    <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                      <img
-                        src={event.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                        alt={event.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      {event.status === 'live' && (
-                        <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                          <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                            <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                            Live
-                          </div>
-                        </div>
+                      {user.role === 'host' && (
+                        <>
+                          <button
+                            onClick={() => { router.push('/host/dashboard'); setIsProfileOpen(false); }}
+                            className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-[#161616] transition-colors flex items-center gap-3"
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-gray-400" /> Dashboard
+                          </button>
+                          <button
+                            onClick={() => { router.push('/host/events/create'); setIsProfileOpen(false); }}
+                            className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-[#161616] transition-colors flex items-center gap-3"
+                          >
+                            <Plus className="w-4 h-4 text-gray-400" /> Create Event
+                          </button>
+                          <button
+                            onClick={() => { router.push('/host/profile'); setIsProfileOpen(false); }}
+                            className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-[#161616] transition-colors flex items-center gap-3"
+                          >
+                            <UsersIcon className="w-4 h-4 text-gray-400" /> Profile
+                          </button>
+                        </>
                       )}
-                    </div>
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                        <div className="flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                          <Logo className="w-4 text-brand-500" /> Featured
-                        </div>
-                      </div>
-                      <h2 className="text-lg font-[300] text-slate-900 tracking-tight truncate">{event.title}</h2>
-                      <p className="text-xs text-slate-500 font-[300] line-clamp-2">{event.tagline || event.description}</p>
-                      <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                        <span className="flex items-center gap-1 text-xs ">
-                          <Calendar size={12} strokeWidth={1}/>
-                          {formatDate(startDate)}
-                        </span>
-                        <span className="flex items-center gap-1 text-xs">
-                          <Clock10 size={12} strokeWidth={1}/>
-                          {formatTime(startDate)} - {formatTime(endDate)}
-                        </span>
-                      </div>
-                      {/* Price */}
-                      <div className="flex justify-between items-center gap-2 mt-2">
-                        <span className="text-xs text-slate-500 font-[300]">
-                          {event.venue?.address?.city || 'Location TBA'}
-                        </span>
-                        <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                          <span className="text-xs">From</span> {minPrice === 0 ? (
-                            <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
-                              FREE
-                            </span>
-                          ) : (
-                            <>
-                              <BDTIcon className="text-xs"/>{minPrice}
-                            </>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                      {user.role === 'user' && (
+                        <button
+                          onClick={() => { router.push('/wallet'); setIsProfileOpen(false); }}
+                          className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-[#161616] transition-colors flex items-center gap-3"
+                        >
+                          <WalletIcon className="w-4 h-4 text-gray-400" /> Wallet
+                        </button>
+                      )}
+                      <div className="h-px bg-gray-100 my-1 mx-4" />
+                      <button
+                        onClick={() => { handleLogout(); setIsProfileOpen(false); }}
+                        className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-red-500 transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* ─── Mobile Menu Overlay ─── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-white z-40 md:hidden pt-20 px-6"
+          >
+            <nav className="flex flex-col gap-0 text-base font-medium">
+              <button
+                onClick={() => { router.push('/'); setIsMobileMenuOpen(false); }}
+                className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3 text-left"
+              >
+                <Home className="w-5 h-5" /> Events
+              </button>
+              {user?.role === 'host' && (
+                <>
+                  <button
+                    onClick={() => { router.push('/host/dashboard'); setIsMobileMenuOpen(false); }}
+                    className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3 text-left"
+                  >
+                    <LayoutDashboard className="w-5 h-5" /> Dashboard
+                  </button>
+                  <button
+                    onClick={() => { router.push('/host/events'); setIsMobileMenuOpen(false); }}
+                    className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3 text-left"
+                  >
+                    <Calendar className="w-5 h-5" /> My Events
+                  </button>
+                </>
+              )}
+              {user?.role === 'user' && (
+                <button
+                  onClick={() => { router.push('/wallet'); setIsMobileMenuOpen(false); }}
+                  className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3 text-left"
+                >
+                  <WalletIcon className="w-5 h-5" /> Wallet
+                </button>
+              )}
+              {!user && (
+                <>
+                  <button
+                    onClick={() => { router.push('/auth?tab=login'); setIsMobileMenuOpen(false); }}
+                    className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3"
+                  >
+                    <LogIn className="w-5 h-5" /> Sign In
+                  </button>
+                  <button
+                    onClick={() => { router.push('/onboarding'); setIsMobileMenuOpen(false); }}
+                    className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3"
+                  >
+                    <UserPlus className="w-5 h-5" /> Get Started
+                  </button>
+                </>
+              )}
+              <a href="/contact" className="hover:text-[#4d33de] transition-colors py-4 flex items-center gap-3">
+                <HelpCircle className="w-5 h-5" /> Contact Us
+              </a>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── Hero ─── */}
+      <section className="py-12 md:py-20 text-center px-4">
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-3xl md:text-[44px] font-medium mb-8 md:mb-12 tracking-tight"
+        >
+          Pick from the Events You Love
+        </motion.h1>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="relative w-full max-w-[560px] mx-auto border-b border-black pb-2 flex items-center gap-3"
+        >
+          <Search className="w-5 h-5 text-gray-500 flex-shrink-0" />
+          <input
+            type="text"
+            placeholder="Search events..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKey}
+            className="w-full outline-none text-[17px] placeholder:text-gray-400 bg-transparent"
+          />
+          {searchQuery && (
+            <button onClick={() => { setSearchQuery(''); handleFilterChange('search', ''); }} className="text-gray-400 hover:text-gray-700">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </motion.div>
+      </section>
+
+      {/* ─── Filter Bar ─── */}
+      <nav className="flex flex-col md:flex-row max-w-[1400px] mx-auto md:items-center justify-between px-4 md:px-10 2xl:px-0 py-4 border-b border-gray-200 text-[15px] gap-4 md:gap-0">
+        <div className="flex items-center gap-6">
+          {/* Category Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setActiveDropdown(activeDropdown === 'category' ? null : 'category')}
+              className={`flex items-center gap-1 transition-colors ${filters.category ? 'text-[#4d33de] font-medium' : 'text-gray-600 hover:text-[#4d33de]'}`}
+            >
+              {selectedCategory}
+              <ChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === 'category' ? 'rotate-180' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {activeDropdown === 'category' && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 py-2 z-50"
+                  >
+                    <button
+                      onClick={() => { handleFilterChange('category', ''); setActiveDropdown(null); }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-[14px] text-gray-500 transition-colors"
+                    >
+                      All Categories
+                    </button>
+                    {categoryOptions.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => { handleFilterChange('category', opt.value); setActiveDropdown(null); }}
+                        className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 text-[14px] transition-colors ${filters.category === opt.value ? 'text-[#4d33de] font-medium' : 'text-[#161616]'}`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
                   </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Location Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setActiveDropdown(activeDropdown === 'location' ? null : 'location')}
+              className={`flex items-center gap-1 transition-colors ${filters.location ? 'text-[#4d33de] font-medium' : 'text-gray-600 hover:text-[#4d33de]'}`}
+            >
+              {selectedLocation}
+              <ChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === 'location' ? 'rotate-180' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {activeDropdown === 'location' && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 py-2 z-50"
+                  >
+                    <button
+                      onClick={() => { handleFilterChange('location', ''); setActiveDropdown(null); }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-[14px] text-gray-500 transition-colors"
+                    >
+                      All Locations
+                    </button>
+                    {allLocations.map(loc => (
+                      <button
+                        key={loc}
+                        onClick={() => { handleFilterChange('location', loc); setActiveDropdown(null); }}
+                        className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 text-[14px] transition-colors ${filters.location === loc ? 'text-[#4d33de] font-medium' : 'text-[#161616]'}`}
+                      >
+                        {loc}
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Right tag filters */}
+        <div className="flex items-center gap-3 md:gap-5 overflow-x-auto whitespace-nowrap pb-1 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="hidden md:block w-px h-5 bg-gray-200" />
+          {tagFilters.map(tag => (
+            <button
+              key={tag}
+              onClick={() => setSelectedTag(tag)}
+              className={`text-[14px] transition-colors ${selectedTag === tag ? 'text-[#4d33de] font-semibold' : 'text-gray-600 hover:text-[#4d33de]'}`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {/* ─── Main Content ─── */}
+      <main className="bg-[#f4f5f6] px-4 md:px-10 py-8 md:py-10 min-h-screen">
+        <div className="max-w-[1400px] mx-auto">
+
+          {/* Heading + Sort */}
+          <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
+            <div>
+              <div className="text-[12px] text-gray-400 mb-1">Zenvy Events /</div>
+              <h2 className="text-2xl md:text-[28px] font-medium tracking-tight">
+                {selectedTag === 'All' ? 'All Events' : selectedTag}
+              </h2>
+            </div>
+            {activeFilters.length > 0 && (
+              <button
+                onClick={() => setFilters({})}
+                className="text-[13px] text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" /> Clear filters
+              </button>
+            )}
+          </div>
+
+          {/* Active Filter Chips */}
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {activeFilters.map(([key, value]) => {
+                let label = String(value);
+                if (key === 'category') label = categoryOptions.find(o => o.value === value)?.label ?? label;
+                if (key === 'location') label = `${value}`;
+                if (key === 'search') label = `"${value}"`;
+                return (
+                  <span key={key} className="flex items-center gap-1.5 px-3 py-1 bg-[#4d33de]/10 text-[#4d33de] rounded-full text-[13px]">
+                    <Tag className="w-3 h-3" /> {label}
+                    <button onClick={() => handleFilterChange(key as keyof EventFilters, '')} className="hover:text-red-500 transition-colors ml-0.5">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
                 );
               })}
             </div>
-          </section>
           )}
 
-          {/* Events */}
-        <section className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-[300] text-slate-900 tracking-tight">Explore</h2>
-                <p className="text-xs text-slate-500 font-[300]">Choose what's best for you</p>
+          {/* Trending */}
+          {/* {trendingEvents.length > 0 && activeFilters.length === 0 && (
+            <section className="mb-12">
+              <div className="mb-4">
+                <h3 className="text-lg font-medium text-slate-900 tracking-tight">🔥 Trending Now</h3>
+                <p className="text-xs text-slate-400 font-light">Events everybody's talking about</p>
               </div>
-              <button className="text-[12px] font-[300] text-slate-400 hover:text-slate-900 transition-colors tracking-tight">See more</button>
+              <div className="grid grid-flow-col auto-cols-[280px] gap-5 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {trendingEvents.map((event: any, i: number) => (
+                  <EventCard key={event._id} event={event} index={i} router={router} badge="🔥 Trending" />
+                ))}
+              </div>
+            </section>
+          )} */}
+
+          {/* Featured */}
+          {/* {featuredEvents.length > 0 && activeFilters.length === 0 && (
+            <section className="mb-12">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium text-slate-900 tracking-tight flex items-center gap-1.5">
+                    <Logo className="w-5 text-brand-500" /> Featured
+                  </h3>
+                  <p className="text-xs text-slate-400 font-light">Handpicked by the Zenvy team</p>
+                </div>
+                <button className="text-[12px] text-slate-400 hover:text-slate-900 transition-colors">See all</button>
+              </div>
+              <div className="grid grid-flow-col auto-cols-[280px] gap-5 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {featuredEvents.map((event: any, i: number) => (
+                  <EventCard key={event._id} event={event} index={i} router={router} badge="⭐ Featured" />
+                ))}
+              </div>
+            </section>
+          )} */}
+
+          {/* All / Filtered Events Grid */}
+          <section>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium text-slate-900 tracking-tight">Explore All</h3>
+                <p className="text-xs text-slate-400 font-light">Choose what's best for you</p>
+              </div>
+              {user?.role === 'host' && (
+                <button
+                  onClick={() => router.push('/host/events/create')}
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-[#4d33de] text-white text-[13px] rounded-lg hover:bg-[#3d26c0] transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> Create Event
+                </button>
+              )}
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6 mb-10">
-              {events.length > 0 ? events.map((event: any, i: number) => {
-                const minPrice = event.tickets?.length > 0 
-                  ? Math.min(...event.tickets.map((t: any) => t.price?.amount))
-                  : 0;
-                const startDate = new Date(event.schedule?.startDate);
-                const endDate = new Date(event.schedule?.endDate);
-                const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-                const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-                return (
-                  <motion.div
-                    key={event._id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    onClick={() => router.push(`/events/${event.slug || event._id}`)}
-                    className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
-                  >
-                    <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
-                      <img
-                        src={event.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                        alt={event.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      {event.status === 'live' && (
-                        <div className="absolute top-4 gap-2 left-4 flex items-center ">
-                          <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-[300] text-slate-900 border border-slate-100">
-                            <div className="w-1.5 h-1.5 animate-pulse bg-emerald-500 rounded-full mr-2"></div>
-                            Live
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                      </div>
-                      <h2 className="text-lg font-[300] text-slate-900 tracking-tight truncate">{event.title}</h2>
-                      <p className="text-xs text-slate-500 font-[300] line-clamp-2">{event.tagline || event.description}</p>
-                      <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                        <span className="flex items-center gap-1 text-xs ">
-                          <Calendar size={12} strokeWidth={1}/>
-                          {formatDate(startDate)}
-                        </span>
-                        <span className="flex items-center gap-1 text-xs">
-                          <Clock10 size={12} strokeWidth={1}/>
-                          {formatTime(startDate)} - {formatTime(endDate)}
-                        </span>
-                      </div>
-                      {/* Price */}
-                      <div className="flex justify-between items-center gap-2 mt-2">
-                        <span className="text-xs text-slate-500 font-[300]">
-                          {event.venue?.address?.city || 'Location TBA'}
-                        </span>
-                        <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                          <span className="text-xs">From</span> {minPrice === 0 ? (
-                            <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
-                              FREE
-                            </span>
-                          ) : (
-                            <>
-                              <BDTIcon className="text-xs"/>{minPrice}
-                            </>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                  </motion.div>
-                );
-              }) : (
-                <div className="col-span-full text-center py-10 text-slate-400">
-                  <p>No events found</p>
+            <div className="grid grid-cols-1 mx-[3vw] sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-12 mb-10">
+              {events.length > 0 ? events.map((event: any, i: number) => (
+                <EventCard key={event._id} event={event} index={i} router={router} />
+              )) : (
+                <div className="col-span-full text-center py-20 text-slate-400">
+                  <div className="text-4xl mb-3">🎭</div>
+                  <p className="font-light">No events found</p>
+                  {activeFilters.length > 0 && (
+                    <button onClick={() => setFilters({})} className="mt-3 text-[#4d33de] text-sm hover:underline">Clear filters</button>
+                  )}
                 </div>
               )}
             </div>
           </section>
+        </div>
       </main>
     </div>
   );
-};
+}
+
+/* ─── Event Card ─── */
+function EventCard({
+  event, index, router, badge,
+}: {
+  event: any;
+  index: number;
+  router: ReturnType<typeof useRouter>;
+  badge?: string;
+}) {
+  const minPrice = event.tickets?.length > 0
+    ? Math.min(...event.tickets.map((t: any) => t.price?.amount ?? 0))
+    : 0;
+  const startDate = new Date(event.schedule?.startDate);
+
+  const formatDateShort = (d: Date) =>
+    d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const organizer = event.organizer?.name || event.host?.name || 'Zenvy';
+  const category = event.category
+    ? event.category.charAt(0).toUpperCase() + event.category.slice(1)
+    : 'Event';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
+      onClick={() => router.push(`/events/${event.slug || event._id}`)}
+      className="group cursor-pointer rounded-sm overflow-hidden hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300"
+    >
+      {/* Browser chrome top bar */}
+      <div className="h-6 bg-[#f0f0f0] flex items-center px-2.5 gap-1 border-b border-[#e0e0e0]">
+        <div className="w-[6px] h-[6px] rounded-full bg-[#d0d0d0]" />
+        <div className="w-[6px] h-[6px] rounded-full bg-[#d0d0d0]" />
+        <div className="w-[6px] h-[6px] rounded-full bg-[#d0d0d0]" />
+      </div>
+
+      {/* Event image preview */}
+      <div className="aspect-[1.45/1] relative overflow-hidden bg-gray-100">
+        {event.status === 'live' && (
+          <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-white/85 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium text-slate-800 border border-white/60 shadow-sm">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Live
+          </div>
+        )}
+        {badge && (
+          <div className="absolute top-3 right-3 z-10 bg-white/85 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium text-slate-700 border border-white/60 shadow-sm">
+            {badge}
+          </div>
+        )}
+        <img
+          src={
+            event.media?.coverImage?.url ||
+            'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'
+          }
+          alt={event.title}
+          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+        />
+        {/* Subtle vignette overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+      </div>
+
+      {/* Card footer */}
+      <div className="bg-white px-5 py-4 flex flex-col gap-3 border-t border-[#f0f0f0]">
+        {/* Title + Price row */}
+        <div className="flex items-start justify-between gap-2">
+          <span className="text-[15px] font-medium text-wix-text-dark leading-snug line-clamp-1 flex-1">
+            {event.title}
+          </span>
+          <span className="text-[15px] font-bold text-wix-text-dark shrink-0">
+            {minPrice === 0 ? (
+              <span className="bg-[#d2f47c] text-[#161616] text-[10px] px-2 py-1 rounded-[3px] tracking-wide h-fit leading-tight">
+                <span className="font-bold">Free</span>
+              </span>
+            ) : (
+              <span className="flex items-center gap-0.5">
+                <BDTIcon className="text-[13px]" />{minPrice}
+              </span>
+            )}
+          </span>
+        </div>
+
+        {/* Meta row */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[12px] text-wix-text-muted">By {organizer}</span>
+            <span className="text-[11px] text-gray-400">{formatDateShort(startDate)}</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}

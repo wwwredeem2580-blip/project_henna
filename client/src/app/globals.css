@@ -1,9 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@200;300;399;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Matemasie&family=Kirang+Haerang&family=Wix+Madefor+Display:wght@400;500;600;700;800&display=swap');
 
 @import "tailwindcss";
 @config "../../tailwind.config.js";
 
+@theme {
+  --font-sans: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
+  --font-matemasie: "Matemasie", ui-sans-serif, system-ui, sans-serif;
+  --font-kirang-haerang: "Kirang Haerang", ui-sans-serif, system-ui, sans-serif;
+
+  --color-wix-purple: #4a2bed;
+  --color-wix-purple-hover: #3b22bc;
+  --color-wix-gray-bg: #f7f7f7;
+  --color-wix-border-light: #ebebeb;
+  --color-wix-text-dark: #161616;
+  --color-wix-text-muted: #595959;
+  --color-wix-avatar-bg: #8a6c60;
+  --color-wix-input-border: #161616;
+  --color-wix-card-border: #e1e1e1;
+}
+
 @layer base {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   :root {
     /* Neutral Colors */
     --h-color-neutral-0: theme('colors.neutral.0');
@@ -18,87 +42,44 @@
     --h-color-neutral-800: theme('colors.neutral.800');
     --h-color-neutral-900: theme('colors.neutral.900');
     --h-color-neutral-950: theme('colors.neutral.950');
-
-    /* Primary Colors */
-    --h-color-primary-50: theme('colors.primary.50');
-    --h-color-primary-100: theme('colors.primary.100');
-    --h-color-primary-200: theme('colors.primary.200');
-    --h-color-primary-300: theme('colors.primary.300');
-    --h-color-primary-400: theme('colors.primary.400');
-    --h-color-primary-500: theme('colors.primary.500');
-    --h-color-primary-600: theme('colors.primary.600');
-    --h-color-primary-700: theme('colors.primary.700');
-    --h-color-primary-800: theme('colors.primary.800');
-    --h-color-primary-900: theme('colors.primary.900');
-
-    /* Other Colors */
-    --h-color-success-600: theme('colors.success.600');
-    --h-color-danger-600: theme('colors.danger.600');
-    --h-color-warning-400: theme('colors.warning.400');
-    --h-color-neon-500: theme('colors.neon.500');
-
-    /* Theme Variables */
-    --h-bg-brand-default: var(--h-color-primary-600);
-    --h-bg-brand-hover: var(--h-color-primary-700);
-    --h-fg-brand-inverse-default: var(--h-color-neutral-0);
-    --h-bg-neutral-default: var(--h-color-neutral-0);
-    
-    /* Spacing */
-    --h-spacing-sm: 16px;
-    --h-spacing-md: 24px;
   }
 
   body {
-    font-family: 'DM Sans', sans-serif;
-    @apply bg-neutral-0 text-neutral-800 font-light;
+    font-family: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
+    @apply bg-wix-gray-bg text-wix-text-dark antialiased;
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6, strong, b {
-     @apply font-light tracking-tight text-neutral-950;
-  }
-
-  p {
-     @apply font-light leading-relaxed;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
+    @apply tracking-tight;
   }
 }
 
 @layer components {
-  /* Navigation */
   .navigation-section {
-    @apply sticky top-0 z-50 w-full border-b border-neutral-200 bg-neutral-0 px-6 py-4 flex items-center justify-between;
-  }
-  
-  .navigation-section__logo {
-    @apply flex items-center gap-2;
+    @apply sticky top-0 z-50 w-full border-b border-neutral-200 bg-white px-6 py-4 flex items-center justify-between;
   }
 
-  /* Buttons - h-button-v2 */
   .h-button-v2 {
     @apply inline-flex items-center justify-center rounded-xl font-bold transition-all duration-200 cursor-pointer text-sm;
     padding: 10px 24px;
   }
 
   .h-button-v2--contain-primary {
-    @apply bg-primary-600 text-white shadow-lg shadow-primary-100;
+    @apply bg-wix-purple text-white;
   }
   .h-button-v2--contain-primary:hover {
-    @apply bg-primary-700 -translate-y-0.5;
+    @apply bg-wix-purple-hover -translate-y-0.5;
   }
-  
+
   .h-button-v2--outlineStrong-neutral {
     @apply border border-neutral-300 text-neutral-700 bg-transparent;
   }
   .h-button-v2--outlineStrong-neutral:hover {
-    @apply border-primary-600 text-primary-600;
+    @apply border-wix-purple text-wix-purple;
   }
 
-  .h-button-v2--large {
-    padding: 12px 32px;
-    font-size: 16px;
-  }
-
-  /* Banner */
   .h-banner {
     @apply bg-neon-500 p-3 text-center text-neutral-900 font-medium;
   }
@@ -107,25 +88,31 @@
   }
 }
 
-/* Utilities / Legacy */
+/* Template card drop-shadow */
+.template-card-shadow {
+  box-shadow: -10px 30px 50px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 3D card utils */
+.perspective-1000 { perspective: 1000px; }
+.preserve-3d { transform-style: preserve-3d; }
+.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.rotate-y-180 { transform: rotateY(180deg); }
+
+/* Abstract cover patterns */
+.cover-pattern {
+  background-color: #161616;
+  background-image: radial-gradient(#444 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.gallery-pattern-1 { background: repeating-linear-gradient(45deg, #eee, #eee 10px, #fafafa 10px, #fafafa 20px); }
+.gallery-pattern-2 { background: radial-gradient(circle, #ddd 20%, transparent 20%), radial-gradient(circle, #ddd 20%, transparent 20%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
+.gallery-pattern-3 { background: linear-gradient(135deg, #ececec 25%, transparent 25%) -10px 0, linear-gradient(225deg, #ececec 25%, transparent 25%) -10px 0, linear-gradient(315deg, #ececec 25%, transparent 25%), linear-gradient(45deg, #ececec 25%, transparent 25%); background-size: 20px 20px; }
+.gallery-pattern-4 { background: repeating-radial-gradient(circle at 0 0, transparent 0, #f7f7f7 10px), repeating-linear-gradient(#eee, #eee); }
+
+/* Legacy glass card */
 .glass-card {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
   border: 1px solid theme('colors.brand.divider');
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  max-height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: theme('colors.neutral.0');
-}
-::-webkit-scrollbar-thumb {
-  background: theme('colors.neutral.200');
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: theme('colors.brand.300');
 }

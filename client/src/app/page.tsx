@@ -1,22 +1,10 @@
-'use client';
+import { Suspense } from 'react';
+import Events from '@/components/events/Events';
 
-import { Landing } from "@/components/public/Landing";
-import { useRouter } from "next/navigation";
-
-export default function Home() {
-  const router = useRouter();
-
-  const handleGetStarted = () => {
-    router.push('/onboarding');
-  };
-
-  const handleLogin = () => {
-    router.push('/auth?tab=login&role=user');
-  };
-
-  const handleExploreEvents = () => {
-    router.push('/events');
-  };
-
-  return <Landing onGetStarted={handleGetStarted} onLogin={handleLogin} onExploreEvents={handleExploreEvents} />;
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-brand-600 animate-pulse">Loading...</div></div>}>
+      <Events />
+    </Suspense>
+  );
 }

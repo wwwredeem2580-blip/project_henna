@@ -4,7 +4,6 @@ import "./globals.css";
 import { NotificationProvider } from "@/lib/context/notification";
 import { AuthProvider } from "@/lib/context/auth";
 import { NotificationToast } from "@/components/ui/NotificationToast";
-import { Footer } from "@/components/layout/Footer";
 import { SupportProvider } from "@/lib/context/support";
 
 const geistSans = Geist({
@@ -36,12 +35,7 @@ export default function RootLayout({
         <NotificationProvider>
           <AuthProvider>
             <SupportProvider>
-              <div className="min-h-screen flex flex-col">
-                <main className="flex-1">
-                  {children}
-                </main>
-                <Footer />
-              </div>
+              {children}
               <NotificationToast />
             </SupportProvider>
           </AuthProvider>
