@@ -8,7 +8,7 @@ import {
   Calendar, MapPin, ArrowRight, Search, Filter,
   Download, Plus, X, Clock, Trash2, AlertTriangle,
   Mail, Tag, Link as LinkIcon, ArrowLeft, Loader2,
-  Scan, Copy,
+  Scan, Copy, Upload,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { hostAnalyticsService, HostEventDetailsResponse } from '@/lib/api/host-analytics';
@@ -945,8 +945,78 @@ const TicketsTab = ({ data, onUpdate, onRefetch }: { data: HostEventDetailsRespo
 };
 
 
-const GalleryTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
-  const gallery = data?.event?.media?.gallery ?? [];
+const GalleryTab = ({ data, onUpdate }: { data: HostEventDetailsResponse | null; onUpdate: (d: HostEventDetailsResponse) => void }) => {
+  const { showNotification } = useNotification();
+  const [gallery, setGallery] = useState<any[]>(data?.event?.media?.gallery ?? []);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync gallery when data changes (e.g. on first load)
+  useEffect(() => {
+    setGallery(data?.event?.media?.gallery ?? []);
+  }, [data?.event?._id]);
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { mediaService } = await import('@/lib/api/media');
+      const ImageKit = (await import('imagekit-javascript')).default;
+      const auth = await mediaService.getImageKitAuth();
+      const imagekit = new ImageKit({ publicKey: auth.publicKey, urlEndpoint: auth.urlEndpoint });
+      const uploadResponse: any = await new Promise((resolve, reject) => {
+        imagekit.upload({
+          file,
+          fileName: `event_gallery_${Date.now()}_${file.name}`,
+          folder: '/zenvy/event_gallery',
+          useUniqueFileName: true,
+          tags: ['event_gallery'],
+          signature: auth.signature,
+          expire: auth.expire,
+          token: auth.token,
+        }, (err: any, result: any) => { if (err) reject(new Error(err.message)); else resolve(result); });
+      });
+      await mediaService.trackImageKitUpload({
+        fileId: uploadResponse.fileId,
+        url: uploadResponse.url,
+        filename: uploadResponse.name,
+        type: 'event_gallery',
+        status: 'permanent',
+      });
+      setGallery(prev => [...prev, { url: uploadResponse.url, caption: '', thumbnailUrl: uploadResponse.url, order: prev.length + 1 }]);
+      showNotification('success', 'Uploaded', 'Image added to gallery. Click Save to persist.');
+    } catch (err: any) {
+      showNotification('error', 'Upload Failed', err?.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemove = (index: number) => {
+    setGallery(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSave = async () => {
+    if (!data?.event) return;
+    setSaving(true);
+    try {
+      const result = await eventsService.updateEventByStatus(
+        data.event._id,
+        data.event.status,
+        { media: { ...data.event.media, gallery } }
+      );
+      showNotification('success', 'Gallery Saved', result.message || 'Gallery updated successfully.');
+      onUpdate({ ...data, event: { ...data.event, media: { ...data.event.media, gallery } } });
+    } catch (err: any) {
+      showNotification('error', 'Save Failed', err?.response?.data?.message || err?.message || 'Failed to save gallery');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 animate-in fade-in max-w-[1280px] duration-300">
       <div className="flex justify-between items-center">
@@ -954,27 +1024,62 @@ const GalleryTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
           <h2 className="text-[20px] font-medium text-wix-text-dark">Event Gallery</h2>
           <p className="text-[13px] text-gray-500 mt-1">Upload and manage promotional and recap photos.</p>
         </div>
-        <button className="flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[14px] font-medium hover:bg-gray-800 transition-colors border border-black">
-          <Plus className="w-4 h-4" /> Upload Media
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Hidden file input */}
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileSelected} className="hidden" />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 bg-white text-black px-5 py-2.5 text-[14px] font-medium hover:bg-gray-50 transition-colors border border-wix-border-light disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {uploading ? 'Uploading...' : 'Upload Media'}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[14px] font-medium hover:bg-gray-800 transition-colors border border-black disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {saving ? 'Saving...' : 'Save Gallery'}
+          </button>
+        </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div className="aspect-square border-2 border-dashed border-wix-border-light bg-gray-50 flex flex-col items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer group">
-          <ImageIcon className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" />
-          <span className="text-[13px] font-medium">Click to Upload</span>
+        {/* Upload tile */}
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="aspect-square border-2 border-dashed border-wix-border-light bg-gray-50 flex flex-col items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer group"
+        >
+          {uploading ? (
+            <Loader2 className="w-8 h-8 mb-2 animate-spin" />
+          ) : (
+            <ImageIcon className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" />
+          )}
+          <span className="text-[13px] font-medium">{uploading ? 'Uploading...' : 'Click to Upload'}</span>
         </div>
+        {/* Gallery images */}
         {gallery.map((img, i) => (
           <div key={i} className="aspect-square relative group border border-wix-border-light overflow-hidden">
             <img src={img.url} alt={img.caption || ''} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <button className="p-3 bg-white text-red-600 hover:bg-red-600 hover:text-white transition-colors"><Trash2 className="w-5 h-5" /></button>
+              <button
+                onClick={() => handleRemove(i)}
+                className="p-3 bg-white text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
             </div>
           </div>
         ))}
       </div>
+      {gallery.length === 0 && !uploading && (
+        <p className="text-[13px] text-gray-400 text-center py-8">No gallery images yet. Upload photos to get started.</p>
+      )}
     </div>
   );
 };
+
 
 const MarketingTab = () => {
   const tools = [
@@ -1289,7 +1394,7 @@ export default function ManageEvent() {
                 {activeKey === 'Attendees' && <AttendeesTab data={data} />}
                 {activeKey === 'Checkin' && <CheckinTab data={data} />}
                 {activeKey === 'Tickets' && <TicketsTab data={data} onUpdate={setData} onRefetch={fetchEventData} />}
-                {activeKey === 'Gallery' && <GalleryTab data={data} />}
+                {activeKey === 'Gallery' && <GalleryTab data={data} onUpdate={setData} />}
                 {activeKey === 'Marketing' && <MarketingTab />}
                 {activeKey === 'Settings' && <SettingsTab data={data} />}
               </div>
