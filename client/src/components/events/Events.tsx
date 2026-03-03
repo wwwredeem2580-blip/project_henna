@@ -594,7 +594,7 @@ export default function Events() {
   );
 }
 
-/* ─── Event Card ─── */
+/* \u2500\u2500\u2500 Event Card \u2500\u2500\u2500 */
 function EventCard({
   event, index, router, badge,
 }: {
@@ -606,15 +606,22 @@ function EventCard({
   const minPrice = event.tickets?.length > 0
     ? Math.min(...event.tickets.map((t: any) => t.price?.amount ?? 0))
     : 0;
+  const isFree = minPrice === 0;
   const startDate = new Date(event.schedule?.startDate);
+  const endDate = new Date(event.schedule?.endDate);
+  const sameDay = startDate.toDateString() === endDate.toDateString();
 
-  const formatDateShort = (d: Date) =>
-    d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  const addr = event.venue?.address;
+  const locationParts = [addr?.street, addr?.city, addr?.country].filter(Boolean);
+  const location = locationParts.length > 0 ? locationParts.join(', ') : event.venue?.name;
 
   const organizer = event.organizer?.name || event.host?.name || 'Zenvy';
   const category = event.category
     ? event.category.charAt(0).toUpperCase() + event.category.slice(1)
-    : 'Event';
+    : null;
+
+  const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+  const fmtTime = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
   return (
     <motion.div
@@ -622,67 +629,73 @@ function EventCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       onClick={() => router.push(`/events/${event.slug || event._id}`)}
-      className="group cursor-pointer rounded-sm overflow-hidden hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-300"
+      className="group cursor-pointer flex flex-col gap-3"
     >
-      {/* Browser chrome top bar */}
-      <div className="h-6 bg-[#f0f0f0] flex items-center px-2.5 gap-1 border-b border-[#e0e0e0]">
-        <div className="w-[6px] h-[6px] rounded-full bg-[#d0d0d0]" />
-        <div className="w-[6px] h-[6px] rounded-full bg-[#d0d0d0]" />
-        <div className="w-[6px] h-[6px] rounded-full bg-[#d0d0d0]" />
-      </div>
-
-      {/* Event image preview */}
-      <div className="aspect-[1.45/1] relative overflow-hidden bg-gray-100">
-        {event.status === 'live' && (
-          <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-white/85 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium text-slate-800 border border-white/60 shadow-sm">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Live
-          </div>
-        )}
-        {badge && (
-          <div className="absolute top-3 right-3 z-10 bg-white/85 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium text-slate-700 border border-white/60 shadow-sm">
-            {badge}
-          </div>
-        )}
+      {/* Cover Image */}
+      <div className="aspect-[1.6/1] relative overflow-hidden rounded-tr-xl rounded-tl-xl bg-gray-100 shadow-sm group-hover:shadow-md transition-shadow duration-300">
         <img
           src={
             event.media?.coverImage?.url ||
             'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'
           }
           alt={event.title}
-          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
         />
-        {/* Subtle vignette overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+        {/* Live badge */}
+        {event.status === 'live' && (
+          <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-semibold text-slate-800 border border-white/60 shadow-sm">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Live
+          </div>
+        )}
+        {/* Custom badge (trending/featured) */}
+        {badge && (
+          <div className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-semibold text-slate-700 border border-white/60 shadow-sm">
+            {badge}
+          </div>
+        )}
+        {/* Category pill bottom-left */}
+        {category && (
+          <div className="absolute bottom-3 left-3 z-10 bg-[#f0ebff] text-[#4d33de] text-[10px] font-semibold px-2.5 py-1 rounded-full">
+            {category}
+          </div>
+        )}
       </div>
 
-      {/* Card footer */}
-      <div className="bg-white px-5 py-4 flex flex-col gap-3 border-t border-[#f0f0f0]">
-        {/* Title + Price row */}
-        <div className="flex items-start justify-between gap-2">
-          <span className="text-[15px] font-medium text-wix-text-dark leading-snug line-clamp-1 flex-1">
-            {event.title}
-          </span>
-          <span className="text-[15px] font-bold text-wix-text-dark shrink-0">
-            {minPrice === 0 ? (
-              <span className="bg-[#d2f47c] text-[#161616] text-[10px] px-2 py-1 rounded-[3px] tracking-wide h-fit leading-tight">
-                <span className="font-bold">Free</span>
-              </span>
-            ) : (
-              <span className="flex items-center gap-0.5">
-                <BDTIcon className="text-[13px]" />{minPrice}
-              </span>
-            )}
+      {/* Card Content */}
+      <div className="flex flex-col gap-1">
+        <h3 className="text-[15px] font-semibold text-[#161616] leading-snug line-clamp-2 group-hover:text-[#4d33de] transition-colors duration-200">
+          {event.title}
+        </h3>
+
+        <div className="flex items-start gap-1.5 text-[12px] text-gray-500 mt-0.5">
+          <Calendar className="w-3.5 h-3.5 shrink-0 mt-[1px]" />
+          <span>
+            {fmtDate(startDate)}{!sameDay && ` → ${fmtDate(endDate)}`}
+            <span className="text-gray-400 ml-1">· {fmtTime(startDate)}–{fmtTime(endDate)}</span>
           </span>
         </div>
 
-        {/* Meta row */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[12px] text-wix-text-muted">By {organizer}</span>
-            <span className="text-[11px] text-gray-400">{formatDateShort(startDate)}</span>
+        {location && (
+          <div className="flex items-center gap-1.5 text-[12px] text-gray-400">
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            <span className="line-clamp-1">{location}</span>
           </div>
+        )}
+
+        <div className="flex items-center justify-between mt-1.5">
+          <span className="text-[13px] font-bold text-[#161616]">
+            {isFree ? (
+              <span className="bg-[#d2f47c] text-[#161616] text-[11px] px-2.5 py-0.5 rounded-[4px] font-bold">Free</span>
+            ) : (
+              <span>From <BDTIcon className="inline text-[12px]" />{minPrice.toLocaleString()}</span>
+            )}
+          </span>
+          <span className="text-[11px] text-gray-400">By {organizer}</span>
         </div>
       </div>
     </motion.div>
   );
 }
+
