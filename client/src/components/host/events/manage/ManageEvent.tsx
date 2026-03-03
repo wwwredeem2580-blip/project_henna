@@ -893,7 +893,6 @@ const TicketsTab = ({ data, onUpdate, onRefetch }: { data: HostEventDetailsRespo
           return (
             <div key={i} className="bg-white border border-wix-border-light p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-black transition-colors group">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-4 h-4 rounded-full border border-gray-300 shrink-0" style={{ backgroundColor: t.wristbandColor || '#161616' }} />
                 <div className="min-w-0">
                   <div className="flex items-center gap-3 mb-0.5">
                     <h3 className="text-[16px] font-semibold text-wix-text-dark truncate">{t.name}</h3>
