@@ -1142,18 +1142,117 @@ const RestrictedTimePicker = ({ originalTime, label }: { originalTime: string; l
   );
 };
 
-const SettingsTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
+const SettingsTab = ({ data, onUpdate, onRefetch }: { data: HostEventDetailsResponse | null; onUpdate: (d: HostEventDetailsResponse) => void; onRefetch: () => Promise<void> }) => {
   const ev = data?.event;
-  const [isPublic, setIsPublic] = useState(true);
-  const [salesActive, setSalesActive] = useState(!(ev?.moderation?.sales?.paused));
-  const [dates, setDates] = useState<string[]>(
-    ev?.schedule?.startDate ? [ev.schedule.startDate.slice(0, 10)] : ['2026-10-15']
-  );
-  const removeDate = (d: string) => setDates(prev => prev.filter(x => x !== d));
-  const addDate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value && !dates.includes(e.target.value)) setDates(prev => [...prev, e.target.value].sort());
+  const router = useRouter();
+  const { showNotification } = useNotification();
+
+  // ─── Controlled form state ───
+  const [description, setDescription] = useState(ev?.description || '');
+  const [tagline, setTagline] = useState(ev?.tagline || '');
+  const [savingDetails, setSavingDetails] = useState(false);
+
+  // ─── Sales pause state ───
+  const salesPaused = ev?.moderation?.sales?.paused ?? false;
+  const [isTogglingPause, setIsTogglingPause] = useState(false);
+  const canToggleSales = ev?.status === 'published' || ev?.status === 'live';
+
+  // ─── Schedule state (approved-only) ───
+  const isApproved = ev?.status === 'approved';
+  const scheduleModified = ev?.schedule?.scheduleModified ?? false;
+  const canEditSchedule = isApproved && !scheduleModified;
+  const [startDate, setStartDate] = useState(ev?.schedule?.startDate?.slice(0, 10) || '');
+  const [endDate, setEndDate] = useState(ev?.schedule?.endDate?.slice(0, 10) || '');
+  const originalStartTime = ev?.schedule?.startDate
+    ? new Date(ev.schedule.startDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    : '09:00';
+  const originalEndTime = ev?.schedule?.endDate
+    ? new Date(ev.schedule.endDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    : '18:00';
+  const [savingSchedule, setSavingSchedule] = useState(false);
+
+  // ─── Delete state ───
+  const [deleting, setDeleting] = useState(false);
+
+  // Sync state when data loads
+  useEffect(() => {
+    if (ev) {
+      setDescription(ev.description || '');
+      setTagline(ev.tagline || '');
+      setStartDate(ev.schedule?.startDate?.slice(0, 10) || '');
+      setEndDate(ev.schedule?.endDate?.slice(0, 10) || '');
+    }
+  }, [ev?._id]);
+
+  // ─── Handlers ───
+  const handleSaveDetails = async () => {
+    if (!ev) return;
+    setSavingDetails(true);
+    try {
+      const result = await eventsService.updateEventByStatus(ev._id, ev.status, { description, tagline });
+      showNotification('success', 'Details Saved', result.message || 'Event details updated successfully.');
+      onUpdate({ ...data!, event: { ...ev, description, tagline } });
+    } catch (err: any) {
+      showNotification('error', 'Save Failed', err?.response?.data?.message || err?.message || 'Failed to save details.');
+    } finally {
+      setSavingDetails(false);
+    }
   };
-  const startTime = ev?.schedule?.doors || '09:00';
+
+  const handleToggleSalesPause = async () => {
+    if (!ev?._id) return;
+    setIsTogglingPause(true);
+    try {
+      const result = await eventsService.toggleSalesPause(ev._id);
+      showNotification('success', 'Sales Updated', result.message);
+      await onRefetch();
+    } catch (err: any) {
+      showNotification('error', 'Update Failed', err?.response?.data?.message || err?.message || 'Failed to update sales status.');
+    } finally {
+      setIsTogglingPause(false);
+    }
+  };
+
+  const handleSaveSchedule = async () => {
+    if (!ev || !canEditSchedule) return;
+    // Validate ±2h
+    const origStart = new Date(ev.schedule!.startDate);
+    const origEnd = new Date(ev.schedule!.endDate);
+    const newStart = new Date(`${startDate}T${originalStartTime}`);
+    const newEnd = new Date(`${endDate}T${originalEndTime}`);
+    const TWO_HOURS = 2 * 60 * 60 * 1000;
+    if (Math.abs(newStart.getTime() - origStart.getTime()) > TWO_HOURS || Math.abs(newEnd.getTime() - origEnd.getTime()) > TWO_HOURS) {
+      showNotification('error', 'Invalid Change', 'Schedule can only be modified by ±2 hours from the original time.');
+      return;
+    }
+    if (!window.confirm('⚠️ This can only be done ONCE. All attendees will be notified. Confirm schedule change?')) return;
+    setSavingSchedule(true);
+    try {
+      const updatedSchedule = { ...ev.schedule, startDate: newStart.toISOString(), endDate: newEnd.toISOString(), scheduleModified: true };
+      const result = await eventsService.updateEventByStatus(ev._id, ev.status, { schedule: updatedSchedule });
+      showNotification('success', 'Schedule Updated', result.message || 'Event schedule has been updated.');
+      onUpdate({ ...data!, event: { ...ev, schedule: updatedSchedule } });
+    } catch (err: any) {
+      showNotification('error', 'Save Failed', err?.response?.data?.message || err?.message || 'Failed to update schedule.');
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!ev) return;
+    if (ev.status !== 'draft' && !window.confirm(`⚠️ This event has status "${ev.status}". Deleting is permanent and cannot be undone. All ticket sales will stop immediately. Are you absolutely sure?`)) return;
+    if (ev.status === 'draft' && !window.confirm('Delete this draft event? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await eventsService.deleteEvent(ev._id);
+      showNotification('success', 'Event Deleted', 'Event has been permanently deleted.');
+      router.push('/host/events');
+    } catch (err: any) {
+      showNotification('error', 'Delete Failed', err?.response?.data?.message || err?.message || 'Failed to delete event.');
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-300 max-w-[1080px] pb-10">
@@ -1163,87 +1262,163 @@ const SettingsTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 flex flex-col gap-8">
+
+          {/* ─── Event Details ─── */}
           <div className="bg-white border border-wix-border-light p-8 flex flex-col gap-6">
             <h3 className="text-[14px] uppercase tracking-wider text-gray-800 font-semibold border-b border-wix-border-light pb-3">Event Details</h3>
             <div className="flex flex-col gap-2">
               <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Event Description</label>
-              <textarea rows={5} defaultValue={ev?.description || ''} className="w-full border border-wix-border-light p-4 text-[14px] focus:border-black outline-none transition-colors resize-y leading-relaxed" />
+              <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} className="w-full border border-wix-border-light p-4 text-[14px] focus:border-black outline-none transition-colors resize-y leading-relaxed" />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Event Tagline</label>
-              <input type="text" defaultValue={ev?.tagline || ''} className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors" />
+              <input type="text" value={tagline} onChange={e => setTagline(e.target.value)} className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors" />
             </div>
+            <button
+              onClick={handleSaveDetails}
+              disabled={savingDetails}
+              className="self-end flex items-center gap-2 bg-black text-white px-6 py-2.5 text-[13px] font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
+            >
+              {savingDetails ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {savingDetails ? 'Saving...' : 'Save Details'}
+            </button>
           </div>
+
+          {/* ─── Event Schedule (approved only) ─── */}
           <div className="bg-white border border-wix-border-light p-8 flex flex-col gap-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-black" />
-            <div>
-              <h3 className="text-[14px] uppercase tracking-wider text-gray-800 font-semibold">Event Schedule</h3>
-              <p className="text-[12px] text-gray-500 mt-1">Multi-day configuration. Time edits restricted to ±2h from permit time.</p>
-            </div>
-            <div className="flex flex-col gap-3 pt-3 border-t border-wix-border-light">
-              <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Selected Dates</label>
-              <div className="flex flex-wrap gap-2">
-                {dates.map(d => (
-                  <div key={d} className="flex items-center border border-black bg-gray-50 text-[13px] font-mono">
-                    <span className="px-3 py-1.5 border-r border-black">{d}</span>
-                    <button onClick={() => removeDate(d)} className="p-1.5 hover:bg-black hover:text-white transition-colors"><X className="w-3.5 h-3.5" /></button>
-                  </div>
-                ))}
-                <input type="date" onChange={addDate} className="border border-dashed border-wix-border-light text-gray-500 px-3 py-1.5 text-[13px] font-mono hover:border-black cursor-pointer outline-none bg-white" />
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-[14px] uppercase tracking-wider text-gray-800 font-semibold">Event Schedule</h3>
+                <p className="text-[12px] text-gray-500 mt-1">
+                  {isApproved
+                    ? scheduleModified
+                      ? 'Schedule was already modified — no further changes allowed.'
+                      : 'One-time edit allowed. Time edits restricted to ±2h from permit time.'
+                    : 'Schedule editing is only available for approved events.'}
+                </p>
               </div>
+              {isApproved && !scheduleModified && (
+                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1">One-Time Edit</span>
+              )}
+              {scheduleModified && (
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 bg-gray-50 border border-gray-200 px-2 py-1">Already Modified</span>
+              )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-2">
-              <RestrictedTimePicker label="Daily Start Time" originalTime={startTime} />
-              <RestrictedTimePicker label="Daily End Time" originalTime="17:00" />
-            </div>
+
+            {!isApproved ? (
+              <div className="flex items-center gap-2 text-[13px] text-gray-400 border border-dashed border-wix-border-light p-4">
+                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                Schedule editing is only available once your event is approved.
+              </div>
+            ) : (
+              <div className={`flex flex-col gap-6 ${!canEditSchedule ? 'opacity-40 pointer-events-none' : ''}`}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Start Date</label>
+                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border border-wix-border-light p-2.5 text-[14px] focus:border-black outline-none transition-colors font-mono" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">End Date</label>
+                    <input type="date" value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)} className="border border-wix-border-light p-2.5 text-[14px] focus:border-black outline-none transition-colors font-mono" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <RestrictedTimePicker label="Daily Start Time" originalTime={originalStartTime} />
+                  <RestrictedTimePicker label="Daily End Time" originalTime={originalEndTime} />
+                </div>
+                {canEditSchedule && (
+                  <button
+                    onClick={handleSaveSchedule}
+                    disabled={savingSchedule}
+                    className="self-end flex items-center gap-2 bg-black text-white px-6 py-2.5 text-[13px] font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  >
+                    {savingSchedule ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    {savingSchedule ? 'Saving...' : 'Save Schedule'}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
+        {/* ─── Right Sidebar ─── */}
         <div className="flex flex-col gap-6">
           <div className="bg-white border border-wix-border-light p-6 flex flex-col gap-6">
             <h3 className="text-[14px] uppercase tracking-wider text-gray-800 font-semibold border-b border-wix-border-light pb-3">Status Controls</h3>
-            <div className="flex justify-between items-center group">
-              <div>
-                <div className="font-semibold text-[14px] text-wix-text-dark">Event Visibility</div>
-                <div className="text-[12px] text-gray-500 mt-1">{isPublic ? 'Publicly visible' : 'Hidden / Private'}</div>
-              </div>
-              <SharpToggle checked={isPublic} onChange={setIsPublic} />
-            </div>
-            <div className="flex justify-between items-center group">
+            <div className="flex justify-between items-center">
               <div>
                 <div className="font-semibold text-[14px] text-wix-text-dark">Ticket Sales</div>
-                <div className="text-[12px] text-gray-500 mt-1">{salesActive ? 'Active' : 'Paused'}</div>
+                <div className="text-[12px] text-gray-500 mt-1">
+                  {!canToggleSales ? `Not available (${ev?.status || 'draft'})` : salesPaused ? 'Currently paused' : 'Currently active'}
+                </div>
               </div>
-              <SharpToggle checked={salesActive} onChange={setSalesActive} />
+              <button
+                onClick={handleToggleSalesPause}
+                disabled={!canToggleSales || isTogglingPause}
+                className={`px-3 py-1.5 text-[12px] font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  salesPaused ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
+                }`}
+              >
+                {isTogglingPause ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : salesPaused ? 'Resume Sales' : 'Pause Sales'}
+              </button>
+            </div>
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="font-semibold text-[14px] text-wix-text-dark">Event Status</div>
+                <div className="text-[12px] text-gray-500 mt-1 capitalize">{ev?.status || 'Unknown'}</div>
+              </div>
+              <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 border ${
+                ev?.status === 'live' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                ev?.status === 'published' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                ev?.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                ev?.status === 'pending_approval' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                'bg-gray-100 text-gray-500 border-gray-300'
+              }`}>{ev?.status || 'unknown'}</span>
             </div>
           </div>
-          <div className="bg-white border border-wix-border-light p-6 flex flex-col gap-6">
+
+          <div className="bg-white border border-wix-border-light p-6 flex flex-col gap-4">
             <h3 className="text-[14px] uppercase tracking-wider text-gray-800 font-semibold border-b border-wix-border-light pb-3">Financials</h3>
-            <div className="flex flex-col gap-2">
-              <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Tax Rate (%)</label>
-              <input type="number" defaultValue="0" className="border border-wix-border-light p-2.5 text-[14px] focus:border-black outline-none transition-colors" />
+            <div className="flex justify-between text-[13px]">
+              <span className="text-gray-500">Currency</span>
+              <span className="font-semibold text-wix-text-dark">{ev?.tickets?.[0]?.price?.currency || 'BDT'}</span>
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Currency</label>
-              <select className="border border-wix-border-light p-2.5 text-[14px] focus:border-black outline-none transition-colors bg-white cursor-pointer appearance-none">
-                <option>BDT (৳)</option><option>USD ($)</option><option>EUR (€)</option>
-              </select>
+            <div className="flex justify-between text-[13px]">
+              <span className="text-gray-500">Min. Price</span>
+              <span className="font-semibold text-wix-text-dark">
+                {ev?.tickets && ev.tickets.length > 0
+                  ? Math.min(...ev.tickets.map(t => t.price?.amount ?? 0)).toLocaleString()
+                  : '—'}
+              </span>
+            </div>
+            <div className="flex justify-between text-[13px]">
+              <span className="text-gray-500">Tickets Active</span>
+              <span className="font-semibold text-wix-text-dark">{ev?.tickets?.filter(t => t.isActive).length ?? 0} / {ev?.tickets?.length ?? 0}</span>
             </div>
           </div>
-          <button className="w-full bg-black text-white px-6 py-4 text-[13px] font-bold tracking-widest uppercase hover:bg-wix-purple transition-colors border border-black mt-2">Save All Settings</button>
-          <div className="border border-red-600 bg-red-50 p-6 flex flex-col gap-4 mt-2">
+
+          <div className="border border-red-300 bg-red-50 p-6 flex flex-col gap-4">
             <div className="flex items-center gap-2 text-red-600">
               <AlertTriangle className="w-5 h-5" />
-              <h3 className="text-[16px] font-semibold">Danger Zone</h3>
+              <h3 className="text-[15px] font-semibold">Danger Zone</h3>
             </div>
             <p className="text-[12px] text-gray-700 leading-relaxed">Deleting an event is permanent and cannot be undone. All ticket sales will be stopped immediately.</p>
-            <button className="bg-white text-red-600 border border-red-600 px-6 py-2.5 text-[13px] font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors w-full text-center">Delete Event</button>
+            <button
+              onClick={handleDeleteEvent}
+              disabled={deleting}
+              className="bg-white text-red-600 border border-red-600 px-6 py-2.5 text-[13px] font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors w-full text-center flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {deleting ? 'Deleting...' : 'Delete Event'}
+            </button>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
 
 /* ─── Mobile Tab Strip ─── */
 const MobileTabStrip = ({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) => {
@@ -1396,7 +1571,7 @@ export default function ManageEvent() {
                 {activeKey === 'Tickets' && <TicketsTab data={data} onUpdate={setData} onRefetch={fetchEventData} />}
                 {activeKey === 'Gallery' && <GalleryTab data={data} onUpdate={setData} />}
                 {activeKey === 'Marketing' && <MarketingTab />}
-                {activeKey === 'Settings' && <SettingsTab data={data} />}
+                {activeKey === 'Settings' && <SettingsTab data={data} onUpdate={setData} onRefetch={fetchEventData} />}
               </div>
             )}
           </div>
