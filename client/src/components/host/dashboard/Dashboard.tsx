@@ -277,6 +277,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(false);
+  const [showNote, setShowNote] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -415,16 +416,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
               <Plus className="w-4 h-4" /> New Event
             </button>
             <button
-              onClick={() => router.push('/host/orders')}
+              onClick={() => router.push('/host/profile')}
               className="flex items-center gap-2 border border-wix-border-light bg-white px-5 py-2.5 text-[13px] font-medium hover:border-wix-text-dark transition-colors"
             >
-              Orders
+              Profile
             </button>
           </div>
         </div>
 
         {/* Guide banner */}
-        {showGuide && !loading && (
+        {/* {showGuide && !loading && (
           <div className="flex items-start sm:items-center gap-4 p-4 bg-wix-purple/5 border border-wix-purple/20">
             <div className="flex-1 text-[13px] text-wix-text-dark leading-relaxed">
               <span className="font-bold text-wix-purple mr-1">Recommended:</span>
@@ -435,6 +436,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
               before creating an event.
             </div>
             <button onClick={() => setShowGuide(false)} className="text-wix-text-muted hover:text-wix-text-dark shrink-0 text-[18px] leading-none">×</button>
+          </div>
+        )} */}
+        {/* Note banner */}
+        {showNote && !loading && (
+          <div className="flex items-start sm:items-center gap-4 p-4 bg-wix-purple/5 border border-wix-purple/20">
+            <div className="flex-1 text-[13px] text-wix-text-dark leading-relaxed">
+              <span className="font-bold text-wix-purple mr-1">Note:</span>
+              You Must Complete Your{' '}
+              <Link href="/host/profile" className="text-wix-purple hover:underline font-medium">Profile</Link>{' '}
+              before creating an event. Just verify your phone number and add a payment method to your profile to create an event.
+            </div>
+            <button onClick={() => setShowNote(false)} className="text-wix-text-muted hover:text-wix-text-dark shrink-0 text-[18px] leading-none">×</button>
           </div>
         )}
 

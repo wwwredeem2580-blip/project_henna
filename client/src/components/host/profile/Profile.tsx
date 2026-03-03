@@ -1,597 +1,690 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  Calendar,
-  ShoppingBag,
-  Star,
-  Trash2,
-  UserCircle,
-  HelpCircle,
-  Plus,
-  LogIn,
-  UserPlus,
-  PlusCircle,
-  BarChart3,
-  Ticket,
-  DollarSign,
+  ArrowDownLeft,
+  Globe,
+  ArrowRight,
   CreditCard,
-  MoreHorizontal,
-  Loader2,
-  Search,
-  MessageSquare,
-  Send,
-  ChevronRight,
-  Phone,
-  ShieldCheck,
-  Wallet,
-  ChevronLeft,
   Smartphone,
-  Landmark,
-  ArrowUpRight,
-  Upload,
-  ArrowLeft,
-  Pencil,
-  Edit,
-  CheckCircle,
+  CheckCircle2,
   AlertCircle,
+  X as CloseIcon,
+  Loader2,
 } from 'lucide-react';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/lib/context/auth';
-import { useRouter } from 'next/navigation';
-import { hostAnalyticsService, DashboardMetrics, HostOrder } from '@/lib/api/host-analytics';
+import { phoneOTPAPI } from '@/lib/api/phone';
+import { useNotification } from '@/lib/context/notification';
 import { hostEventsService } from '@/lib/api/host';
 
-interface DashboardProps {
-  onLogout: () => void;
-}
+/* ─── Chip SVG ─── */
+const ChipIcon = () => (
+  <svg width="40" height="28" viewBox="0 0 40 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="40" height="28" rx="4" fill="#E2E8F0" />
+    <path d="M12 0V28M28 0V28M0 14H40M12 8H0M28 8H40M12 20H0M28 20H40" stroke="#CBD5E1" strokeWidth="1.5" />
+    <rect x="14" y="6" width="12" height="16" rx="2" stroke="#CBD5E1" strokeWidth="1.5" />
+  </svg>
+);
 
-import { Logo } from '@/components/shared/Logo';
+/* ─── 3D tilt payment card ─── */
+const PaymentCard = ({
+  type,
+  details,
+  color = '#161616',
+  logo,
+  accentColor = '#4a2bed',
+}: {
+  type: string;
+  details: any;
+  color?: string;
+  logo?: React.ReactNode;
+  accentColor?: string;
+}) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseXSpring = useSpring(x);
+  const mouseYSpring = useSpring(y);
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ['15deg', '-15deg']);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ['-15deg', '15deg']);
+  const glareX = useTransform(mouseXSpring, [-0.5, 0.5], ['-50%', '50%']);
 
-import Sidebar from '@/components/layout/Sidebar';
-import { BDTIcon } from '@/components/ui/Icons';
-
-
-import { PhoneVerification } from './PhoneVerification';
-import { useNotification } from '@/lib/context/notification';
-
-export interface PayoutConfig {
-  type: 'bank' | 'bkash' | 'nagad' | null;
-  details: {
-    accountNumber?: string;
-    accountName?: string;
-    bankName?: string;
-    branchName?: string;
-    phoneNumber?: string;
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    x.set((e.clientX - rect.left) / rect.width - 0.5);
+    y.set((e.clientY - rect.top) / rect.height - 0.5);
   };
-}
 
-export default function Profile() {
+  return (
+    <div
+      className="w-full max-w-[400px] aspect-[1.586/1] mx-auto group cursor-pointer"
+      style={{ perspective: '1000px' }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => { x.set(0); y.set(0); }}
+    >
+      <motion.div
+        style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
+        className="w-full h-full relative rounded-2xl border-2 border-wix-text-dark overflow-hidden"
+        animate={{ backgroundColor: color }}
+        transition={{ duration: 0.4 }}
+      >
+        {/* Glare */}
+        <motion.div
+          className="absolute inset-0 z-20 pointer-events-none opacity-40"
+          style={{
+            background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.3) 25%, transparent 30%)',
+            x: glareX,
+          }}
+        />
+        {/* Content */}
+        <div className="absolute inset-0 p-6 sm:p-8 flex flex-col justify-between z-10 text-white" style={{ transformStyle: 'preserve-3d' }}>
+          <div className="flex justify-between items-start" style={{ transform: 'translateZ(40px)' }}>
+            {type === 'card' ? <ChipIcon /> : <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">{logo}</div>}
+            <div className="text-xl italic font-serif font-bold tracking-widest text-gray-300">
+              {type === 'card' ? 'WIX' : type.toUpperCase()}
+              <span className="text-white">{type === 'card' ? 'PAY' : ''}</span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1" style={{ transform: 'translateZ(60px)' }}>
+            <div className="font-mono text-[1.4rem] sm:text-2xl tracking-[0.2em] mb-2">
+              {details.number || (type === 'card' ? '**** **** **** ****' : '01XXX XXXXXX')}
+            </div>
+            <div className="flex justify-between items-end text-sm text-gray-400 font-medium tracking-widest uppercase">
+              <div className="flex flex-col">
+                <span className="text-[10px] mb-1">{type === 'card' ? 'Cardholder' : 'Account Name'}</span>
+                <span className="text-white">{details.name || 'YOUR NAME'}</span>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] mb-1">{type === 'card' ? 'Expires' : 'Status'}</span>
+                <span className="text-white">{type === 'card' ? (details.expiry || 'MM/YY') : 'VERIFIED'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Background glow */}
+        <div
+          className="absolute -bottom-20 -right-20 w-64 h-64 opacity-20 rounded-full blur-2xl"
+          style={{ backgroundColor: accentColor }}
+        />
+      </motion.div>
+    </div>
+  );
+};
 
+/* ─── OTP Modal ─── */
+const OtpModal = ({
+  isOpen,
+  onClose,
+  phoneNumber,
+  onVerify,
+  onResend,
+  onChangeNumber,
+  verifying,
+  resending,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  phoneNumber: string;
+  onVerify: (otp: string) => void;
+  onResend: () => void;
+  onChangeNumber: () => void;
+  verifying?: boolean;
+  resending?: boolean;
+}) => {
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [timer, setTimer] = useState(60);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!isOpen) { setOtp(['', '', '', '', '', '']); setTimer(60); return; }
+    const id = setInterval(() => setTimer(p => (p > 0 ? p - 1 : 0)), 1000);
+    return () => clearInterval(id);
+  }, [isOpen]);
+
+  const handleChange = (idx: number, val: string) => {
+    if (!/^\d*$/.test(val)) return;
+    const next = [...otp];
+    next[idx] = val.slice(-1);
+    setOtp(next);
+    if (val && idx < 5) inputRefs.current[idx + 1]?.focus();
+  };
+
+  const handleKeyDown = (idx: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[idx] && idx > 0) inputRefs.current[idx - 1]?.focus();
+  };
+
+  const handleResendClick = () => {
+    if (timer > 0) return;
+    setOtp(['', '', '', '', '', '']);
+    setTimer(60);
+    onResend();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="bg-white w-full max-w-[480px] p-8 sm:p-10 border border-wix-border-light shadow-2xl relative"
+        >
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors">
+            <CloseIcon className="w-6 h-6" />
+          </button>
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-wix-purple/10 rounded-full flex items-center justify-center mb-6">
+              <Smartphone className="w-8 h-8 text-wix-purple" />
+            </div>
+            <h2 className="text-2xl font-bold text-wix-text-dark mb-2">Verify Your Phone</h2>
+            <p className="text-wix-text-muted text-[15px] mb-8">
+              We've sent a 6-digit code to <span className="font-semibold text-wix-text-dark">{phoneNumber}</span>
+            </p>
+            <div className="flex gap-2 sm:gap-3 mb-8">
+              {otp.map((digit, idx) => (
+                <input
+                  key={idx}
+                  ref={el => { inputRefs.current[idx] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={e => handleChange(idx, e.target.value)}
+                  onKeyDown={e => handleKeyDown(idx, e)}
+                  className="w-10 h-12 sm:w-12 sm:h-14 border-2 border-gray-200 text-center text-xl font-bold focus:border-wix-purple outline-none transition-colors"
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => onVerify(otp.join(''))}
+              disabled={verifying || otp.join('').length < 6}
+              className="w-full bg-wix-text-dark text-white py-4 font-bold hover:bg-black transition-colors mb-6 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {verifying && <Loader2 className="w-4 h-4 animate-spin" />}
+              {verifying ? 'Verifying...' : 'Verify & Continue'}
+            </button>
+            <div className="flex flex-col gap-3 w-full">
+              <button
+                onClick={handleResendClick}
+                disabled={timer > 0 || resending}
+                className={`text-[14px] font-medium flex items-center justify-center gap-1 ${timer > 0 || resending ? 'text-gray-400 cursor-not-allowed' : 'text-wix-purple hover:opacity-80'}`}
+              >
+                {resending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {timer > 0 ? `Resend code in ${timer}s` : resending ? 'Sending...' : 'Resend Code'}
+              </button>
+              <button onClick={onChangeNumber} className="text-[14px] font-medium text-wix-text-muted hover:text-black transition-colors">
+                Change Phone Number
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};
+
+/* ─── Main Profile/Wallet page ─── */
+export function Profile() {
   const { user } = useAuth();
-  const router = useRouter();
-  
-  // State management
-  // State management
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [editingPayoutType, setEditingPayoutType] = useState<'bank_transfer' | 'bkash' | 'nagad' | 'rocket' | null>(null);
-  const [activeSettingsSection, setActiveSettingsSection] = useState('Phone Verification');
-  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const { showNotification } = useNotification();
 
-  // Payment form state
-  const [paymentFormData, setPaymentFormData] = useState({
-    method: '',
-    mobileNumber: '',
-    accountHolderName: '',
-    bankName: '',
-    accountNumber: '',
-    branchName: '',
-    routingNumber: '',
-    swiftCode: ''
-  });
+  // Payment method state
+  const [selectedMethod, setSelectedMethod] = useState('card');
+  const [cardDetails, setCardDetails] = useState({ name: '', number: '', expiry: '' });
+  const [mfsDetails, setMfsDetails] = useState({ name: '', number: '' });
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   // Phone verification state
-  const [verifyPhone, setVerifyPhone] = useState('');
-  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('+880');
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState<string | null>(null);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [resendingOtp, setResendingOtp] = useState(false);
 
-  // Fetch profile data
+  // Load profile on mount
   useEffect(() => {
-    const fetchProfile = async () => {
+    const load = async () => {
       try {
-        setLoading(true);
-        const data = await hostEventsService.getProfile();
-        setProfile(data);
-        
-        // Initialize phone number
-        if (data.user?.phoneNumber) {
-          setVerifyPhone(data.user.phoneNumber);
+        const profile = await hostEventsService.getProfile();
+        // Phone verification
+        if (profile.phoneVerified && profile.phoneVerificationDetails?.phoneNumber) {
+          setIsPhoneVerified(true);
+          setVerifiedPhoneNumber(profile.phoneVerificationDetails.phoneNumber);
+          setPhoneNumber(profile.phoneVerificationDetails.phoneNumber);
         }
-
-        // Pre-fill form if payment details exist
-        if (data.paymentDetails) {
-          setPaymentFormData({
-            method: data.paymentDetails.method || '',
-            mobileNumber: data.paymentDetails.mobileNumber || '',
-            accountHolderName: data.paymentDetails.accountHolderName || '',
-            bankName: data.paymentDetails.bankName || '',
-            accountNumber: data.paymentDetails.accountNumber || '',
-            branchName: data.paymentDetails.branchName || '',
-            routingNumber: data.paymentDetails.routingNumber || '',
-            swiftCode: data.paymentDetails.swiftCode || ''
-          });
+        // Payment details
+        const pd = profile.paymentDetails;
+        if (pd) {
+          const method = pd.method || 'card';
+          setSelectedMethod(method);
+          if (method === 'card') {
+            setCardDetails({ name: pd.accountHolderName || '', number: pd.accountNumber || '', expiry: '' });
+          } else {
+            setMfsDetails({ name: pd.accountHolderName || '', number: pd.mobileNumber || '' });
+          }
         }
-      } catch (error: any) {
-        console.error('Failed to fetch profile:', error);
-        setError(error.message || 'Failed to load profile');
+      } catch (_) {
+        // silent — user may not have profile yet
       } finally {
-        setLoading(false);
+        setLoadingProfile(false);
       }
     };
-    
-    fetchProfile();
+    load();
   }, []);
 
-  const handleVerificationComplete = async () => {
-    // Refresh profile to update verified status
-    const updatedProfile = await hostEventsService.getProfile();
-    setProfile(updatedProfile);
-    setIsEditingPhone(false);
-  };
+  const paymentMethods = [
+    { id: 'card', name: 'Credit Card', icon: <CreditCard className="w-5 h-5" />, color: '#161616', accent: '#4a2bed' },
+    { id: 'bkash', name: 'bKash', icon: <span className="font-bold text-[10px]">bK</span>, color: '#e2136e', accent: '#ffffff' },
+    { id: 'nagad', name: 'Nagad', icon: <span className="font-bold text-[10px]">N</span>, color: '#f7941d', accent: '#ffffff' },
+    { id: 'rocket', name: 'Rocket', icon: <span className="font-bold text-[10px]">R</span>, color: '#8c3494', accent: '#ffffff' },
+    { id: 'upay', name: 'Upay', icon: <span className="font-bold text-[10px]">U</span>, color: '#00adef', accent: '#ffffff' },
+  ];
 
-  const handlePhoneEdit = () => {
-    setIsEditingPhone(true);
-  };
+  const currentMethod = paymentMethods.find(m => m.id === selectedMethod) || paymentMethods[0];
 
-  // Handle form input changes
-  const handleFormChange = (field: string, value: string) => {
-    setPaymentFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Reset form when changing payment type
-  useEffect(() => {
-    if (editingPayoutType) {
-      setPaymentFormData(prev => ({
-        ...prev,
-        method: editingPayoutType
-      }));
+  /* ── Phone handlers ── */
+  const handleSendOtp = async () => {
+    if (!phoneNumber.startsWith('+880') || phoneNumber.replace(/\s/g, '').length < 14) {
+      showNotification('error', 'Invalid Number', 'Please enter a valid Bangladesh phone number starting with +880');
+      return;
     }
-  }, [editingPayoutType]);
-
-  const handleSavePayout = async () => {
+    setSendingOtp(true);
     try {
-      setIsSaving(true);
-      await hostEventsService.updatePaymentDetails(paymentFormData);
-      
-      // Refresh profile data
-      const updatedProfile = await hostEventsService.getProfile();
-      setProfile(updatedProfile);
-      setEditingPayoutType(null);
-    } catch (error: any) {
-      console.error('Failed to save payment details:', error);
-      showNotification('error', 'Payment details not saved', error?.response?.data?.message || 'Failed to save payment details')
+      const res = await phoneOTPAPI.sendOTP(phoneNumber.replace(/\s/g, ''));
+      if (res.success) {
+        setShowOtpModal(true);
+        showNotification('info', 'OTP Sent', `Verification code sent to ${phoneNumber}`);
+      } else {
+        showNotification('error', 'Failed to Send', res.message || 'Could not send OTP. Try again.');
+      }
+    } catch (err: any) {
+      showNotification('error', 'Send Failed', err?.response?.data?.message || 'Failed to send OTP');
     } finally {
-      setIsSaving(false);
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async (otp: string) => {
+    if (otp.length < 6) return;
+    setVerifyingOtp(true);
+    try {
+      const res = await phoneOTPAPI.verifyOTP(otp);
+      if (res.success) {
+        setIsPhoneVerified(true);
+        setShowOtpModal(false);
+        showNotification('success', 'Phone Verified', 'Your phone number has been verified successfully.');
+      } else {
+        showNotification('error', 'Invalid Code', res.message || 'The OTP you entered is incorrect.');
+      }
+    } catch (err: any) {
+      showNotification('error', 'Verification Failed', err?.response?.data?.message || 'Invalid or expired OTP');
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setResendingOtp(true);
+    try {
+      const res = await phoneOTPAPI.resendOTP(phoneNumber.replace(/\s/g, ''));
+      if (res.success) {
+        showNotification('info', 'OTP Resent', 'A new verification code has been sent.');
+      } else {
+        showNotification('error', 'Resend Failed', res.message || 'Failed to resend OTP.');
+      }
+    } catch (err: any) {
+      showNotification('error', 'Resend Failed', err?.response?.data?.message || 'Failed to resend OTP');
+    } finally {
+      setResendingOtp(false);
+    }
+  };
+
+  /* ── Save payment method ── */
+  const handleSavePayment = async () => {
+    setSavingPayment(true);
+    try {
+      const isMobile = selectedMethod !== 'card';
+      const details = isMobile
+        ? {
+            method: selectedMethod,
+            mobileNumber: mfsDetails.number.replace(/\s/g, ''),
+            accountHolderName: mfsDetails.name,
+          }
+        : {
+            method: 'card',
+            accountHolderName: cardDetails.name,
+            accountNumber: cardDetails.number.replace(/\s/g, ''),
+          };
+
+      if (isMobile && (!details.mobileNumber || !details.accountHolderName)) {
+        showNotification('error', 'Missing Fields', 'Please fill in Account Name and mobile number.');
+        return;
+      }
+      if (!isMobile && (!details.accountHolderName || !details.accountNumber)) {
+        showNotification('error', 'Missing Fields', 'Please fill in Name on Card and Card Number.');
+        return;
+      }
+
+      await hostEventsService.updatePaymentDetails(details);
+      showNotification('success', 'Saved', `${currentMethod.name} payment method saved successfully.`);
+    } catch (err: any) {
+      showNotification('error', 'Save Failed', err?.response?.data?.message || 'Failed to save payment method.');
+    } finally {
+      setSavingPayment(false);
     }
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white font-sans text-slate-950">
-      <Sidebar />
+    <div className="max-w-[1240px] mx-auto w-full px-6 py-12 flex flex-col lg:flex-row gap-8">
 
-      {/* Main Content */}
-      <main className="flex-1 lg:ml-64 p-4 lg:p-8">
+      {/* ── Left Column ── */}
+      <div className="w-full lg:w-1/3 flex flex-col gap-6">
 
-        {/* Header */}
-        <header className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="text-2xl font-[400] tracking-normal text-slate-900">Profile</h1>
-            <p className="text-sm text-slate-500 font-[300]">Manage your profile details like contact, payout methods, etc.</p>
+        {/* Balance Panel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white border border-wix-border-light p-8"
+        >
+          <h2 className="text-[15px] text-wix-text-muted font-medium uppercase tracking-wider mb-2">Available Balance</h2>
+          <div className="text-[32px] font-medium tracking-tight text-wix-text-dark mb-6"><span className="text-[16px]">BDT</span> 0.00</div>
+          <div className="flex gap-4">
+            <button className="flex-1 bg-wix-purple text-white py-3 px-4 font-semibold hover:bg-wix-purple/90 transition-colors border border-wix-purple">
+              Withdraw
+            </button>
+            <button className="flex-1 bg-white text-wix-text-dark py-3 px-4 font-semibold hover:bg-gray-50 transition-colors border border-wix-text-dark">
+              Add Funds
+            </button>
           </div>
-          <div className="hidden lg:flex items-center gap-3">
-              <button title='Create Event' onClick={() => {router.push('/host/events/create')}} className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><Plus size={18}/></button>
-              <button title='Analytics' onClick={() => {router.push('/host/analytics')}} className="p-2 transition-all text-neutral-400 hover:text-neutral-600 border border-slate-100 rounded-lg hover:bg-slate-50"><BarChart3 size={18}/></button>
-              <button title='Help' onClick={() => {router.push('/contact')}} className="p-2 transition-all text-brand-400 hover:text-brand-500 border border-slate-100 rounded-lg hover:bg-slate-50"><HelpCircle size={18}/></button>
-              <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden ml-2 border border-slate-200">
-              <img onClick={() => {user?.role === 'host' ? router.push('/host/profile') : router.push('/wallet')}} src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover cursor-pointer" />
+        </motion.div>
+
+        {/* Phone Verification Panel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="bg-white border border-wix-border-light p-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-[15px] text-wix-text-muted font-medium uppercase tracking-wider">Phone Verification</h2>
+            {isPhoneVerified
+              ? <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-green-700 bg-green-50 border border-green-300 px-2 py-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span>
+              : <AlertCircle className="w-5 h-5 text-amber-500" />}
+          </div>
+          {isPhoneVerified && verifiedPhoneNumber && (
+            <div className="mb-4 flex items-center gap-2 text-[13px] text-gray-600 bg-green-50 border border-green-200 px-3 py-2">
+              <Smartphone className="w-3.5 h-3.5 text-green-600 shrink-0" />
+              <span className="font-mono font-medium text-green-800">{verifiedPhoneNumber}</span>
+              <span className="text-green-600 ml-auto">✓ Phone verified</span>
+            </div>
+          )}
+          <div className="flex flex-col gap-4">
+            <div className="relative">
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={e => setPhoneNumber(e.target.value)}
+                disabled={isPhoneVerified}
+                className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                placeholder="+880 1XXX XXXXXX"
+              />
+              <Smartphone className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
+            {!isPhoneVerified ? (
+              <button
+                onClick={handleSendOtp}
+                disabled={sendingOtp}
+                className="w-full bg-white text-wix-text-dark py-3 px-4 font-semibold hover:bg-gray-50 transition-colors border border-wix-text-dark flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {sendingOtp && <Loader2 className="w-4 h-4 animate-spin" />}
+                {sendingOtp ? 'Sending Code...' : 'Verify Number'}
+              </button>
+            ) : (
+              <button
+                onClick={() => { setIsPhoneVerified(false); setVerifiedPhoneNumber(null); setPhoneNumber('+880'); }}
+                className="w-full text-[13px] text-gray-500 py-2 border border-gray-200 hover:border-black hover:text-black transition-colors"
+              >
+                Change Verified Number
+              </button>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Current Plan Panel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white border border-wix-border-light p-8 flex flex-col"
+        >
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h2 className="text-[15px] text-wix-text-muted font-medium uppercase tracking-wider mb-2">Current Plan</h2>
+              <div className="text-[24px] font-semibold text-wix-text-dark">Zenvy Organizer</div>
+            </div>
+            <span className="bg-[#d9f7a3] text-[#2e4d00] text-[11px] font-bold px-3 py-1 uppercase tracking-widest border border-[#c4e48b]">Exclusive</span>
+          </div>
+          <ul className="flex flex-col gap-3 mb-8 text-[15px] text-wix-text-dark">
+            <li className="flex justify-between border-b border-gray-100 pb-2">
+              <span className="text-gray-500">Platform Fee</span>
+              <span className="font-medium">0% / sale</span>
+            </li>
+            <li className="flex justify-between border-b border-gray-100 pb-2">
+              <span className="text-gray-500">Events Limit</span>
+              <span className="font-medium">Unlimited</span>
+            </li>
+            <li className="flex justify-between pb-2">
+              <span className="text-gray-500">Payout Window</span>
+              <span className="font-medium">T+7 days</span>
+            </li>
+          </ul>
+          <button className="w-full text-wix-text-dark py-3 px-4 font-semibold hover:bg-gray-50 transition-colors border border-wix-text-dark">
+            View Plan Details
+          </button>
+        </motion.div>
+
+        {/* Recent Activity */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white border border-wix-border-light p-8"
+        >
+          <h2 className="text-[15px] text-wix-text-muted font-medium uppercase tracking-wider mb-6">Recent Activity</h2>
+          <div className="flex flex-col gap-5">
+            <div className="flex justify-between items-center group cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 border border-gray-200 bg-gray-50 flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+                  <Globe className="w-5 h-5 text-gray-400" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[15px] font-medium text-wix-text-dark">Ticket Payout</span>
+                  <span className="text-[13px] text-gray-500">No payouts yet</span>
+                </div>
+              </div>
+              <span className="text-[15px] font-medium text-wix-text-dark">৳—</span>
+            </div>
+            <div className="flex justify-between items-center group cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 border border-gray-200 bg-gray-50 flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+                  <ArrowDownLeft className="w-5 h-5 text-gray-400" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[15px] font-medium text-wix-text-dark">Funds Added</span>
+                  <span className="text-[13px] text-gray-500">—</span>
+                </div>
+              </div>
+              <span className="text-[15px] font-medium text-green-700">৳—</span>
             </div>
           </div>
-        </header>
+          <button className="text-[14px] text-wix-purple font-medium hover:opacity-80 mt-6 flex items-center gap-1">
+            View all transactions <ArrowRight className="w-3 h-3" />
+          </button>
+        </motion.div>
+      </div>
 
-        {/* Stats Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 animate-pulse">
-                <div className="h-4 bg-slate-200 rounded w-1/2 mb-4"></div>
-                <div className="h-8 bg-slate-200 rounded w-3/4"></div>
-              </div>
+      {/* ── Right Column: Payment Methods & 3D Card ── */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="w-full lg:w-2/3 bg-white border border-wix-border-light p-8 lg:p-12 flex flex-col"
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
+          <div>
+            <h1 className="text-[32px] font-medium tracking-tight text-wix-text-dark leading-none mb-2">Payment Methods</h1>
+            <p className="text-[15px] text-wix-text-muted">Manage your cards and billing preferences.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {paymentMethods.map(method => (
+              <button
+                key={method.id}
+                onClick={() => setSelectedMethod(method.id)}
+                className={`flex items-center gap-2 px-4 py-2 border transition-all ${
+                  selectedMethod === method.id
+                    ? 'border-black bg-black text-white'
+                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400'
+                }`}
+              >
+                {method.icon}
+                <span className="text-[13px] font-semibold">{method.name}</span>
+              </button>
             ))}
           </div>
-        ) : error ? (
-          <div className="p-6 bg-red-50 border border-red-200 rounded-lg mb-10">
-            <p className="text-sm text-red-600">{error}</p>
+        </div>
+
+        {/* Interactive Card Preview */}
+        <div className="w-full bg-wix-gray-bg border border-wix-border-light p-8 lg:p-16 mb-10 flex flex-col items-center justify-center overflow-hidden relative group">
+          <div className="absolute top-4 left-4 text-[11px] font-bold tracking-widest text-gray-400 uppercase">Interactive Preview</div>
+          <PaymentCard
+            type={selectedMethod}
+            details={selectedMethod === 'card' ? cardDetails : mfsDetails}
+            color={currentMethod.color}
+            accentColor={currentMethod.accent}
+            logo={currentMethod.icon}
+          />
+          <div className="mt-8 flex gap-2 items-center opacity-60 group-hover:opacity-100 transition-opacity">
+            <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
+            </svg>
+            <span className="text-[13px] text-gray-500 font-medium tracking-wide">Hover to interact</span>
           </div>
-        ) : 
-          <div className="flex flex-col">
-            
-            {/* Eligibility Banner */}
-            <div className="mb-6">
-              {profile?.phoneVerified && profile?.paymentDetails ? (
-                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex flex-col gap-4 md:flex-row items-start md:items-center md:justify-between">
-                  <div className="flex items-center gap-4">
-                     <div className="min-w-8 min-h-8 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm">
-                        <CheckCircle size={16} strokeWidth={2} />
-                     </div>
-                     <div>
-                        <h3 className="text-md font-[500] text-slate-800">You are eligible to create events!</h3>
-                        <p className="text-xs text-slate-500 font-[300]">Your profile is complete. You can now start hosting events on Zenvy.</p>
-                     </div>
-                  </div>
-                  <button 
-                    onClick={() => router.push('/host/events/create')}
-                    className="px-4 ml-12 md:ml-0 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-[500] text-[10px] transition-all shadow-sm shadow-emerald-200 flex items-center gap-2"
-                  >
-                    Create Event <ArrowUpRight size={18} />
-                  </button>
+        </div>
+
+        {/* Add / Edit Form */}
+        <div className="w-full max-w-[520px] mx-auto">
+          <h3 className="text-[20px] font-medium text-wix-text-dark mb-6 border-b border-wix-border-light pb-4">
+            {selectedMethod === 'card' ? 'Add a New Card' : `Configure ${currentMethod.name}`}
+          </h3>
+          <form className="flex flex-col gap-6" onSubmit={e => e.preventDefault()}>
+            {selectedMethod === 'card' ? (
+              <>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[14px] font-medium text-wix-text-dark">Name on Card</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none"
+                    placeholder="Jane Doe"
+                    onChange={e => setCardDetails(p => ({ ...p, name: e.target.value.toUpperCase() }))}
+                  />
                 </div>
-              ) : (
-                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                     <div className="min-w-8 min-h-8 bg-white rounded-full flex items-center justify-center text-amber-500 shadow-sm">
-                        <AlertCircle size={16} strokeWidth={2} />
-                     </div>
-                     <div>
-                        <h3 className="text-md font-[500] text-slate-800">Complete your profile to host events</h3>
-                        <p className="text-xs text-slate-500 font-[300]">
-                          You need to { !profile?.phoneVerified ? 'verify your phone number' : '' } 
-                          { !profile?.phoneVerified && !profile?.paymentDetails ? ' and ' : '' }
-                          { !profile?.paymentDetails ? 'add a payout method' : '' } to be eligible.
-                        </p>
-                     </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[14px] font-medium text-wix-text-dark">Card Number</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] font-mono outline-none"
+                    placeholder="0000 0000 0000 0000"
+                    maxLength={19}
+                    onChange={e => {
+                      const val = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+                      e.target.value = val;
+                      setCardDetails(p => ({ ...p, number: val }));
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col sm:flex-row gap-6">
+                  <div className="flex flex-col gap-2 flex-1">
+                    <label className="text-[14px] font-medium text-wix-text-dark">Expiry Date</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none"
+                      placeholder="MM/YY"
+                      maxLength={5}
+                      onChange={e => setCardDetails(p => ({ ...p, expiry: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2 flex-1">
+                    <label className="text-[14px] font-medium text-wix-text-dark">Security Code (CVC)</label>
+                    <input
+                      type="password"
+                      className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none"
+                      placeholder="***"
+                      maxLength={4}
+                    />
                   </div>
                 </div>
-              )}
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[14px] font-medium text-wix-text-dark">Account Name</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none"
+                    placeholder="Jane Doe"
+                    onChange={e => setMfsDetails(p => ({ ...p, name: e.target.value.toUpperCase() }))}
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[14px] font-medium text-wix-text-dark">{currentMethod.name} Number</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] font-mono outline-none"
+                    placeholder="01XXX XXXXXX"
+                    onChange={e => setMfsDetails(p => ({ ...p, number: e.target.value }))}
+                  />
+                </div>
+              </>
+            )}
+            <div className="flex items-center gap-3 mt-2">
+              <input type="checkbox" id="default-method" className="w-4 h-4 accent-black cursor-pointer" defaultChecked />
+              <label htmlFor="default-method" className="text-[14px] text-wix-text-dark cursor-pointer">
+                Set as default payment method
+              </label>
             </div>
-
-            <div className="flex flex-1 bg-white overflow-hidden flex-col md:flex-row">
-            <div className={`w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-100 flex-col bg-white ${isMobileDetailOpen ? 'hidden md:flex' : 'flex'}`}>
-              <div className="p-4 md:p-6 border-b border-slate-50">
-                <h3 className="text-md font-[500] text-neutral-750 uppercase tracking-widest"></h3>
-              </div>
-              <div className="bg-white overflow-hidden">
-                {[
-                  { 
-                    label: 'Phone Verification', 
-                    icon: <Phone size={18}/>, 
-                    desc: 'Verify your phone for account security',
-                    status: profile?.phoneVerified ? 'verified' : 'pending'
-                  },
-                  { 
-                    label: 'KYC Documents', 
-                    icon: <ShieldCheck size={18}/>, 
-                    desc: 'Upload identity for verification',
-                    status: 'locked'
-                  },
-                  { 
-                    label: 'Payout Methods', 
-                    icon: <Wallet size={18}/>, 
-                    desc: 'Manage how you receive payments',
-                    status: profile?.paymentDetails ? 'configured' : 'pending'
-                  },
-                ].map((section) => (
-                  <button key={section.label} onClick={() => {
-                    setActiveSettingsSection(section.label);
-                    setIsMobileDetailOpen(true);
-                  }} className={`w-full p-4 md:p-6 text-left border-b border-slate-50 transition-all flex gap-4 hover:bg-slate-50 group ${activeSettingsSection === section.label ? 'bg-brand-50/30' : ''}`}>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${activeSettingsSection === section.label ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-brand-100 group-hover:text-brand-500'}`}>{section.icon}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <h4 className="text-sm font-[400] text-neutral-750">{section.label}</h4>
-                        {section.status === 'verified' && (
-                          <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[9px] font-[400] rounded-full uppercase tracking-wider">Verified</span>
-                        )}
-                        {section.status === 'configured' && (
-                          <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-[400] rounded-full uppercase tracking-wider">Configured</span>
-                        )}
-                        {section.status === 'pending' && (
-                          <span className="px-2 py-0.5 bg-amber-50 text-amber-600 text-[9px] font-[400] rounded-full uppercase tracking-wider">Pending</span>
-                        )}
-                        {section.status === 'locked' && (
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-[400] rounded-full uppercase tracking-wider">Locked</span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-neutral-500 font-[300]">{section.desc}</p>
-                    </div>
-                    <ChevronRight size={16} className={`mt-1 transition-transform hidden md:block ${activeSettingsSection === section.label ? 'text-brand-500 translate-x-1' : 'text-slate-200'}`} />
-                  </button>
-                ))}
-              </div>
+            <div className="mt-4 border-t border-wix-border-light pt-6 flex justify-end gap-4">
+              <button type="button" className="px-6 py-3 font-semibold text-wix-text-dark hover:bg-gray-100 transition-colors border border-transparent">
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePayment}
+                disabled={savingPayment}
+                className="bg-wix-text-dark text-white px-8 py-3 font-semibold hover:bg-black transition-colors border border-black flex items-center gap-2 disabled:opacity-50"
+              >
+                {savingPayment && <Loader2 className="w-4 h-4 animate-spin" />}
+                {savingPayment ? 'Saving...' : `Save ${selectedMethod === 'card' ? 'Card' : 'Method'}`}
+              </button>
             </div>
+          </form>
+        </div>
+      </motion.div>
 
-            <div className={`flex-1 overflow-y-auto bg-slate-50/30 ${isMobileDetailOpen ? 'flex flex-col' : 'hidden md:flex flex-col'}`}>
-              <AnimatePresence mode="wait">
-                {activeSettingsSection === 'Phone Verification' && (
-                  <motion.div key="phone" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-0 md:p-10 max-w-[600px] space-y-10">
-                    <div className="space-y-4 flex flex-col gap-4">
-                      <button 
-                        onClick={() => setIsMobileDetailOpen(false)}
-                        className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all h-fit"
-                      >
-                        <ArrowLeft size={18} strokeWidth={1.5}/>
-                      </button>
-                      <div className='flex gap-6'>
-                        <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 flex-shrink-0">
-                          <Smartphone size={16}/>
-                        </div>
-                        <div className="space-y-1">
-                          <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Phone Verification</h2>
-                          <p className="text-[12px] text-neutral-500 font-[300]">To complete your host profile, we need to verify your phone number.</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-white px-2 rounded-[2rem]">
-                      {profile?.phoneVerified ? (
-                         <div className="space-y-6">
-                            <div className="bg-brand-50 rounded-xl p-6 text-white overflow-hidden relative group">
-                              <div className="relative z-10">
-                                <div className='flex gap-3'>
-                                  <ShieldCheck size={20} className="text-brand-500 mt-1" />
-                                  <h3 className="text-md text-neutral-800 font-[400] mb-2">
-                                    Phone Verified
-                                  </h3>
-                                </div>
-                                <p className="text-slate-400 text-xs mb-6 font-[300] leading-relaxed">Your number {profile.phoneVerificationDetails?.phoneNumber || profile.user.phoneNumber} is verified.</p>
-                                <button onClick={() => handlePhoneEdit()} className="w-full py-2 bg-brand-500 text-brand-50 font-[500] rounded-xl text-xs max-w-[100px] flex items-center justify-center gap-2 hover:translate-y-[-2px] transition-all">
-                                  Edit <ArrowUpRight size={16} />
-                                </button>
-                              </div>
-                            </div>
-                         </div>
-                      ) : (
-                        <PhoneVerification 
-                          phoneNumber={verifyPhone}
-                          onPhoneUpdate={setVerifyPhone}
-                          onVerificationComplete={handleVerificationComplete}
-                        />
-                      )}
-                      
-                      {isEditingPhone && profile?.phoneVerified && (
-                        <div className="mt-8 pt-8 border-t border-slate-100">
-                          <h3 className="text-sm font-[400] text-neutral-750 mb-4">Update Phone Number</h3>
-                          <PhoneVerification 
-                            phoneNumber={verifyPhone}
-                            onPhoneUpdate={setVerifyPhone}
-                            onVerificationComplete={() => {
-                              handleVerificationComplete();
-                              setIsEditingPhone(false);
-                            }}
-                          />
-                          <button 
-                            onClick={() => setIsEditingPhone(false)}
-                            className="mt-4 text-xs text-neutral-500 hover:text-neutral-600"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeSettingsSection === 'KYC Documents' && (
-                  <motion.div key="kyc" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-0 md:p-10 max-w-[600px] space-y-10">
-                    <div className="space-y-4 flex flex-col gap-2">
-                      <button 
-                        onClick={() => setIsMobileDetailOpen(false)}
-                        className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all h-fit"
-                      >
-                        <ArrowLeft size={18} strokeWidth={1.5}/>
-                      </button>
-                      <div className='flex gap-6'>
-                        <div className="w-10 h-10 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-500 flex-shrink-0">
-                          <ShieldCheck size={20}/>
-                        </div>
-                        <div className="space-y-1">
-                          <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">KYC coming soon</h2>
-                          <p className="text-[12px] text-neutral-500 font-[300]">Soon you'll be able to upload NID and Passport documents.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="border-2 border-dashed border-slate-100 rounded-[2rem] p-10 md:p-16 flex flex-col items-center justify-center text-center space-y-4 bg-white/50">
-                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-neutral-500">
-                        <Upload size={20}/>
-                      </div>
-                      <div>
-                        <h4 className="text-md font-[400] text-neutral-500">Section Locked</h4>
-                        <p className="text-[10px] text-neutral-500 font-[300]">Verify your phone first.</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeSettingsSection === 'Payout Methods' && (
-                  <motion.div key="payout" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-0 md:p-10 max-w-[600px] space-y-10">
-                    <div className="space-y-4 flex flex-col gap-2">
-                      <button 
-                         onClick={() => setIsMobileDetailOpen(false)}
-                         className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all h-fit"
-                      >
-                        <ArrowLeft size={18} strokeWidth={1.5}/>
-                      </button>
-                      <div className='flex gap-6'>
-                        <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 flex-shrink-0">
-                          <Landmark size={20} strokeWidth={1.5}/>
-                        </div>
-                        <div className="space-y-1">
-                          <h2 className="text-lg font-[400] text-neutral-750 tracking-tight">Payout Management</h2>
-                          <p className="text-[12px] text-neutral-500 font-[300]">Manage how you receive your earnings. Select one primary method.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {!editingPayoutType ? (
-                      <div className="grid grid-cols-1 gap-4">
-                        {[
-                          { id: 'bank_transfer', label: 'Bank Account', icon: <Landmark size={18}/> },
-                          { id: 'bkash', label: 'bKash Wallet', icon: <Smartphone size={18}/> },
-                          { id: 'nagad', label: 'Nagad Wallet', icon: <CreditCard size={18}/> },
-                        ].map(method => (
-                          <button 
-                            key={method.id} 
-                            onClick={() => setEditingPayoutType(method.id as any)}
-                            className={`bg-white border-2 rounded-[2rem] p-4 flex items-center justify-between group transition-all border-slate-100 hover:translate-y-[-2px] hover:shadow-md`}
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${profile?.paymentDetails?.method === method.id ? 'bg-brand-500 text-white' : 'bg-slate-50 text-slate-400'}`}>{method.icon}</div>
-                              <div className="text-left">
-                                <span className="font-[300] text-sm text-slate-900 block">{method.label}</span>
-                                {profile?.paymentDetails?.method === method.id ? (
-                                  <span className="text-[9px] font-[300] text-brand-500 uppercase tracking-widest">Active & Configured</span>
-                                ) : (
-                                  <span className="text-[9px] font-[300] text-slate-400 uppercase tracking-widest">Available</span>
-                                )}
-                              </div>
-                            </div>
-                            <ChevronRight size={18} className={`${profile?.paymentDetails?.method === method.id ? 'text-brand-500' : 'text-slate-200'}`} />
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="bg-white p-0 space-y-8">
-                        <div className="flex items-center justify-between mb-4">
-                          <button onClick={() => setEditingPayoutType(null)} className="flex items-center gap-2 text-slate-400 hover:text-brand-600 hover:translate-x-[-2px] transition-all font-[300] text-xs uppercase tracking-widest">
-                            <ArrowLeft size={16} strokeWidth={1.5}/>
-                          </button>
-                          <span className="text-[10px] font-[300] uppercase tracking-widest text-brand-500">Configure {editingPayoutType}</span>
-                        </div>
-                        
-                        {editingPayoutType === 'bank_transfer' && (
-                          <div className="space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2 flex flex-col gap-1">
-                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Bank Name</label>
-                                <input 
-                                  value={paymentFormData.bankName}
-                                  onChange={(e) => handleFormChange('bankName', e.target.value)}
-                                  placeholder="e.g. City Bank" 
-                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
-                                />
-                              </div>
-                              <div className="space-y-2 flex flex-col gap-1">
-                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Account Name</label>
-                                <input 
-                                  value={paymentFormData.accountHolderName}
-                                  onChange={(e) => handleFormChange('accountHolderName', e.target.value)}
-                                  placeholder="Full Name" 
-                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
-                                />
-                              </div>
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-4">
-                              <div className="space-y-2 flex flex-col gap-1">
-                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Account Number</label>
-                                <input 
-                                  value={paymentFormData.accountNumber}
-                                  onChange={(e) => handleFormChange('accountNumber', e.target.value)}
-                                  placeholder="0000 0000 0000" 
-                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
-                                />
-                              </div>
-                              <div className="space-y-2 flex flex-col gap-1">
-                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Branch Name</label>
-                                <input 
-                                  value={paymentFormData.branchName}
-                                  onChange={(e) => handleFormChange('branchName', e.target.value)}
-                                  placeholder="Dhaka Main Branch" 
-                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
-                                />
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2 flex flex-col gap-1">
-                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Routing Number</label>
-                                <input 
-                                  value={paymentFormData.routingNumber}
-                                  onChange={(e) => handleFormChange('routingNumber', e.target.value)}
-                                  placeholder="Routing Number" 
-                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
-                                />
-                              </div>
-                              <div className="space-y-2 flex flex-col gap-1">
-                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Swift Code</label>
-                                <input 
-                                  value={paymentFormData.swiftCode}
-                                  onChange={(e) => handleFormChange('swiftCode', e.target.value)}
-                                  placeholder="Swift Code" 
-                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {(editingPayoutType === 'bkash' || editingPayoutType === 'nagad' || editingPayoutType === 'rocket') && (
-                          <div className="space-y-6">
-                            <div className="p-4 bg-brand-50 rounded-tr-xl rounded-bl-xl flex items-center gap-4 border border-brand-100 mb-4">
-                              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-500"><Smartphone size={20}/></div>
-                              <p className="text-xs font-[300] text-brand-800">Ensure the wallet number is personal and verified.</p>
-                            </div>
-                            <div className="space-y-2 flex flex-col gap-1">
-                              <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Wallet Number</label>
-                              <div className="flex gap-4">
-                                <div className="px-4 py-2 text-sm bg-slate-50 rounded-tr-lg rounded-bl-lg font-[400] text-slate-900 border-2 border-transparent">+880</div>
-                                <input 
-                                  value={paymentFormData.mobileNumber}
-                                  onChange={(e) => handleFormChange('mobileNumber', e.target.value)}
-                                  placeholder="171 234 5678" 
-                                  className="flex-1 px-6 py-2 text-sm bg-slate-50 rounded-tr-lg rounded-bl-lg font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-2 flex flex-col gap-1">
-                                <label className="text-xs font-[500] text-neutral-750 uppercase ml-1">Account Holder Name</label>
-                                <input 
-                                  value={paymentFormData.accountHolderName}
-                                  onChange={(e) => handleFormChange('accountHolderName', e.target.value)}
-                                  placeholder="Full Name" 
-                                  className="w-full px-6 py-2 bg-slate-50 text-xs rounded-xl font-[400] outline-none border-2 border-transparent focus:border-brand-500/20"
-                                />
-                              </div>
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={handleSavePayout}
-                          disabled={isSaving}
-                          className="w-full bg-brand-500 text-white py-2 rounded-tr-lg rounded-bl-lg font-[500] text-sm hover:bg-brand-600 transition-all shadow-xl shadow-brand-100 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSaving ? (
-                            <>
-                              <Loader2 size={18} className="animate-spin" />
-                              Saving...
-                            </>
-                          ) : (
-                            'Save & Set as Primary'
-                          )}
-                        </button>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-          </div>
-      }
-      </main>
+      {/* OTP Modal */}
+      <OtpModal
+        isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        phoneNumber={phoneNumber}
+        onVerify={handleVerifyOtp}
+        onResend={handleResendOtp}
+        onChangeNumber={() => setShowOtpModal(false)}
+        verifying={verifyingOtp}
+        resending={resendingOtp}
+      />
     </div>
   );
-};
+}
