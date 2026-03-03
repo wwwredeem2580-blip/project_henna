@@ -12,11 +12,14 @@ import {
   Loader2,
   ArrowLeft,
   ShoppingBag,
+  Trash2,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { useRouter } from 'next/navigation';
 import { hostAnalyticsService, DashboardMetrics, HostOrder } from '@/lib/api/host-analytics';
 import { hostEventsService } from '@/lib/api/host';
+import { eventsService } from '@/lib/api/events';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api/client';
 import { TOTAL_ITEMS } from '@/app/(public)/learn/host-guide/content';
@@ -149,14 +152,35 @@ const FunnelChart = ({ metrics }: { metrics: DashboardMetrics | null }) => {
   );
 };
 
+/* ─── Status priority sort ─── */
+const STATUS_ORDER: Record<string, number> = {
+  approved: 0,
+  live: 1,
+  published: 2,
+  pending_approval: 3,
+  draft: 4,
+  ended: 5,
+  cancelled: 6,
+};
+
+const STATUS_BADGE: Record<string, string> = {
+  live: 'border-emerald-500 text-emerald-600',
+  published: 'border-wix-purple text-wix-purple',
+  approved: 'border-green-500 text-green-600',
+  pending_approval: 'border-amber-500 text-amber-600',
+  draft: 'border-gray-400 text-gray-500',
+  ended: 'border-gray-300 text-gray-400',
+  cancelled: 'border-red-400 text-red-500',
+};
+
 /* ─── Event Performance Table ─── */
-const EventTable = ({ events, loading, router }: { events: any[]; loading: boolean; router: any }) => (
+const EventTable = ({ events, loading, router, onDelete }: { events: any[]; loading: boolean; router: any; onDelete: (eventId: string) => void }) => (
   <div className="w-full overflow-x-auto">
     <table className="w-full text-left border-collapse min-w-[700px]">
       <thead>
         <tr className="border-b-2 border-wix-text-dark text-[11px] uppercase tracking-wider text-wix-text-muted">
           <th className="pb-4 pl-3 font-black w-2/5">Event</th>
-          <th className="pb-4 font-black">Capacity & Sales</th>
+          <th className="pb-4 font-black">Capacity &amp; Sales</th>
           <th className="pb-4 font-black">Revenue</th>
           <th className="pb-4 font-black">Status</th>
           <th className="pb-4 pr-3 font-black text-right">Action</th>
@@ -170,6 +194,7 @@ const EventTable = ({ events, loading, router }: { events: any[]; loading: boole
         ) : (
           events.map((event: any, i: number) => {
             const sold = event.ticketsSoldPercentage ?? 0;
+            const isDraft = event.status === 'draft';
             return (
               <tr key={event.eventId || i} className="border-b border-wix-border-light hover:bg-gray-50 transition-colors group">
                 <td className="py-4 pl-3">
@@ -203,27 +228,31 @@ const EventTable = ({ events, loading, router }: { events: any[]; loading: boole
                   </span>
                 </td>
                 <td className="py-4">
-                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 border ${
-                    event.status === 'live'
-                      ? 'border-emerald-500 text-emerald-600'
-                      : event.status === 'published'
-                      ? 'border-wix-purple text-wix-purple'
-                      : 'border-gray-300 text-gray-500'
-                  }`}>
-                    {event.status}
+                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 border ${STATUS_BADGE[event.status] || 'border-gray-300 text-gray-500'}`}>
+                    {event.status === 'pending_approval' ? 'pending' : event.status}
                   </span>
                 </td>
                 <td className="py-4 pr-3 text-right">
-                  <button
-                    onClick={() =>
-                      event?.status === 'draft'
-                        ? router.push(`/host/events/create?draftId=${event.eventId}`)
-                        : router.push(`/host/events/manage/${event.eventId}`)
-                    }
-                    className="text-[12px] font-bold uppercase tracking-widest text-wix-text-dark border border-wix-border-light px-3 py-1.5 hover:border-wix-text-dark transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    Manage
-                  </button>
+                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {isDraft && (
+                      <button
+                        onClick={() => onDelete(event.eventId)}
+                        className="text-[12px] font-bold uppercase tracking-widest text-red-600 border border-red-300 px-3 py-1.5 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    )}
+                    <button
+                      onClick={() =>
+                        isDraft
+                          ? router.push(`/host/events/create?draftId=${event.eventId}`)
+                          : router.push(`/host/events/manage/${event.eventId}`)
+                      }
+                      className="text-[12px] font-bold uppercase tracking-widest text-wix-text-dark border border-wix-border-light px-3 py-1.5 hover:border-wix-text-dark transition-colors"
+                    >
+                      {isDraft ? 'Edit Draft' : 'Manage'}
+                    </button>
+                  </div>
                 </td>
               </tr>
             );
@@ -242,11 +271,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [recentOrders, setRecentOrders] = useState<HostOrder[]>([]);
+  const [allOrders, setAllOrders] = useState<HostOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAllOrders, setLoadingAllOrders] = useState(false);
+  const [showAllOrders, setShowAllOrders] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllEvents, setShowAllEvents] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -271,14 +304,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     fetchData();
   }, []);
 
-  // Filter out ended events, apply search, then cap at 5 unless expanded
-  const activeEvents = events.filter(e =>
-    e.status !== 'ended' && e.status !== 'cancelled'
-  );
+  // Filter + sort events
+  const activeEvents = events.filter(e => e.status !== 'cancelled');
   const searchedEvents = activeEvents.filter(e =>
-    !searchQuery || e.title?.toLowerCase().includes(searchQuery.toLowerCase())
+    (!searchQuery || e.title?.toLowerCase().includes(searchQuery.toLowerCase())) &&
+    (statusFilter === 'all' || e.status === statusFilter)
   );
-  const filteredEvents = showAllEvents ? searchedEvents : searchedEvents.slice(0, 5);
+  // Sort by status priority
+  const sortedEvents = [...searchedEvents].sort((a, b) =>
+    (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)
+  );
+  const filteredEvents = showAllEvents ? sortedEvents : sortedEvents.slice(0, 5);
+
+  // Delete a draft event
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!window.confirm('Delete this draft event? This cannot be undone.')) return;
+    try {
+      await eventsService.deleteEvent(eventId);
+      setEvents(prev => prev.filter(e => e.eventId !== eventId));
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Failed to delete event');
+    }
+  };
+
+  // Expand Recent Sales in-place
+  const handleToggleAllOrders = async () => {
+    if (!showAllOrders && allOrders.length === 0) {
+      setLoadingAllOrders(true);
+      try {
+        const result = await hostAnalyticsService.getHostOrders(1, 100);
+        setAllOrders(result.orders || []);
+      } catch (_) {}
+      setLoadingAllOrders(false);
+    }
+    setShowAllOrders(v => !v);
+  };
 
   // Build KPI cards from real metrics
   const kpiCards = metrics ? [
@@ -430,30 +490,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
               <h2 className="text-[18px] font-medium text-wix-text-dark mb-1">Event Performance</h2>
               <p className="text-[13px] text-wix-text-muted">Live and published events with real-time metrics.</p>
             </div>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search events..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="border border-wix-border-light px-4 py-2 text-[13px] w-[220px] focus:border-wix-text-dark outline-none transition-colors"
-              />
-              <Search className="w-3.5 h-3.5 absolute right-3 top-2.5 text-gray-400" />
+            <div className="flex items-center gap-3">
+              {/* Status Filter */}
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={e => { setStatusFilter(e.target.value); setShowAllEvents(false); }}
+                  className="border border-wix-border-light pl-3 pr-8 py-2 text-[13px] focus:border-wix-text-dark outline-none transition-colors appearance-none bg-white cursor-pointer"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="approved">Approved</option>
+                  <option value="live">Live</option>
+                  <option value="published">Published</option>
+                  <option value="pending_approval">Pending Approval</option>
+                  <option value="draft">Draft</option>
+                  <option value="ended">Ended</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-gray-400 pointer-events-none" />
+              </div>
+              {/* Search */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search events..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="border border-wix-border-light px-4 py-2 text-[13px] w-[220px] focus:border-wix-text-dark outline-none transition-colors"
+                />
+                <Search className="w-3.5 h-3.5 absolute right-3 top-2.5 text-gray-400" />
+              </div>
             </div>
           </div>
 
-          <EventTable events={filteredEvents} loading={loading} router={router} />
+          <EventTable events={filteredEvents} loading={loading} router={router} onDelete={handleDeleteEvent} />
 
           <div className="mt-6 flex justify-between items-center pt-4 border-t border-wix-border-light">
             <span className="text-[12px] text-wix-text-muted">
-              {showAllEvents ? searchedEvents.length : Math.min(searchedEvents.length, 5)} of {searchedEvents.length} events
+              {showAllEvents ? sortedEvents.length : Math.min(sortedEvents.length, 5)} of {sortedEvents.length} events
             </span>
-            {searchedEvents.length > 5 && (
+            {sortedEvents.length > 5 && (
               <button
                 onClick={() => setShowAllEvents(v => !v)}
                 className="text-[13px] font-bold text-wix-text-dark border-b border-wix-text-dark pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors"
               >
-                {showAllEvents ? 'Show less ↑' : `View all ${searchedEvents.length} events ↓`}
+                {showAllEvents ? 'Show less ↑' : `View all ${sortedEvents.length} events ↓`}
               </button>
             )}
           </div>
@@ -466,35 +546,44 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
               <h2 className="text-[18px] font-medium text-wix-text-dark mb-1">Recent Sales</h2>
               <p className="text-[13px] text-wix-text-muted">Latest incoming ticket orders</p>
             </div>
-            <button onClick={() => router.push('/host/orders')} className="text-[12px] font-bold uppercase tracking-widest text-wix-text-dark border-b border-wix-text-dark pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors">
-              See All
+            <button
+              onClick={handleToggleAllOrders}
+              disabled={loadingAllOrders}
+              className="flex items-center gap-1 text-[12px] font-bold uppercase tracking-widest text-wix-text-dark border-b border-wix-text-dark pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors"
+            >
+              {loadingAllOrders
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : showAllOrders ? 'Show less ↑' : 'See All ↓'}
             </button>
           </div>
 
           {loading ? (
             <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-wix-purple" /></div>
-          ) : recentOrders.length === 0 ? (
-            <div className="text-center py-10 text-[14px] text-wix-text-muted">No recent orders</div>
-          ) : (
-            <div className="flex flex-col divide-y divide-wix-border-light">
-              {recentOrders.map((order, i) => (
-                <div key={i} className="flex items-center justify-between py-4 hover:bg-gray-50 transition-colors -mx-2 px-2">
-                  <div className="flex items-center gap-4">
-                    <div className="w-9 h-9 bg-gray-100 border border-wix-border-light flex items-center justify-center shrink-0">
-                      <ShoppingBag className="w-4 h-4 text-wix-text-muted" />
+          ) : (() => {
+            const displayOrders = showAllOrders ? allOrders : recentOrders;
+            return displayOrders.length === 0 ? (
+              <div className="text-center py-10 text-[14px] text-wix-text-muted">No recent orders</div>
+            ) : (
+              <div className="flex flex-col divide-y divide-wix-border-light">
+                {displayOrders.map((order, i) => (
+                  <div key={i} className="flex items-center justify-between py-4 hover:bg-gray-50 transition-colors -mx-2 px-2">
+                    <div className="flex items-center gap-4">
+                      <div className="w-9 h-9 bg-gray-100 border border-wix-border-light flex items-center justify-center shrink-0">
+                        <ShoppingBag className="w-4 h-4 text-wix-text-muted" />
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-medium text-wix-text-dark line-clamp-1 max-w-[260px]">{order.eventTitle}</p>
+                        <p className="text-[11px] text-wix-text-muted">{order.orderNumber}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[13px] font-medium text-wix-text-dark line-clamp-1 max-w-[260px]">{order.eventTitle}</p>
-                      <p className="text-[11px] text-wix-text-muted">{order.orderNumber}</p>
-                    </div>
+                    <span className="font-mono text-[14px] font-semibold text-wix-text-dark flex items-center gap-0.5 shrink-0">
+                      <BDTIcon className="text-[12px]" />{order.total?.toLocaleString()}
+                    </span>
                   </div>
-                  <span className="font-mono text-[14px] font-semibold text-wix-text-dark flex items-center gap-0.5 shrink-0">
-                    <BDTIcon className="text-[12px]" />{order.total?.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
       </main>
