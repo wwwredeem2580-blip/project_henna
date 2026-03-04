@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe, Upload, Ticket, Trash, Edit, Plus, Calendar, Clock10, Save } from 'lucide-react';
+import { Mail, Lock, User, ChevronLeft, Sparkles, Building2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Globe, Upload, Ticket, Trash, Edit, Plus, Calendar, Clock10, Save, MapPin } from 'lucide-react';
 import { authService } from '@/lib/api/auth';
 import { eventsService } from '@/lib/api/events';
 import { useNotification } from '@/lib/context/notification';
@@ -565,60 +565,47 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-0 sm:p-6 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-50 rounded-full blur-[100px] -z-10 opacity-50" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-50 rounded-full blur-[80px] -z-10 opacity-50" />
-
-      <motion.div
-        layout
-        className="w-full max-w-[500px] bg-white p-8 md:p-12 rounded-[2rem] border border-gray-100 shadow-2xl shadow-gray-100/50"
-      >
-        <div className="mb-12 text-xs sm:text-sm flex justify-between items-center">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[600px] mx-auto px-6 py-12">
+        {/* Top nav: back + step dots */}
+        <div className="mb-10 flex justify-between items-center">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors group font-[400]"
+            className="flex items-center gap-2 text-wix-text-muted hover:text-wix-text-dark transition-colors text-[14px] font-medium group"
           >
-            <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+            <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
             {step === 'basic' ? 'Back' : 'Previous'}
           </button>
-
-          <div className="flex gap-2">
-            {(['basic', 'details', 'logistics', 'verification', 'tickets', 'platform'] as Step[]).map((s) => (
-              <div key={s} className={`h-1.5 w-6 sm:w-8 rounded-full transition-all duration-500 ${step === s ? 'bg-brand-500' : 'bg-gray-100'}`} />
+          <div className="flex gap-1.5">
+            {(['basic', 'details', 'venue', 'schedule', 'verification', 'tickets', 'platform'] as Step[]).map((s) => (
+              <div key={s} className={`h-1 w-8 transition-all duration-500 ${step === s ? 'bg-wix-text-dark' : 'bg-gray-200'}`} />
             ))}
           </div>
         </div>
 
         <AnimatePresence mode="wait">
-          {/* Step 1: Business Information */}
           {step === 'basic' && (
-            <motion.div key="basic" {...stepVariants} className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Building2 className="text-brand-500" size={20} />
-                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 1: Basic Information</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Basic Information</h2>
-                <p className="text-gray-500 text-sm sm:text-base font-[300]">How should we identify your event?</p>
+            <motion.div key="basic" {...stepVariants} className="space-y-8">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-purple">Step 1 of 7 — Basic Information</span>
+                <h2 className="text-[30px] font-medium tracking-tight text-wix-text-dark mt-2 leading-tight">Basic Information</h2>
+                <p className="text-wix-text-muted text-[15px] mt-1">How should we identify your event?</p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-[500] text-neutral-700 ml-1">Title *</label>
+                <label className="text-[14px] font-medium text-wix-text-dark">Title *</label>
                 <input
                   type="text"
                   value={formData.title || ''}
                   onChange={(e) => updateField('title', e.target.value)}
                   placeholder="Gala Night 2026"
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black outline-none transition-colors text-[15px]"
                 />
                 {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Event Category *
-                </label>
+                <label className="text-[14px] font-medium text-wix-text-dark">Event Category *</label>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {eventCategory.map((category) => {
@@ -632,9 +619,9 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                           setIsCustomCategory(false);
                           updateField('category', category);
                         }}
-                        className={`px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 transition-all ${
+                        className={`px-3 py-2 text-sm border transition-all ${
                           isActive
-                            ? 'border-brand-500 bg-brand-50 text-brand-700'
+                            ? 'border-wix-text-dark bg-wix-text-dark text-white'
                             : 'border-slate-200 hover:border-brand-300'
                         }`}
                       >
@@ -651,7 +638,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                         setIsCustomCategory(true);
                         updateField('category', '');
                       }}
-                      className="px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 border-dashed border-slate-300 text-slate-500 hover:border-brand-300 hover:text-brand-600 transition-all"
+                      className="px-3 py-2 text-sm border border-dashed border-gray-300 text-gray-500 hover:border-wix-text-dark hover:text-wix-text-dark transition-all"
                     >
                       + Add custom
                     </button>
@@ -667,7 +654,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                           setIsCustomCategory(false);
                         }
                       }}
-                      className="px-3 text-center py-2 text-sm sm:text-base rounded-lg border-2 border-brand-500 bg-white outline-none transition-all"
+                      className="px-3 text-center py-2 text-[13px] bg-white border border-wix-text-dark outline-none transition-all"
                     />
                   )}
                 </div>
@@ -678,13 +665,13 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-[500] text-neutral-700 ml-1">Tagline</label>
+                <label className="text-[14px] font-medium text-wix-text-dark">Tagline</label>
                 <input
                   type="text"
                   value={formData.tagline || ''}
                   onChange={(e) => updateField('tagline', e.target.value)}
                   placeholder="Experience the magic of music"
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black outline-none transition-colors text-[15px]"
                 />
                 {errors.tagline && <p className="text-xs text-red-500">{errors.tagline}</p>}
               </div>
@@ -693,14 +680,14 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white border border-wix-border-light text-wix-text-muted text-[13px] py-3 px-4 font-medium flex items-center justify-center gap-2 hover:border-wix-text-dark hover:text-wix-text-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('details')}
-                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-wix-text-dark text-white text-[13px] font-medium py-3 px-4 flex items-center justify-center gap-2 hover:bg-black transition-colors"
                 >
                   Details
                   <ArrowRight size={20} />
@@ -709,16 +696,12 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             </motion.div>
           )}
 
-          {/* Step 2: Company Details */}
           {step === 'details' && (
-            <motion.div key="details" {...stepVariants} className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="text-brand-500" size={20} />
-                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 2: Event Details</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Event Details</h2>
-                <p className="text-gray-500 text-sm sm:text-base font-[300]">Tell us about your event more</p>
+            <motion.div key="details" {...stepVariants} className="space-y-8">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-purple">Step 2 of 7 — Event Details</span>
+                <h2 className="text-[30px] font-medium tracking-tight text-wix-text-dark mt-2 leading-tight">Event Details</h2>
+                <p className="text-wix-text-muted text-[15px] mt-1">Tell us more about your event.</p>
               </div>
 
 
@@ -775,14 +758,14 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white border border-wix-border-light text-wix-text-muted text-[13px] py-3 px-4 font-medium flex items-center justify-center gap-2 hover:border-wix-text-dark hover:text-wix-text-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('venue')}
-                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-wix-text-dark text-white text-[13px] font-medium py-3 px-4 flex items-center justify-center gap-2 hover:bg-black transition-colors"
                 >
                   Venue Setup
                   <ArrowRight size={20} />
@@ -791,16 +774,12 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             </motion.div>
           )}
 
-          {/* Step 3: Venue Setup */}
           {step === 'venue' && (
-            <motion.div key="venue" {...stepVariants} className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="text-brand-500" size={20} />
-                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 3: Event Setup</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Event Setup</h2>
-                <p className="text-gray-500 text-sm sm:text-base font-[300]">Setup your event logistics</p>
+            <motion.div key="venue" {...stepVariants} className="space-y-8">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-purple">Step 3 of 7 — Venue Setup</span>
+                <h2 className="text-[30px] font-medium tracking-tight text-wix-text-dark mt-2 leading-tight">Venue Setup</h2>
+                <p className="text-wix-text-muted text-[15px] mt-1">Setup your event logistics.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -811,7 +790,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     value={formData.venue.name || ''}
                     onChange={(e) => updateVenueField('name', e.target.value)}
                     placeholder="Grand Hotel"
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black outline-none transition-colors text-[15px]"
                   />
                   {errors['venue.name'] && <p className="text-xs text-red-500">{errors['venue.name']}</p>}
                 </div>
@@ -822,7 +801,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     value={formData.venue.capacity || ''}
                     onChange={(e) => updateVenueField('capacity', Number(e.target.value) || 0)}
                     placeholder="1000"
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black outline-none transition-colors text-[15px]"
                   />
                   {errors['venue.capacity'] && <p className="text-xs text-red-500">{errors['venue.capacity']}</p>}
                 </div>
@@ -836,10 +815,10 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                       key={type}
                       type="button"
                       onClick={() => updateVenueField('type', type as 'indoor' | 'outdoor' | 'hybrid')}
-                      className={`px-3 py-2 text-sm sm:text-base rounded-lg border-1 sm:border-2 transition-all ${
+                      className={`px-3 py-2 text-[13px] font-medium transition-all border ${
                         formData.venue?.type === type
-                          ? 'border-brand-500 bg-brand-50 text-brand-700'
-                          : 'border-slate-200 hover:border-brand-300'
+                          ? 'border-wix-text-dark bg-wix-text-dark text-white'
+                          : 'border-wix-border-light hover:border-wix-text-dark bg-white text-wix-text-dark'
                       }`}
                     >
                       {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -856,7 +835,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     value={formData?.venue?.address?.street || ''}
                     onChange={(e) => updateVenueAddress('street', e.target.value)}
                     placeholder="123 Main St"
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black outline-none transition-colors text-[15px]"
                   />
                   {errors['venue.address.street'] && <p className="text-xs text-red-500">{errors['venue.address.street']}</p>}
                 </div>
@@ -867,7 +846,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     value={formData?.venue?.address?.city || ''}
                     onChange={(e) => updateVenueAddress('city', e.target.value)}
                     placeholder="Dhaka"
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black outline-none transition-colors text-[15px]"
                   />
                   {errors['venue.address.city'] && <p className="text-xs text-red-500">{errors['venue.address.city']}</p>}
                 </div>
@@ -876,14 +855,14 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white border border-wix-border-light text-wix-text-muted text-[13px] py-3 px-4 font-medium flex items-center justify-center gap-2 hover:border-wix-text-dark hover:text-wix-text-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('schedule')}
-                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-wix-text-dark text-white text-[13px] font-medium py-3 px-4 flex items-center justify-center gap-2 hover:bg-black transition-colors"
                 >
                   Schedule
                   <ArrowRight size={20} />
@@ -892,27 +871,23 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             </motion.div>
           )}
 
-          {/* Step 4: Event Schedule */}
           {step === 'schedule' && (
-            <motion.div key="schedule" {...stepVariants} className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="text-brand-500" size={20} />
-                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 4: Event Schedule</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Event Schedule</h2>
-                <p className="text-gray-500 text-sm sm:text-base font-[300]">Set up your event dates and times</p>
+            <motion.div key="schedule" {...stepVariants} className="space-y-8">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-purple">Step 4 of 7 — Schedule</span>
+                <h2 className="text-[30px] font-medium tracking-tight text-wix-text-dark mt-2 leading-tight">Event Schedule</h2>
+                <p className="text-wix-text-muted text-[15px] mt-1">Set up your event dates and times.</p>
               </div>
 
               {/* Mode Toggle */}
-              <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+              <div className="flex bg-gray-100 p-1 w-fit">
                 <button
                   type="button"
                   onClick={() => updateScheduleField('type', 'single')}
-                  className={`px-4 py-2 rounded-lg text-sm font-[400] transition-all duration-200 ${
+                  className={`px-4 py-2 text-[13px] font-medium transition-all duration-200 ${
                     (formData.schedule?.type || 'single') === 'single'
-                      ? 'bg-white text-brand-600 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'bg-white text-wix-text-dark shadow-sm'
+                      : 'text-wix-text-muted hover:text-wix-text-dark'
                   }`}
                 >
                   Single Day Event
@@ -920,10 +895,10 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   type="button"
                   onClick={() => updateScheduleField('type', 'multiple')}
-                  className={`px-4 py-2 rounded-lg text-sm font-[400] transition-all duration-200 ${
+                  className={`px-4 py-2 text-[13px] font-medium transition-all duration-200 ${
                     formData.schedule?.type === 'multiple'
-                      ? 'bg-white text-brand-600 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'bg-white text-wix-text-dark shadow-sm'
+                      : 'text-wix-text-muted hover:text-wix-text-dark'
                   }`}
                 >
                   Multi-Day Event
@@ -1017,14 +992,14 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white border border-wix-border-light text-wix-text-muted text-[13px] py-3 px-4 font-medium flex items-center justify-center gap-2 hover:border-wix-text-dark hover:text-wix-text-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('verification')}
-                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-wix-text-dark text-white text-[13px] font-medium py-3 px-4 flex items-center justify-center gap-2 hover:bg-black transition-colors"
                 >
                   Verification
                   <ArrowRight size={20} />
@@ -1033,16 +1008,12 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             </motion.div>
           )}
 
-          {/* Step 5: Verification */}
           {step === 'verification' && (
-            <motion.div key="verification" {...stepVariants} className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="text-brand-500" size={20} />
-                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 5: Verification</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Verification</h2>
-                <p className="text-gray-500 text-sm sm:text-base font-[300]">Help us to keep the platform safe for everyone</p>
+            <motion.div key="verification" {...stepVariants} className="space-y-8">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-purple">Step 5 of 7 — Verification</span>
+                <h2 className="text-[30px] font-medium tracking-tight text-wix-text-dark mt-2 leading-tight">Verification</h2>
+                <p className="text-wix-text-muted text-[15px] mt-1">Help us keep the platform safe.</p>
               </div>
 
               <DocumentUploader
@@ -1077,7 +1048,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   <label className="text-sm font-[500] text-neutral-700 ml-1">Uploaded Documents ({formData.verification.documents.length})</label>
                   <div className="space-y-2">
                     {formData.verification.documents.map((doc, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 border border-wix-border-light">
                         <div className="flex items-center gap-2">
                           <Upload size={16} className="text-brand-500" />
                           <span className="text-sm text-gray-700">{doc.filename}</span>
@@ -1105,14 +1076,14 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white border border-wix-border-light text-wix-text-muted text-[13px] py-3 px-4 font-medium flex items-center justify-center gap-2 hover:border-wix-text-dark hover:text-wix-text-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('tickets')}
-                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-wix-text-dark text-white text-[13px] font-medium py-3 px-4 flex items-center justify-center gap-2 hover:bg-black transition-colors"
                 >
                   Setup Tickets
                   <ArrowRight size={20} />
@@ -1121,16 +1092,12 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             </motion.div>
           )}
 
-          {/* Step 5: Tickets */}
           {step === 'tickets' && (
-            <motion.div key="tickets" {...stepVariants} className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Ticket className="text-brand-500" size={20} />
-                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 5: Tickets</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Setup Tickets</h2>
-                <p className="text-gray-500 text-sm sm:text-base font-[300]">Setup your tickets so people can engage</p>
+            <motion.div key="tickets" {...stepVariants} className="space-y-8">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-purple">Step 6 of 7 — Tickets</span>
+                <h2 className="text-[30px] font-medium tracking-tight text-wix-text-dark mt-2 leading-tight">Setup Tickets</h2>
+                <p className="text-wix-text-muted text-[15px] mt-1">Create ticket tiers for your attendees.</p>
               </div>
 
               {/* Capacity Overview */}
@@ -1147,10 +1114,10 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                       Total Capacity
                     </p>
                   </div>
-                  <div className={`flex items-center gap-2 px-3 py-1 ${
-                    getCapacityPercentage() > 100 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-brand-50 text-brand-600 border-brand-100'
-                  } rounded-full border`}>
-                    <div className={`w-2 h-2 rounded-full ${getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-brand-500'}`} />
+                  <div className={`flex items-center gap-2 px-3 py-1 border ${
+                    getCapacityPercentage() > 100 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-wix-purple/5 text-wix-purple border-wix-purple/20'
+                  }`}>
+                    <div className={`w-2 h-2 ${ getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-wix-purple'}`} />
                     <span className="text-[10px] font-[400] uppercase tracking-widest">
                       {Math.round(getCapacityPercentage())}%
                     </span>
@@ -1161,7 +1128,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <div className="w-full h-2 bg-slate-100 rounded-tr-sm rounded-bl-sm overflow-hidden">
                   <div 
                     className={`h-full transition-all duration-500 ${
-                      getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-brand-500'
+                      getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-wix-purple'
                     }`}
                     style={{ width: `${Math.min(getCapacityPercentage(), 100)}%` }}
                   ></div>
@@ -1174,25 +1141,23 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   <h2 className="text-lg sm:text-xl md:text-xl lg:text-xl font-[300] text-neutral-700 leading-[0.9] tracking-tight">
                     Created Tickets ({formData.tickets.length})
                   </h2>
-                  <button 
-                    onClick={handleAddTicket}
-                    title="Add New Ticket" 
-                    className="flex items-center gap-2 px-3 py-2 text-xs font-[500] text-brand-500 border border-brand-200 rounded-lg hover:bg-brand-50 transition-all"
-                  >
+                  <button
+                      onClick={handleAddTicket}
+                      title="Add New Ticket" 
+                      className="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-wix-text-dark border border-wix-border-light hover:border-wix-text-dark transition-all"
+                    >
                     <Plus size={14} />
                     Add Ticket
                   </button>
                 </div>
 
                 {formData.tickets.length === 0 ? (
-                  <div className="p-12 border-2 border-dashed border-slate-200 rounded-xl text-center">
-                    <Ticket size={48} className="mx-auto text-slate-300 mb-4" />
-                    <p className="text-sm text-slate-500 font-[300] mb-4">
-                      No tickets created yet
-                    </p>
+                  <div className="p-12 border border-dashed border-gray-300 text-center">
+                    <Ticket size={40} className="mx-auto text-gray-300 mb-4" />
+                    <p className="text-[14px] text-wix-text-muted mb-4">No tickets created yet</p>
                     <button
                       onClick={handleAddTicket}
-                      className="px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all text-sm font-[500]"
+                      className="px-6 py-2.5 bg-wix-text-dark text-white hover:bg-black transition-colors text-[13px] font-medium"
                     >
                       Create Your First Ticket
                     </button>
@@ -1259,14 +1224,14 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white border border-wix-border-light text-wix-text-muted text-[13px] py-3 px-4 font-medium flex items-center justify-center gap-2 hover:border-wix-text-dark hover:text-wix-text-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
                 </button>
                 <button
                   onClick={() => handleNext('platform')}
-                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-wix-text-dark text-white text-[13px] font-medium py-3 px-4 flex items-center justify-center gap-2 hover:bg-black transition-colors"
                 >
                   Review
                   <ArrowRight size={20} />
@@ -1275,64 +1240,70 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             </motion.div>
           )}
 
-          {/* Step 6: Platform */}
           {step === 'platform' && (
-            <motion.div key="platform" {...stepVariants} className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="text-brand-500" size={20} />
-                  <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Step 6: Platform Policy</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Platform Policy</h2>
-                <p className="text-gray-500 text-sm sm:text-base font-[300]">Please Review your Event and our Platform Policy</p>
+            <motion.div key="platform" {...stepVariants} className="space-y-8">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-purple">Step 7 of 7 — Review</span>
+                <h2 className="text-[30px] font-medium tracking-tight text-wix-text-dark mt-2 leading-tight">Platform Policy</h2>
+                <p className="text-wix-text-muted text-[15px] mt-1">Review your event and our Platform Policy.</p>
               </div>
 
-              <div className="px-6">
+              <div className="px-6 flex justify-center">
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="p-0 bg-slate-50 border rounded-br-lg rounded-tl-lg border-slate-100 relative group overflow-hidden cursor-pointer"
+                  className="group cursor-pointer flex flex-col gap-3 max-w-[400px] w-full"
                 >
-                  <div className="relative aspect-[2/1] overflow-hidden rounded-tl-lg">
+                  <div className="aspect-[1.6/1] relative overflow-hidden rounded-tr-xl rounded-tl-xl bg-gray-100 shadow-sm group-hover:shadow-md transition-shadow duration-300">
                     <img
                       src={formData.media?.coverImage?.url || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
                       alt={formData.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                    {formData.category && (
+                      <div className="absolute bottom-3 left-3 z-10 bg-[#f0ebff] text-wix-purple text-[10px] font-semibold px-2.5 py-1 rounded-full">
+                        {formData.category.charAt(0).toUpperCase() + formData.category.slice(1)}
+                      </div>
+                    )}
                   </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 ml-[-12px] mb-2">
-                    </div>
-                    <h2 className="text-lg font-[300] text-slate-900 tracking-tight truncate">{formData.title || "Event Title"}</h2>
-                    <p className="text-xs text-slate-500 font-[300] line-clamp-2">{formData.tagline || formData.description || "Event Description"}</p>
-                    <div className="flex flex-col gap-2 mt-2 font-[400] text-neutral-700">
-                      <span className="flex items-center gap-1 text-xs ">
-                        <Calendar size={12} strokeWidth={1}/>
-                        {formatDate(formData.schedule.startDate || "Event Start Date")}
-                      </span>
-                      <span className="flex items-center gap-1 text-xs">
-                        <Clock10 size={12} strokeWidth={1}/>
-                        {formatTime(formData.schedule.startDate || "Event Start Time")} - {formatTime(formData.schedule.endDate || "Event End Time")}
+
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-[15px] font-semibold text-[#161616] leading-snug line-clamp-2 group-hover:text-wix-purple transition-colors duration-200">
+                      {formData.title || "Event Title"}
+                    </h3>
+
+                    <div className="flex items-start gap-1.5 text-[12px] text-gray-500 mt-0.5">
+                      <Calendar size={14} className="shrink-0 mt-[1px]" />
+                      <span>
+                        {formatDate(formData.schedule.startDate) || "Event Start Date"}
+                        <span className="text-gray-400 ml-1">· {formatTime(formData.schedule.startDate) || "Event Start Time"}</span>
                       </span>
                     </div>
-                    {/* Price */}
-                    <div className="flex justify-between items-center gap-2 mt-2">
-                      <span className="text-xs text-slate-500 font-[300]">
-                        {formData.venue?.address?.city || 'Location TBA'}
+
+                    <div className="flex items-center gap-1.5 text-[12px] text-gray-400">
+                      <MapPin size={14} className="shrink-0" />
+                      <span className="line-clamp-1">{formData.venue?.name || 'Location TBA'}, {formData.venue?.address?.city || ''}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-[13px] font-bold text-[#161616]">
+                        {formData?.tickets?.[0]?.price?.amount === 0 ? (
+                           <span className="bg-[#d2f47c] text-[#161616] text-[11px] px-2.5 py-0.5 rounded-[4px] font-bold">Free</span>
+                        ) : (
+                          <span>From <BDTIcon className="inline text-[12px]" />{formData?.tickets?.[0]?.price?.amount || "0"}</span>
+                        )}
                       </span>
-                      <span className="flex items-center gap-1 text-md text-slate-500 font-[300]">
-                        <span className="text-xs">From</span> <BDTIcon className="text-xs"/>{formData?.tickets[0]?.price?.amount || "0"}
-                      </span>
+                      <span className="text-[11px] text-gray-400">By Zenvy</span>
                     </div>
                   </div>
-                  <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
                 </motion.div>
               </div>
 
-              <div className="p-4 bg-brand-50 rounded-xl border border-brand-100 flex items-start gap-3">
-                <div className="mt-0.5"><CheckCircle2 size={16} className="text-brand-600" /></div>
-                <p className="text-xs text-brand-800 font-[400] leading-relaxed">
+              <div className="p-4 bg-wix-purple/5 border border-wix-purple/20 flex items-start gap-3">
+                <div className="mt-0.5"><CheckCircle2 size={16} className="text-wix-purple" /></div>
+                <p className="text-[13px] text-wix-text-dark font-medium leading-relaxed">
                   By clicking create, you agree to our event verification process, terms and conditions.
                 </p>
               </div>
@@ -1340,7 +1311,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <button
                   onClick={handleSaveDraft}
                   disabled={loading}
-                  className="flex-1 bg-white text-xs text-brand-600 border-2 py-2 sm:py-3 px-3 border-brand-200 font-[500] rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white border border-wix-border-light text-wix-text-muted text-[13px] py-3 px-4 font-medium flex items-center justify-center gap-2 hover:border-wix-text-dark hover:text-wix-text-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={18} />
                   {loading ? 'Saving...' : 'Save Draft'}
@@ -1363,7 +1334,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     }
                   }}
                   disabled={loading}
-                  className="flex-1 bg-brand-500 text-xs text-white font-[500] py-2 sm:py-3 px-3 rounded-tr-lg rounded-bl-lg flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100"
+                  className="flex-1 bg-wix-text-dark text-white text-[13px] font-medium py-3 px-4 flex items-center justify-center gap-2 hover:bg-black transition-colors"
                 >
                   {loading ? 'Submitting...' : 'Submit'}
                   <CheckCircle2 size={20} />
@@ -1373,7 +1344,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
 
       {/* Ticket Configurator Modal */}
       <TicketConfiguratorModal

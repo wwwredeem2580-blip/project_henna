@@ -97,17 +97,17 @@ export const TimeInput = ({
                 type="button"
                 onClick={onOpen}
                 className={cn(
-                    'w-full bg-[#F9FAFB] rounded-2xl px-4 py-3.5 text-left flex items-center gap-3 transition-all duration-300 hover:text-brand-600 group',
+                    'w-full bg-white border outline-none px-4 py-3 text-left flex items-center gap-3 transition-colors group',
                     error 
-                        ? 'border-rose-400 ring-4 ring-rose-500/10 input-error' 
-                        : 'border-slate-200 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500'
+                        ? 'border-red-400 focus:border-red-500' 
+                        : 'border-gray-300 hover:border-black focus:border-black'
                 )}
             >
                 <div className={cn(
-                    'p-2 rounded-xl transition-colors',
+                    'p-1.5 transition-colors',
                     error 
-                        ? 'bg-rose-100 text-rose-500' 
-                        : 'bg-white text-brand-500 group-hover:text-brand-600 group-hover:bg-brand-50'
+                        ? 'bg-red-50 text-red-500' 
+                        : 'bg-gray-50 text-wix-text-dark group-hover:bg-gray-100'
                 )}>
                     <Clock size={18} />
                 </div>
@@ -124,7 +124,7 @@ export const TimeInput = ({
 
             {isOpen && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" onClick={onClose}>
-                    <div className="w-full max-w-[340px] overflow-hidden relative bg-white shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] rounded-[32px]" onClick={e => e.stopPropagation()}>
+                    <div className="w-full max-w-[340px] overflow-hidden relative bg-white border border-gray-300 shadow-xl" onClick={e => e.stopPropagation()}>
                         <div className="px-6 py-5 flex items-center justify-between border-b border-black/5">
                             <h3 className="text-base font-bold text-slate-900">{`Select ${label}`}</h3>
                             <button onClick={onClose} className="p-2 -mr-2 hover:bg-black/5 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
@@ -133,7 +133,7 @@ export const TimeInput = ({
                         </div>
                         <div className="p-6">
                             <div className="relative h-[240px] flex items-center justify-center gap-1 px-2 mb-6">
-                                <div className="absolute top-1/2 -translate-y-1/2 left-2 right-2 h-[48px] bg-brand-50 rounded-xl -z-10 border border-brand-100/50"></div>
+                                <div className="absolute top-1/2 -translate-y-1/2 left-2 right-2 h-[48px] bg-gray-50 -z-10 border border-gray-200"></div>
                                 <div className="flex-1 text-center">
                                     <ScrollColumn items={HOURS} selected={hour} onSelect={handleHourSelect} />
                                 </div>
@@ -158,7 +158,7 @@ export const TimeInput = ({
                                                 setPeriod(p.p); 
                                                 setValidationError(null); 
                                             }} 
-                                            className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50 transition-all whitespace-nowrap active:scale-95 bg-white/50"
+                                            className="px-3 py-2 border border-gray-200 text-xs font-semibold text-gray-600 hover:border-wix-text-dark hover:text-wix-text-dark hover:bg-gray-50 transition-all whitespace-nowrap active:scale-95 bg-white"
                                         >
                                             {p.label}
                                         </button>
@@ -175,7 +175,7 @@ export const TimeInput = ({
 
                             <button 
                                 onClick={(e) => handleConfirm(e)} 
-                                className="w-full bg-brand-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-brand-600/20 hover:bg-brand-700 active:scale-[0.98] transition-all"
+                                className="w-full bg-wix-text-dark text-white py-3 font-medium hover:bg-black transition-colors"
                             >
                                 Done
                             </button>

@@ -214,7 +214,7 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="bg-slate-50 rounded-tr-xl rounded-bl-xl shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-hidden"
+              className="bg-white border border-gray-300 shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -257,7 +257,7 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                               value={ticketData.name}
                               onChange={(e) => updateField('name', e.target.value)}
                               placeholder="Standard"
-                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                              className="w-full px-4 py-2 bg-white border border-gray-300 focus:border-black outline-none transition-all text-[15px]"
                             />
                           </div>
                           <div className="space-y-2">
@@ -267,7 +267,7 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                               value={ticketData.tier}
                               onChange={(e) => updateField('tier', e.target.value)}
                               placeholder="Basic"
-                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                              className="w-full px-4 py-2 bg-white border border-gray-300 focus:border-black outline-none transition-all text-[15px]"
                             />
                           </div>
                         </div>
@@ -280,12 +280,12 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                               onChange={(e) => updateField('price', parseFloat(e.target.value) || 0)}
                               placeholder="0"
                               min="0"
-                              className={`w-full px-4 py-2 bg-gray-50 border-1 rounded-tr-md rounded-bl-md outline-none transition-all ${
+                              className={`w-full px-4 py-2 bg-white border outline-none transition-all text-[15px] ${
                                 validationErrors.price
                                   ? validationErrors.price.includes('⚠️')
                                     ? 'border-amber-400 focus:border-amber-500'
                                     : 'border-red-400 focus:border-red-500'
-                                  : 'border-neutral-300 focus:border-purple-600 focus:bg-white'
+                                  : 'border-gray-300 focus:border-black'
                               }`}
                             />
                             {validationErrors.price && (
@@ -304,10 +304,10 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                               onChange={(e) => updateField('quantity', parseInt(e.target.value) || 0)}
                               placeholder="0"
                               min="0"
-                              className={`w-full px-4 py-2 bg-gray-50 border-1 rounded-tr-md rounded-bl-md outline-none transition-all ${
+                              className={`w-full px-4 py-2 bg-white border outline-none transition-all text-[15px] ${
                                 validationErrors.quantity
                                   ? 'border-red-400 focus:border-red-500'
-                                  : 'border-neutral-300 focus:border-purple-600 focus:bg-white'
+                                  : 'border-gray-300 focus:border-black'
                               }`}
                             />
                             {validationErrors.quantity && (
@@ -324,10 +324,10 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                                 key={color.value}
                                 type="button"
                                 onClick={() => updateField('wristbandColor', color.value)}
-                                className={`flex items-center gap-2 p-1 rounded-lg border-2 transition-all ${
+                                className={`flex items-center gap-2 p-1.5 border transition-all ${
                                   ticketData.wristbandColor === color.value
-                                    ? 'border-brand-500 bg-brand-50'
-                                    : 'border-slate-200 hover:border-slate-300'
+                                    ? 'border-black bg-gray-100'
+                                    : 'border-transparent hover:border-gray-300'
                                 }`}
                               >
                                 <div
@@ -403,11 +403,11 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                               onChange={(e) => setNewBenefit(e.target.value)}
                               onKeyPress={(e) => e.key === 'Enter' && addBenefit()}
                               placeholder="e.g., Access to VIP lounge"
-                              className="w-full px-4 py-2 bg-gray-50 border-1 border-neutral-300 rounded-tr-md rounded-bl-md focus:border-purple-600 focus:bg-white outline-none transition-all"
+                              className="w-full px-4 py-2 bg-white border border-gray-300 focus:border-black outline-none transition-all text-[15px]"
                             />
                             <button
                               onClick={addBenefit}
-                              className="px-2 py-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all"
+                              className="px-4 py-2 bg-wix-text-dark text-white hover:bg-black transition-all flex items-center justify-center font-medium text-[13px]"
                             >
                               <Plus size={16} strokeWidth={2}/>
                             </button>
@@ -433,9 +433,9 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                                   initial={{ opacity: 0, y: -10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, y: -10 }}
-                                  className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg group"
+                                  className="flex items-center gap-3 p-3 bg-gray-50 border border-wix-border-light group"
                                 >
-                                  <CheckCircle size={16} className="text-brand-500 flex-shrink-0" />
+                                  <CheckCircle size={16} className="text-wix-purple flex-shrink-0" />
                                   <span className="flex-1 text-sm text-slate-700">{benefit}</span>
                                   <button
                                     onClick={() => removeBenefit(index)}
@@ -459,11 +459,11 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                 </div>
 
                 {/* Right Side - Live Preview (Hidden on Mobile) */}
-                <div className="hidden lg:flex lg:w-[400px] p-6 bg-[radial-gradient(circle_at_top_right,rgba(103,61,230,0.1),transparent)] items-center justify-center border-l border-slate-100">
+                <div className="hidden lg:flex lg:w-[400px] p-6 bg-gray-50 items-center justify-center border-l border-gray-200">
                   <div className="space-y-4 w-full">
                     <div className="flex items-center gap-2 mb-4">
-                      <Sparkles size={16} className="text-brand-500" />
-                      <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">
+                      <Sparkles size={16} className="text-wix-purple" />
+                      <span className="text-xs font-[600] uppercase tracking-widest text-wix-text-dark">
                         Live Preview
                       </span>
                     </div>
@@ -478,7 +478,7 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                       >
                         {/* Front Face */}
                         <div
-                          className="absolute w-full h-full rounded-tr-lg rounded-bl-lg bg-slate-50 overflow-hidden"
+                          className="absolute w-full h-full bg-white border border-gray-200 overflow-hidden shadow-lg"
                           style={{ backfaceVisibility: 'hidden' }}
                         >
                           <div className="px-6 py-4 h-full flex flex-col justify-between relative">
@@ -510,9 +510,9 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                                 <span className="flex items-center text-md gap-1 mt-2 text-slate-500 font-[300]">
                                   <span className="text-xs">For </span>
                                   {ticketData.price === 0 ? (
-                                    <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
-                                      FREE
-                                    </span>
+                                      <span className="px-2 py-0.5 bg-[#d2f47c] text-black text-xs font-[600] uppercase tracking-wider">
+                                        FREE
+                                      </span>
                                   ) : (
                                     <>
                                       <BDTIcon className="text-xs"/>{ticketData.price}
@@ -556,14 +556,14 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
 
                         {/* Back Face */}
                         <div
-                          className="absolute w-full h-full bg-slate-50 rounded-tr-lg rounded-bl-lg text-neutral-600 overflow-hidden relative"
+                          className="absolute w-full h-full bg-white border border-gray-200 text-neutral-600 overflow-hidden relative shadow-lg"
                           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                         >
                           <div className="px-6 py-4 h-full flex flex-col gap-6 relative">
                             <div className="flex justify-between items-start">
                               <div>
                                 <div className="text-md font-[400] flex items-center gap-2 tracking-wide text-neutral-700">
-                                  <Sparkles size={16} className='text-brand-500' strokeWidth={1}/>
+                                  <Sparkles size={16} className='text-wix-purple' strokeWidth={1}/>
                                   Benefits
                                 </div>
                                 <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
@@ -612,8 +612,8 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                   {(['details', 'benefits'] as Step[]).map((s) => (
                     <div
                       key={s}
-                      className={`h-1.5 w-8 rounded-full transition-all duration-300 ${
-                        step === s ? 'bg-brand-500' : 'bg-slate-200'
+                      className={`h-1.5 w-8 transition-all duration-300 ${
+                        step === s ? 'bg-wix-purple' : 'bg-slate-200'
                       }`}
                     />
                   ))}
@@ -623,7 +623,7 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                   {step === 'benefits' && (
                     <button
                       onClick={() => {setStep('details'); setIsFlipped(false)}}
-                      className="px-2 py-1 text-xs bg-white border border-slate-200 text-slate-700 rounded-tr-md rounded-bl-md hover:bg-slate-50 transition-all flex items-center gap-2"
+                      className="px-4 py-2 text-[13px] font-medium bg-white border border-gray-300 text-slate-700 hover:bg-gray-50 transition-all flex items-center gap-2"
                     >
                       <ArrowLeft size={16} />
                       Back
@@ -634,7 +634,7 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                     <button
                       onClick={() => {setStep('benefits'); setIsFlipped(true)}}
                       disabled={!ticketData.name || !ticketData.tier || ticketData.price < 0 || ticketData.quantity <= 0}
-                      className="px-4 py-2 text-xs bg-brand-500 text-white rounded-tr-md rounded-bl-md hover:bg-brand-600 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-[13px] font-medium bg-wix-text-dark text-white hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next: Benefits
                       <ArrowRight size={16} />
@@ -647,7 +647,7 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                         !!validationErrors.benefits || 
                         (!!validationErrors.price && !validationErrors.price.includes('⚠️'))
                       }
-                      className="px-4 py-2 text-xs bg-brand-500 text-white rounded-tr-md rounded-bl-md hover:bg-brand-600 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-[13px] font-medium bg-wix-text-dark text-white hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <CheckCircle size={16} />
                       Save Ticket

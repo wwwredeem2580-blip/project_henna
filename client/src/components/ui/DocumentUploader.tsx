@@ -148,8 +148,8 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
       {/* Upload Area */}
       {!allSuccess && (
-        <div className="p-8 border-2 border-dashed rounded-2xl bg-gray-50 flex flex-col items-center justify-center gap-4 transition-all border-gray-200">
-          <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400 transition-colors">
+        <div className="p-8 border border-dashed rounded-none bg-white border-gray-300 hover:border-wix-text-dark flex flex-col items-center justify-center gap-4 transition-all">
+          <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 transition-colors">
             <Upload size={24} />
           </div>
           <div className="text-center space-y-3">
@@ -164,7 +164,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed text-sm font-[500]"
+              className="px-6 py-2.5 bg-wix-text-dark text-white hover:bg-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-[13px] font-medium"
             >
               {isUploading ? 'Uploading...' : 'Choose Files'}
             </button>
@@ -190,16 +190,16 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className={`flex items-center gap-3 p-3 rounded-lg border ${
+                  className={`flex items-center gap-3 p-3 border ${
                     fileItem.status === 'error'
                       ? 'bg-red-50 border-red-200'
                       : fileItem.status === 'success'
                       ? 'bg-green-50 border-green-200'
-                      : 'bg-white border-slate-200'
+                      : 'bg-white border-gray-300'
                   }`}
                 >
                   {/* File Icon/Preview */}
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-10 h-10 overflow-hidden bg-gray-50 border border-gray-200 flex items-center justify-center">
                     {icon ? (
                       <img src={icon} alt={fileItem.file.name} className="w-full h-full object-cover" />
                     ) : (
@@ -223,7 +223,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
                   {/* Status Icon */}
                   <div className="flex-shrink-0">
                     {fileItem.status === 'uploading' ? (
-                      <Loader2 size={20} className="text-brand-500 animate-spin" />
+                      <Loader2 size={20} className="text-wix-purple animate-spin" />
                     ) : fileItem.status === 'success' ? (
                       <CheckCircle size={20} className="text-green-500" />
                     ) : fileItem.status === 'error' ? (
@@ -253,7 +253,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
         <button
           onClick={handleUpload}
           disabled={isUploading || files.length === 0}
-          className="w-full bg-brand-500 text-white font-[600] py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-wix-text-dark text-white text-[13px] font-medium py-3 rounded-none flex items-center justify-center gap-2 hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isUploading ? (
             <>
@@ -271,7 +271,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
       {/* Success State */}
       {allSuccess && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+        <div className="p-4 bg-green-50 border border-green-200 flex items-center gap-3">
           <CheckCircle size={20} className="text-green-600 flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-[500] text-green-800">

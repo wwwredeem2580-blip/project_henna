@@ -187,7 +187,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             exit={{ opacity: 0, scale: 0.95 }}
             className="relative group"
           >
-            <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-slate-200">
+            <div className="relative aspect-video rounded-none overflow-hidden border border-gray-300">
               <img
                 src={preview}
                 alt="Preview"
@@ -197,20 +197,20 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 <div className="md:opacity-0 md:group-hover:opacity-100 transition-opacity flex gap-2">
                   <button
                     onClick={handleClick}
-                    className="px-4 py-2 bg-white text-slate-700 rounded-lg text-sm font-[500] hover:bg-slate-100 transition-all"
+                    className="px-4 py-2 bg-white text-wix-text-dark border border-gray-300 text-[13px] font-medium hover:border-black transition-all"
                   >
                     Replace
                   </button>
                   <button
                     onClick={handleRemove}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-[500] hover:bg-red-600 transition-all"
+                    className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 text-[13px] font-medium hover:bg-red-100 transition-all font-medium"
                   >
                     Remove
                   </button>
                 </div>
               </div>
-              <div className="absolute top-3 right-3 bg-green-500 text-white p-2 rounded-full shadow-lg">
-                <Check size={16} />
+              <div className="absolute top-4 right-4 bg-green-500 text-white p-1.5 rounded-full shadow-md">
+                <Check size={14} strokeWidth={3} />
               </div>
             </div>
           </motion.div>
@@ -224,21 +224,21 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`p-8 border-2 border-dashed rounded-2xl bg-gray-50 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group ${
+            className={`p-10 border border-dashed rounded-none flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group ${
               state === 'dragging'
-                ? 'border-brand-500 bg-brand-50'
+                ? 'border-wix-text-dark bg-gray-50'
                 : state === 'error'
                 ? 'border-red-300 bg-red-50'
-                : 'border-gray-200 hover:border-brand-300'
+                : 'border-gray-300 bg-white hover:border-wix-text-dark'
             }`}
           >
             <div
-              className={`w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center transition-all ${
+              className={`w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center transition-all ${
                 state === 'uploading'
-                  ? 'text-brand-500'
+                  ? 'text-wix-purple'
                   : state === 'error'
                   ? 'text-red-500'
-                  : 'text-gray-400 group-hover:text-brand-600'
+                  : 'text-gray-400 group-hover:text-wix-text-dark'
               }`}
             >
               {state === 'uploading' ? (
@@ -246,7 +246,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               ) : state === 'error' ? (
                 <AlertCircle size={24} />
               ) : state === 'dragging' ? (
-                <ImageIcon size={24} className="text-brand-500" />
+                <ImageIcon size={24} className="text-wix-text-dark" />
               ) : (
                 <Upload size={24} />
               )}
@@ -256,9 +256,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               {state === 'uploading' ? (
                 <>
                   <p className="font-[500] text-neutral-800">Uploading...</p>
-                  <div className="w-48 h-2 bg-slate-200 rounded-full mt-2 overflow-hidden">
+                  <div className="w-48 h-1.5 bg-gray-100 mt-3 overflow-hidden">
                     <motion.div
-                      className="h-full bg-brand-500"
+                      className="h-full bg-wix-text-dark"
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
                       transition={{ duration: 0.3 }}
@@ -276,7 +276,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                       setState('idle');
                       setError('');
                     }}
-                    className="mt-2 text-xs text-brand-500 hover:underline"
+                    className="mt-2 text-[13px] font-medium text-wix-text-dark hover:underline"
                   >
                     Try Again
                   </button>

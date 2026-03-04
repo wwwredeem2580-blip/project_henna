@@ -92,12 +92,12 @@ export const DateInput = ({
                 onClick={(e) => handleSelect(i, e)}
                 onMouseDown={(e) => e.preventDefault()}
                 className={cn(
-                    'w-9 h-9 rounded-full text-sm font-semibold flex items-center justify-center transition-all',
+                    'w-9 h-9 rounded-none text-[13px] font-medium flex items-center justify-center transition-all',
                     isSelected 
-                        ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30 scale-110' 
+                        ? 'bg-black text-white' 
                         : disabled 
-                            ? 'text-slate-200 cursor-not-allowed' 
-                            : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                            ? 'text-gray-200 cursor-not-allowed' 
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-black'
                 )}
             >
                 {i}
@@ -111,17 +111,17 @@ export const DateInput = ({
                 type="button"
                 onClick={() => { onOpen(); if(onFocus) onFocus(); }}
                 className={cn(
-                    'w-full bg-[#F9FAFB] rounded-2xl px-4 py-3.5 text-left flex items-center gap-3 transition-all duration-300 hover:text-brand-600 group',
+                    'w-full bg-white border outline-none px-4 py-3 text-left flex items-center gap-3 transition-colors group',
                     error 
-                        ? 'border-rose-400 ring-4 ring-rose-500/10 input-error' 
-                        : 'border-slate-200 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500'
+                        ? 'border-red-400 focus:border-red-500' 
+                        : 'border-gray-300 hover:border-black focus:border-black'
                 )}
             >
                 <div className={cn(
-                    'p-2 rounded-xl transition-colors',
+                    'p-1.5 transition-colors',
                     error 
-                        ? 'bg-rose-100 text-rose-500' 
-                        : 'bg-white text-brand-500 group-hover:text-brand-600 group-hover:bg-brand-50'
+                        ? 'bg-red-50 text-red-500' 
+                        : 'bg-gray-50 text-wix-text-dark group-hover:bg-gray-100'
                 )}>
                     <Calendar size={18} />
                 </div>
@@ -138,7 +138,7 @@ export const DateInput = ({
 
             {isOpen && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" onClick={onClose}>
-                    <div className="w-full max-w-[340px] overflow-hidden relative bg-white rounded-[32px] shadow-2xl" onClick={e => e.stopPropagation()}>
+                    <div className="w-full max-w-[340px] overflow-hidden relative bg-white border border-gray-300 shadow-xl" onClick={e => e.stopPropagation()}>
                         <div className="px-6 py-5 flex items-center justify-between border-b border-black/5">
                             <h3 className="text-base font-bold text-slate-900">{`Select ${label}`}</h3>
                             <button onClick={onClose} className="p-2 -mr-2 hover:bg-black/5 rounded-full text-slate-400 hover:text-slate-600 transition-colors">

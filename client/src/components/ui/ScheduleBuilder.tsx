@@ -108,10 +108,10 @@ export const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({ sessions, onCh
                   className={`
                     h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium transition-all
                     ${isSelected 
-                        ? 'bg-brand-500 text-white shadow-md scale-105' 
+                        ? 'bg-black text-white shadow-md' 
                         : disabled 
-                            ? 'text-slate-200 cursor-not-allowed' 
-                            : 'text-slate-700 hover:bg-brand-50 hover:text-brand-600'
+                            ? 'text-gray-200 cursor-not-allowed' 
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-black'
                     }
                   `}
               >
@@ -158,14 +158,14 @@ export const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({ sessions, onCh
   };
 
   return (
-    <div className="bg-white rounded-tr-xl rounded-bl-xl overflow-hidden">
-      <div className="flex border-b border-slate-100">
+    <div className="bg-white border border-gray-300">
+      <div className="flex border-b border-gray-200">
         <button 
           onClick={() => setActiveTab('calendar')}
-          className={`flex-1 py-3 text-xs font-[400] transition-colors ${
+          className={`flex-1 py-3 text-[13px] font-medium transition-colors ${
             activeTab === 'calendar' 
-              ? 'text-brand-600 bg-brand-50/50' 
-              : 'text-slate-500 hover:text-slate-700'
+              ? 'text-wix-text-dark bg-gray-50 border-b-2 border-wix-text-dark' 
+              : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           Select Dates ({sessions.length})
@@ -173,10 +173,10 @@ export const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({ sessions, onCh
         <button 
           onClick={() => setActiveTab('config')}
           disabled={sessions.length === 0}
-          className={`flex-1 py-3 text-xs font-[400] transition-colors ${
+          className={`flex-1 py-3 text-[13px] font-medium transition-colors ${
             activeTab === 'config' 
-              ? 'text-brand-600 bg-brand-50/50' 
-              : 'text-slate-500 hover:text-slate-700 disabled:opacity-50'
+              ? 'text-wix-text-dark bg-gray-50 border-b-2 border-wix-text-dark' 
+              : 'text-gray-500 hover:text-gray-700 disabled:opacity-50'
           }`}
         >
           Configure Times
@@ -227,7 +227,7 @@ export const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({ sessions, onCh
                             {idx === 0 && sessions.length > 1 && (
                                 <button 
                                     onClick={() => copyToAll(0)} 
-                                    className="text-xs font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1"
+                                    className="text-[13px] font-medium text-wix-text-dark hover:text-black flex items-center gap-1"
                                 >
                                     <Copy size={12} /> Apply to all
                                 </button>
