@@ -24,10 +24,13 @@ import { BDTIcon } from '../ui/Icons';
 
 /* ─── Chip SVG ─── */
 const ChipIcon = () => (
-  <svg width="40" height="28" viewBox="0 0 40 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="40" height="28" rx="4" fill="rgba(255,255,255,0.2)"/>
-    <path d="M12 0V28M28 0V28M0 14H40M12 8H0M28 8H40M12 20H0M28 20H40" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"/>
-    <rect x="14" y="6" width="12" height="16" rx="2" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"/>
+  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1" y="1" width="38" height="28" rx="4" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M1 10H10V20H1" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M39 10H30V20H39" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M15 1V30" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M25 1V30" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M15 15H25" stroke="currentColor" strokeWidth="1.5"/>
   </svg>
 );
 
@@ -54,10 +57,12 @@ function FlippableTicket({
     tierName.toLowerCase().includes('premium') || tierName.toLowerCase().includes('early');
 
   const bgGradient = isVIP
-    ? 'linear-gradient(135deg, #161616 0%, #2a2a2a 100%)'
+    ? 'bg-[#1a1a1a] text-white border-2 border-black'
     : isPremium
-    ? 'linear-gradient(135deg, #4a2bed 0%, #5d42f5 100%)'
-    : 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)';
+    ? 'bg-wix-purple text-white border-2 border-black'
+    : 'bg-white text-wix-text-dark border-2 border-black';
+
+  const accentText = isVIP || isPremium ? 'text-gray-300' : 'text-wix-text-muted';
 
   const eventDate = ticket.eventDate
     ? new Date(ticket.eventDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -85,66 +90,61 @@ function FlippableTicket({
     >
       {/* ─ FRONT ─ */}
       <div
-        className="absolute inset-0 w-full h-full rounded-2xl border-2 border-wix-text-dark backface-hidden flex flex-col justify-between p-5 sm:p-7 overflow-hidden"
-        style={{ background: bgGradient }}
+        className={`absolute inset-0 w-full h-full backface-hidden flex flex-col justify-between p-5 sm:p-7 overflow-hidden ${bgGradient}`}
       >
-        {/* Decorative circle */}
-        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/5" />
-
         <div className="flex justify-between items-start">
           <ChipIcon />
           <div className="text-right">
-            <div className="text-[11px] font-black uppercase tracking-widest text-white/60 mb-0.5">Event Ticket</div>
-            <div className="text-[14px] font-black uppercase tracking-widest text-white">{tierName}</div>
+            <div className={`text-[11px] font-black uppercase tracking-widest mb-0.5 ${accentText}`}>Event Ticket</div>
+            <div className="text-[14px] font-black uppercase tracking-widest">{tierName}</div>
           </div>
         </div>
 
-        <div className="font-mono text-[15px] sm:text-[18px] tracking-[0.18em] text-white/70 my-3">
+        <div className={`font-mono text-[15px] sm:text-[18px] tracking-[0.18em] my-3 ${accentText}`}>
           {displayCode}
         </div>
 
         <div className="flex justify-between items-end">
           <div>
-            <div className="text-[9px] uppercase tracking-widest text-white/50 mb-0.5">Event</div>
-            <div className="text-[12px] font-bold text-white line-clamp-1 max-w-[180px]">{eventTitle}</div>
+            <div className={`text-[9px] uppercase tracking-widest mb-0.5 ${accentText}`}>Event</div>
+            <div className="text-[12px] font-bold line-clamp-1 max-w-[180px]">{eventTitle}</div>
           </div>
           <div className="text-right">
-            <div className="text-[9px] uppercase tracking-widest text-white/50 mb-0.5">Valid</div>
-            <div className="text-[12px] font-mono font-bold text-white">{eventDate}</div>
+            <div className={`text-[9px] uppercase tracking-widest mb-0.5 ${accentText}`}>Valid</div>
+            <div className="text-[12px] font-mono font-bold">{eventDate}</div>
           </div>
         </div>
 
-        <div className="absolute bottom-4 right-5 text-[9px] text-white/30 uppercase tracking-widest">
+        <div className={`absolute bottom-4 right-5 text-[9px] uppercase tracking-widest ${accentText} opacity-50`}>
           Tap to flip
         </div>
       </div>
 
       {/* ─ BACK ─ */}
       <div
-        className="absolute inset-0 w-full h-full rounded-2xl border-2 border-wix-text-dark backface-hidden flex flex-col rotate-y-180 overflow-hidden"
-        style={{ background: bgGradient }}
+        className={`absolute inset-0 w-full h-full backface-hidden flex flex-col rotate-y-180 overflow-hidden ${bgGradient}`}
       >
-        <div className="w-full h-10 bg-black/70 mt-6" />
+        <div className={`w-full h-10 mt-6 ${isVIP || isPremium ? 'bg-white/10' : 'bg-gray-100'}`} />
         <div className="px-6 flex flex-col gap-3 mt-4 flex-1">
-          <div className="w-full h-9 bg-white/20 flex items-center justify-end px-4">
-            <span className="font-mono text-white font-black tracking-widest text-[12px]">
+          <div className={`w-full h-9 flex items-center justify-end px-4 ${isVIP || isPremium ? 'bg-black/30' : 'bg-gray-100'}`}>
+            <span className="font-mono font-black tracking-widest text-[12px]">
               #{ticket.ticketNumber || '—'}
             </span>
           </div>
           <div className="flex flex-col gap-1.5 mt-1">
-            <div className="flex items-center gap-2 text-[11px] text-white/70">
+            <div className={`flex items-center gap-2 text-[11px] ${accentText}`}>
               <Calendar className="w-3.5 h-3.5 shrink-0" />
               {eventDate} · {eventTime}
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-white/70">
+            <div className={`flex items-center gap-2 text-[11px] ${accentText}`}>
               <MapPin className="w-3.5 h-3.5 shrink-0" />
               {ticket.eventVenue || 'Venue TBA'}
             </div>
           </div>
-          {ticket.ticketTheme?.benefits?.length > 0 && (
+          {ticket.ticketTheme?.benefits && ticket.ticketTheme.benefits.length > 0 && (
             <ul className="mt-1 flex flex-col gap-1">
               {ticket.ticketTheme.benefits.slice(0, 4).map((b: string, i: number) => (
-                <li key={i} className="text-[11px] text-white/60">• {b}</li>
+                <li key={i} className={`text-[11px] ${accentText}`}>• {b}</li>
               ))}
             </ul>
           )}

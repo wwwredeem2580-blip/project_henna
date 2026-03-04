@@ -73,39 +73,11 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
 
     /* Header Section */
     .header {
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      background: #161616;
       padding: 30px 40px;
-      border-top-right-radius: 48px;
       color: white;
+      border: 3px solid #161616;
       position: relative;
-      overflow: hidden;
-    }
-
-    .header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 300px;
-      height: 300px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-    }
-
-    .header::after {
-      content: '';
-      position: absolute;
-      bottom: -30%;
-      left: -5%;
-      width: 200px;
-      height: 200px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 50%;
-    }
-
-    .header-content {
-      position: relative;
-      z-index: 1;
     }
 
     .event-title {
@@ -113,14 +85,17 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
       font-size: 32px;
       font-weight: 700;
       margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       line-height: 1.2;
     }
 
     .event-subtitle {
       font-size: 14px;
-      font-weight: 300;
-      opacity: 0.9;
-      letter-spacing: 0.5px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #cbd5e1;
     }
 
     /* Main Content */
@@ -128,9 +103,10 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
       display: flex;
       gap: 40px;
       padding: 40px;
-      background: #f8fafc;
-      border-left: 1px solid #e2e8f0;
-      border-right: 1px solid #e2e8f0;
+      background: white;
+      border-left: 3px solid #161616;
+      border-right: 3px solid #161616;
+      border-bottom: 2px solid #e2e8f0;
     }
 
     .qr-section {
@@ -140,8 +116,7 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
     .qr-container {
       background: white;
       padding: 24px;
-      border-top-right-radius: 24px;
-      border-bottom-left-radius: 24px;
+      border: 2px solid #161616;
       text-align: center;
     }
 
@@ -153,10 +128,10 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
 
     .qr-label {
       font-size: 11px;
-      color: #64748b;
-      font-weight: 500;
+      color: #161616;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
 
     .details-section {
@@ -170,27 +145,31 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
     .detail-label {
       font-size: 11px;
       color: #64748b;
-      font-weight: 500;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
       margin-bottom: 6px;
     }
 
     .detail-value {
       font-size: 16px;
-      color: #1e293b;
-      font-weight: 400;
+      color: #161616;
+      font-weight: 500;
       line-height: 1.5;
     }
 
     .detail-value.large {
       font-size: 20px;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .detail-value.highlight {
-      color: #6366f1;
-      font-weight: 600;
+      display: inline-block;
+      border: 2px solid #161616;
+      padding: 4px 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     /* Ticket Info Bar */
@@ -199,28 +178,28 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
       justify-content: space-between;
       padding: 24px 40px;
       background: white;
-      border-left: 1px solid #e2e8f0;
-      border-right: 1px solid #e2e8f0;
-      border-top: 2px dashed #cbd5e1;
+      border-left: 3px solid #161616;
+      border-right: 3px solid #161616;
+      border-bottom: 3px solid #161616;
     }
 
     .info-item {
-      text-align: center;
+      text-align: left;
     }
 
     .info-label {
       font-size: 10px;
       color: #64748b;
-      font-weight: 500;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
       margin-bottom: 6px;
     }
 
     .info-value {
       font-size: 14px;
-      color: #1e293b;
-      font-weight: 600;
+      color: #161616;
+      font-weight: 700;
       font-family: 'Courier New', monospace;
     }
 
@@ -228,17 +207,18 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
     .benefits-section {
       padding: 30px 40px;
       background: white;
-      border-left: 1px solid #e2e8f0;
-      border-right: 1px solid #e2e8f0;
+      border-left: 3px solid #161616;
+      border-right: 3px solid #161616;
+      border-bottom: 3px solid #161616;
     }
 
     .benefits-title {
       font-size: 14px;
-      font-weight: 600;
-      color: #1e293b;
+      font-weight: 700;
+      color: #161616;
       margin-bottom: 16px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
 
     .benefits-list {
@@ -250,16 +230,16 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
     .benefit-item {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
       font-size: 13px;
-      color: #475569;
+      color: #161616;
+      font-weight: 500;
     }
 
     .benefit-check {
       width: 18px;
       height: 18px;
-      background: #6366f1;
-      border-radius: 50%;
+      background: #161616;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -271,10 +251,10 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
     /* Footer */
     .footer {
       padding: 30px 40px;
-      background: #f8fafc;
-      border-bottom-left-radius: 48px;
-      border: 1px solid #e2e8f0;
-      border-top: 2px dashed #cbd5e1;
+      background: #f8f8f8;
+      border-left: 3px solid #161616;
+      border-right: 3px solid #161616;
+      border-bottom: 3px solid #161616;
     }
 
     .footer-content {
@@ -290,9 +270,11 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
 
     .terms-title {
       font-size: 12px;
-      font-weight: 600;
-      color: #1e293b;
+      font-weight: 700;
+      color: #161616;
       margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .terms-text {
@@ -307,12 +289,15 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
 
     .powered-by {
       font-size: 10px;
-      color: #94a3b8;
+      font-weight: 700;
+      color: #161616;
       margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .brand-name {
-      color: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: #161616;
     }
 
     /* Print Styles */
@@ -422,17 +407,12 @@ export function generateTicketHTML(params: TicketTemplateParams): string {
         <div class="branding">
           <p class="powered-by">Powered by</p>
           <div class="brand-name">
-            <svg viewBox="0 0 94 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #6366f1; font-size: 48px;">
-              {/* Z */}
-              <path d="M4 6H16L6 18H18" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-              {/* E */}
-              <path d="M36 6H24V18H36 M24 12H34" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-              {/* N */}
-              <path d="M42 18V6L54 18V6" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-              {/* V */}
-              <path d="M60 6L66 18L72 6" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-              {/* Y */}
-              <path d="M78 6L84 12L90 6 M84 12V18" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+            <svg viewBox="0 0 94 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #161616; width: 64px; height: 16px;">
+              <path transform="scale(0.8) translate(0, 4)" d="M4 6H16L6 18H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path transform="scale(0.8) translate(0, 4)" d="M36 6H24V18H36 M24 12H34" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path transform="scale(0.8) translate(0, 4)" d="M42 18V6L54 18V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path transform="scale(0.8) translate(0, 4)" d="M60 6L66 18L72 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path transform="scale(0.8) translate(0, 4)" d="M78 6L84 12L90 6 M84 12V18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </div>
         </div>
