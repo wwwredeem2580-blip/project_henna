@@ -23,16 +23,16 @@ export const RoleCard: React.FC<RoleCardProps> = ({ title, description, icon, se
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        "relative cursor-pointer p-4 sm:p-6 rounded-[1.5rem] border-2 transition-all duration-300",
+        "relative cursor-pointer p-4 sm:p-6 border-2 transition-all duration-300",
         selected
-          ? "border-brand-500 bg-brand-50 shadow-xl shadow-brand-100/50"
-          : "border-brand-200 bg-white hover:border-brand-300 hover:shadow-xl hover:shadow-brand-50"
+          ? "border-wix-purple bg-wix-purple/5"
+          : "border-wix-border-light bg-white hover:border-black"
       )}
     >
       <div className="flex items-center gap-4">
         <div className={cn(
-          "w-10 sm:w-12 h-10 sm:h-12 rounded-xl flex items-center justify-center transition-all duration-300",
-          selected ? "bg-brand-500 text-white shadow-lg shadow-brand-200" : "bg-brand-100 text-brand-400"
+          "w-10 sm:w-12 h-10 sm:h-12 flex items-center justify-center transition-all duration-300 border border-transparent",
+          selected ? "bg-wix-purple text-white border-wix-purple" : "bg-gray-100 text-gray-500 border-wix-border-light"
         )}>
           {icon}
         </div>
@@ -54,18 +54,11 @@ export const RoleCard: React.FC<RoleCardProps> = ({ title, description, icon, se
               animate={{ scale: 1 }}
               className="text-purple-600"
             >
-              <CheckCircle2 size={24} fill="currentColor" className="text-white fill-purple-600" />
+              <CheckCircle2 size={24} fill="currentColor" className="text-white fill-wix-purple" />
             </motion.div>
           )}
         </div>
       </div>
-
-      {selected && (
-        <motion.div
-          layoutId="glow"
-          className="absolute inset-0 rounded-[1.5rem] ring-4 ring-purple-500/5 blur-sm -z-10"
-        />
-      )}
     </motion.div>
   );
 };

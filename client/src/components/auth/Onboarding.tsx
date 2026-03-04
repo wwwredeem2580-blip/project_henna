@@ -83,14 +83,14 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
             onClick={() => role && onContinue(role)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-slate-950 text-white font-[500] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-slate-200/50"
+            className="w-full bg-black text-white font-[500] py-3 sm:py-4 flex items-center justify-center gap-2 transition-all hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed border outline-none"
           >
             Get Started
             <ArrowRight size={20} />
           </motion.button>
 
-          <motion.p variants={itemVariants} className="text-center text-slate-400 font-[400] text-sm">
-            Already have an account? <button onClick={onLogin} className="text-brand-500 hover:underline transition-colors">Sign In</button>
+          <motion.p variants={itemVariants} className="text-center text-slate-500 font-[400] text-sm">
+            Already have an account? <button onClick={onLogin} className="text-wix-purple font-medium hover:underline transition-colors">Sign In</button>
           </motion.p>
         </div>
       </motion.div>
@@ -99,42 +99,42 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="hidden lg:flex flex-1 bg-purple-50 relative overflow-hidden items-center justify-center p-12"
+        className="hidden lg:flex flex-1 bg-wix-purple relative overflow-hidden items-center justify-center p-12"
       >
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-100 blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-100 blur-[120px]" />
+        {/* Sharp background pattern */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_white_1px,_transparent_1px)] bg-[length:24px_24px]" />
         </div>
 
-        <div className="w-full max-w-[500px] bg-white rounded-[3.5rem] border border-purple-200 shadow-4xl p-10 space-y-8 relative z-10">
-          <div className="flex items-center justify-between border-b border-purple-200 pb-6">
+        <div className="w-full max-w-[500px] bg-white border border-wix-border-light shadow-[8px_8px_0_0_rgba(0,0,0,0.1)] p-10 space-y-8 relative z-10">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-6">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-brand-50" />
+              <div className="w-10 h-10 bg-gray-100 border border-wix-border-light" />
               <div className="space-y-1.5">
-                <div className="h-3 w-32 bg-brand-50 rounded-full" />
-                <div className="h-2 w-20 bg-brand-50 rounded-full" />
+                <div className="h-3 w-32 bg-gray-100" />
+                <div className="h-2 w-20 bg-gray-100" />
               </div>
             </div>
-            <div className="h-10 w-10 bg-brand-50 rounded-xl" />
+            <div className="h-10 w-10 bg-gray-100 border border-wix-border-light" />
           </div>
 
           <div className="space-y-4">
-            <div className="h-12 w-4/5 bg-brand-50 rounded-2xl" />
-            <div className="h-4 w-3/5 bg-brand-50 rounded-full" />
+            <div className="h-12 w-4/5 bg-gray-100" />
+            <div className="h-4 w-3/5 bg-gray-100" />
           </div>
 
           <div className="grid grid-cols-2 gap-6 pt-4">
-            <div className="aspect-video bg-brand-50 rounded-[2rem] border-2 border-dashed border-brand-200 flex items-center justify-center">
-              <BotIcon className="text-brand-200" size={40} />
+            <div className="aspect-video bg-gray-50 border border-wix-border-light flex items-center justify-center">
+              <BotIcon className="text-gray-400" size={40} />
             </div>
-            <div className="aspect-video bg-brand-50 rounded-[2rem] border border-brand-200 flex items-center justify-center">
-              <Calendar className="text-brand-300" size={40} />
+            <div className="aspect-video bg-gray-50 border border-wix-border-light flex items-center justify-center">
+              <Calendar className="text-gray-400" size={40} />
             </div>
           </div>
 
-          <div className="p-8 bg-brand-400 rounded-[2.5rem] text-white space-y-3 shadow-3xl shadow-brand-500/30">
-            <h3 className="font-[400] text-2xl tracking-tight leading-none text-white">Human-led, AI-powered</h3>
-            <p className="text-white/80 leading-[1] font-[300]">Built with Top-Notch precision. Every pixel optimized for your business success.</p>
+          <div className="p-8 bg-black text-white space-y-3 border-l-4 border-wix-purple shadow-[4px_4px_0_0_#e5e7eb]">
+            <h3 className="font-[300] text-2xl tracking-tight leading-none text-white">Human-led, AI-powered</h3>
+            <p className="text-white/80 leading-relaxed font-[300]">Built with Top-Notch precision. Every pixel optimized for your business success.</p>
           </div>
         </div>
       </motion.div>

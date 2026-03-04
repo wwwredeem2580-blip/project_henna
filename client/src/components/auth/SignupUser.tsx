@@ -88,15 +88,16 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-0 sm:p-6 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-50 rounded-full blur-[100px] -z-10 opacity-50" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-50 rounded-full blur-[80px] -z-10 opacity-50" />
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+      {/* Sharp grid background pattern */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_#9333ea_1px,_transparent_1px)] bg-[length:24px_24px]" />
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[500px] bg-white p-8 md:p-12 rounded-[2rem] border border-gray-100 shadow-2xl shadow-gray-100/50"
+        className="w-full max-w-[500px] bg-white p-8 md:p-12 border-2 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] relative z-10"
       >
         <button
           onClick={onGoBack}
@@ -109,8 +110,8 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
         <div className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="text-brand-500" size={20} strokeWidth={1} />
-              <span className="text-xs font-[600] uppercase tracking-widest text-brand-500">Join as Attendee</span>
+              <Sparkles className="text-wix-purple" size={20} strokeWidth={1} />
+              <span className="text-xs font-[600] uppercase tracking-widest text-wix-purple">Join as Attendee</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-[300] text-gray-900 mt-4 leading-[0.9] tracking-tight">Create Your Account</h1>
             <p className="text-gray-500 text-sm sm:text-base font-[300]">Discover and attend amazing events</p>
@@ -122,7 +123,7 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
               type="button"
               onClick={handleGoogleRegister}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-1 sm:border-2 border-neutral-200 rounded-xl hover:bg-gray-50 transition-all font-[500] text-neutral-700 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-black bg-white hover:bg-gray-50 transition-all font-[500] text-black disabled:opacity-50"
             >
               <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
               {loading ? 'Redirecting...' : 'Continue with Google'}
@@ -146,7 +147,7 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
                   value={formData.firstName}
                   onChange={(e) => updateField('firstName', e.target.value)}
                   placeholder="John"
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all"
                 />
                 {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
               </div>
@@ -157,7 +158,7 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
                   value={formData.lastName}
                   onChange={(e) => updateField('lastName', e.target.value)}
                   placeholder="Doe"
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all"
                 />
                 {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
               </div>
@@ -170,7 +171,7 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
                 value={formData.email}
                 onChange={(e) => updateField('email', e.target.value)}
                 placeholder="john@example.com"
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all"
               />
               {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
             </div>
@@ -183,7 +184,7 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
                   value={formData.password}
                   onChange={(e) => updateField('password', e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all"
                 />
                 {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
               </div>
@@ -194,14 +195,14 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
                   value={formData.confirmPassword}
                   onChange={(e) => updateField('confirmPassword', e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all"
                 />
                 {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
               </div>
             </div>
 
             {errors.submit && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="p-3 bg-red-50 border-2 border-red-200">
                 <p className="text-sm text-red-600">{errors.submit}</p>
               </div>
             )}
@@ -209,7 +210,7 @@ export const SignupUser: React.FC<SignupUserProps> = ({ onSuccess, onGoBack }) =
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
+              className="w-full bg-black text-white font-[600] py-3 sm:py-4 flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all border-2 border-black disabled:opacity-50"
             >
               {loading ? 'Creating Account...' : 'Create Account'}
               <CheckCircle2 size={20} />

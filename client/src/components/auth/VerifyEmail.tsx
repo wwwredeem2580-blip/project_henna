@@ -160,15 +160,16 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-50 rounded-full blur-[100px] -z-10 opacity-50" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-50 rounded-full blur-[80px] -z-10 opacity-50" />
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+      {/* Sharp grid background pattern */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_#9333ea_1px,_transparent_1px)] bg-[length:24px_24px]" />
+      </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[500px] bg-white p-8 md:p-12 rounded-[2rem] border border-gray-100 shadow-2xl shadow-gray-100/50"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-[500px] bg-white p-8 md:p-12 border-2 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] text-center relative z-10"
       >
         <button
           onClick={onGoBack}
@@ -177,28 +178,28 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
           <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           Back
         </button>
-
         <div className="space-y-6 text-center">
-          <div className="w-20 h-20 mx-auto bg-brand-50 rounded-full flex items-center justify-center">
-            <Mail className="text-brand-500" size={40} />
+          <div className="w-16 h-16 bg-wix-purple/10 border-2 border-wix-purple flex items-center justify-center mx-auto mb-6">
+            <Mail className="text-wix-purple" size={32} />
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-3xl font-[300] text-gray-900 tracking-tight">Verify Your Email</h1>
-            <p className="text-gray-500 font-[300]">
-              We've sent a verification link to <span className="font-[500] text-gray-700">{user?.email}</span>
+            <h1 className="text-2xl sm:text-3xl font-[300] text-gray-900 mb-4 leading-tight">Check your email</h1>
+            <p className="text-gray-500 text-sm sm:text-base font-[300] mb-8">
+              We've sent a verification link to <br/>
+              <span className="font-medium text-wix-purple">{user?.email}</span>
             </p>
           </div>
 
-          <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 text-left space-y-2">
-            <p className="text-sm text-brand-700 font-[500]">📧 Check your inbox</p>
+          <div className="bg-wix-purple/5 border border-wix-purple/20 p-4 text-left space-y-2">
+            <p className="text-sm text-wix-purple font-[500]">📧 Check your inbox</p>
             <p className="text-sm text-gray-600">Click the verification link in the email to activate your account.</p>
           </div>
 
           <button
             onClick={handleCheckStatus}
             disabled={checking}
-            className="w-full bg-brand-500 text-white font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
+            className="w-full bg-black text-white font-[600] py-3 sm:py-4 flex items-center justify-center gap-2 hover:bg-neutral-800 border-2 border-black transition-all disabled:opacity-50"
           >
             {checking ? (
               <>
@@ -212,11 +213,10 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
               </>
             )}
           </button>
-
           <button
             onClick={handleResendEmail}
             disabled={loading}
-            className="w-full bg-white border-2 border-gray-200 text-gray-700 font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 transition-all disabled:opacity-50"
+            className="w-full bg-white border-2 border-black text-black font-[600] py-3 sm:py-4 flex items-center justify-center gap-2 hover:bg-gray-50 transition-all disabled:opacity-50"
           >
             {loading ? (
               <>
@@ -250,7 +250,7 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
                 showNotification('error', 'Error', 'Failed to logout');
               }
             }}
-            className="w-full bg-white border-2 border-red-200 text-red-600 font-[600] py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-50 transition-all"
+            className="w-full bg-white border-2 border-black text-black font-[600] py-3 sm:py-4 flex items-center justify-center gap-2 hover:bg-gray-50 transition-all"
           >
             Use Different Email
           </button>
@@ -258,7 +258,7 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({ onSuccess, onGoBack, t
           <p className="text-xs text-gray-400">
             Didn't receive the email? Check your spam folder or click resend.
             <br />
-            <span className="text-brand-500">Auto-checking every 5 seconds...</span>
+            <span className="text-wix-purple font-medium">Auto-checking every 5 seconds...</span>
           </p>
         </div>
       </motion.div>

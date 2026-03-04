@@ -107,7 +107,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
               type="button"
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-1 sm:border-2 border-neutral-200 rounded-xl hover:bg-gray-50 transition-all font-[500] text-neutral-700 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-black hover:bg-gray-50 transition-all font-[500] text-black disabled:opacity-50"
             >
               <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
               {loading ? 'Redirecting...' : 'Sign in with Google'}
@@ -129,7 +129,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
                     value={formData.email}
                     onChange={(e) => updateField('email', e.target.value)}
                     placeholder="name@company.com"
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all"
                   />
                 </div>
                 {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
@@ -147,7 +147,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
                     value={formData.password}
                     onChange={(e) => updateField('password', e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all"
                   />
                 </div>
                 {errors.password && <p className="text-xs text-red-500 ml-1">{errors.password}</p>}
@@ -155,7 +155,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
             </div>
 
             {errors.submit && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="p-3 bg-red-50 border-2 border-red-200">
                 <p className="text-sm text-red-600">{errors.submit}</p>
               </div>
             )}
@@ -163,7 +163,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-500 text-white font-[600] py-3 sm:py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
+              className="w-full bg-black text-white font-[600] py-3 sm:py-4 flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all shadow-[4px_4px_0_0_#9333ea] border-2 border-black disabled:opacity-50"
             >
               {loading ? 'Signing In...' : 'Sign In'}
               <LogIn size={20} />
@@ -171,7 +171,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
           </form>
 
           <p className="text-center text-sm sm:text-base text-neutral-500 font-[400]">
-            Don't have an account? <button onClick={onGoBack} className="text-brand-500 font-[500] hover:underline">Create one</button>
+            Don't have an account? <button onClick={onGoBack} className="text-wix-purple font-[600] border-b-2 border-transparent hover:border-wix-purple transition-all pb-0.5">Create one</button>
           </p>
         </div>
       </motion.div>
@@ -181,50 +181,50 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8 }}
-        className="flex-1 bg-brand-500 hidden lg:block relative overflow-hidden flex flex-col justify-center items-center p-12 order-1 lg:order-2"
+        className="flex-1 bg-wix-purple hidden lg:block relative overflow-hidden flex flex-col justify-center items-center p-12 order-1 lg:order-2"
       >
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-20">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_white_1px,_transparent_1px)] bg-[length:24px_24px]" />
         </div>
 
-        {/* Animated Background Orbs */}
+        {/* Sharp Geometric Background Shapes */}
         <motion.div
           animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-          transition={{ duration: 10, repeat: Infinity }}
-          className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-brand-400 blur-[120px] rounded-full opacity-40"
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] border-[10px] border-white/10"
         />
         <motion.div
           animate={{ scale: [1, 1.1, 1], rotate: [0, -90, 0] }}
-          transition={{ duration: 12, repeat: Infinity }}
-          className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-brand-300 blur-[100px] rounded-full opacity-30"
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] border-[10px] border-black/10"
         />
 
         <div className="relative z-10 flex flex-col items-center justify-center h-[80vh] text-center space-y-8">
           <div className='max-w-[500px] flex flex-col items-center gap-4'>
-            <div className="inline-flex max-w-[400px] items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white">
+            <div className="inline-flex max-w-[400px] items-center gap-3 px-4 py-2 bg-black border-2 border-white text-white shadow-[4px_4px_0_0_#fff]">
               <Sparkles size={18} />
-              <span className="text-sm font-[500] uppercase tracking-wider">Experience the Future</span>
+              <span className="text-sm font-[600] uppercase tracking-wider">Experience the Future</span>
             </div>
 
-            <h2 className="text-3xl lg:text-5xl font-black text-white leading-tight">
+            <h2 className="text-3xl lg:text-5xl font-black text-white leading-tight uppercase tracking-tight">
               Elevate your <br />
-              <span className="text-brand-200">Experiences.</span>
+              <span className="text-black bg-white px-2 mt-2 inline-block">Experiences.</span>
             </h2>
 
-              <p className="text-white/80 text-lg font-[300] leading-relaxed">
+              <p className="text-white/90 text-lg font-[400] leading-relaxed">
                 Join thousands of event architects creating unfathomably clean moments for their community.
               </p>
 
-              <div className="flex justify-center -space-x-4">
+              <div className="flex justify-center -space-x-4 pt-4">
                 {[1, 2, 3, 4].map((i) => (
                   <img
                     key={i}
                     src={`https://picsum.photos/seed/${i + 20}/100/100`}
-                    className="w-16 h-16 rounded-full border-4 border-purple-600 shadow-xl"
+                    className="w-16 h-16 border-2 border-black"
                     alt="user"
                   />
                 ))}
-                <div className="w-16 h-16 rounded-full border-4 border-purple-600 bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-bold text-xl shadow-xl">
+                <div className="w-16 h-16 border-2 border-black bg-white flex items-center justify-center text-black font-black text-xl">
                   +10k
                 </div>
               </div>
