@@ -158,12 +158,12 @@ export default function Events() {
                 >
                   Dashboard
                 </button>
-                <button
+                {/* <button
                   onClick={() => router.push('/host/events')}
                   className="hover:text-[#4d33de] transition-colors"
                 >
                   My Events
-                </button>
+                </button> */}
               </>
             )}
             {user?.role === 'user' && (
@@ -632,7 +632,7 @@ function EventCard({
       className="group cursor-pointer flex flex-col gap-3"
     >
       {/* Cover Image */}
-      <div className="aspect-[1.6/1] relative overflow-hidden rounded-tr-xl rounded-tl-xl bg-gray-100 shadow-sm group-hover:shadow-md transition-shadow duration-300">
+      <div className="aspect-[1.6/1] relative overflow-hidden bg-gray-100 shadow-sm group-hover:shadow-md transition-shadow duration-300">
         <img
           src={
             event.media?.coverImage?.url ||
@@ -664,7 +664,7 @@ function EventCard({
       </div>
 
       {/* Card Content */}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 px-2">
         <h3 className="text-[15px] font-semibold text-[#161616] leading-snug line-clamp-2 group-hover:text-[#4d33de] transition-colors duration-200">
           {event.title}
         </h3>
