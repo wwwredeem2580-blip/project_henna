@@ -10,6 +10,7 @@ export interface TicketTheme {
   perforationStyle?: string;
   benefits?: string[];
   tier?: string;
+  name?: string;
 }
 
 export interface Ticket {
@@ -31,6 +32,7 @@ export interface Ticket {
   checkInStatus: 'not_checked_in' | 'checked_in';
   issuedAt: string;
   ticketTheme?: TicketTheme;
+  eventCoverImage?: string;
 }
 
 export const ticketService = {

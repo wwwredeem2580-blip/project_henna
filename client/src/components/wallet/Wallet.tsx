@@ -300,11 +300,17 @@ function EventAccordion({
         <div className="flex items-start gap-4 flex-1 min-w-0">
           {/* Event cover thumb */}
           <div className="w-14 h-14 shrink-0 bg-gray-100 border border-wix-border-light overflow-hidden">
-            <img
-              src="https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60"
-              alt=""
-              className="w-full h-full object-cover"
-            />
+            {eventGroup.eventCoverImage ? (
+              <img
+                src={eventGroup.eventCoverImage}
+                alt={eventGroup.eventTitle}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-wix-text-muted">
+                <Calendar className="w-5 h-5" />
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-1 min-w-0">
             <h2 className="text-[16px] sm:text-[18px] font-semibold tracking-tight text-wix-text-dark line-clamp-1">
@@ -418,6 +424,7 @@ export default function WalletPage() {
           eventDate: ticket.eventDate,
           eventVenue: ticket.eventVenue,
           venueAddress: ticket.venueAddress,
+          eventCoverImage: ticket.eventCoverImage || null,
           tickets: [],
         };
       }

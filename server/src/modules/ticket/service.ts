@@ -17,6 +17,7 @@ export const getTicketsService = async (userId: string) => {
               venue: 1,
               schedule: 1,
               tickets: 1,
+              media: 1,
             }
           }
         ]
@@ -73,7 +74,8 @@ export const getTicketsService = async (userId: string) => {
           benefits: '$ticketTheme.benefits',
           tier: '$ticketTheme.tier',
           name: '$ticketTheme.name',
-        }
+        },
+        eventCoverImage: '$event.media.coverImage.url',
       }
     },
     { $sort: { issuedAt: -1 } }
