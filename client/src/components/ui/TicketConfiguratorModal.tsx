@@ -5,6 +5,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, ArrowLeft, CheckCircle, Plus, Trash2, Sparkles, QrCode, Rotate3D, Minus } from 'lucide-react';
 import { BDTIcon, LocationIcon } from './Icons';
 
+/* ─── SVG Icons ─── */
+const ChipIcon = () => (
+  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1" y="1" width="38" height="28" rx="4" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M1 10H10V20H1" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M39 10H30V20H39" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M15 1V30" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M25 1V30" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M15 15H25" stroke="currentColor" strokeWidth="1.5"/>
+  </svg>
+);
+
+const ContactlessIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8.5 5.5a10 10 0 0 1 0 13"/>
+    <path d="M12.5 7.5a6 6 0 0 1 0 9"/>
+    <path d="M16.5 9.5a2 2 0 0 1 0 5"/>
+  </svg>
+);
+
 interface TicketData {
   name: string;
   tier: string;
@@ -460,15 +480,19 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
 
                 {/* Right Side - Live Preview (Hidden on Mobile) */}
                 <div className="hidden lg:flex lg:w-[400px] p-6 bg-gray-50 items-center justify-center border-l border-gray-200">
-                  <div className="space-y-4 w-full">
-                    <div className="flex items-center gap-2 mb-4">
+                  <div className="space-y-4 w-full flex flex-col items-center">
+                    <div className="flex items-center self-start gap-2 mb-4">
                       <Sparkles size={16} className="text-wix-purple" />
                       <span className="text-xs font-[600] uppercase tracking-widest text-wix-text-dark">
                         Live Preview
                       </span>
                     </div>
 
-                    <div className="relative w-full max-w-[350px] h-[180px] group cursor-pointer" onClick={handleFlip} style={{ perspective: '1000px' }}>
+                    <div 
+                      className="perspective-1000 w-full max-w-[380px] aspect-[1.586/1] cursor-pointer"
+                      onClick={handleFlip}
+                      title="Click to flip and see benefits"
+                    >
                       <motion.div
                         className="w-full h-full relative"
                         initial={false}
@@ -476,132 +500,74 @@ export const TicketConfiguratorModal: React.FC<TicketConfiguratorModalProps> = (
                         transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
                         style={{ transformStyle: 'preserve-3d' }}
                       >
-                        {/* Front Face */}
+                        {/* FRONT */}
                         <div
-                          className="absolute w-full h-full bg-white border border-gray-200 overflow-hidden shadow-lg"
+                          className="absolute inset-0 w-full h-full backface-hidden p-5 sm:p-6 flex flex-col justify-between bg-white text-wix-text-dark border-2 border-black"
                           style={{ backfaceVisibility: 'hidden' }}
                         >
-                          <div className="px-6 py-4 h-full flex flex-col justify-between relative">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="text-md font-[400] tracking-wide text-neutral-700">
-                                  {ticketData.tier || 'Ticket Tier'}
-                                </div>
-                                <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
-                                  {ticketData.name || 'Ticket Name'}
-                                </div>
-                                <div className="mt-2">
-                                  <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
-                                    {sameDay ? eventData?.startDate : `${eventData?.startDate} - ${eventData?.endDate}`}
-                                  </div>
-                                  <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
-                                    {eventData?.startTime} - {eventData?.endTime}
-                                  </div>
-                                </div>
-                              </div>
+                          <div className="flex justify-between items-start">
+                            <div className="flex flex-col gap-1.5">
+                              <ChipIcon />
+                              <div className="opacity-70"><ContactlessIcon /></div>
                             </div>
+                            <div className="text-right flex flex-col items-end">
+                              <h3 className="text-[15px] font-black uppercase tracking-widest">{ticketData.tier || 'Standard'}</h3>
+                              <span className="text-[10px] font-medium uppercase tracking-wider text-wix-text-muted">Event Ticket</span>
+                            </div>
+                          </div>
 
-                            <div className="flex flex-col items-start">
-                              {true && (
-                                <>
-                                <span className="text-xs text-slate-500 font-[300]">
-                                  {ticketData.quantity > 0 ? `Only ${ticketData.quantity} tickets left` : 'Sold out'}
-                                </span>
-                                <span className="flex items-center text-md gap-1 mt-2 text-slate-500 font-[300]">
-                                  <span className="text-xs">For </span>
-                                  {ticketData.price === 0 ? (
-                                      <span className="px-2 py-0.5 bg-[#d2f47c] text-black text-xs font-[600] uppercase tracking-wider">
-                                        FREE
-                                      </span>
-                                  ) : (
-                                    <>
-                                      <BDTIcon className="text-xs"/>{ticketData.price}
-                                    </>
-                                  )}
-                                </span>
-                                </>
-                              )}
-                              <span className="flex items-center gap-1 text-xs text-slate-500 font-[300]">
-                                <LocationIcon className="w-3"/> {eventData?.venue}
+                          <div className="text-[16px] sm:text-[20px] font-mono tracking-widest mt-auto mb-3 text-wix-text-muted">
+                            Powered by Zenvy
+                          </div>
+
+                          <div className="flex justify-between items-end">
+                            <div className="flex flex-col">
+                              <span className="text-[9px] uppercase tracking-widest text-wix-text-muted mb-0.5">Valid for</span>
+                              <span className="text-[13px] font-mono font-bold tracking-wide uppercase">Admit One</span>
+                            </div>
+                            <div className="flex flex-col text-right">
+                              <span className="text-[9px] uppercase tracking-widest text-wix-text-muted mb-0.5">Price</span>
+                              <span className="text-[16px] font-bold font-mono">
+                                {ticketData.price === 0 ? 'FREE' : <><BDTIcon className="inline text-[13px]" />{ticketData.price.toLocaleString()}</>}
                               </span>
-                            </div>
-                            {true && (
-                              <div className="absolute bottom-10 right-6 flex items-center gap-2" onClick={handleControlClick}>
-                                <button 
-                                  disabled={true}
-                                  className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
-                                >
-                                  <Minus size={12}/>
-                                </button>
-                                <span className="text-xs font-[400] text-neutral-500 min-w-[20px] text-center">{0}</span>
-                                <button 
-                                  disabled={true}
-                                  className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
-                                >
-                                  <Plus size={12}/>
-                                </button>
-                              </div>
-                            )}
-
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
-                            <div className="absolute top-4 right-4 text-brand-400 opacity-50">
-                              <Rotate3D size={16} />
-                            </div>
-                            
-                            <div className="absolute bottom-18 right-6 text-brand-400/20">
-                              <QrCode size={36} />
                             </div>
                           </div>
                         </div>
 
-                        {/* Back Face */}
+                        {/* BACK */}
                         <div
-                          className="absolute w-full h-full bg-white border border-gray-200 text-neutral-600 overflow-hidden relative shadow-lg"
+                          className="absolute inset-0 w-full h-full backface-hidden border-2 border-black bg-white text-wix-text-dark flex flex-col rotate-y-180 overflow-hidden"
                           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                         >
-                          <div className="px-6 py-4 h-full flex flex-col gap-6 relative">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="text-md font-[400] flex items-center gap-2 tracking-wide text-neutral-700">
-                                  <Sparkles size={16} className='text-wix-purple' strokeWidth={1}/>
-                                  Benefits
-                                </div>
-                                <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
-                                  {ticketData.name}
-                                </div>
-                              </div>
+                          <div className="px-5 py-4 flex flex-col flex-1">
+                            <div className="bg-gray-100 h-8 w-full flex items-center justify-end px-4 font-mono text-[11px] mb-4 text-gray-500">
+                              VALID: {sameDay ? eventData?.startDate : `${eventData?.startDate} - ${eventData?.endDate}`}
                             </div>
-
-                            <div className="flex text-[12px] flex-col items-start">
+                            <div className="text-[10px] text-wix-text-muted uppercase tracking-widest mb-2 border-b border-black pb-3">
+                              Included Benefits
+                            </div>
+                            <ul className="flex flex-col gap-1.5 text-[12px] font-medium leading-snug text-wix-text-muted">
                               {ticketData.benefits.length > 0 ? (
-                                ticketData.benefits.map((benefit, index) => (
-                                  <div key={index} className='flex items-center gap-2'>
-                                    <CheckCircle size={12} className='text-brand-500' strokeWidth={1}/>
-                                    <span className='line-clamp-1'>{benefit}</span>
-                                  </div>
-                                )).slice(0, 3)
+                                <>
+                                  {ticketData.benefits.slice(0, 5).map((b, i) => (
+                                    <li key={i}>• {b}</li>
+                                  ))}
+                                  {ticketData.benefits.length > 5 && <li>• +{ticketData.benefits.length - 5} more</li>}
+                                </>
                               ) : (
-                                <span className='text-xs text-slate-500 font-[300]'>No benefits</span>
+                                <li>• Event access</li>
                               )}
-                              {ticketData.benefits.length > 3 && (
-                                <button className='text-xs text-brand-500 font-[300] mt-2 hover:underline'>
-                                  See more...
-                                </button>
-                              )}
-                            </div>
-
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
-                            <div className="absolute top-4 right-4 text-brand-400 opacity-50">
-                              <Rotate3D size={16} />
-                            </div>
-                            
-                            <div className="absolute bottom-18 right-6 text-brand-400/20">
-                              <QrCode size={36} />
-                            </div>
+                            </ul>
                           </div>
                         </div>
                       </motion.div>
                     </div>
+                    {/* Quantity preview */}
+                    <div className="flex items-center justify-between border-2 border-black w-full max-w-[380px] bg-white h-[46px] overflow-hidden opacity-50 pointer-events-none mt-2">
+                       <button className="w-12 h-full flex items-center justify-center text-xl font-medium">−</button>
+                       <span className="font-mono text-[15px] font-bold">1</span>
+                       <button className="w-12 h-full flex items-center justify-center text-xl font-medium">+</button>
+                     </div>
                   </div>
                 </div>
               </div>

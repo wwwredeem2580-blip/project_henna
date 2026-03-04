@@ -556,10 +556,10 @@ export default function EventDetails() {
                   </div>
                 </div>
               </div>
-              <MinimalMap
+              {/* <MinimalMap
                 venue={event.venue?.address?.city}
                 coordinates={event.venue?.coordinates?.coordinates}
-              />
+              /> */}
             </div>
 
             {/* Right: About & Host Profile */}
