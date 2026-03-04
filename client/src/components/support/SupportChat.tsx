@@ -2,16 +2,63 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, MessageSquare, MoreHorizontal, ArrowLeft } from 'lucide-react';
+import { Send, X, MessageSquare, MoreHorizontal, ArrowLeft, Plus, Mic, ArrowUp, Sparkles, ChevronDown } from 'lucide-react';
 import { useSupport } from '@/lib/context/support';
 import { useAuth } from '@/lib/context/auth';
 import { Logo } from '@/components/shared/Logo';
 import { TypingIndicator } from './TypingIndicator';
 
+const ZennyAvatar = ({ size = 'large' }: { size?: 'small' | 'medium' | 'large' }) => {
+  if (size === 'small') {
+    return (
+      <div className="w-8 h-8 bg-[#4a2bed] rounded-xl flex items-center justify-center relative overflow-hidden flex-shrink-0 self-end mb-1 mr-2 shadow-sm">
+        <div className="relative w-4 h-4">
+          <div className="absolute top-[25%] left-[20%] w-[20%] h-[20%] bg-white rounded-full"></div>
+          <div className="absolute top-[25%] right-[20%] w-[20%] h-[20%] bg-white rounded-full"></div>
+          <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 w-[50%] h-[12%] bg-white/50 rounded-full"></div>
+          <div className="absolute -top-[12%] left-1/2 -translate-x-1/2 w-[12%] h-[25%] bg-white/70 rounded-full"></div>
+          <div className="absolute -top-[30%] left-1/2 -translate-x-1/2 w-[25%] h-[25%] bg-white rounded-full"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (size === 'medium') {
+    return (
+      <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
+        <div className="relative w-7 h-7">
+          <div className="absolute top-[25%] left-[16%] w-[20%] h-[20%] bg-white rounded-full animate-pulse"></div>
+          <div className="absolute top-[25%] right-[16%] w-[20%] h-[20%] bg-white rounded-full animate-pulse"></div>
+          <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 w-[50%] h-[10%] bg-white/40 rounded-full"></div>
+          <div className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[10%] h-[25%] bg-white/60 rounded-full"></div>
+          <div className="absolute -top-[25%] left-1/2 -translate-x-1/2 w-[25%] h-[25%] bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-20 h-20 bg-[#4a2bed] rounded-[1.5rem] flex items-center justify-center relative overflow-hidden shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
+      <div className="relative w-12 h-12">
+        <div className="absolute top-[25%] left-[16%] w-[20%] h-[20%] bg-white rounded-full animate-pulse"></div>
+        <div className="absolute top-[25%] right-[16%] w-[20%] h-[20%] bg-white rounded-full animate-pulse"></div>
+        <div className="absolute bottom-[25%] left-1/2 -translate-x-1/2 w-[50%] h-[10%] bg-white/30 rounded-full"></div>
+        <div className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[10%] h-[25%] bg-white/50 rounded-full"></div>
+        <div className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[20%] h-[20%] bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]"></div>
+      </div>
+    </div>
+  );
+};
+
 export const SupportChat = () => {
   const { isOpen, toggleChat } = useSupport();
   const { user } = useAuth();
   const [message, setMessage] = useState('');
+  const suggestions = [
+    "I need help choosing the right hosting plan",
+    "I want to create a website",
+    "I want to migrate to Wixel"
+  ];
   const [messages, setMessages] = useState<any[]>([
     { id: 1, text: "Hi there! I'm Zenny. Welcome to Zenvy! 👋", sender: 'bot', time: 'Just now' },
     { id: 2, text: "I'm here to help you get started or answer any questions you might have.", sender: 'bot', time: 'Just now' },
@@ -187,12 +234,16 @@ export const SupportChat = () => {
     };
   }, [isOpen]);
 
-  const handleSend = () => {
-    if (!message.trim() || isClosed) return;
+  const handleSend = (textOverride?: string | React.MouseEvent | React.KeyboardEvent) => {
+    let finalMessage = message;
+    if (typeof textOverride === 'string') {
+      finalMessage = textOverride;
+    }
+    if (!finalMessage.trim() || isClosed) return;
 
     const userMsg = {
         id: Date.now(), 
-        text: message, 
+        text: finalMessage, 
         sender: 'user', 
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -344,38 +395,20 @@ export const SupportChat = () => {
             transition={{ duration: 0.2 }}
             className="fixed inset-0 w-full h-[100dvh] sm:static sm:w-[380px] sm:h-[600px] bg-white sm:rounded-[2rem] shadow-2xl border border-slate-200 flex flex-col overflow-hidden z-[10000]"
           >
-            {/* Header */}
-            <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
-              <div className="flex items-center gap-4">
-                {/* Mobile Back Button */}
+            <header className="flex items-center justify-between px-6 py-5 border-b border-gray-50 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="text-[16px] font-bold text-wix-text-dark tracking-tight">Zenny</div>
+              </div>
+              <div className="flex items-center gap-3">
                 <button 
                   onClick={toggleChat}
-                  className="sm:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all"
+                  className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-all"
                 >
-                  <ArrowLeft size={20} strokeWidth={1.5}/>
-                </button>
-
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
-                     <Logo className="w-5 h-5 text-brand-600" />
-                  </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-[500] text-slate-900">Zenny</h3>
-                  <p className="text-[9px] text-green-500 font-[300] uppercase tracking-widest">Online</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                 <button className="p-1 text-neutral-600 hover:text-neutral-900 rounded-lg"><MoreHorizontal size={16} strokeWidth={1.5}/></button>
-                 <button 
-                  onClick={toggleChat}
-                  className="hidden sm:block p-1 text-neutral-600 hover:text-neutral-900 rounded-lg ml-2"
-                >
-                  <X size={16} strokeWidth={1.5}/>
+                  <ChevronDown className="w-5 h-5" />
                 </button>
               </div>
-            </div>
+            </header>
 
             {/* Queue Banner - Always Visible */}
             {queuePos !== null && (
@@ -394,53 +427,95 @@ export const SupportChat = () => {
                  </div>
             )}
 
-            {/* Chat Area */}
-            <div className="flex-1 p-8 overflow-y-auto space-y-6 bg-slate-50/30">
-               <div className="flex justify-center">
-                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest bg-slate-100/80 px-3 py-1 rounded-full">Today</span>
-               </div>
-
-               <div className="flex justify-center">
-                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest bg-slate-100/80 px-3 py-1 rounded-full">Today</span>
-               </div>
-
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {msg.sender === 'bot' && (
-                     <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center mr-2 flex-shrink-0 self-end mb-1">
-                        <Logo className="w-4 h-4 text-brand-500" />
-                     </div>
-                  )}
-                  <div 
-                    className={`max-w-[70%] p-4 rounded-2xl text-[12px] font-[300] whitespace-pre-wrap ${
-                      msg.sender === 'user' 
-                        ? 'bg-brand-500 text-white rounded-tr-none' 
-                        : 'bg-white border border-slate-100 text-slate-600 rounded-tl-none'
-                    }`}
+            {/* Chat Area & Empty State */}
+            <div className={`flex-1 overflow-y-auto flex flex-col ${messages.length <= 2 ? 'items-center px-6 pt-12 pb-6 bg-white' : 'p-6 space-y-6 bg-slate-50/30'}`}>
+              
+              {messages.length <= 2 ? (
+                <>
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0, rotate: -10 }}
+                    animate={{ scale: 1, opacity: 1, rotate: 3 }}
+                    transition={{ delay: 0.2, type: 'spring' }}
+                    className="mb-10"
                   >
-                    {renderMessageWithLinks(msg.text)}
-                    <p className={`text-[9px] mt-2 font-[500] ${msg.sender === 'user' ? 'text-white/60' : 'text-slate-400'}`}>{msg.time}</p>
+                    <ZennyAvatar />
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-center mb-12"
+                  >
+                    <h1 className="text-[32px] font-bold text-wix-text-dark leading-tight mb-2">
+                      Hello 👋
+                    </h1>
+                    <p className="text-gray-500 text-[16px]">
+                      How can I help you today?
+                    </p>
+                  </motion.div>
+
+                  <div className="w-full space-y-3 mb-8">
+                    {suggestions.map((text, idx) => (
+                      <motion.button
+                        key={idx}
+                        onClick={() => handleSend(text)}
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4 + idx * 0.1 }}
+                        className="w-full flex items-center gap-4 px-5 py-4 bg-white hover:bg-gray-50 transition-all text-left border border-gray-100 rounded-2xl group shadow-sm hover:shadow-md"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-[#4a2bed]/10 transition-colors">
+                          <ArrowUp className="w-4 h-4 text-gray-400 group-hover:text-[#4a2bed] rotate-45" />
+                        </div>
+                        <span className="text-[15px] font-medium text-wix-text-dark flex-1">{text}</span>
+                      </motion.button>
+                    ))}
                   </div>
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="mb-4">
-                  <TypingIndicator showTimeout={showTimeout} />
-                </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-center">
+                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest bg-slate-100/80 px-3 py-1 rounded-full">Today</span>
+                  </div>
+
+                  {messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      {msg.sender === 'bot' && (
+                        <ZennyAvatar size="small" />
+                      )}
+                      <div 
+                        className={`max-w-[70%] p-4 rounded-2xl text-[12px] font-[400] whitespace-pre-wrap ${
+                          msg.sender === 'user' 
+                            ? 'bg-[#4a2bed] text-white rounded-tr-none' 
+                            : 'bg-white border border-slate-100 text-wix-text-dark rounded-tl-none shadow-sm'
+                        }`}
+                      >
+                        {renderMessageWithLinks(msg.text)}
+                        <p className={`text-[9px] mt-2 font-[500] opacity-60 text-right`}>{msg.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {isTyping && (
+                    <div className="mb-4">
+                      <TypingIndicator showTimeout={showTimeout} />
+                    </div>
+                  )}
+                </>
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
-            <div className="p-6 border-t border-slate-100 bg-white">
+            <div className="p-6 bg-white border-t border-gray-50 flex-shrink-0">
               {isClosed ? (
                  <div className="flex flex-col items-center gap-3 py-2">
                      <p className="text-xs text-slate-500">This conversation has ended.</p>
                      <button 
                         onClick={handleRestart}
-                        className="px-6 py-2 bg-brand-600 text-white text-xs font-medium rounded-xl hover:bg-brand-700 transition-colors shadow-lg shadow-brand-100"
+                        className="px-6 py-2 bg-[#4a2bed] text-white text-xs font-medium rounded-xl hover:bg-[#3a20d0] transition-colors shadow-lg shadow-[#4a2bed]/30"
                      >
                         Start New Chat
                      </button>
@@ -459,28 +534,37 @@ export const SupportChat = () => {
                   </div>
               ) : (
                   <>
-                  <div className="flex gap-4">
-                    <input
-                      type="text"
-                      placeholder="Type a message..."
+                  <div className="relative bg-white rounded-3xl border-2 border-gray-900 p-4 shadow-sm focus-within:shadow-md transition-shadow">
+                    <textarea 
+                      rows={1}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      className="flex-1 bg-slate-50 border border-transparent focus:border-brand-500 rounded-xl px-4 py-3 text-[12px] font-[300] outline-none transition-all placeholder:text-slate-400"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                      placeholder="Ask Zenny anything..."
+                      className="w-full text-[15px] font-[400] text-wix-text-dark outline-none placeholder:text-gray-400 resize-none pr-12 bg-transparent"
                     />
-                    <button 
-                      onClick={handleSend}
-                      className={`px-4 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-brand-100 ${
-                        message.trim() ? 'bg-brand-500 text-white hover:bg-brand-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                      }`}
-                      disabled={!message.trim()}
-                    >
-                      <Send size={16} />
-                    </button>
+                    <div className="absolute bottom-3 right-3">
+                      <button 
+                        onClick={() => handleSend()}
+                        disabled={!message.trim()}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                          message.trim() 
+                            ? 'bg-[#4a2bed] text-white shadow-lg shadow-[#4a2bed]/30 hover:scale-105' 
+                            : 'bg-gray-100 text-gray-400'
+                        }`}
+                      >
+                        <ArrowUp className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex justify-center mt-3">
-                     <p className="text-[10px] text-slate-300 font-[300]">Powered by Zenvy AI</p>
-                  </div>
+                  <p className="mt-4 text-center text-[12px] text-gray-400">
+                    Zenny can make mistakes. Double-check replies.
+                  </p>
                   </>
               )}
             </div>
@@ -493,9 +577,9 @@ export const SupportChat = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={toggleChat}
-        className={`w-14 h-14 bg-brand-600 text-white rounded-2xl shadow-xl shadow-brand-500/30 flex items-center justify-center transition-all duration-300 border-[3px] border-white ${isOpen ? 'rotate-90 opacity-0 pointer-events-none absolute' : 'opacity-100'}`}
+        className={`w-14 h-14 bg-[#4a2bed] text-white rounded-[20px] shadow-lg shadow-[#4a2bed]/30 flex items-center justify-center transition-all duration-300 border-2 border-white ${isOpen ? 'rotate-90 opacity-0 pointer-events-none absolute' : 'opacity-100'}`}
       >
-        <Logo className="w-7 h-7" strokeWidth="2.5" />
+        <ZennyAvatar size="medium" />
         <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
       </motion.button>
     </div>
