@@ -55,7 +55,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
       >
         {/* Front Face */}
         <div
-          className="absolute w-full h-full rounded-tr-lg rounded-bl-lg bg-slate-50 overflow-hidden"
+          className="absolute w-full h-full bg-white border border-gray-200 shadow-md overflow-hidden"
           style={{ backfaceVisibility: 'hidden' }}
         >
           <div className="px-6 py-4 h-full flex flex-col justify-between relative">
@@ -87,7 +87,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <span className="flex items-center text-md gap-1 mt-2 text-slate-500 font-[300]">
                   <span className="text-xs">For </span>
                   {ticket.price === 0 ? (
-                    <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-[600] rounded-md uppercase tracking-wider">
+                    <span className="px-2 py-0.5 bg-[#d2f47c] text-black text-[11px] font-[600] uppercase tracking-wider">
                       FREE
                     </span>
                   ) : (
@@ -107,27 +107,27 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <button 
                   onClick={ticket.onDecrement}
                   disabled={!ticket.selectedQuantity || ticket.selectedQuantity <= 0}
-                  className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-2 py-1 border border-gray-200 text-[9px] font-[400] text-wix-text-dark hover:bg-gray-50 hover:border-wix-text-dark transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <Minus size={12}/>
                 </button>
-                <span className="text-xs font-[400] text-neutral-500 min-w-[20px] text-center">{ticket.selectedQuantity || 0}</span>
+                <span className="text-xs font-[400] text-gray-500 min-w-[20px] text-center">{ticket.selectedQuantity || 0}</span>
                 <button 
                   onClick={ticket.onIncrement}
                   disabled={!ticket.quantity || (ticket.selectedQuantity ?? 0) >= ticket.quantity}
-                  className="px-2 py-1 border border-brand-divider rounded-sm text-[9px] font-[400] text-brand-500 hover:bg-white hover:border-brand-500 hover:text-brand-500 transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-2 py-1 border border-gray-200 text-[9px] font-[400] text-wix-text-dark hover:bg-gray-50 hover:border-wix-text-dark transition-all z-10 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <Plus size={12}/>
                 </button>
               </div>
             )}
 
-            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
-            <div className="absolute top-4 right-4 text-brand-400 opacity-50">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
+            <div className="absolute top-4 right-4 text-gray-300 opacity-80">
                <Rotate3D size={16} />
             </div>
             
-            <div className="absolute bottom-18 right-6 text-brand-400/20">
+            <div className="absolute bottom-18 right-6 text-gray-200">
               <QrCode size={36} />
             </div>
           </div>
@@ -135,14 +135,14 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
 
         {/* Back Face */}
         <div
-          className="absolute w-full h-full bg-slate-50 rounded-tr-lg rounded-bl-lg text-neutral-600 overflow-hidden relative"
+          className="absolute w-full h-full bg-white border border-gray-200 shadow-md text-neutral-600 overflow-hidden relative"
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
           <div className="px-6 py-4 h-full flex flex-col gap-6 relative">
             <div className="flex justify-between items-start">
               <div>
                 <div className="text-md font-[400] flex items-center gap-2 tracking-wide text-neutral-700">
-                  <Sparkles size={16} className='text-brand-500' strokeWidth={1}/>
+                  <Sparkles size={16} className='text-wix-purple' strokeWidth={1}/>
                   Benefits
                 </div>
                 <div className="text-neutral-400 font-[500] text-[10px] uppercase tracking-widest">
@@ -155,7 +155,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               {ticket.benefits.length > 0 ? (
                 ticket.benefits.map((benefit, index) => (
                   <div key={index} className='flex items-center gap-2'>
-                    <CheckCircle size={12} className='text-brand-500' strokeWidth={1}/>
+                    <CheckCircle size={12} className='text-wix-purple' strokeWidth={1}/>
                     <span className='line-clamp-1'>{benefit}</span>
                   </div>
                 )).slice(0, 3)
@@ -163,18 +163,18 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <span className='text-xs text-slate-500 font-[300]'>No benefits</span>
               )}
               {ticket.benefits.length > 3 && (
-                <button className='text-xs text-brand-500 font-[300] mt-2 hover:underline'>
+                <button className='text-xs text-wix-purple font-[300] mt-2 hover:underline'>
                   See more...
                 </button>
               )}
             </div>
 
-            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
-            <div className="absolute top-4 right-4 text-brand-400 opacity-50">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none" />
+            <div className="absolute top-4 right-4 text-gray-300 opacity-80">
                <Rotate3D size={16} />
             </div>
             
-            <div className="absolute bottom-18 right-6 text-brand-400/20">
+            <div className="absolute bottom-18 right-6 text-gray-200 flex pointer-events-none">
               <QrCode size={36} />
             </div>
           </div>

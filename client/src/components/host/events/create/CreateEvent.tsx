@@ -1105,7 +1105,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                 <div className="flex items-start justify-between mb-6">
                   <div>
                     <div className="flex items-center gap-4">
-                      <div className='h-7 sm:h-8 md:h-9 lg:h-10 w-[3px] bg-brand-400'></div>
+                      <div className='h-7 sm:h-8 md:h-9 lg:h-10 w-[3px] bg-wix-purple'></div>
                       <p className="text-xl sm:text-2xl md:text-2xl lg:text-2xl font-[300] tracking-wider text-gray-800">
                         {getTotalTicketsAllocated()} <span className="text-[10px] font-[500] text-gray-400 uppercase tracking-[0.1em]">out of</span> {formData.venue.capacity}
                       </p>
@@ -1115,20 +1115,20 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                     </p>
                   </div>
                   <div className={`flex items-center gap-2 px-3 py-1 border ${
-                    getCapacityPercentage() > 100 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-wix-purple/5 text-wix-purple border-wix-purple/20'
+                    getCapacityPercentage() > 100 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-wix-purple/5 text-wix-text-dark border-wix-border-light'
                   }`}>
-                    <div className={`w-2 h-2 ${ getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-wix-purple'}`} />
-                    <span className="text-[10px] font-[400] uppercase tracking-widest">
+                    <div className={`w-2 h-2 rounded-none ${ getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-wix-text-dark'}`} />
+                    <span className="text-[10px] font-[400] text-wix-text-dark uppercase tracking-widest">
                       {Math.round(getCapacityPercentage())}%
                     </span>
                   </div>
                 </div>
 
                 {/* Capacity Bar */}
-                <div className="w-full h-2 bg-slate-100 rounded-tr-sm rounded-bl-sm overflow-hidden">
+                <div className="w-full h-2 bg-gray-100 overflow-hidden">
                   <div 
                     className={`h-full transition-all duration-500 ${
-                      getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-wix-purple'
+                      getCapacityPercentage() > 100 ? 'bg-red-500' : 'bg-wix-text-dark'
                     }`}
                     style={{ width: `${Math.min(getCapacityPercentage(), 100)}%` }}
                   ></div>
@@ -1198,14 +1198,14 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                                 <div className="flex text-xs font-[400] text-slate-500 items-center gap-2 mt-2 justify-center">
                                   <button 
                                     onClick={() => handleEditTicket(index)}
-                                    className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-neutral-300 px-2 py-1 rounded-sm"
+                                    className="border transition-transform duration-100 flex items-center gap-2 border-gray-300 px-3 py-1.5 hover:bg-gray-50 text-wix-text-dark"
                                   >
                                     <Edit size={12} />
                                     Edit
                                   </button>
                                   <button 
                                     onClick={() => handleDeleteTicket(index)}
-                                    className="border hover:scale-105 transition-transform duration-100 flex items-center gap-2 border-red-300 text-red-500 px-2 py-1 rounded-sm"
+                                    className="border transition-transform duration-100 flex items-center gap-2 border-red-200 hover:bg-red-50 text-red-500 px-3 py-1.5"
                                   >
                                     <Trash size={12} />
                                     Delete
