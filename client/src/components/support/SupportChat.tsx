@@ -55,9 +55,9 @@ export const SupportChat = () => {
   const { user } = useAuth();
   const [message, setMessage] = useState('');
   const suggestions = [
-    "I need help choosing the right hosting plan",
-    "I want to create a website",
-    "I want to migrate to Wixel"
+    "Tell me about your refund policy",
+    "Can I trust Zenvy?",
+    "How can I host an event?"
   ];
   const [messages, setMessages] = useState<any[]>([
     { id: 1, text: "Hi there! I'm Zenny. Welcome to Zenvy! 👋", sender: 'bot', time: 'Just now' },
@@ -397,8 +397,7 @@ export const SupportChat = () => {
           >
             <header className="flex items-center justify-between px-6 py-5 border-b border-gray-50 flex-shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <div className="text-[16px] font-bold text-wix-text-dark tracking-tight">Zenny</div>
+                <div className="text-[16px] font-medium text-wix-text-dark tracking-tight">Zenny</div>
               </div>
               <div className="flex items-center gap-3">
                 <button 
@@ -463,7 +462,7 @@ export const SupportChat = () => {
                         initial={{ y: 10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 + idx * 0.1 }}
-                        className="w-full flex items-center gap-4 px-5 py-4 bg-white hover:bg-gray-50 transition-all text-left border border-gray-100 rounded-2xl group shadow-sm hover:shadow-md"
+                        className="w-full flex items-center gap-4 px-5 py-4 bg-white hover:bg-gray-50 transition-all text-left border border-gray-100 rounded-2xl group hover:shadow-md"
                       >
                         <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-[#4a2bed]/10 transition-colors">
                           <ArrowUp className="w-4 h-4 text-gray-400 group-hover:text-[#4a2bed] rotate-45" />
@@ -488,7 +487,7 @@ export const SupportChat = () => {
                         className={`max-w-[70%] p-4 rounded-2xl text-[12px] font-[400] whitespace-pre-wrap ${
                           msg.sender === 'user' 
                             ? 'bg-[#4a2bed] text-white rounded-tr-none' 
-                            : 'bg-white border border-slate-100 text-wix-text-dark rounded-tl-none shadow-sm'
+                            : 'bg-white border border-slate-100 text-wix-text-dark rounded-tl-none'
                         }`}
                       >
                         {renderMessageWithLinks(msg.text)}
@@ -580,7 +579,6 @@ export const SupportChat = () => {
         className={`w-14 h-14 bg-[#4a2bed] text-white rounded-[20px] shadow-lg shadow-[#4a2bed]/30 flex items-center justify-center transition-all duration-300 border-2 border-white ${isOpen ? 'rotate-90 opacity-0 pointer-events-none absolute' : 'opacity-100'}`}
       >
         <ZennyAvatar size="medium" />
-        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
       </motion.button>
     </div>
   );
