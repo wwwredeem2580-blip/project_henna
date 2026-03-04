@@ -142,9 +142,9 @@ function TicketCardNew({
         <div className={`relative w-full h-full preserve-3d transition-transform duration-700 ease-in-out ${isFlipped ? 'rotate-y-180' : ''}`}>
 
           {/* FRONT */}
-          <div className={`absolute inset-0 w-full h-full backface-hidden rounded-2xl p-5 sm:p-6 flex flex-col justify-between ${frontBg} ${!isVIP && !isPremium ? '' : ''}`}>
+          <div className={`absolute inset-0 w-full h-full backface-hidden p-5 sm:p-6 flex flex-col justify-between ${frontBg} ${!isVIP && !isPremium ? '' : ''}`}>
             {isSoldOut && (
-              <div className="absolute inset-0 rounded-2xl bg-black/60 flex items-center justify-center z-10">
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
                 <span className="text-white text-[16px] font-black uppercase tracking-widest">Sold Out</span>
               </div>
             )}
@@ -178,7 +178,7 @@ function TicketCardNew({
           </div>
 
           {/* BACK */}
-          <div className={`absolute inset-0 w-full h-full backface-hidden rounded-2xl border-2 border-black ${frontBg} flex flex-col rotate-y-180 overflow-hidden`}>
+          <div className={`absolute inset-0 w-full h-full backface-hidden border-2 border-black ${frontBg} flex flex-col rotate-y-180 overflow-hidden`}>
             <div className="px-5 py-4 flex flex-col flex-1">
               <div className="bg-gray-100 h-8 w-full flex items-center justify-end px-4 font-mono text-[11px] mb-4 text-gray-500">
                 VALID: {eventDate}
@@ -200,7 +200,7 @@ function TicketCardNew({
 
       {/* Quantity controls */}
       {!isSoldOut && (
-        <div className="flex items-center justify-between border-2 border-black rounded-full w-[152px] bg-white h-[46px] overflow-hidden">
+        <div className="flex items-center justify-between border-2 border-black w-[152px] bg-white h-[46px] overflow-hidden">
           <button
             onClick={onDecrement}
             className="w-12 h-full flex items-center justify-center hover:bg-black hover:text-white transition-colors text-xl font-medium"
@@ -424,12 +424,12 @@ export default function EventDetails() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               {event.status === 'live' && (
-                <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest border border-emerald-500 text-emerald-600 px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Live
+                <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest border border-emerald-500 text-emerald-600 px-2.5 py-1">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 animate-pulse" /> Live
                 </span>
               )}
               {event.category && (
-                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-text-muted border border-wix-border-light px-2.5 py-1 rounded-full">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-wix-text-muted border border-wix-border-light px-2.5 py-1">
                   {event.category}
                 </span>
               )}
@@ -562,23 +562,57 @@ export default function EventDetails() {
               />
             </div>
 
-            {/* Right: About */}
-            <div className="col-span-1 lg:col-span-7 flex flex-col gap-5 pt-1">
-              <h3 className="text-[22px] font-semibold tracking-tight">About This Event</h3>
-              {(event.description || event.tagline) && (
-                <p className="text-[15px] text-wix-text-dark leading-relaxed">
-                  {event.description}
-                </p>
-              )}
-              {event.highlights?.length > 0 && (
-                <ul className="flex flex-col gap-2 mt-2">
-                  {event.highlights.map((h: string, i: number) => (
-                    <li key={i} className="flex items-start gap-2 text-[14px] text-wix-text-muted">
-                      <span className="text-wix-purple mt-1">•</span> {h}
-                    </li>
-                  ))}
-                </ul>
-              )}
+            {/* Right: About & Host Profile */}
+            <div className="col-span-1 lg:col-span-7 flex flex-col gap-10 pt-1">
+              <div className="flex flex-col gap-5">
+                <h3 className="text-[22px] font-semibold tracking-tight">About This Event</h3>
+                {(event.description || event.tagline) && (
+                  <p className="text-[15px] text-wix-text-dark leading-relaxed">
+                    {event.description}
+                  </p>
+                )}
+                {event.highlights?.length > 0 && (
+                  <ul className="flex flex-col gap-2 mt-2">
+                    {event.highlights.map((h: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-[14px] text-wix-text-muted">
+                        <span className="text-wix-purple mt-1">•</span> {h}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Host Profile Section */}
+              {/* {(event.host || event.organizer) && (() => {
+                const hostData = event.host || event.organizer;
+                const hostId = event.hostId;
+                const hostName = hostData.name || hostData.companyName || 'Event Organizer';
+                
+                return (
+                  <div className="flex flex-col gap-4 pt-8 border-t border-wix-border-light">
+                    <h3 className="text-[20px] font-semibold tracking-tight">Hosted By</h3>
+                    <div 
+                      className="flex items-center gap-5 bg-white border border-wix-border-light p-5 hover:border-wix-text-dark transition-colors cursor-pointer group shadow-sm hover:shadow"
+                      onClick={() => router.push(`/profile/host/${hostId}`)}
+                    >
+                      <div className="w-16 h-16 bg-[#f0f0f0] flex items-center justify-center shrink-0 border border-wix-border-light overflow-hidden">
+                        <img 
+                          src={hostData.profile?.photo || `https://api.dicebear.com/7.x/avataaars/svg?seed=${hostData.email || hostName}`} 
+                          alt={hostName} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        />
+                      </div>
+                      <div className="flex flex-col flex-1">
+                        <h4 className="text-[16px] font-bold text-wix-text-dark group-hover:text-wix-purple transition-colors truncate max-w-[200px] sm:max-w-full">{hostName}</h4>
+                        <p className="text-[13px] text-wix-text-muted mt-0.5">Verified Organizer</p>
+                      </div>
+                      <div className="text-[12px] font-bold uppercase tracking-widest text-wix-text-dark border-b border-wix-text-dark pb-0.5 group-hover:text-wix-purple group-hover:border-wix-purple transition-colors shrink-0 hidden sm:block">
+                        View Profile
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()} */}
             </div>
           </div>
 
@@ -590,7 +624,7 @@ export default function EventDetails() {
             </div>
 
             {event.moderation?.sales?.paused && (
-              <div className="p-4 bg-red-50 border border-red-200 text-sm text-red-600 rounded-lg">
+              <div className="p-4 bg-red-50 border border-red-200 text-[13px] text-red-600">
                 Ticket sales are currently paused. Please check back later.
               </div>
             )}
@@ -613,7 +647,7 @@ export default function EventDetails() {
 
             {/* Order error */}
             {orderError && (
-              <div className="p-4 bg-red-50 border border-red-200 text-sm text-red-600 rounded-lg max-w-md">
+              <div className="p-4 bg-red-50 border border-red-200 text-[13px] text-red-600 max-w-md">
                 {orderError}
               </div>
             )}
@@ -633,7 +667,7 @@ export default function EventDetails() {
             onClick={() => setSelectedImage(null)}
           >
             <button
-              className="absolute top-5 right-5 bg-white rounded-full p-2 border-2 border-black hover:scale-110 transition-transform z-10"
+              className="absolute top-5 right-5 bg-white p-2 border-2 border-black hover:scale-110 transition-transform z-10"
               onClick={() => setSelectedImage(null)}
             >
               <X className="w-6 h-6" />
@@ -669,7 +703,7 @@ export default function EventDetails() {
               animate={{ scale: 1, opacity: 1 }}
               className="relative w-full max-w-[440px] bg-white border-2 border-black p-10 text-center space-y-8"
             >
-              <div className="w-20 h-20 border-2 border-emerald-500 rounded-full flex items-center justify-center text-emerald-500 mx-auto">
+              <div className="w-20 h-20 border-2 border-emerald-500 flex items-center justify-center text-emerald-500 mx-auto">
                 <CheckCircle2 size={44} />
               </div>
               <div className="space-y-2">
