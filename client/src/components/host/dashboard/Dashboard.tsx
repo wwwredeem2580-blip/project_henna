@@ -14,8 +14,13 @@ import {
   ShoppingBag,
   Trash2,
   ChevronDown,
+  Menu, X, Globe,
+  Wallet as WalletIcon, Users as UsersIcon,
+  LayoutDashboard, Home, LogIn, UserPlus,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
+import { authService } from '@/lib/api/auth';
+import { Logo } from '@/components/shared/Logo';
 import { useRouter } from 'next/navigation';
 import { hostAnalyticsService, DashboardMetrics, HostOrder } from '@/lib/api/host-analytics';
 import { hostEventsService } from '@/lib/api/host';
@@ -281,6 +286,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const avatarSeed = user?.email ?? 'default';
+
+  const handleLogout = async () => {
+    await authService.logout();
+    router.push('/auth?tab=login');
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -396,6 +410,202 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
   return (
     <div className="min-h-screen bg-wix-gray-bg text-wix-text-dark font-sans">
+      {/* ─── Header ─── */}
+      <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-gray-200 sticky top-0 bg-white z-30">
+        <div className="flex items-center gap-4 md:gap-8">
+          {/* Logo */}
+          <div
+            onClick={() => router.push('/')}
+            className="flex items-center cursor-pointer"
+          >
+            <Logo variant="full" className="h-6 text-wix-purple" strokeWidth="2" />
+          </div>
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-6 text-[15px]">
+            <button
+              onClick={() => router.push('/')}
+              className="hover:text-wix-purple transition-colors font-medium text-wix-text-dark"
+            >
+              Events
+            </button>
+            {user?.role === 'host' && (
+              <>
+                <button
+                  onClick={() => router.push('/host/dashboard')}
+                  className="hover:text-wix-purple transition-colors text-wix-purple font-medium"
+                >
+                  Dashboard
+                </button>
+                {/* <button
+                  onClick={() => router.push('/host/events')}
+                  className="hover:text-wix-purple transition-colors"
+                >
+                  My Events
+                </button> */}
+              </>
+            )}
+            {user?.role === 'user' && (
+              <button
+                onClick={() => router.push('/wallet')}
+                className="hover:text-wix-purple transition-colors"
+              >
+                Wallet
+              </button>
+            )}
+            <div className="w-px h-4 bg-gray-300 mx-1" />
+            <a href="/contact" className="hover:text-wix-purple transition-colors">Contact Us</a>
+          </nav>
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-3 relative">
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden text-gray-700 hover:text-black z-50 relative"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+
+          {/* Auth buttons when not logged in */}
+          {!user && (
+            <div className="hidden md:flex items-center gap-2">
+              <button
+                onClick={() => router.push('/auth?tab=login')}
+                className="flex items-center gap-1.5 px-4 py-1.5 text-[14px] text-gray-600 hover:text-wix-purple transition-colors"
+              >
+                <LogIn className="w-4 h-4" /> Sign In
+              </button>
+              <button
+                onClick={() => router.push('/onboarding')}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-wix-purple text-white text-[14px] hover:bg-black transition-colors"
+              >
+                <UserPlus className="w-4 h-4" /> Get Started
+              </button>
+            </div>
+          )}
+
+          {/* Profile avatar */}
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="w-9 h-9 text-white flex items-center justify-center text-sm font-medium hover:opacity-90 transition-opacity overflow-hidden border border-gray-200 hover:border-wix-purple"
+              >
+                <img
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              </button>
+
+              {isProfileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 shadow-xl py-2 z-50"
+                    >
+                      {/* User info */}
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-[13px] font-medium text-[#161616] truncate">{user.firstName} {user.lastName}</p>
+                        <p className="text-[11px] text-gray-400 capitalize">{user.role}</p>
+                      </div>
+                      {user.role === 'host' && (
+                        <>
+                          <button
+                            onClick={() => { router.push('/host/dashboard'); setIsProfileOpen(false); }}
+                            className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[13px] text-[#161616] transition-colors flex items-center gap-3 font-medium text-wix-purple"
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-wix-purple" /> Dashboard
+                          </button>
+                          <button
+                            onClick={() => { router.push('/host/events/create'); setIsProfileOpen(false); }}
+                            className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[13px] text-[#161616] transition-colors flex items-center gap-3"
+                          >
+                            <Plus className="w-4 h-4 text-gray-400" /> Create Event
+                          </button>
+                          <button
+                            onClick={() => { router.push('/host/profile'); setIsProfileOpen(false); }}
+                            className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[13px] text-[#161616] transition-colors flex items-center gap-3"
+                          >
+                            <UsersIcon className="w-4 h-4 text-gray-400" /> Profile
+                          </button>
+                        </>
+                      )}
+                      {user.role === 'user' && (
+                        <button
+                          onClick={() => { router.push('/wallet'); setIsProfileOpen(false); }}
+                          className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[13px] text-[#161616] transition-colors flex items-center gap-3"
+                        >
+                          <WalletIcon className="w-4 h-4 text-gray-400" /> Wallet
+                        </button>
+                      )}
+                      <div className="h-px bg-gray-200 my-1 mx-4" />
+                      <button
+                        onClick={() => { handleLogout(); setIsProfileOpen(false); }}
+                        className="w-full px-4 py-2.5 text-left hover:bg-red-50 text-[13px] text-red-500 transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* ─── Mobile Menu Overlay ─── */}
+      {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-white z-40 md:hidden pt-20 px-6"
+          >
+            <nav className="flex flex-col gap-0 text-[15px] font-medium">
+              <button
+                onClick={() => { router.push('/'); setIsMobileMenuOpen(false); }}
+                className="hover:text-wix-purple transition-colors py-4 border-b border-gray-200 flex items-center gap-3 text-left w-full"
+              >
+                <Home className="w-5 h-5" /> Events
+              </button>
+              {user?.role === 'host' && (
+                <>
+                  <button
+                    onClick={() => { router.push('/host/dashboard'); setIsMobileMenuOpen(false); }}
+                    className="hover:text-wix-purple text-wix-purple transition-colors py-4 border-b border-gray-200 flex items-center gap-3 text-left w-full"
+                  >
+                    <LayoutDashboard className="w-5 h-5" /> Dashboard
+                  </button>
+                  <button
+                    onClick={() => { router.push('/host/events'); setIsMobileMenuOpen(false); }}
+                    className="hover:text-wix-purple transition-colors py-4 border-b border-gray-200 flex items-center gap-3 text-left w-full"
+                  >
+                    <Calendar className="w-5 h-5" /> My Events
+                  </button>
+                </>
+              )}
+              {user?.role === 'user' && (
+                <button
+                  onClick={() => { router.push('/wallet'); setIsMobileMenuOpen(false); }}
+                  className="hover:text-wix-purple transition-colors py-4 border-b border-gray-200 flex items-center gap-3 text-left w-full"
+                >
+                  <WalletIcon className="w-5 h-5" /> Wallet
+                </button>
+              )}
+              <a href="/contact" className="hover:text-wix-purple transition-colors py-4 border-b border-gray-200 flex items-center gap-3">
+                <Globe className="w-5 h-5" /> Contact Us
+              </a>
+            </nav>
+          </motion.div>
+      )}
+
       <main className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 py-8 sm:py-10 flex flex-col gap-10">
 
         {/* Header */}
