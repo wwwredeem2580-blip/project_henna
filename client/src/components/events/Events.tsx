@@ -176,6 +176,7 @@ export default function Events() {
             )}
             <div className="w-px h-4 bg-gray-300 mx-1" />
             <a href="/contact" className="hover:text-[#4d33de] transition-colors">Contact Us</a>
+            <a href="/about" className="hover:text-[#4d33de] transition-colors">About</a>
           </nav>
         </div>
 

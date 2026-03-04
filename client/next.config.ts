@@ -18,7 +18,27 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts'],
   },
-  
+  // Redirects
+  async redirects() {
+    return [
+      {
+        source: '/host/orders',
+        destination: '/host/dashboard',
+        permanent: true,
+      },
+      {
+        source: '/host/events',
+        destination: '/host/dashboard',
+        permanent: true,
+      },
+      {
+        source: '/host/analytics',
+        destination: '/host/dashboard',
+        permanent: true,
+      },
+    ];
+  },
+
   // Security headers
   async headers() {
     return [
