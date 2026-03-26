@@ -283,6 +283,16 @@ export default function EventDetails() {
     return () => { document.body.style.overflow = 'auto'; };
   }, [selectedImage, checkoutStep]);
 
+  // Prevent browser-back loop: push a history entry when success modal opens
+  // so pressing Back dismisses the modal instead of re-triggering it.
+  useEffect(() => {
+    if (checkoutStep !== 'success') return;
+    window.history.pushState({ successModal: true }, '');
+    const handlePopState = () => setCheckoutStep('selection');
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [checkoutStep]);
+
   // Ticket helpers
   const getTotalTickets = () => Object.values(ticketQuantities).reduce((s, q) => s + q, 0);
 
@@ -413,7 +423,7 @@ export default function EventDetails() {
           {/* Breadcrumb / Back */}
           <div>
             <button
-              onClick={() => router.back()}
+              onClick={() => user?.role === 'host' ? router.back() : router.push('/')}
               className="inline-flex items-center gap-2 text-[13px] font-bold tracking-widest uppercase text-wix-text-dark hover:text-wix-purple transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Back to Events
@@ -714,13 +724,18 @@ export default function EventDetails() {
               </div>
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={() => router.push('/wallet')}
+                  onClick={() => {
+                    // Replace the modal history entry so pressing back from
+                    // wallet doesn't loop back into the success modal.
+                    window.history.replaceState(null, '');
+                    router.push('/wallet');
+                  }}
                   className="w-full bg-black text-white py-3.5 text-[13px] font-black uppercase tracking-widest hover:bg-wix-purple transition-colors border-2 border-black"
                 >
                   View My Wallet
                 </button>
                 <button
-                  onClick={() => { setCheckoutStep('selection'); }}
+                  onClick={() => window.history.back()}
                   className="w-full py-3.5 text-[13px] font-bold uppercase tracking-widest border-2 border-black hover:bg-gray-50 transition-colors"
                 >
                   Back to Event

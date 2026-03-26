@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { hostAnalyticsService, HostEventDetailsResponse } from '@/lib/api/host-analytics';
+import { hostEventsService } from '@/lib/api/host';
 import { scannerService } from '@/lib/api/scanner';
 import { eventsService } from '@/lib/api/events';
 import { useNotification } from '@/lib/context/notification';
@@ -1445,6 +1446,7 @@ export default function ManageEvent() {
   const [error, setError] = useState<string | null>(null);
   const [activeKey, setActiveKey] = useState('Overview');
   const [sidePanelOpen, setSidePanelOpen] = useState(false); // kept for legacy ref
+  const [publishing, setPublishing] = useState(false);
   // sidePanelOpen is now managed inside TicketsTab itself
   void sidePanelOpen; void setSidePanelOpen;
 
@@ -1465,6 +1467,20 @@ export default function ManageEvent() {
       setError(err.message || 'Failed to load event data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePublishEvent = async () => {
+    if (!id) return;
+    try {
+      setPublishing(true);
+      await hostEventsService.publishEvent(id as string);
+      showNotification('success', 'Event Published', 'Your event is now live and visible to the public.');
+      await fetchEventData();
+    } catch (err: any) {
+      showNotification('error', 'Publish Failed', err.message || 'Failed to publish event. Please try again.');
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -1548,7 +1564,16 @@ export default function ManageEvent() {
               {!loading && ev && (
                 <div className="flex items-center gap-3 shrink-0">
                   <button onClick={() => router.push(`/events/${ev._id || id}`)} className="border border-wix-text-dark bg-white text-wix-text-dark px-5 py-2.5 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors">Preview</button>
-                  {ev.status === 'published' && <button className="bg-wix-text-dark text-white px-5 py-2.5 text-[13px] font-bold uppercase tracking-widest hover:bg-wix-purple transition-colors border border-wix-text-dark hover:border-wix-purple">Publish Event</button>}
+                  {ev.status === 'approved' && ev.schedule?.startDate && new Date(ev.schedule.startDate) > new Date() && (
+                    <button
+                      onClick={handlePublishEvent}
+                      disabled={publishing}
+                      className="bg-wix-text-dark text-white px-5 py-2.5 text-[13px] font-bold uppercase tracking-widest hover:bg-wix-purple transition-colors border border-wix-text-dark hover:border-wix-purple disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {publishing && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {publishing ? 'Publishing...' : 'Publish Event'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
