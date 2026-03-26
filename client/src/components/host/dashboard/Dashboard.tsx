@@ -57,16 +57,16 @@ const Sparkline = ({
 
 /* ─── KPI Card ─── */
 const KPICard = ({ title, value, change, isPositive, data, color, prefix }: any) => (
-  <div className="bg-white border-r border-b border-wix-border-light p-6 flex flex-col justify-between hover:bg-gray-50 transition-colors">
+  <div className="bg-white border-r border-b border-wix-border-light p-4 sm:p-6 flex flex-col justify-between hover:bg-gray-50 transition-colors min-w-0">
     <div>
-      <h3 className="text-[11px] text-wix-text-muted font-black uppercase tracking-widest mb-3">{title}</h3>
-      <div className="flex items-end justify-between gap-2">
-        <span className="text-[26px] font-medium tracking-tight leading-none text-wix-text-dark">
-          {prefix && <span className="text-[14px] mr-0.5 font-normal text-wix-text-muted">{prefix}</span>}
+      <h3 className="text-[10px] sm:text-[11px] text-wix-text-muted font-black uppercase tracking-widest mb-2 sm:mb-3 truncate">{title}</h3>
+      <div className="flex items-end justify-between gap-1 sm:gap-2">
+        <span className="text-[18px] sm:text-[24px] font-medium tracking-tight leading-none text-wix-text-dark min-w-0 truncate">
+          {prefix && <span className="text-[11px] sm:text-[13px] mr-0.5 font-normal text-wix-text-muted">{prefix}</span>}
           {value}
         </span>
         {change !== undefined && (
-          <div className={`flex items-center gap-0.5 text-[12px] font-bold mb-1 ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
+          <div className={`flex items-center gap-0.5 text-[11px] font-bold mb-1 shrink-0 ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
             {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
             {change}%
           </div>
@@ -74,8 +74,8 @@ const KPICard = ({ title, value, change, isPositive, data, color, prefix }: any)
       </div>
     </div>
     {data && (
-      <div className="mt-5 flex justify-between items-end">
-        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">vs last period</span>
+      <div className="mt-3 sm:mt-5 flex justify-between items-end">
+        <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium uppercase tracking-wider hidden sm:block">vs last period</span>
         <Sparkline data={data} color={color} />
       </div>
     )}
@@ -134,11 +134,11 @@ const FunnelChart = ({ metrics }: { metrics: DashboardMetrics | null }) => {
       {steps.map((step, i) => (
         <div className="flex flex-col items-center w-full" key={i}>
           <div
-            className={`h-11 flex items-center justify-between px-5 text-white hover:opacity-90 transition-opacity cursor-pointer ${step.color}`}
+            className={`h-10 sm:h-11 flex items-center justify-between px-3 sm:px-5 text-white hover:opacity-90 transition-opacity cursor-pointer ${step.color}`}
             style={{ width: step.width }}
           >
-            <span className="text-[12px] font-medium tracking-wide">{step.label}</span>
-            <span className="font-mono text-[13px]">{step.value.toLocaleString()}</span>
+            <span className="text-[11px] sm:text-[12px] font-medium tracking-wide truncate mr-2">{step.label}</span>
+            <span className="font-mono text-[11px] sm:text-[13px] shrink-0">{step.value.toLocaleString()}</span>
           </div>
           {i < steps.length - 1 && (
             <div className="text-[11px] font-bold text-gray-400 my-1">
@@ -618,16 +618,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
               High-level metrics and performance across {user?.firstName ? `${user.firstName}'s` : 'your'} active events.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={() => router.push('/host/events/create')}
-              className="flex items-center gap-2 bg-wix-text-dark text-white px-5 py-2.5 text-[13px] font-bold hover:bg-wix-purple transition-colors border border-wix-text-dark"
+              className="flex items-center gap-2 bg-wix-text-dark text-white px-4 py-2 sm:px-5 sm:py-2.5 text-[12px] sm:text-[13px] font-bold hover:bg-wix-purple transition-colors border border-wix-text-dark whitespace-nowrap"
             >
               <Plus className="w-4 h-4" /> New Event
             </button>
             <button
               onClick={() => router.push('/host/profile')}
-              className="flex items-center gap-2 border border-wix-border-light bg-white px-5 py-2.5 text-[13px] font-medium hover:border-wix-text-dark transition-colors"
+              className="flex items-center gap-2 border border-wix-border-light bg-white px-4 py-2 sm:px-5 sm:py-2.5 text-[12px] sm:text-[13px] font-medium hover:border-wix-text-dark transition-colors whitespace-nowrap"
             >
               Profile
             </button>
@@ -713,7 +713,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
               <h2 className="text-[18px] font-medium text-wix-text-dark mb-1">Event Performance</h2>
               <p className="text-[13px] text-wix-text-muted">Live and published events with real-time metrics.</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               {/* Status Filter */}
               <div className="relative">
                 <select
@@ -725,20 +725,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   <option value="approved">Approved</option>
                   <option value="live">Live</option>
                   <option value="published">Published</option>
-                  <option value="pending_approval">Pending Approval</option>
+                  <option value="pending_approval">Pending</option>
                   <option value="draft">Draft</option>
                   <option value="ended">Ended</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-gray-400 pointer-events-none" />
               </div>
               {/* Search */}
-              <div className="relative">
+              <div className="relative flex-1 min-w-[140px]">
                 <input
                   type="text"
                   placeholder="Search events..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="border border-wix-border-light px-4 py-2 text-[13px] w-[220px] focus:border-wix-text-dark outline-none transition-colors"
+                  className="border border-wix-border-light px-4 py-2 text-[13px] w-full sm:w-[200px] focus:border-wix-text-dark outline-none transition-colors"
                 />
                 <Search className="w-3.5 h-3.5 absolute right-3 top-2.5 text-gray-400" />
               </div>
@@ -789,17 +789,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             ) : (
               <div className="flex flex-col divide-y divide-wix-border-light">
                 {displayOrders.map((order, i) => (
-                  <div key={i} className="flex items-center justify-between py-4 hover:bg-gray-50 transition-colors -mx-2 px-2">
-                    <div className="flex items-center gap-4">
-                      <div className="w-9 h-9 bg-gray-100 border border-wix-border-light flex items-center justify-center shrink-0">
+                  <div key={i} className="flex items-center justify-between py-3 sm:py-4 hover:bg-gray-50 transition-colors -mx-2 px-2 gap-3">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gray-100 border border-wix-border-light flex items-center justify-center shrink-0">
                         <ShoppingBag className="w-4 h-4 text-wix-text-muted" />
                       </div>
-                      <div>
-                        <p className="text-[13px] font-medium text-wix-text-dark line-clamp-1 max-w-[260px]">{order.eventTitle}</p>
-                        <p className="text-[11px] text-wix-text-muted">{order.orderNumber}</p>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-medium text-wix-text-dark line-clamp-1 max-w-[140px] sm:max-w-[260px]">{order.eventTitle}</p>
+                        <p className="text-[11px] text-wix-text-muted truncate">{order.orderNumber}</p>
                       </div>
                     </div>
-                    <span className="font-mono text-[14px] font-semibold text-wix-text-dark flex items-center gap-0.5 shrink-0">
+                    <span className="font-mono text-[13px] sm:text-[14px] font-semibold text-wix-text-dark flex items-center gap-0.5 shrink-0">
                       <BDTIcon className="text-[12px]" />{order.total?.toLocaleString()}
                     </span>
                   </div>
