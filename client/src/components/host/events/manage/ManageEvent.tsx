@@ -865,12 +865,12 @@ const TicketsTab = ({ data, onUpdate, onRefetch }: { data: HostEventDetailsRespo
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in max-w-[1280px] duration-300">
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div>
           <h2 className="text-[20px] font-medium text-wix-text-dark">Tickets &amp; Pricing</h2>
           <p className="text-[13px] text-gray-500 mt-1">Manage ticket tiers, capacity, and pricing rules.</p>
         </div>
-        <button onClick={() => { setEditingIndex(null); setPanelOpen(true); }} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[14px] font-medium hover:bg-gray-800 transition-colors border border-black">
+        <button onClick={() => { setEditingIndex(null); setPanelOpen(true); }} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[13px] sm:text-[14px] font-medium hover:bg-gray-800 transition-colors border border-black self-start shrink-0">
           <Plus className="w-4 h-4" /> Create Ticket
         </button>
       </div>
@@ -892,11 +892,12 @@ const TicketsTab = ({ data, onUpdate, onRefetch }: { data: HostEventDetailsRespo
           const pct = t.quantity > 0 ? Math.round((t.sold / t.quantity) * 100) : 0;
           const isSoldOut = t.sold >= t.quantity && t.quantity > 0;
           return (
-            <div key={i} className="bg-white border border-wix-border-light p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-black transition-colors group">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-3 mb-0.5">
-                    <h3 className="text-[16px] font-semibold text-wix-text-dark truncate">{t.name}</h3>
+            <div key={i} className="bg-white border border-wix-border-light p-4 sm:p-6 flex flex-col gap-4 hover:border-black transition-colors">
+              {/* Top row: name + badge + price */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <h3 className="text-[15px] sm:text-[16px] font-semibold text-wix-text-dark truncate">{t.name}</h3>
                     <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border shrink-0 ${isSoldOut ? 'bg-gray-100 text-gray-500 border-gray-300' : t.isActive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-300'}`}>{isSoldOut ? 'Sold Out' : t.isActive ? 'Active' : 'Inactive'}</span>
                   </div>
                   <div className="text-[13px] text-gray-500">{t.sold} / {t.quantity} sold</div>
@@ -907,16 +908,16 @@ const TicketsTab = ({ data, onUpdate, onRefetch }: { data: HostEventDetailsRespo
                     </div>
                   )}
                 </div>
-              </div>
-              <div className="flex-1 w-full max-w-[200px] hidden md:block">
-                <div className="w-full h-1.5 bg-gray-100 border border-gray-200">
-                  <div className={`h-full ${isSoldOut ? 'bg-gray-400' : 'bg-black'}`} style={{ width: `${pct}%` }} />
+                <div className="text-right shrink-0">
+                  <div className="text-[16px] sm:text-[18px] font-mono font-medium text-black">{t.price.amount.toLocaleString()} <span className="text-[12px] font-normal">{t.price.currency}</span></div>
                 </div>
               </div>
-              <div className="w-[130px] text-right">
-                <div className="text-[18px] font-mono font-medium text-black">{t.price.amount.toLocaleString()} <span className="text-[13px] font-normal">{t.price.currency}</span></div>
+              {/* Progress bar */}
+              <div className="w-full h-1.5 bg-gray-100 border border-gray-200">
+                <div className={`h-full ${isSoldOut ? 'bg-gray-400' : 'bg-black'}`} style={{ width: `${pct}%` }} />
               </div>
-              <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Bottom row: always-visible action buttons */}
+              <div className="flex items-center gap-4 pt-1 border-t border-gray-100">
                 <button onClick={() => { setEditingIndex(i); setPanelOpen(true); }} className="text-[13px] text-black font-medium border-b border-black pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors">Edit</button>
                 <button onClick={() => handleDelete(i)} className="text-[13px] text-red-500 font-medium border-b border-red-400 pb-0.5 hover:text-red-700 hover:border-red-700 transition-colors">Delete</button>
               </div>
@@ -1025,13 +1026,13 @@ const GalleryTab = ({ data, onUpdate }: { data: HostEventDetailsResponse | null;
           <h2 className="text-[20px] font-medium text-wix-text-dark">Event Gallery</h2>
           <p className="text-[13px] text-gray-500 mt-1">Upload and manage promotional and recap photos.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Hidden file input */}
           <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileSelected} className="hidden" />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 bg-white text-black px-5 py-2.5 text-[14px] font-medium hover:bg-gray-50 transition-colors border border-wix-border-light disabled:opacity-50"
+            className="flex items-center gap-2 bg-white text-black px-4 py-2 sm:px-5 sm:py-2.5 text-[13px] sm:text-[14px] font-medium hover:bg-gray-50 transition-colors border border-wix-border-light disabled:opacity-50 whitespace-nowrap"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {uploading ? 'Uploading...' : 'Upload Media'}
@@ -1039,7 +1040,7 @@ const GalleryTab = ({ data, onUpdate }: { data: HostEventDetailsResponse | null;
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[14px] font-medium hover:bg-gray-800 transition-colors border border-black disabled:opacity-50"
+            className="flex items-center gap-2 bg-black text-white px-4 py-2 sm:px-5 sm:py-2.5 text-[13px] sm:text-[14px] font-medium hover:bg-gray-800 transition-colors border border-black disabled:opacity-50 whitespace-nowrap"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
             {saving ? 'Saving...' : 'Save Gallery'}
@@ -1540,22 +1541,22 @@ export default function ManageEvent() {
         {/* Main */}
         <main className="flex-1 min-w-0 overflow-y-auto">
           {/* Header */}
-          <div className="px-8 py-7 border-b border-wix-border-light bg-white">
-            <div className="text-[12px] text-wix-text-muted font-medium flex items-center gap-2 mb-4">
+          <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-wix-border-light bg-white">
+            <div className="text-[12px] text-wix-text-muted font-medium flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
               <span onClick={() => router.push('/host/dashboard')} className="hover:text-wix-text-dark cursor-pointer transition-colors">Dashboard</span>
               <span>/</span>
               <span onClick={() => router.push('/host/events')} className="hover:text-wix-text-dark cursor-pointer transition-colors">Events</span>
               <span>/</span>
               <span className="text-wix-text-dark">{loading ? '...' : (ev?.title || 'Event')}</span>
             </div>
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-5">
-              <div>
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
+              <div className="min-w-0">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  <h1 className="text-[28px] font-medium tracking-tight text-wix-text-dark leading-none">{loading ? 'Loading...' : (ev?.title || 'Event')}</h1>
+                  <h1 className="text-[22px] sm:text-[28px] font-medium tracking-tight text-wix-text-dark leading-none">{loading ? 'Loading...' : (ev?.title || 'Event')}</h1>
                   {statusBadge}
                 </div>
                 {(ev?.schedule?.startDate || ev?.venue?.name) && (
-                  <div className="flex flex-wrap items-center gap-4 text-[13px] text-wix-text-muted mt-3">
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[12px] sm:text-[13px] text-wix-text-muted mt-2 sm:mt-3">
                     {ev?.schedule?.startDate && <div className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{new Date(ev.schedule.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>}
                     {ev?.venue?.name && <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{ev.venue.name}{ev.venue.address?.city ? `, ${ev.venue.address.city}` : ''}</div>}
                   </div>
@@ -1580,7 +1581,7 @@ export default function ManageEvent() {
           </div>
 
           {/* Content */}
-          <div className="px-8 py-10">
+          <div className="px-4 sm:px-8 py-8 sm:py-10">
             {loading ? (
               <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-wix-purple" /></div>
             ) : error ? (
