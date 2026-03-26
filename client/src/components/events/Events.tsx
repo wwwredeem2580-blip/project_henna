@@ -139,7 +139,7 @@ export default function Events() {
             onClick={() => router.push('/')}
             className="flex items-center cursor-pointer"
           >
-            <Logo variant="full" className="h-6 text-brand-600" strokeWidth="2" />
+            <Logo variant="full" className="h-6 text-brand-600" strokeWidth="2" animated />
           </div>
 
           {/* Desktop Nav */}

@@ -41,14 +41,12 @@ export default function NotFound() {
       {/* Abstract Background Shapes */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-40">
         <motion.div 
-          variants={floatVariants}
           initial="initial"
           animate="animate"
           className="absolute -top-[10%] -left-[5%] w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] bg-wix-purple/5 backdrop-blur-3xl border border-wix-purple/10"
           style={{ transform: 'rotate(-15deg)' }}
         />
         <motion.div 
-          variants={floatVariantsReverse}
           initial="initial"
           animate="animate"
           className="absolute -bottom-[10%] -right-[5%] w-[45vw] h-[45vw] max-w-[500px] max-h-[500px] bg-black/5 backdrop-blur-3xl border border-black/5"
