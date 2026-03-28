@@ -376,7 +376,8 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
     category: "Henna Cone",
     description: "",
     stock: 0,
-    sizes: []
+    sizes: [],
+    variantImages: {}
   });
 
   const handleImageChange = (index: number, val: string) => {
@@ -391,8 +392,14 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
 
   const handleSizeChange = (index: number, val: string) => {
     const newSizes = [...(formData.sizes || [])];
+    const newSizeImages = { ...(formData.variantImages || {}) };
+    const oldSize = newSizes[index];
+    if (oldSize && newSizeImages[oldSize]) {
+      newSizeImages[val] = newSizeImages[oldSize];
+      delete newSizeImages[oldSize];
+    }
     newSizes[index] = val;
-    setFormData({ ...formData, sizes: newSizes });
+    setFormData({ ...formData, sizes: newSizes, variantImages: newSizeImages });
   };
 
   const addSizeField = () => {
@@ -503,7 +510,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
             <label className="text-[10px] uppercase tracking-widest text-ink-muted">Available Sizes (Optional)</label>
             <div className="space-y-4">
               {formData.sizes?.map((size, idx) => (
-                <div key={idx} className="flex space-x-4">
+                <div key={idx} className="flex space-x-4 items-center">
                   <input 
                     type="text" 
                     value={size}
@@ -511,9 +518,55 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
                     className="flex-1 bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
                     placeholder="e.g. 25g"
                   />
+                  <div className="relative w-8 h-8 rounded-sm overflow-hidden flex-shrink-0 border border-dashed border-ink/20 hover:border-ink/50 transition-colors flex items-center justify-center group">
+                    {formData.variantImages?.[size] ? (
+                      <>
+                        <img src={formData.variantImages[size]} alt="Variant" className="w-full h-full object-cover" />
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const newSizeImages = { ...(formData.variantImages || {}) };
+                            delete newSizeImages[size];
+                            setFormData({ ...formData, variantImages: newSizeImages });
+                          }} 
+                          className="absolute inset-0 bg-rose-600/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={10} className="text-white" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          title="Add Variant Image"
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                const url = reader.result as string;
+                                const newSizeImages = { ...(formData.variantImages || {}), [size]: url };
+                                const newImages = Array.from(new Set([...(formData.images || []), url]));
+                                setFormData({ ...formData, images: newImages, variantImages: newSizeImages });
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        <ImageIcon className="text-ink/30" size={14} />
+                      </>
+                    )}
+                  </div>
                   <button 
                     type="button"
-                    onClick={() => setFormData({ ...formData, sizes: formData.sizes?.filter((_, i) => i !== idx) })}
+                    onClick={() => {
+                      const newSizes = formData.sizes?.filter((_, i) => i !== idx) || [];
+                      const newSizeImages = { ...(formData.variantImages || {}) };
+                      delete newSizeImages[size];
+                      setFormData({ ...formData, sizes: newSizes, variantImages: newSizeImages });
+                    }}
                     className="text-rose-600 p-2"
                   >
                     <Trash2 size={16} />

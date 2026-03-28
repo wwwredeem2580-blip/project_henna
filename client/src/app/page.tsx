@@ -36,6 +36,11 @@ const INITIAL_PRODUCTS: Product[] = [
     category: "Henna Cone",
     description: "Our signature organic henna cone is crafted with the finest Rajasthani henna powder, essential oils, and lemon juice. It provides a rich, deep stain that lasts for weeks. Perfect for intricate bridal designs.",
     sizes: ["100g", "200g", "1kg"],
+    variantImages: {
+      "100g": "/images/Henna_100g.png",
+      "200g": "/images/Henna_200g.png",
+      "1kg": "/images/Henna_500g.png"
+    },
     stock: 150
   },
   { 

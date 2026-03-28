@@ -15,6 +15,7 @@ export interface Product {
   category: string;
   description: string;
   sizes?: string[];
+  variantImages?: Record<string, string>;
   stock: number;
 }
 

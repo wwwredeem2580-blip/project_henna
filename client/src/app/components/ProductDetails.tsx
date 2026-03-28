@@ -27,7 +27,10 @@ export function ProductDetails({ product, onBack, onAddToCart }: ProductDetailsP
 
   const handleSizeChange = (size: string) => {
     setSelectedSize(size);
-    if (product.sizes) {
+    if (product.variantImages && product.variantImages[size]) {
+      const idx = product.images.indexOf(product.variantImages[size]);
+      if (idx !== -1) setCurrentImageIndex(idx);
+    } else if (product.sizes) {
       const index = product.sizes.indexOf(size);
       if (index !== -1 && index < product.images.length) {
         setCurrentImageIndex(index);
