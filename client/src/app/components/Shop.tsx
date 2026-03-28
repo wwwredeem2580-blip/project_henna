@@ -15,7 +15,7 @@ interface ShopProps {
 
 export function Shop({ products, onProductClick, onAddToCart, cartCount, onViewCart }: ShopProps) {
   const [activeCategory, setActiveCategory] = useState<string>("All");
-  const categories = ["All", "Henna Cone", "Henna Oil", "Hair Mask"];
+  const categories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
 
   const filteredProducts = activeCategory === "All" 
     ? products 

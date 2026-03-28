@@ -63,6 +63,11 @@ export function Admin({
     { id: "settings", label: "Settings", icon: Edit2 },
   ];
 
+  const productCategories = Array.from(new Set(products.map(p => p.category)));
+  ["Henna Cone", "Henna Oil", "Hair Mask"].forEach(c => {
+    if (!productCategories.includes(c)) productCategories.push(c);
+  });
+
   return (
     <section className="px-6 lg:px-12 py-12 lg:py-24 min-h-screen bg-bg">
       <div className="mb-16 flex flex-col lg:flex-row lg:justify-between lg:items-end space-y-4 lg:space-y-0">
@@ -143,6 +148,7 @@ export function Admin({
         <ProductModal 
           onClose={() => setIsAddingProduct(false)} 
           onSave={(p) => { onAddProduct(p); setIsAddingProduct(false); }}
+          existingCategories={productCategories}
         />
       )}
       {isEditingProduct && (
@@ -150,6 +156,7 @@ export function Admin({
           product={isEditingProduct}
           onClose={() => setIsEditingProduct(null)} 
           onSave={(p) => { onUpdateProduct(p); setIsEditingProduct(null); }}
+          existingCategories={productCategories}
         />
       )}
       {isAddingDesign && (
@@ -359,7 +366,8 @@ function DesignManagement({ designs, onAdd, onDelete }: {
   );
 }
 
-function ProductModal({ product, onClose, onSave }: { product?: Product, onClose: () => void, onSave: (p: Product) => void }) {
+function ProductModal({ product, onClose, onSave, existingCategories }: { product?: Product, onClose: () => void, onSave: (p: Product) => void, existingCategories: string[] }) {
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [formData, setFormData] = useState<Partial<Product>>(product || {
     name: "",
     brand: "",
@@ -426,17 +434,35 @@ function ProductModal({ product, onClose, onSave }: { product?: Product, onClose
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Category</label>
-              <select 
-                required
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif"
-              >
-                <option value="Henna Cone">Henna Cone</option>
-                <option value="Henna Oil">Henna Oil</option>
-                <option value="Hair Mask">Hair Mask</option>
-              </select>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-[10px] uppercase tracking-widest text-ink-muted">Category</label>
+                <button 
+                  type="button" 
+                  onClick={() => setIsCustomCategory(!isCustomCategory)} 
+                  className="text-[10px] uppercase tracking-widest text-ink hover:underline border-none bg-transparent"
+                >
+                  {isCustomCategory ? "Select Existing" : "Add Custom"}
+                </button>
+              </div>
+              {isCustomCategory ? (
+                <input 
+                  required
+                  type="text" 
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                  placeholder="Enter custom category"
+                />
+              ) : (
+                <select 
+                  required
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif"
+                >
+                  {existingCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
             </div>
           </div>
 

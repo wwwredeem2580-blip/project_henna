@@ -35,7 +35,8 @@ export function CustomCalendar({ value, onChange, label, bookedDates = [], avail
 
   const handleDateSelect = (day: number) => {
     const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    onChange(selectedDate.toISOString().split("T")[0]);
+    const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    onChange(dateString);
     setIsOpen(false);
   };
 
@@ -64,7 +65,7 @@ export function CustomCalendar({ value, onChange, label, bookedDates = [], avail
     // Actual days of the month
     for (let d = 1; d <= totalDays; d++) {
       const dateObj = new Date(year, month, d);
-      const dateString = dateObj.toISOString().split("T")[0];
+      const dateString = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
       const isSelected = value === dateString;
       const isToday = new Date().toDateString() === dateObj.toDateString();
       
