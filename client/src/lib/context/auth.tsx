@@ -11,7 +11,6 @@ import { loginSchema, registerSchema } from '@/schema/auth.schema';
 interface AuthContextType {
   user: JwtTokenPayload | null;
   loading: boolean;
-  isHost: boolean;
   isUser: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
@@ -38,9 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Route configuration for role-based access control
   const PROTECTED_ROUTES: Record<string, string[]> = {
-    '/host/*': ['host', 'admin'],
     '/admin/*': ['admin'],
-    '/wallet': ['user', 'admin'],
   };
 
   // Helper function to get required roles for a route
@@ -232,14 +229,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Role-based helpers
-  const isHost = user?.role === 'host';
   const isUser = user?.role === 'user';
 
   return (
     <AuthContext.Provider value={{
       user,
       loading,
-      isHost,
       isUser,
       login,
       register,

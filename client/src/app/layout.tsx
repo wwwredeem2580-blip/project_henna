@@ -1,46 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { NotificationProvider } from "@/lib/context/notification";
-import { AuthProvider } from "@/lib/context/auth";
-import { NotificationToast } from "@/components/ui/NotificationToast";
-import { SupportProvider } from "@/lib/context/support";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
-  title: "Zenvy - Event Management Platform",
-  description: "Create, manage, and sell tickets for your events with Zenvy - the all-in-one event management platform",
+  title: "Ria's Henna Artistry",
+  description: "Professional mehendi artistry for your most cherished moments. Bespoke henna designs for weddings, engagements, and celebrations.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning
-      >
-        <NotificationProvider>
-          <AuthProvider>
-            <SupportProvider>
-              {children}
-              <NotificationToast />
-            </SupportProvider>
-          </AuthProvider>
-        </NotificationProvider>
-      </body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   );
 }

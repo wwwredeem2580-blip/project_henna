@@ -4,7 +4,7 @@ import { z } from "zod";
 export interface JwtTokenPayload {
   sub: string;
   email: string;
-  role: 'host' | 'user' | 'admin';
+  role: 'user' | 'admin';
   firstName: string;
   lastName: string;
   emailVerified: boolean;

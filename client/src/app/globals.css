@@ -1,118 +1,45 @@
-@import url('https://fonts.googleapis.com/css2?family=Matemasie&family=Kirang+Haerang&family=Wix+Madefor+Display:wght@400;500;600;700;800&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
-@config "../../tailwind.config.js";
 
 @theme {
-  --font-sans: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
-  --font-matemasie: "Matemasie", ui-sans-serif, system-ui, sans-serif;
-  --font-kirang-haerang: "Kirang Haerang", ui-sans-serif, system-ui, sans-serif;
-
-  --color-wix-purple: #4a2bed;
-  --color-wix-purple-hover: #3b22bc;
-  --color-wix-gray-bg: #f7f7f7;
-  --color-wix-border-light: #ebebeb;
-  --color-wix-text-dark: #161616;
-  --color-wix-text-muted: #595959;
-  --color-wix-avatar-bg: #8a6c60;
-  --color-wix-input-border: #161616;
-  --color-wix-card-border: #e1e1e1;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "Inter", sans-serif;
+  --color-bg: #f5f5f5;
+  --color-ink: #111111;
+  --color-ink-muted: #11111199;
 }
 
 @layer base {
-  ::-webkit-scrollbar {
-    display: none;
-  }
-  * {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  :root {
-    /* Neutral Colors */
-    --h-color-neutral-0: theme('colors.neutral.0');
-    --h-color-neutral-50: theme('colors.neutral.50');
-    --h-color-neutral-100: theme('colors.neutral.100');
-    --h-color-neutral-200: theme('colors.neutral.200');
-    --h-color-neutral-300: theme('colors.neutral.300');
-    --h-color-neutral-400: theme('colors.neutral.400');
-    --h-color-neutral-500: theme('colors.neutral.500');
-    --h-color-neutral-600: theme('colors.neutral.600');
-    --h-color-neutral-700: theme('colors.neutral.700');
-    --h-color-neutral-800: theme('colors.neutral.800');
-    --h-color-neutral-900: theme('colors.neutral.900');
-    --h-color-neutral-950: theme('colors.neutral.950');
-  }
-
   body {
-    font-family: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
-    @apply bg-wix-gray-bg text-wix-text-dark antialiased;
-    -webkit-font-smoothing: antialiased;
+    @apply bg-bg text-ink font-sans antialiased;
   }
-
+  
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
-    @apply tracking-tight;
+    @apply font-serif;
+  }
+
+  input, textarea, select {
+    @apply font-serif;
+  }
+
+  ::placeholder {
+    @apply font-serif italic opacity-50;
   }
 }
 
-@layer components {
-  .navigation-section {
-    @apply sticky top-0 z-50 w-full border-b border-neutral-200 bg-white px-6 py-4 flex items-center justify-between;
-  }
-
-  .h-button-v2 {
-    @apply inline-flex items-center justify-center rounded-xl font-bold transition-all duration-200 cursor-pointer text-sm;
-    padding: 10px 24px;
-  }
-
-  .h-button-v2--contain-primary {
-    @apply bg-wix-purple text-white;
-  }
-  .h-button-v2--contain-primary:hover {
-    @apply bg-wix-purple-hover -translate-y-0.5;
-  }
-
-  .h-button-v2--outlineStrong-neutral {
-    @apply border border-neutral-300 text-neutral-700 bg-transparent;
-  }
-  .h-button-v2--outlineStrong-neutral:hover {
-    @apply border-wix-purple text-wix-purple;
-  }
-
-  .h-banner {
-    @apply bg-neon-500 p-3 text-center text-neutral-900 font-medium;
-  }
-  .h-banner--sticky {
-    @apply sticky top-0 z-[60];
-  }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
 }
 
-/* Template card drop-shadow */
-.template-card-shadow {
-  box-shadow: -10px 30px 50px 0 rgba(0, 0, 0, 0.1) !important;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* 3D card utils */
-.perspective-1000 { perspective: 1000px; }
-.preserve-3d { transform-style: preserve-3d; }
-.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.rotate-y-180 { transform: rotateY(180deg); }
-
-/* Abstract cover patterns */
-.cover-pattern {
-  background-color: #161616;
-  background-image: radial-gradient(#444 1px, transparent 1px);
-  background-size: 24px 24px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #11111122;
+  border-radius: 10px;
 }
-.gallery-pattern-1 { background: repeating-linear-gradient(45deg, #eee, #eee 10px, #fafafa 10px, #fafafa 20px); }
-.gallery-pattern-2 { background: radial-gradient(circle, #ddd 20%, transparent 20%), radial-gradient(circle, #ddd 20%, transparent 20%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
-.gallery-pattern-3 { background: linear-gradient(135deg, #ececec 25%, transparent 25%) -10px 0, linear-gradient(225deg, #ececec 25%, transparent 25%) -10px 0, linear-gradient(315deg, #ececec 25%, transparent 25%), linear-gradient(45deg, #ececec 25%, transparent 25%); background-size: 20px 20px; }
-.gallery-pattern-4 { background: repeating-radial-gradient(circle at 0 0, transparent 0, #f7f7f7 10px), repeating-linear-gradient(#eee, #eee); }
 
-/* Legacy glass card */
-.glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid theme('colors.brand.divider');
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #11111144;
 }
