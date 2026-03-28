@@ -14,12 +14,9 @@ import { Admin } from "./components/Admin";
 import { Design, Product, CartItem, Booking, Order, BookingStatus, OrderStatus, AvailabilitySettings } from "./types";
 
 const INITIAL_DESIGNS: Design[] = [
-  { id: "1", title: "Royal Mughal", category: "Traditional", images: ["https://images.unsplash.com/photo-1590548784585-643d2b9f2925?q=80&w=800&auto=format&fit=crop"], description: "Intricate patterns inspired by Mughal architecture, featuring detailed peacocks and floral motifs." },
-  { id: "2", title: "Modern Minimal", category: "Contemporary", images: ["https://images.unsplash.com/photo-1610173827002-62c0f1f05d04?q=80&w=800&auto=format&fit=crop"], description: "Clean lines and geometric shapes for the modern bride who appreciates subtle elegance." },
-  { id: "3", title: "Floral Bloom", category: "Nature", images: ["https://images.unsplash.com/photo-1589111469659-4927ed092717?q=80&w=800&auto=format&fit=crop"], description: "Delicate floral motifs flowing gracefully across the hands, symbolizing growth and beauty." },
-  { id: "4", title: "Arabic Fusion", category: "Fusion", images: ["https://images.unsplash.com/photo-1560712375-b30a73cff730?q=80&w=800&auto=format&fit=crop"], description: "Bold Arabic strokes mixed with traditional Indian fillers for a striking, high-contrast look." },
-  { id: "5", title: "Bridal Full", category: "Traditional", images: ["https://images.unsplash.com/photo-1617391654484-2894196c2cc9?q=80&w=800&auto=format&fit=crop"], description: "Extensive coverage from fingertips to elbows, telling a complete story of love and tradition." },
-  { id: "6", title: "Mandala Soul", category: "Spiritual", images: ["https://images.unsplash.com/photo-1542451313-a129117d0682?q=80&w=800&auto=format&fit=crop"], description: "Centric mandala designs representing harmony and the infinite cycle of life." },
+  { id: "1", title: "Ria’s Henna Exclusive Variant 1", category: "Traditional", images: ["/images/mehendi_design_001.png"], description: "Intricate patterns inspired by Mughal architecture, featuring detailed peacocks and floral motifs." },
+  { id: "2", title: "Ria’s Henna Exclusive Variant 2", category: "Contemporary", images: ["/images/mehendi_design_002.png"], description: "Clean lines and geometric shapes for the modern bride who appreciates subtle elegance." },
+  { id: "3", title: "Ria’s Henna Exclusive Variant 3", category: "Fusion", images: ["/images/mehendi_design_003.png"], description: "Bold Arabic strokes mixed with traditional Indian fillers for a striking, high-contrast look." },
 ];
 
 const INITIAL_PRODUCTS: Product[] = [
@@ -190,6 +187,7 @@ export default function App() {
                 onAddBooking={(b) => setBookings([...bookings, b])}
                 bookings={bookings}
                 availabilitySettings={availabilitySettings}
+                onBrowseDesigns={() => setActiveSection("designs")}
               />
             )}
             {activeSection === "shop" && (

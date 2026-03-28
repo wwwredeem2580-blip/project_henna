@@ -13,9 +13,10 @@ interface BookingFormProps {
   onAddBooking: (booking: Booking) => void;
   bookings: Booking[];
   availabilitySettings: AvailabilitySettings;
+  onBrowseDesigns: () => void;
 }
 
-export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, bookings, availabilitySettings }: BookingFormProps) {
+export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, bookings, availabilitySettings, onBrowseDesigns }: BookingFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -264,7 +265,8 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
               <div className="py-12 text-center space-y-4">
                 <p className="text-sm text-ink-muted italic">No design selected yet.</p>
                 <button 
-                  onClick={() => {}} // This should trigger navigation to designs
+                  onClick={onBrowseDesigns}
+                  type="button"
                   className="text-[10px] uppercase tracking-widest border-b border-ink/20 pb-1"
                 >
                   Browse Designs
