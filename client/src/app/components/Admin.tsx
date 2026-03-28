@@ -506,38 +506,49 @@ function ProductModal({ product, onClose, onSave }: { product?: Product, onClose
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Product Images (URLs)</label>
-            <div className="space-y-4">
-              {formData.images?.map((url, idx) => (
-                <div key={idx} className="flex space-x-4">
-                  <input 
-                    required
-                    type="url" 
-                    value={url}
-                    onChange={(e) => handleImageChange(idx, e.target.value)}
-                    className="flex-1 bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
-                    placeholder="https://..."
-                  />
-                  {idx > 0 && (
-                    <button 
-                      type="button"
-                      onClick={() => setFormData({ ...formData, images: formData.images?.filter((_, i) => i !== idx) })}
-                      className="text-rose-600 p-2"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
+            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Product Images</label>
+            
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {formData.images?.filter(url => url.length > 0).map((url, idx) => (
+                <div key={idx} className="relative aspect-square bg-ink/5 rounded-sm overflow-hidden group">
+                  <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                  <button 
+                    type="button"
+                    onClick={() => setFormData({ ...formData, images: formData.images?.filter((_, i) => i !== idx) })}
+                    className="absolute top-2 right-2 p-1.5 bg-rose-600 text-bg rounded-full opacity-0 group-hover:opacity-100 hover:scale-110 transition-all"
+                  >
+                    <Trash2 size={12} />
+                  </button>
                 </div>
               ))}
-              <button 
-                type="button"
-                onClick={addImageField}
-                className="flex items-center space-x-2 text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink transition-colors"
-              >
-                <Plus size={14} />
-                <span>Add Another Image</span>
-              </button>
+              
+              <div className="relative aspect-square bg-ink/5 rounded-sm flex flex-col items-center justify-center border border-dashed border-ink/20 hover:border-ink/50 transition-colors cursor-pointer group">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  multiple
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    files.forEach(file => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData(prev => ({
+                          ...prev,
+                          images: [...(prev.images?.filter(u => u.length > 0) || []), reader.result as string]
+                        }));
+                      };
+                      reader.readAsDataURL(file);
+                    });
+                  }}
+                />
+                <Plus className="text-ink/30 group-hover:text-ink/60 transition-colors mb-2" size={24} />
+                <span className="text-[10px] uppercase tracking-widest text-ink-muted group-hover:text-ink transition-colors">Add Image</span>
+              </div>
             </div>
+            {(!formData.images || formData.images.filter(u => u.length > 0).length === 0) && (
+              <p className="text-[10px] text-rose-500 mt-2">* At least one product image is required.</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -620,15 +631,51 @@ function DesignModal({ onClose, onSave }: { onClose: () => void, onSave: (d: Des
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Image URL</label>
-            <input 
-              required
-              type="url" 
-              value={formData.images?.[0]}
-              onChange={(e) => setFormData({ ...formData, images: [e.target.value] })}
-              className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
-            />
+          <div className="space-y-4">
+            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Design Image</label>
+            <div className="flex items-center space-x-6">
+              {formData.images?.[0] ? (
+                <div className="relative w-32 h-32 bg-ink/5 rounded-sm overflow-hidden flex-shrink-0">
+                  <img src={formData.images[0]} alt="Preview" className="w-full h-full object-cover" />
+                  <button 
+                    type="button"
+                    onClick={() => setFormData({ ...formData, images: [] })}
+                    className="absolute top-2 right-2 p-1 bg-ink text-bg rounded-full hover:scale-110 transition-transform"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-32 h-32 bg-ink/5 rounded-sm flex items-center justify-center border border-dashed border-ink/20 flex-shrink-0">
+                  <ImageIcon className="text-ink/20" size={24} />
+                </div>
+              )}
+              <div className="flex-1">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  id="design-image"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData({ ...formData, images: [reader.result as string] });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+                <label 
+                  htmlFor="design-image"
+                  className="inline-block border border-ink/20 px-6 py-2 text-[10px] uppercase tracking-widest cursor-pointer hover:bg-ink hover:text-bg transition-colors"
+                >
+                  Choose Image
+                </label>
+                <p className="text-[10px] text-ink-muted mt-2">Upload a high-quality image of the henna design.</p>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -691,7 +738,14 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
         <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Enabled Days</label>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {daysOfWeek.map(day => (
-            <label key={day.value} className="flex items-center space-x-3 cursor-pointer group">
+            <label 
+              key={day.value} 
+              className="flex items-center space-x-3 cursor-pointer group"
+              onClick={(e) => {
+                e.preventDefault();
+                handleDayToggle(day.value);
+              }}
+            >
               <div className={`w-5 h-5 border flex items-center justify-center transition-colors ${
                 formData.availableDays.includes(day.value) ? "bg-ink border-ink text-bg" : "border-ink/20 group-hover:border-ink/50"
               }`}>
