@@ -13,7 +13,7 @@ import {
   X, 
   Package,
 } from "lucide-react";
-import { Design, Product, Booking, Order, BookingStatus, OrderStatus } from "../types";
+import { Design, Product, Booking, Order, BookingStatus, OrderStatus, AvailabilitySettings } from "../types";
 
 interface AdminProps {
   designs: Design[];
@@ -28,9 +28,11 @@ interface AdminProps {
   onDeleteProduct: (id: string) => void;
   onUpdateBookingStatus: (id: string, status: BookingStatus) => void;
   onUpdateOrderStatus: (id: string, status: OrderStatus) => void;
+  availabilitySettings: AvailabilitySettings;
+  onUpdateAvailability: (settings: AvailabilitySettings) => void;
 }
 
-type AdminTab = "designs" | "bookings" | "products" | "orders";
+type AdminTab = "bookings" | "orders" | "products" | "designs" | "settings";
 
 export function Admin({
   designs,
@@ -44,7 +46,9 @@ export function Admin({
   onAddProduct,
   onDeleteProduct,
   onUpdateBookingStatus,
-  onUpdateOrderStatus
+  onUpdateOrderStatus,
+  availabilitySettings,
+  onUpdateAvailability
 }: AdminProps) {
   const [activeTab, setActiveTab] = useState<AdminTab>("bookings");
   const [isEditingProduct, setIsEditingProduct] = useState<Product | null>(null);
@@ -56,6 +60,7 @@ export function Admin({
     { id: "orders", label: "Orders", icon: Package },
     { id: "products", label: "Shop", icon: ShoppingBag },
     { id: "designs", label: "Designs", icon: ImageIcon },
+    { id: "settings", label: "Settings", icon: Edit2 },
   ];
 
   return (
@@ -124,6 +129,12 @@ export function Admin({
                 onDelete={onDeleteDesign}
               />
             )}
+            {activeTab === "settings" && (
+              <SettingsManagement 
+                settings={availabilitySettings} 
+                onUpdate={onUpdateAvailability}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -167,14 +178,14 @@ function BookingManagement({ bookings, onUpdateStatus }: { bookings: Booking[], 
             <p className="text-xs text-ink-muted">{booking.eventType} • {booking.location}</p>
           </div>
           <div className="text-sm font-light">
-            <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Date</span>
-            {booking.date}
+            <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Date & Time</span>
+            {booking.date} at {booking.time}
           </div>
           <div>
             <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Status</span>
             <span className={`text-[8px] uppercase tracking-widest px-3 py-1 rounded-full border ${
               booking.status === "pending" ? "border-amber-200 text-amber-600 bg-amber-50" :
-              booking.status === "accepted" ? "border-emerald-200 text-emerald-600 bg-emerald-50" :
+              booking.status === "confirmed" ? "border-emerald-200 text-emerald-600 bg-emerald-50" :
               booking.status === "completed" ? "border-ink/10 text-ink/40 bg-ink/5" :
               "border-rose-200 text-rose-600 bg-rose-50"
             }`}>
@@ -185,22 +196,22 @@ function BookingManagement({ bookings, onUpdateStatus }: { bookings: Booking[], 
             {booking.status === "pending" && (
               <>
                 <button 
-                  onClick={() => onUpdateStatus(booking.id, "accepted")}
+                  onClick={() => onUpdateStatus(booking.id, "confirmed")}
                   className="flex-1 lg:flex-none flex items-center justify-center space-x-2 p-3 lg:p-2 text-emerald-600 border border-emerald-100 lg:border-none hover:bg-emerald-50 rounded-sm lg:rounded-full transition-colors"
                 >
                   <Check size={18} />
-                  <span className="lg:hidden text-[10px] uppercase tracking-widest">Accept</span>
+                  <span className="lg:hidden text-[10px] uppercase tracking-widest">Confirm</span>
                 </button>
                 <button 
-                  onClick={() => onUpdateStatus(booking.id, "rejected")}
+                  onClick={() => onUpdateStatus(booking.id, "cancelled")}
                   className="flex-1 lg:flex-none flex items-center justify-center space-x-2 p-3 lg:p-2 text-rose-600 border border-rose-100 lg:border-none hover:bg-rose-50 rounded-sm lg:rounded-full transition-colors"
                 >
                   <X size={18} />
-                  <span className="lg:hidden text-[10px] uppercase tracking-widest">Reject</span>
+                  <span className="lg:hidden text-[10px] uppercase tracking-widest">Cancel</span>
                 </button>
               </>
             )}
-            {booking.status === "accepted" && (
+            {booking.status === "confirmed" && (
               <button 
                 onClick={() => onUpdateStatus(booking.id, "completed")}
                 className="w-full lg:w-auto flex items-center justify-center space-x-2 p-3 lg:p-0 text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink border border-ink/10 lg:border-none rounded-sm lg:rounded-none transition-colors"
@@ -639,6 +650,86 @@ function DesignModal({ onClose, onSave }: { onClose: () => void, onSave: (d: Des
           </button>
         </form>
       </motion.div>
+    </div>
+  );
+}
+
+function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySettings, onUpdate: (s: AvailabilitySettings) => void }) {
+  const [formData, setFormData] = useState<AvailabilitySettings>(settings);
+
+  const daysOfWeek = [
+    { value: 0, label: "Sunday" },
+    { value: 1, label: "Monday" },
+    { value: 2, label: "Tuesday" },
+    { value: 3, label: "Wednesday" },
+    { value: 4, label: "Thursday" },
+    { value: 5, label: "Friday" },
+    { value: 6, label: "Saturday" },
+  ];
+
+  const handleDayToggle = (day: number) => {
+    if (formData.availableDays.includes(day)) {
+      setFormData({ ...formData, availableDays: formData.availableDays.filter(d => d !== day) });
+    } else {
+      setFormData({ ...formData, availableDays: [...formData.availableDays, day].sort() });
+    }
+  };
+
+  const handleSave = () => {
+    onUpdate(formData);
+    alert("Settings saved successfully!");
+  };
+
+  return (
+    <div className="max-w-2xl bg-white/50 border border-ink/5 p-8 lg:p-12 rounded-sm space-y-12">
+      <div>
+        <h3 className="font-serif text-2xl mb-2">Availability Schedule</h3>
+        <p className="text-ink-muted text-sm">Configure which days and times you are available for bookings. These settings automatically update the pre-booking calendar.</p>
+      </div>
+
+      <div className="space-y-6">
+        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Enabled Days</label>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {daysOfWeek.map(day => (
+            <label key={day.value} className="flex items-center space-x-3 cursor-pointer group">
+              <div className={`w-5 h-5 border flex items-center justify-center transition-colors ${
+                formData.availableDays.includes(day.value) ? "bg-ink border-ink text-bg" : "border-ink/20 group-hover:border-ink/50"
+              }`}>
+                {formData.availableDays.includes(day.value) && <Check size={14} />}
+              </div>
+              <span className="text-sm font-serif select-none">{day.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-2">
+          <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
+          <input 
+            type="time" 
+            value={formData.startTime}
+            onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+            className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
+          <input 
+            type="time" 
+            value={formData.endTime}
+            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+            className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+          />
+        </div>
+      </div>
+
+      <button 
+        onClick={handleSave}
+        className="bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+      >
+        Save Settings
+      </button>
     </div>
   );
 }

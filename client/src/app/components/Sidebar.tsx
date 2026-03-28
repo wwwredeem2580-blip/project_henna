@@ -44,19 +44,21 @@ export function Sidebar({ activeSection, setActiveSection, cartCount }: SidebarP
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 w-full h-16 bg-bg border-b border-ink/5 flex items-center justify-between px-6 z-[60]">
-        <h1 
-          className="text-xl font-serif tracking-tight cursor-pointer"
-          onClick={() => handleNavClick("home")}
-        >
-          Ria’s Henna Artistry
-        </h1>
-        <button 
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 text-ink hover:bg-ink/5 rounded-full transition-colors"
-        >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+      <div className="lg:hidden fixed top-0 left-0 w-full h-16 bg-bg border-b border-ink/5 z-[60]">
+        <div className="max-w-[1080px] mx-auto h-full flex items-center justify-between px-6">
+          <h1 
+            className="text-xl font-serif tracking-tight cursor-pointer"
+            onClick={() => handleNavClick("home")}
+          >
+            Ria’s Henna Artistry
+          </h1>
+          <button 
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-2 text-ink hover:bg-ink/5 rounded-full transition-colors"
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Desktop Sidebar & Mobile Menu Overlay */}
@@ -67,7 +69,11 @@ export function Sidebar({ activeSection, setActiveSection, cartCount }: SidebarP
             animate={{ x: 0 }}
             exit={{ x: -256 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className={`fixed left-0 top-0 h-full w-64 border-r border-ink/5 p-8 lg:p-12 flex flex-col justify-between z-50 bg-bg ${isOpen ? 'flex' : 'hidden lg:flex'}`}
+            className={`w-64 border-r border-ink/5 p-8 lg:p-12 flex flex-col justify-between z-50 bg-bg flex-shrink-0 ${
+              isDesktop
+                ? 'hidden lg:flex sticky top-0 h-screen'
+                : 'fixed left-0 top-0 h-full'
+            }`}
           >
             <div className="space-y-12">
               <div 

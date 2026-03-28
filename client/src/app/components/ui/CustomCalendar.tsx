@@ -8,9 +8,11 @@ interface CustomCalendarProps {
   value: string;
   onChange: (value: string) => void;
   label: string;
+  bookedDates?: string[];
+  availableDays?: number[];
 }
 
-export function CustomCalendar({ value, onChange, label }: CustomCalendarProps) {
+export function CustomCalendar({ value, onChange, label, bookedDates = [], availableDays }: CustomCalendarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -61,16 +63,31 @@ export function CustomCalendar({ value, onChange, label }: CustomCalendarProps) 
 
     // Actual days of the month
     for (let d = 1; d <= totalDays; d++) {
-      const isSelected = value === new Date(year, month, d).toISOString().split("T")[0];
-      const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
+      const dateObj = new Date(year, month, d);
+      const dateString = dateObj.toISOString().split("T")[0];
+      const isSelected = value === dateString;
+      const isToday = new Date().toDateString() === dateObj.toDateString();
+      
+      // Determine if date is disabled
+      const isPast = dateObj < new Date(new Date().setHours(0,0,0,0));
+      const isDayNotAllowed = availableDays ? !availableDays.includes(dateObj.getDay()) : false;
+      const isGloballyBooked = bookedDates.includes(dateString);
+      const isDisabled = isPast || isDayNotAllowed || isGloballyBooked;
 
       days.push(
         <button
           key={d}
           type="button"
+          disabled={isDisabled}
           onClick={() => handleDateSelect(d)}
           className={`h-10 w-10 flex items-center justify-center text-xs rounded-full transition-all duration-300 ${
-            isSelected ? "bg-ink text-bg" : isToday ? "border border-ink/20 text-ink" : "hover:bg-ink/5 text-ink"
+            isDisabled 
+              ? "text-ink/20 cursor-not-allowed line-through" 
+              : isSelected 
+                ? "bg-ink text-bg" 
+                : isToday 
+                  ? "border border-ink/20 text-ink hover:bg-ink/5" 
+                  : "hover:bg-ink/5 text-ink hover:bg-ink/5"
           }`}
         >
           {d}

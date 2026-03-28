@@ -11,7 +11,7 @@ import { ProductDetails } from "./components/ProductDetails";
 import { CartPage } from "./components/CartPage";
 import { Auth } from "./components/Auth";
 import { Admin } from "./components/Admin";
-import { Design, Product, CartItem, Booking, Order, BookingStatus, OrderStatus } from "./types";
+import { Design, Product, CartItem, Booking, Order, BookingStatus, OrderStatus, AvailabilitySettings } from "./types";
 
 const INITIAL_DESIGNS: Design[] = [
   { id: "1", title: "Royal Mughal", category: "Traditional", images: ["https://images.unsplash.com/photo-1590548784585-643d2b9f2925?q=80&w=800&auto=format&fit=crop"], description: "Intricate patterns inspired by Mughal architecture, featuring detailed peacocks and floral motifs." },
@@ -75,6 +75,12 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  const [availabilitySettings, setAvailabilitySettings] = useState<AvailabilitySettings>({
+    availableDays: [0, 5, 6], // Sun, Fri, Sat
+    startTime: "12:30",
+    endTime: "22:00"
+  });
 
   // Smooth scroll to top when section changes
   useEffect(() => {
@@ -149,13 +155,15 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg selection:bg-ink selection:text-bg">
-      <Sidebar 
-        activeSection={activeSection} 
-        setActiveSection={setActiveSection} 
-        cartCount={cartCount}
-      />
-      
-      <main className="lg:ml-64 min-h-screen relative overflow-hidden pt-16 lg:pt-0">
+      {/* Centered 1080px wrapper */}
+      <div className="max-w-[1440px] mx-auto min-h-screen flex relative">
+        <Sidebar 
+          activeSection={activeSection} 
+          setActiveSection={setActiveSection} 
+          cartCount={cartCount}
+        />
+        
+        <main className="flex-1 min-h-screen relative overflow-hidden pt-16 lg:pt-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection === "product-details" ? `details-${selectedProduct?.id}` : activeSection}
@@ -174,6 +182,8 @@ export default function App() {
                 selectedDesign={selectedDesign} 
                 onClearDesign={() => setSelectedDesign(null)} 
                 onAddBooking={(b) => setBookings([...bookings, b])}
+                bookings={bookings}
+                availabilitySettings={availabilitySettings}
               />
             )}
             {activeSection === "shop" && (
@@ -229,6 +239,8 @@ export default function App() {
                 products={products}
                 bookings={bookings}
                 orders={orders}
+                availabilitySettings={availabilitySettings}
+                onUpdateAvailability={setAvailabilitySettings}
                 onAddDesign={handleAddDesign}
                 onUpdateDesign={(d) => setDesigns(designs.map(old => old.id === d.id ? d : old))}
                 onDeleteDesign={handleDeleteDesign}
@@ -252,6 +264,7 @@ export default function App() {
           </svg>
         </div>
       </main>
+      </div>
     </div>
   );
 }

@@ -23,7 +23,7 @@ export interface CartItem extends Product {
   selectedSize?: string;
 }
 
-export type BookingStatus = "pending" | "accepted" | "rejected" | "completed";
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
 export interface Booking {
   id: string;
@@ -35,9 +35,16 @@ export interface Booking {
   eventType: string;
   people: string;
   info: string;
+  time: string;
   status: BookingStatus;
   designId?: string;
   createdAt: string;
+}
+
+export interface AvailabilitySettings {
+  availableDays: number[]; // 0=Sun, 1=Mon, ..., 6=Sat
+  startTime: string; // e.g. "12:30"
+  endTime: string; // e.g. "22:00"
 }
 
 export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";
