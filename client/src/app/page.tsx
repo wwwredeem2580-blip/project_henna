@@ -176,7 +176,7 @@ export default function App() {
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className="w-full"
           >
-            {activeSection === "home" && <Hero />}
+            {activeSection === "home" && <Hero onNavigate={setActiveSection} />}
             {activeSection === "designs" && (
               <DesignGallery designs={designs} onSelect={handleDesignSelect} />
             )}
