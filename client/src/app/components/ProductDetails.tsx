@@ -25,6 +25,16 @@ export function ProductDetails({ product, onBack, onAddToCart }: ProductDetailsP
     setCurrentImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
   };
 
+  const handleSizeChange = (size: string) => {
+    setSelectedSize(size);
+    if (product.sizes) {
+      const index = product.sizes.indexOf(size);
+      if (index !== -1 && index < product.images.length) {
+        setCurrentImageIndex(index);
+      }
+    }
+  };
+
   return (
     <section className="min-h-screen flex flex-col lg:flex-row bg-bg">
       {/* Left Content */}
@@ -51,7 +61,7 @@ export function ProductDetails({ product, onBack, onAddToCart }: ProductDetailsP
                 {product.sizes.map((size) => (
                   <button
                     key={size}
-                    onClick={() => setSelectedSize(size)}
+                    onClick={() => handleSizeChange(size)}
                     className={`px-6 py-2 text-[10px] uppercase tracking-widest transition-all duration-300 border ${
                       selectedSize === size 
                         ? "bg-ink text-bg border-ink" 
