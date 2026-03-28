@@ -46,12 +46,15 @@ export function Sidebar({ activeSection, setActiveSection, cartCount }: SidebarP
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 w-full h-16 bg-bg border-b border-ink/5 z-[60]">
         <div className="max-w-[1080px] mx-auto h-full flex items-center justify-between px-6">
-          <h1 
-            className="text-xl font-serif tracking-tight cursor-pointer"
+          <div 
+            className="flex items-center space-x-3 cursor-pointer"
             onClick={() => handleNavClick("home")}
           >
-            Ria’s Henna Artistry
-          </h1>
+            <div className="w-8 h-8 relative flex-shrink-0">
+               <img src="/logo/logo.png" alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
+            </div>
+            <h1 className="text-xl font-serif tracking-tight">Ria’s Henna</h1>
+          </div>
           <button 
             onClick={() => setIsOpen(!isOpen)}
             className="p-2 text-ink hover:bg-ink/5 rounded-full transition-colors"
@@ -77,11 +80,14 @@ export function Sidebar({ activeSection, setActiveSection, cartCount }: SidebarP
           >
             <div className="space-y-12">
               <div 
-                className="cursor-pointer group hidden lg:block"
+                className="cursor-pointer group hidden lg:flex flex-col items-start"
                 onClick={() => handleNavClick("home")}
               >
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 mb-6 overflow-hidden">
+                  <img src="/logo/logo.png" alt="Ria's Henna Artistry" className="w-full h-full object-contain mix-blend-multiply opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
+                </div>
                 <h1 className="text-3xl font-serif tracking-tight leading-none">Ria’s Henna<br />Artistry</h1>
-                <div className="h-0.5 w-0 group-hover:w-8 bg-ink transition-all duration-500 mt-2" />
+                <div className="h-0.5 w-0 group-hover:w-8 bg-ink transition-all duration-500 mt-4" />
               </div>
 
               <nav className="space-y-6 mt-16 lg:mt-0">
