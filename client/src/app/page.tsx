@@ -26,17 +26,17 @@ const INITIAL_PRODUCTS: Product[] = [
     brand: "Ria’s Henna Artistry", 
     price: 120, 
     images: [
-      "/images/Henna_100g.png",
-      "/images/Henna_200g.png",
-      "/images/Henna_500g.png"
+      "/images/Henna_100gV2.png",
+      "/images/Henna_200gV2.png",
+      "/images/Henna_1000gV2.png"
     ], 
     category: "Henna Cone",
     description: "Our signature organic henna cone is crafted with the finest Rajasthani henna powder, essential oils, and lemon juice. It provides a rich, deep stain that lasts for weeks. Perfect for intricate bridal designs.",
     sizes: ["100g", "200g", "1kg"],
     variantImages: {
-      "100g": "/images/Henna_100g.png",
-      "200g": "/images/Henna_200g.png",
-      "1kg": "/images/Henna_500g.png"
+      "100g": "/images/Henna_100gV2.png",
+      "200g": "/images/Henna_200gV2.png",
+      "1kg": "/images/Henna_1000gV2.png"
     },
     stock: 150
   },
