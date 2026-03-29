@@ -85,13 +85,6 @@ export function ProductDetails({ product, onBack, onAddToCart }: ProductDetailsP
             >
               Add to Cart
             </button>
-            <button className="w-full bg-[#5A31F4] text-white py-4 text-[10px] uppercase tracking-[0.3em] font-bold flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity">
-              <span>Buy with</span>
-              <span className="italic">shop</span>
-            </button>
-            <button className="text-[10px] uppercase tracking-widest text-ink-muted border-b border-ink/10 pb-1 self-start hover:text-ink transition-colors">
-              More payment options
-            </button>
           </div>
 
           <div className="space-y-4 pt-8 border-t border-ink/5">
