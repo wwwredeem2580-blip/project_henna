@@ -7,6 +7,13 @@ export interface Design {
   price: number;
 }
 
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  qrCode: string;
+  instruction?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -39,13 +46,23 @@ export interface Booking {
   people: string;
   info: string;
   time: string;
+  endTime?: string;
   status: BookingStatus;
   designId?: string;
   designs?: { personIndex: number; designId: string }[];
   extraFee?: number;
   prepaymentAmount?: number;
+  paymentMethodId?: string;
   transactionId?: string;
   createdAt: string;
+}
+
+export interface BlockedSlot {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  reason?: string;
 }
 
 export interface AvailabilitySettings {
@@ -54,6 +71,8 @@ export interface AvailabilitySettings {
   endTime: string; // e.g. "22:00"
   travelFee: number;
   prepaymentAmount: number;
+  paymentMethods: PaymentMethod[];
+  blockedSlots: BlockedSlot[];
 }
 
 export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";

@@ -32,6 +32,7 @@ export function Admin() {
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [isEditingDesign, setIsEditingDesign] = useState<Design | null>(null);
   const [isAddingDesign, setIsAddingDesign] = useState(false);
+  const [confirmingBooking, setConfirmingBooking] = useState<Booking | null>(null);
 
   const tabs: { id: AdminTab; label: string; icon: any }[] = [
     { id: "bookings", label: "Bookings", icon: Calendar },
@@ -88,7 +89,14 @@ export function Admin() {
             {activeTab === "bookings" && (
               <BookingManagement 
                 bookings={bookings} 
-                onUpdateStatus={(id, status) => setBookings(bookings.map(b => b.id === id ? { ...b, status } : b))} 
+                availabilitySettings={availabilitySettings}
+                onUpdateStatus={(id, status) => {
+                  if (status === "confirmed") {
+                    setConfirmingBooking(bookings.find(b => b.id === id) || null);
+                  } else {
+                    setBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
+                  }
+                }} 
               />
             )}
             {activeTab === "orders" && (
@@ -151,11 +159,21 @@ export function Admin() {
           onSave={(d) => { setDesigns(designs.map(old => old.id === d.id ? d : old)); setIsEditingDesign(null); }}
         />
       )}
+      {confirmingBooking && (
+        <ConfirmationModal
+          booking={confirmingBooking}
+          onClose={() => setConfirmingBooking(null)}
+          onConfirm={(startTime, endTime) => {
+            setBookings(bookings.map(b => b.id === confirmingBooking.id ? { ...b, status: "confirmed", time: startTime, endTime } : b));
+            setConfirmingBooking(null);
+          }}
+        />
+      )}
     </section>
   );
 }
 
-function BookingManagement({ bookings, onUpdateStatus }: { bookings: Booking[], onUpdateStatus: (id: string, status: BookingStatus) => void }) {
+function BookingManagement({ bookings, availabilitySettings, onUpdateStatus }: { bookings: Booking[], availabilitySettings: AvailabilitySettings, onUpdateStatus: (id: string, status: BookingStatus) => void }) {
   return (
     <div className="space-y-6">
       <div className="hidden lg:grid grid-cols-6 px-6 py-4 text-[10px] uppercase tracking-widest text-ink-muted border-b border-ink/5">
@@ -173,12 +191,20 @@ function BookingManagement({ bookings, onUpdateStatus }: { bookings: Booking[], 
             </p>
             <p className="text-xs text-ink-muted">{booking.location}</p>
             {booking.transactionId && (
-              <p className="text-[10px] font-mono bg-ink/5 px-2 py-0.5 inline-block rounded-sm mt-1">TXID: {booking.transactionId}</p>
+              <div className="flex items-center space-x-2 mt-1">
+                <span className="text-[10px] uppercase tracking-widest text-ink/40">
+                  {availabilitySettings.paymentMethods.find(m => m.id === booking.paymentMethodId)?.name || "Payment"}:
+                </span>
+                <p className="text-[10px] font-mono bg-ink/5 px-2 py-0.5 inline-block rounded-sm">{booking.transactionId}</p>
+              </div>
             )}
           </div>
           <div className="text-sm font-light">
             <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Date & Time</span>
-            {booking.date} at {booking.time}
+            <p>{booking.date}</p>
+            <p className="text-[10px] text-ink-muted uppercase tracking-widest mt-0.5">
+              {booking.time} {booking.endTime ? `— ${booking.endTime}` : ""}
+            </p>
           </div>
           <div>
             <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Status</span>
@@ -886,12 +912,265 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
         </div>
       </div>
 
-      <button 
-        onClick={handleSave}
-        className="bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+      <div className="space-y-6 pt-12 border-t border-ink/5">
+        <h3 className="font-serif text-2xl mb-2">Payment Methods</h3>
+        <p className="text-ink-muted text-sm">Manage the payment methods available for pre-booking (bKash, Nagad, etc.) and upload their QR codes.</p>
+        
+        <div className="space-y-4 mt-6">
+          {formData.paymentMethods.map((method, idx) => (
+            <div key={method.id} className="p-6 bg-white/50 border border-ink/5 rounded-sm space-y-6">
+              <div className="flex justify-between items-start">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Method Name</label>
+                    <input 
+                      type="text" 
+                      value={method.name}
+                      onChange={(e) => {
+                        const newMethods = [...formData.paymentMethods];
+                        newMethods[idx] = { ...method, name: e.target.value };
+                        setFormData({ ...formData, paymentMethods: newMethods });
+                      }}
+                      className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Instruction</label>
+                    <input 
+                      type="text" 
+                      value={method.instruction}
+                      onChange={(e) => {
+                        const newMethods = [...formData.paymentMethods];
+                        newMethods[idx] = { ...method, instruction: e.target.value };
+                        setFormData({ ...formData, paymentMethods: newMethods });
+                      }}
+                      className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                    />
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setFormData({ ...formData, paymentMethods: formData.paymentMethods.filter(m => m.id !== method.id) })}
+                  className="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-colors ml-4"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-6">
+                <div className="relative w-24 h-24 bg-white border border-ink/10 rounded-sm overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  {method.qrCode ? (
+                    <img src={method.qrCode} alt="QR Code" className="w-full h-full object-contain" />
+                  ) : (
+                    <ImageIcon className="text-ink/10" size={32} />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] uppercase tracking-widest text-ink-muted block mb-2 font-bold">QR Code Image</label>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          const newMethods = [...formData.paymentMethods];
+                          newMethods[idx] = { ...method, qrCode: reader.result as string };
+                          setFormData({ ...formData, paymentMethods: newMethods });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="text-[10px] file:bg-transparent file:border-ink/20 file:px-4 file:py-2 file:text-[10px] file:uppercase file:tracking-widest cursor-pointer" 
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button 
+            onClick={() => setFormData({ 
+              ...formData, 
+              paymentMethods: [
+                ...formData.paymentMethods, 
+                { id: Date.now().toString(), name: "New Method", qrCode: "", instruction: "Enter payment instruction here" }
+              ] 
+            })}
+            className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-ink/60 hover:text-ink transition-colors mt-4"
+          >
+            <Plus size={14} />
+            <span>Add Payment Method</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-6 pt-12 border-t border-ink/5">
+        <h3 className="font-serif text-2xl mb-2">Manual Time Blocks</h3>
+        <p className="text-ink-muted text-sm">Block specific times for personal tasks or holidays. These times will be unavailable in the booking form.</p>
+        
+        <div className="space-y-4 mt-6">
+          {formData.blockedSlots.map((slot, idx) => (
+            <div key={slot.id} className="p-6 bg-white/50 border border-ink/5 rounded-sm flex flex-col md:flex-row md:items-end gap-6">
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Date</label>
+                  <input 
+                    type="date" 
+                    value={slot.date}
+                    onChange={(e) => {
+                      const newSlots = [...formData.blockedSlots];
+                      newSlots[idx] = { ...slot, date: e.target.value };
+                      setFormData({ ...formData, blockedSlots: newSlots });
+                    }}
+                    className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-mono text-sm" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
+                  <input 
+                    type="time" 
+                    value={slot.startTime}
+                    onChange={(e) => {
+                      const newSlots = [...formData.blockedSlots];
+                      newSlots[idx] = { ...slot, startTime: e.target.value };
+                      setFormData({ ...formData, blockedSlots: newSlots });
+                    }}
+                    className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-mono text-sm" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
+                  <input 
+                    type="time" 
+                    value={slot.endTime}
+                    onChange={(e) => {
+                      const newSlots = [...formData.blockedSlots];
+                      newSlots[idx] = { ...slot, endTime: e.target.value };
+                      setFormData({ ...formData, blockedSlots: newSlots });
+                    }}
+                    className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-mono text-sm" 
+                  />
+                </div>
+              </div>
+              <div className="flex-1 space-y-2">
+                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Reason (Optional)</label>
+                <div className="flex items-center space-x-4">
+                  <input 
+                    type="text" 
+                    value={slot.reason || ""}
+                    onChange={(e) => {
+                      const newSlots = [...formData.blockedSlots];
+                      newSlots[idx] = { ...slot, reason: e.target.value };
+                      setFormData({ ...formData, blockedSlots: newSlots });
+                    }}
+                    placeholder="e.g. Personal appointment"
+                    className="flex-1 bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors italic text-xs" 
+                  />
+                  <button 
+                    onClick={() => setFormData({ ...formData, blockedSlots: formData.blockedSlots.filter(s => s.id !== slot.id) })}
+                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button 
+            onClick={() => setFormData({ 
+              ...formData, 
+              blockedSlots: [
+                ...formData.blockedSlots, 
+                { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], startTime: "09:00", endTime: "10:00", reason: "" }
+              ] 
+            })}
+            className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-ink/60 hover:text-ink transition-colors mt-4"
+          >
+            <Plus size={14} />
+            <span>Add Manual Block</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="pt-12">
+        <button 
+          onClick={handleSave}
+          className="bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+        >
+          Save All Settings
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmationModal({ booking, onClose, onConfirm }: { booking: Booking, onClose: () => void, onConfirm: (start: string, end: string) => void }) {
+  const [startTime, setStartTime] = useState(booking.time);
+  const [endTime, setEndTime] = useState(() => {
+    // Default to +2 hours
+    const [h, m] = booking.time.split(":").map(Number);
+    const date = new Date();
+    date.setHours(h + 2, m);
+    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  });
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center px-6 text-ink">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+      />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="relative bg-bg w-full max-w-md p-8 rounded-sm shadow-2xl space-y-8"
       >
-        Save Settings
-      </button>
+        <div className="space-y-2">
+          <h3 className="text-2xl font-serif">Confirm Booking</h3>
+          <p className="text-xs text-ink-muted uppercase tracking-widest">Select blocked duration</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-8">
+          <div className="space-y-2">
+            <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
+            <input 
+              type="time" 
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
+            <input 
+              type="time" 
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <button 
+            onClick={() => onConfirm(startTime, endTime)}
+            className="w-full bg-ink text-bg py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+          >
+            Confirm & Block Time
+          </button>
+          <button 
+            onClick={onClose}
+            className="w-full py-4 text-[10px] uppercase tracking-[0.3em] text-ink-muted hover:text-ink transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 }

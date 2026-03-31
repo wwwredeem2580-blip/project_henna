@@ -99,7 +99,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     startTime: "12:30",
     endTime: "22:00",
     travelFee: 500,
-    prepaymentAmount: 200
+    prepaymentAmount: 200,
+    paymentMethods: [
+      { id: "1", name: "bKash", qrCode: "/images/bkash_qr_placeholder.png", instruction: "Send money to our bKash merchant account." },
+      { id: "2", name: "Nagad", qrCode: "/images/bkash_qr_placeholder.png", instruction: "Send money to our Nagad personal account." },
+      { id: "3", name: "Rocket", qrCode: "/images/bkash_qr_placeholder.png", instruction: "Send money to our Rocket personal account." }
+    ],
+    blockedSlots: []
   });
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);

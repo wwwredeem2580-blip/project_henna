@@ -29,18 +29,10 @@ export function BookingForm() {
   const [personDesigns, setPersonDesigns] = useState<Record<number, string>>({});
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStep, setPaymentStep] = useState(1);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [transactionId, setTransactionId] = useState("");
 
-  const bookedDates = bookings.filter(b => b.status === "confirmed").map(b => b.date);
-
-  const eventOptions = [
-    { value: "wedding", label: "Wedding" },
-    { value: "engagement", label: "Engagement" },
-    { value: "party", label: "Party / Celebration" },
-    { value: "other", label: "Other" },
-  ];
-
-  const generateTimeSlots = () => {
+  const generateTimeSlots = (date?: string) => {
     const slots = [];
     let [startH, startM] = availabilitySettings.startTime.split(":").map(Number);
     let [endH, endM] = availabilitySettings.endTime.split(":").map(Number);
@@ -50,6 +42,17 @@ export function BookingForm() {
     
     while (currentH < endH || (currentH === endH && currentM <= endM)) {
       const timeStr = `${currentH.toString().padStart(2, '0')}:${currentM.toString().padStart(2, '0')}`;
+      
+      // If date is provided, only return available slots
+      if (date && !isSlotAvailable(date, timeStr)) {
+        currentM += 30;
+        if (currentM >= 60) {
+          currentH += 1;
+          currentM -= 60;
+        }
+        continue;
+      }
+
       const ampm = currentH >= 12 ? 'PM' : 'AM';
       const displayH = currentH > 12 ? currentH - 12 : (currentH === 0 ? 12 : currentH);
       const displayTime = `${displayH}:${currentM.toString().padStart(2, '0')} ${ampm}`;
@@ -65,7 +68,42 @@ export function BookingForm() {
     return slots;
   };
 
-  const timeOptions = generateTimeSlots();
+  const isSlotAvailable = (date: string, time: string) => {
+    // Check confirmed bookings
+    const dailyBookings = bookings.filter(b => b.date === date && b.status === "confirmed");
+    const isBooked = dailyBookings.some(b => {
+      if (!b.endTime) return b.time === time; // Legacy or single-slot
+      return time >= b.time && time < b.endTime;
+    });
+    if (isBooked) return false;
+
+    // Check manual blocks
+    const dailyBlocks = availabilitySettings.blockedSlots.filter(s => s.date === date);
+    const isBlocked = dailyBlocks.some(s => time >= s.startTime && time < s.endTime);
+    if (isBlocked) return false;
+
+    return true;
+  };
+
+  const bookedDates = bookings.reduce((acc: string[], b) => {
+    if (b.status !== "confirmed") return acc;
+    if (!acc.includes(b.date)) {
+      // Check if ALL slots for this date are taken
+      const slots = generateTimeSlots(b.date);
+      const allTaken = slots.length === 0;
+      if (allTaken) acc.push(b.date);
+    }
+    return acc;
+  }, []);
+
+  const eventOptions = [
+    { value: "wedding", label: "Wedding" },
+    { value: "engagement", label: "Engagement" },
+    { value: "party", label: "Party / Celebration" },
+    { value: "other", label: "Other" },
+  ];
+
+  const timeOptions = generateTimeSlots(formData.date);
 
   const calculateTotal = () => {
     let designTotal = 0;
@@ -87,6 +125,9 @@ export function BookingForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (availabilitySettings.paymentMethods.length > 0) {
+      setSelectedPaymentMethod(availabilitySettings.paymentMethods[0].id);
+    }
     setShowPaymentModal(true);
   };
 
@@ -106,6 +147,7 @@ export function BookingForm() {
       designs: multiPersonDesigns,
       extraFee: formData.locationType === "user_location" ? availabilitySettings.travelFee : 0,
       prepaymentAmount: availabilitySettings.prepaymentAmount,
+      paymentMethodId: selectedPaymentMethod,
       transactionId: transactionId,
       createdAt: new Date().toISOString()
     };
@@ -396,24 +438,53 @@ export function BookingForm() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <h3 className="text-2xl font-serif">Secure Pre-booking</h3>
-                      <p className="text-xs text-ink-muted uppercase tracking-widest">Pre-payment Required</p>
+                      <p className="text-xs text-ink-muted uppercase tracking-widest">Select Payment Method</p>
                     </div>
                     
-                    <div className="bg-ink/5 p-6 rounded-sm space-y-4">
-                      <p className="text-sm">To confirm your slot, a pre-payment of <span className="font-bold">Tk {availabilitySettings.prepaymentAmount}</span> is required via bKash.</p>
-                      <div className="aspect-square w-48 mx-auto bg-white p-2 border border-ink/10 rounded-sm">
-                        {/* Placeholder for QR Code */}
-                        <div className="w-full h-full bg-ink/5 flex items-center justify-center border-2 border-dashed border-ink/20">
-                          <img src="/images/bkash_qr_placeholder.png" alt="bKash QR" className="w-full h-full object-contain" />
-                          <span className="hidden">bKash QR</span>
-                        </div>
-                      </div>
-                      <p className="text-[10px] uppercase tracking-widest text-ink-muted">Scan to pay Tk {availabilitySettings.prepaymentAmount}</p>
+                    <div className="grid grid-cols-3 gap-4">
+                      {availabilitySettings.paymentMethods.map((method) => (
+                        <button
+                          key={method.id}
+                          onClick={() => setSelectedPaymentMethod(method.id)}
+                          className={`flex flex-col items-center justify-center p-3 border rounded-sm transition-all space-y-2 ${
+                            selectedPaymentMethod === method.id ? "border-ink bg-ink/5" : "border-ink/10 hover:border-ink/20"
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] uppercase tracking-tighter ${
+                            selectedPaymentMethod === method.id ? "bg-ink text-bg" : "bg-ink/5 text-ink-muted"
+                          }`}>
+                            {method.name.substring(0, 1)}
+                          </div>
+                          <span className="text-[9px] uppercase tracking-widest">{method.name}</span>
+                        </button>
+                      ))}
                     </div>
+
+                    {selectedPaymentMethod && (() => {
+                      const method = availabilitySettings.paymentMethods.find(m => m.id === selectedPaymentMethod);
+                      return (
+                        <div className="bg-ink/5 p-6 rounded-sm space-y-4">
+                          <p className="text-sm">To confirm your slot, a pre-payment of <span className="font-bold">Tk {availabilitySettings.prepaymentAmount}</span> is required.</p>
+                          <p className="text-[10px] text-ink-muted leading-relaxed">{method?.instruction}</p>
+                          
+                          <div className="aspect-square w-48 mx-auto bg-white p-2 border border-ink/10 rounded-sm overflow-hidden">
+                            {method?.qrCode ? (
+                              <img src={method.qrCode} alt={`${method.name} QR`} className="w-full h-full object-contain" />
+                            ) : (
+                              <div className="w-full h-full bg-ink/5 flex items-center justify-center border-2 border-dashed border-ink/20">
+                                <span className="text-[10px] uppercase tracking-widest text-ink/30">No QR Code</span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-[10px] uppercase tracking-widest text-ink-muted">Scan to pay with {method?.name}</p>
+                        </div>
+                      );
+                    })()}
 
                     <button 
                       onClick={() => setPaymentStep(2)}
-                      className="w-full bg-ink text-bg py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all"
+                      disabled={!selectedPaymentMethod}
+                      className="w-full bg-ink text-bg py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all disabled:opacity-50"
                     >
                       I Have Paid
                     </button>
