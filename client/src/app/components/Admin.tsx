@@ -816,6 +816,7 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
 
 function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySettings, onUpdate: (s: AvailabilitySettings) => void }) {
   const [formData, setFormData] = useState<AvailabilitySettings>(settings);
+  const [activeSubTab, setActiveSubTab] = useState<"schedule" | "payments" | "blocks">("schedule");
 
   const daysOfWeek = [
     { value: 0, label: "Sunday" },
@@ -841,262 +842,293 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
   };
 
   return (
-    <div className="max-w-2xl bg-white/50 border border-ink/5 p-8 lg:p-12 rounded-sm space-y-12">
-      <div>
-        <h3 className="font-serif text-2xl mb-2">Availability Schedule</h3>
-        <p className="text-ink-muted text-sm">Configure which days and times you are available for bookings. These settings automatically update the pre-booking calendar.</p>
-      </div>
-
-      <div className="space-y-6">
-        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Enabled Days</label>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {daysOfWeek.map(day => (
-            <label 
-              key={day.value} 
-              className="flex items-center space-x-3 cursor-pointer group"
-              onClick={(e) => {
-                e.preventDefault();
-                handleDayToggle(day.value);
-              }}
-            >
-              <div className={`w-5 h-5 border flex items-center justify-center transition-colors ${
-                formData.availableDays.includes(day.value) ? "bg-ink border-ink text-bg" : "border-ink/20 group-hover:border-ink/50"
-              }`}>
-                {formData.availableDays.includes(day.value) && <Check size={14} />}
-              </div>
-              <span className="text-sm font-serif select-none">{day.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-2">
-          <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
-          <input 
-            type="time" 
-            value={formData.startTime}
-            onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-            className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
-          <input 
-            type="time" 
-            value={formData.endTime}
-            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-            className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-2">
-          <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Travel Fee (Tk)</label>
-          <input 
-            type="number" 
-            value={formData.travelFee}
-            onChange={(e) => setFormData({ ...formData, travelFee: Number(e.target.value) })}
-            className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Pre-payment Amount (Tk)</label>
-          <input 
-            type="number" 
-            value={formData.prepaymentAmount}
-            onChange={(e) => setFormData({ ...formData, prepaymentAmount: Number(e.target.value) })}
-            className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
-          />
-        </div>
-      </div>
-
-      <div className="space-y-6 pt-12 border-t border-ink/5">
-        <h3 className="font-serif text-2xl mb-2">Payment Methods</h3>
-        <p className="text-ink-muted text-sm">Manage the payment methods available for pre-booking (bKash, Nagad, etc.) and upload their QR codes.</p>
-        
-        <div className="space-y-4 mt-6">
-          {formData.paymentMethods.map((method, idx) => (
-            <div key={method.id} className="p-6 bg-white/50 border border-ink/5 rounded-sm space-y-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Method Name</label>
-                    <input 
-                      type="text" 
-                      value={method.name}
-                      onChange={(e) => {
-                        const newMethods = [...formData.paymentMethods];
-                        newMethods[idx] = { ...method, name: e.target.value };
-                        setFormData({ ...formData, paymentMethods: newMethods });
-                      }}
-                      className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Instruction</label>
-                    <input 
-                      type="text" 
-                      value={method.instruction}
-                      onChange={(e) => {
-                        const newMethods = [...formData.paymentMethods];
-                        newMethods[idx] = { ...method, instruction: e.target.value };
-                        setFormData({ ...formData, paymentMethods: newMethods });
-                      }}
-                      className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
-                    />
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setFormData({ ...formData, paymentMethods: formData.paymentMethods.filter(m => m.id !== method.id) })}
-                  className="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-colors ml-4"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-
-              <div className="flex items-center space-x-6">
-                <div className="relative w-24 h-24 bg-white border border-ink/10 rounded-sm overflow-hidden flex-shrink-0 flex items-center justify-center">
-                  {method.qrCode ? (
-                    <img src={method.qrCode} alt="QR Code" className="w-full h-full object-contain" />
-                  ) : (
-                    <ImageIcon className="text-ink/10" size={32} />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <label className="text-[10px] uppercase tracking-widest text-ink-muted block mb-2 font-bold">QR Code Image</label>
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          const newMethods = [...formData.paymentMethods];
-                          newMethods[idx] = { ...method, qrCode: reader.result as string };
-                          setFormData({ ...formData, paymentMethods: newMethods });
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="text-[10px] file:bg-transparent file:border-ink/20 file:px-4 file:py-2 file:text-[10px] file:uppercase file:tracking-widest cursor-pointer" 
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-
-          <button 
-            onClick={() => setFormData({ 
-              ...formData, 
-              paymentMethods: [
-                ...formData.paymentMethods, 
-                { id: Date.now().toString(), name: "New Method", qrCode: "", instruction: "Enter payment instruction here" }
-              ] 
-            })}
-            className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-ink/60 hover:text-ink transition-colors mt-4"
+    <div className="max-w-4xl space-y-12">
+      <div className="flex border-b border-ink/5 space-x-12">
+        {(["schedule", "payments", "blocks"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveSubTab(tab)}
+            className={`pb-4 text-[10px] uppercase tracking-[0.2em] transition-all relative ${
+              activeSubTab === tab ? "text-ink font-bold" : "text-ink/40 hover:text-ink/60"
+            }`}
           >
-            <Plus size={14} />
-            <span>Add Payment Method</span>
+            {tab === "schedule" ? "Schedule" : tab === "payments" ? "Payment Methods" : "Manual Blocks"}
+            {activeSubTab === tab && (
+              <motion.div layoutId="subtab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-ink" />
+            )}
           </button>
-        </div>
+        ))}
       </div>
 
-      <div className="space-y-6 pt-12 border-t border-ink/5">
-        <h3 className="font-serif text-2xl mb-2">Manual Time Blocks</h3>
-        <p className="text-ink-muted text-sm">Block specific times for personal tasks or holidays. These times will be unavailable in the booking form.</p>
-        
-        <div className="space-y-4 mt-6">
-          {formData.blockedSlots.map((slot, idx) => (
-            <div key={slot.id} className="p-6 bg-white/50 border border-ink/5 rounded-sm flex flex-col md:flex-row md:items-end gap-6">
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Date</label>
-                  <input 
-                    type="date" 
-                    value={slot.date}
-                    onChange={(e) => {
-                      const newSlots = [...formData.blockedSlots];
-                      newSlots[idx] = { ...slot, date: e.target.value };
-                      setFormData({ ...formData, blockedSlots: newSlots });
+      <div className="bg-white/50 border border-ink/5 p-8 lg:p-12 rounded-sm min-h-[400px]">
+        {activeSubTab === "schedule" && (
+          <div className="space-y-12">
+            <div>
+              <h3 className="font-serif text-2xl mb-2">Availability Schedule</h3>
+              <p className="text-ink-muted text-sm">Configure which days and times you are available for bookings.</p>
+            </div>
+
+            <div className="space-y-6">
+              <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Enabled Days</label>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {daysOfWeek.map(day => (
+                  <label 
+                    key={day.value} 
+                    className="flex items-center space-x-3 cursor-pointer group"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleDayToggle(day.value);
                     }}
-                    className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-mono text-sm" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
-                  <input 
-                    type="time" 
-                    value={slot.startTime}
-                    onChange={(e) => {
-                      const newSlots = [...formData.blockedSlots];
-                      newSlots[idx] = { ...slot, startTime: e.target.value };
-                      setFormData({ ...formData, blockedSlots: newSlots });
-                    }}
-                    className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-mono text-sm" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
-                  <input 
-                    type="time" 
-                    value={slot.endTime}
-                    onChange={(e) => {
-                      const newSlots = [...formData.blockedSlots];
-                      newSlots[idx] = { ...slot, endTime: e.target.value };
-                      setFormData({ ...formData, blockedSlots: newSlots });
-                    }}
-                    className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-mono text-sm" 
-                  />
-                </div>
-              </div>
-              <div className="flex-1 space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Reason (Optional)</label>
-                <div className="flex items-center space-x-4">
-                  <input 
-                    type="text" 
-                    value={slot.reason || ""}
-                    onChange={(e) => {
-                      const newSlots = [...formData.blockedSlots];
-                      newSlots[idx] = { ...slot, reason: e.target.value };
-                      setFormData({ ...formData, blockedSlots: newSlots });
-                    }}
-                    placeholder="e.g. Personal appointment"
-                    className="flex-1 bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors italic text-xs" 
-                  />
-                  <button 
-                    onClick={() => setFormData({ ...formData, blockedSlots: formData.blockedSlots.filter(s => s.id !== slot.id) })}
-                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-colors"
                   >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
+                    <div className={`w-5 h-5 border flex items-center justify-center transition-colors ${
+                      formData.availableDays.includes(day.value) ? "bg-ink border-ink text-bg" : "border-ink/20 group-hover:border-ink/50"
+                    }`}>
+                      {formData.availableDays.includes(day.value) && <Check size={14} />}
+                    </div>
+                    <span className="text-sm font-serif select-none">{day.label}</span>
+                  </label>
+                ))}
               </div>
             </div>
-          ))}
 
-          <button 
-            onClick={() => setFormData({ 
-              ...formData, 
-              blockedSlots: [
-                ...formData.blockedSlots, 
-                { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], startTime: "09:00", endTime: "10:00", reason: "" }
-              ] 
-            })}
-            className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-ink/60 hover:text-ink transition-colors mt-4"
-          >
-            <Plus size={14} />
-            <span>Add Manual Block</span>
-          </button>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
+                <input 
+                  type="time" 
+                  value={formData.startTime}
+                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                  className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
+                <input 
+                  type="time" 
+                  value={formData.endTime}
+                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                  className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Travel Fee (Tk)</label>
+                <input 
+                  type="number" 
+                  value={formData.travelFee}
+                  onChange={(e) => setFormData({ ...formData, travelFee: Number(e.target.value) })}
+                  className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Pre-payment Amount (Tk)</label>
+                <input 
+                  type="number" 
+                  value={formData.prepaymentAmount}
+                  onChange={(e) => setFormData({ ...formData, prepaymentAmount: Number(e.target.value) })}
+                  className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === "payments" && (
+          <div className="space-y-8">
+            <div>
+              <h3 className="font-serif text-2xl mb-2">Payment Methods</h3>
+              <p className="text-ink-muted text-sm">Manage methods and QR codes for pre-payment.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6">
+              {formData.paymentMethods.map((method, idx) => (
+                <div key={method.id} className="p-6 bg-white border border-ink/5 rounded-sm space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Method Name</label>
+                        <input 
+                          type="text" 
+                          value={method.name}
+                          onChange={(e) => {
+                            const newMethods = [...formData.paymentMethods];
+                            newMethods[idx] = { ...method, name: e.target.value };
+                            setFormData({ ...formData, paymentMethods: newMethods });
+                          }}
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Instruction</label>
+                        <input 
+                          type="text" 
+                          value={method.instruction}
+                          onChange={(e) => {
+                            const newMethods = [...formData.paymentMethods];
+                            newMethods[idx] = { ...method, instruction: e.target.value };
+                            setFormData({ ...formData, paymentMethods: newMethods });
+                          }}
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                        />
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setFormData({ ...formData, paymentMethods: formData.paymentMethods.filter(m => m.id !== method.id) })}
+                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-colors ml-4"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center space-x-6">
+                    <div className="relative w-24 h-24 bg-white border border-ink/10 rounded-sm overflow-hidden flex-shrink-0 flex items-center justify-center">
+                      {method.qrCode ? (
+                        <img src={method.qrCode} alt="QR Code" className="w-full h-full object-contain" />
+                      ) : (
+                        <ImageIcon className="text-ink/10" size={32} />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[10px] uppercase tracking-widest text-ink-muted block mb-2 font-bold">QR Code Image</label>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              const newMethods = [...formData.paymentMethods];
+                              newMethods[idx] = { ...method, qrCode: reader.result as string };
+                              setFormData({ ...formData, paymentMethods: newMethods });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="text-[10px] file:bg-transparent file:border-ink/20 file:px-4 file:py-2 file:text-[10px] file:uppercase file:tracking-widest cursor-pointer" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button 
+                onClick={() => setFormData({ 
+                  ...formData, 
+                  paymentMethods: [
+                    ...formData.paymentMethods, 
+                    { id: Date.now().toString(), name: "New Method", qrCode: "", instruction: "Enter payment instruction here" }
+                  ] 
+                })}
+                className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-ink/60 hover:text-ink transition-colors mt-4"
+              >
+                <Plus size={14} />
+                <span>Add Payment Method</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === "blocks" && (
+          <div className="space-y-8">
+            <div>
+              <h3 className="font-serif text-2xl mb-2">Manual Time Blocks</h3>
+              <p className="text-ink-muted text-sm">Block specific times for personal tasks or holidays.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              {formData.blockedSlots.map((slot, idx) => (
+                <div key={slot.id} className="p-6 bg-white border border-ink/5 rounded-sm flex flex-col md:flex-row md:items-end gap-6">
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Date</label>
+                      <input 
+                        type="date" 
+                        value={slot.date}
+                        onChange={(e) => {
+                          const newSlots = [...formData.blockedSlots];
+                          newSlots[idx] = { ...slot, date: e.target.value };
+                          setFormData({ ...formData, blockedSlots: newSlots });
+                        }}
+                        className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-mono text-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
+                      <input 
+                        type="time" 
+                        value={slot.startTime}
+                        onChange={(e) => {
+                          const newSlots = [...formData.blockedSlots];
+                          newSlots[idx] = { ...slot, startTime: e.target.value };
+                          setFormData({ ...formData, blockedSlots: newSlots });
+                        }}
+                        className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-mono text-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
+                      <input 
+                        type="time" 
+                        value={slot.endTime}
+                        onChange={(e) => {
+                          const newSlots = [...formData.blockedSlots];
+                          newSlots[idx] = { ...slot, endTime: e.target.value };
+                          setFormData({ ...formData, blockedSlots: newSlots });
+                        }}
+                        className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-mono text-sm" 
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Reason (Optional)</label>
+                    <div className="flex items-center space-x-4">
+                      <input 
+                        type="text" 
+                        value={slot.reason || ""}
+                        onChange={(e) => {
+                          const newSlots = [...formData.blockedSlots];
+                          newSlots[idx] = { ...slot, reason: e.target.value };
+                          setFormData({ ...formData, blockedSlots: newSlots });
+                        }}
+                        placeholder="e.g. Personal appointment"
+                        className="flex-1 bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors italic text-xs" 
+                      />
+                      <button 
+                        onClick={() => setFormData({ ...formData, blockedSlots: formData.blockedSlots.filter(s => s.id !== slot.id) })}
+                        className="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-colors"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button 
+                onClick={() => setFormData({ 
+                  ...formData, 
+                  blockedSlots: [
+                    ...formData.blockedSlots, 
+                    { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], startTime: "09:00", endTime: "10:00", reason: "" }
+                  ] 
+                })}
+                className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-ink/60 hover:text-ink transition-colors mt-4"
+              >
+                <Plus size={14} />
+                <span>Add Manual Block</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="pt-12">
+      <div className="pt-4 flex justify-end">
         <button 
           onClick={handleSave}
-          className="bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+          className="bg-ink text-bg px-12 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
         >
           Save All Settings
         </button>
