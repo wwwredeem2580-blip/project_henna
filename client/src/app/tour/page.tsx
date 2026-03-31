@@ -1,53 +1,144 @@
 "use client";
 
-import { motion } from "motion/react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Play, X, ArrowDown } from "lucide-react";
 
-const TOUR_ALBUM = [
-  { id: 1, title: "Grand Bridal Mehendi", category: "Weddings", image: "https://images.unsplash.com/photo-1590593162211-996843477430?q=80&w=800&auto=format&fit=crop" },
-  { id: 2, title: "Festival Celebration", category: "Events", image: "https://images.unsplash.com/photo-1516053894464-9f4460d3767c?q=80&w=800&auto=format&fit=crop" },
-  { id: 3, title: "Contemporary Patterns", category: "Private Sessions", image: "https://images.unsplash.com/photo-1505933334113-567ad0030763?q=80&w=800&auto=format&fit=crop" },
-  { id: 4, title: "Arabic Fusion Design", category: "Weddings", image: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=800&auto=format&fit=crop" },
-  { id: 5, title: "Intricate Palm Detail", category: "Bride", image: "https://images.unsplash.com/photo-1542385151-efd9000782a7?q=80&w=800&auto=format&fit=crop" },
-  { id: 6, title: "Minimalist Charm", category: "Daily", image: "https://images.unsplash.com/photo-1537151672256-6cab2e7f22ca?q=80&w=800&auto=format&fit=crop" },
+const GALLERY_ITEMS = [
+  { id: 1, title: "Grand Bridal Legacy", subtitle: "Traditional Wedding Artistry", category: "Weddings", image: "/tour/wedding.png" },
+  { id: 2, title: "Boishakhi Street Fest", subtitle: "A Celebration of Colors", category: "Festivals", image: "/tour/fest.png" },
+  { id: 3, title: "Corporate Elegance", subtitle: "Minimalist Professional Sessions", category: "Corporate", image: "/tour/corporate.png" },
+  { id: 4, title: "Ria’s Personal Journey", subtitle: "A Muse to Henna Art", category: "Legacy", image: "/tour/legacy.png" },
+  { id: 5, title: "Contemporary Fusion", subtitle: "Arabic & Indian Blends", category: "Designs", image: "https://images.unsplash.com/photo-1590593162211-996843477430?q=80&w=800&auto=format&fit=crop" },
+  { id: 6, title: "Eid Celebration", subtitle: "Patterns of Joy & Faith", category: "Festivals", image: "https://images.unsplash.com/photo-1516053894464-9f4460d3767c?q=80&w=800&auto=format&fit=crop" },
+  { id: 7, title: "Intricate Details", subtitle: "A Masterpiece on Skin", category: "Portfolio", image: "https://images.unsplash.com/photo-1505933334113-567ad0030763?q=80&w=800&auto=format&fit=crop" },
+  { id: 8, title: "Minimalist Charm", subtitle: "Simple Beauty, Lasting Impression", category: "Private", image: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=800&auto=format&fit=crop" },
 ];
 
 export default function TakeATour() {
-  return (
-    <section className="px-6 lg:px-12 py-12 lg:py-24 min-h-screen">
-      <div className="mb-16 lg:mb-24">
-        <h2 className="text-4xl lg:text-6xl font-serif mb-6">Our Portfolio</h2>
-        <p className="text-ink-muted uppercase tracking-widest text-xs">A visual journey through our past events and services</p>
-      </div>
+  const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {TOUR_ALBUM.map((item, index) => (
+  return (
+    <div className="bg-bg text-ink min-h-screen px-6 lg:px-24 py-24">
+      {/* Header */}
+      <header className="mb-24 space-y-4 max-w-4xl">
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-[10px] uppercase tracking-[0.4em] text-ink-muted"
+        >
+          Curated Showcase
+        </motion.p>
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-6xl lg:text-8xl font-serif leading-tight"
+        >
+          A Visual Legacy
+        </motion.h1>
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-xl text-ink-muted font-light max-w-xl italic"
+        >
+          Explore a decade of artistry across grand weddings, vibrant festivals, and professional corporate fests.
+        </motion.p>
+      </header>
+
+      {/* Grid Gallery */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {GALLERY_ITEMS.map((item, index) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.1 }}
-            className="group relative"
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ delay: index * 0.05 }}
+            className={`group relative overflow-hidden bg-ink/5 aspect-[3/4] ${
+                index % 3 === 0 ? "lg:col-span-2 lg:aspect-video" : ""
+            }`}
           >
-            <div className="aspect-[4/5] overflow-hidden bg-ink/5">
-              <img 
-                src={item.image} 
-                alt={item.title} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-8">
-                <p className="text-[10px] uppercase tracking-widest text-bg/70 mb-2">{item.category}</p>
-                <h3 className="text-2xl font-serif text-bg">{item.title}</h3>
-              </div>
+            <img 
+              src={item.image} 
+              alt={item.title} 
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+            />
+            
+            {/* Dark Overlay with Details on Hover */}
+            <div className="absolute inset-0 bg-ink/90 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center text-center p-8">
+                <span className="text-[9px] uppercase tracking-[0.5em] text-bg/60 mb-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-100">
+                    {item.category}
+                </span>
+                <h3 className="text-2xl lg:text-4xl font-serif text-bg mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-200">
+                    {item.title}
+                </h3>
+                <div className="w-12 h-px bg-bg/20 my-4 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 delay-300" />
+                <p className="text-xs text-bg/70 italic font-light max-w-xs transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-400">
+                    {item.subtitle}
+                </p>
+                
+                {/* Visual Accent */}
+                <div className="absolute top-8 left-8 right-8 bottom-8 border border-bg/10 transform scale-95 group-hover:scale-100 transition-transform duration-1000 delay-100 pointer-events-none" />
+                
+                <button 
+                  onClick={() => setActiveVideo(item.id.toString())}
+                  className="mt-8 bg-bg text-ink rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-300 hover:scale-110 transform translate-y-4 group-hover:translate-y-0"
+                >
+                  <Play size={16} fill="currentColor" />
+                </button>
             </div>
           </motion.div>
         ))}
       </div>
-      
-      <div className="mt-24 border-t border-ink/5 pt-12 flex flex-col items-center text-center">
-        <p className="text-xl font-serif mb-6 italic">"Artistry that leaves a lasting impression."</p>
-        <div className="w-12 h-px bg-ink/20" />
-      </div>
-    </section>
+
+      <footer className="mt-48 pt-12 border-t border-ink/5 flex flex-col md:flex-row justify-between items-center text-[10px] uppercase tracking-widest text-ink/40 space-y-4 md:space-y-0">
+        <p>© 2026 Ria’s Henna Artistry</p>
+        <p>Legacy in Every Stroke</p>
+        <p>Curated Portfolio Selection</p>
+      </footer>
+
+      {/* Video Modal Placeholder */}
+      <AnimatePresence>
+        {activeVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg/90 backdrop-blur-xl"
+          >
+            <button 
+              onClick={() => setActiveVideo(null)}
+              className="absolute top-8 right-8 text-ink hover:rotate-90 transition-transform duration-300"
+            >
+              <X size={32} />
+            </button>
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-5xl aspect-video bg-ink/5 rounded-2xl overflow-hidden relative group"
+            >
+              <img 
+                src={GALLERY_ITEMS.find(s => s.id.toString() === activeVideo)?.image} 
+                alt="Video Placeholder"
+                className="w-full h-full object-cover opacity-40 blur-sm"
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12 space-y-6">
+                <div className="bg-ink text-bg rounded-full p-8 animate-pulse shadow-2xl text-ink">
+                  <Play size={48} fill="currentColor" className="ml-2" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-serif">Cinematic Experience Coming Soon</h3>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-ink-muted">Relive the memories</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
