@@ -4,16 +4,12 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { ShoppingCart, Plus } from "lucide-react";
 import { Product } from "../types";
+import { useStore } from "../context/StoreContext";
+import { useRouter } from "next/navigation";
 
-interface ShopProps {
-  products: Product[];
-  onProductClick: (product: Product) => void;
-  onAddToCart: (product: Product) => void;
-  cartCount: number;
-  onViewCart: () => void;
-}
-
-export function Shop({ products, onProductClick, onAddToCart, cartCount, onViewCart }: ShopProps) {
+export function Shop() {
+  const { products, handleAddToCart, cartCount } = useStore();
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const categories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -25,11 +21,11 @@ export function Shop({ products, onProductClick, onAddToCart, cartCount, onViewC
     <section className="px-6 lg:px-12 py-12 lg:py-24 min-h-screen">
       <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-12 lg:mb-20 space-y-6 md:space-y-0">
         <div>
-          <h2 className="text-4xl lg:text-5xl font-serif mb-4">The Boutique</h2>
+          <h2 className="text-4xl lg:text-5xl font-serif mb-4">Shop</h2>
           <p className="text-ink-muted uppercase tracking-widest text-xs">Premium products for your beauty rituals</p>
         </div>
         <div 
-          onClick={onViewCart}
+          onClick={() => router.push("/cart")}
           className="flex items-center space-x-2 text-ink-muted hover:text-ink cursor-pointer transition-colors self-start md:self-auto"
         >
           <ShoppingCart size={18} />
@@ -42,7 +38,7 @@ export function Shop({ products, onProductClick, onAddToCart, cartCount, onViewC
           <button
             key={category}
             onClick={() => setActiveCategory(category)}
-            className={`px-6 py-2 text-[10px] uppercase tracking-[0.2em] transition-all duration-300 rounded-full border ${
+            className={`px-8 py-3 text-sm uppercase tracking-[0.2em] transition-all duration-300 rounded-full border ${
               activeCategory === category 
                 ? "bg-ink text-bg border-ink" 
                 : "bg-transparent text-ink border-ink/10 hover:border-ink/30"
@@ -62,7 +58,7 @@ export function Shop({ products, onProductClick, onAddToCart, cartCount, onViewC
             viewport={{ once: true }}
             transition={{ delay: index * 0.1 }}
             className="group cursor-pointer"
-            onClick={() => onProductClick(product)}
+            onClick={() => router.push(`/product/${product.id}`)}
           >
             <div className="relative aspect-[3/4] overflow-hidden mb-6 bg-ink/5">
               <img 
@@ -74,19 +70,22 @@ export function Shop({ products, onProductClick, onAddToCart, cartCount, onViewC
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAddToCart(product);
+                  handleAddToCart(product);
                 }}
                 className="absolute bottom-6 right-6 w-12 h-12 bg-bg rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500 shadow-sm hover:bg-ink hover:text-bg"
               >
                 <Plus size={20} />
               </button>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <p className="text-[10px] uppercase tracking-widest text-ink-muted">{product.brand}</p>
               <div className="flex justify-between items-baseline">
-                <h3 className="text-lg font-serif">{product.name}</h3>
-                <span className="text-sm font-medium">Tk {product.price.toLocaleString()}</span>
+                <h3 className="text-xl lg:text-2xl font-serif">{product.name}</h3>
+                <span className="text-base lg:text-lg font-medium">Tk {product.price.toLocaleString()}</span>
               </div>
+              <p className="text-sm text-ink-muted line-clamp-2 leading-relaxed">
+                {product.description}
+              </p>
             </div>
           </motion.div>
         ))}

@@ -1,14 +1,19 @@
 "use client";
 
 import { motion } from "motion/react";
+import { useStore } from "../context/StoreContext";
+import { useRouter } from "next/navigation";
 import { Design } from "../types";
 
-interface DesignGalleryProps {
-  designs: Design[];
-  onSelect: (design: Design) => void;
-}
+export function DesignGallery() {
+  const { designs, setSelectedDesign } = useStore();
+  const router = useRouter();
 
-export function DesignGallery({ designs, onSelect }: DesignGalleryProps) {
+  const handleSelect = (design: Design) => {
+    setSelectedDesign(design);
+    router.push("/booking");
+  };
+
   return (
     <section className="px-6 lg:px-12 py-12 lg:py-24 min-h-screen">
       <div className="mb-12 lg:mb-20">
@@ -25,7 +30,7 @@ export function DesignGallery({ designs, onSelect }: DesignGalleryProps) {
             viewport={{ once: true }}
             transition={{ delay: index * 0.1 }}
             className="group cursor-pointer"
-            onClick={() => onSelect(design)}
+            onClick={() => handleSelect(design)}
           >
             <div className="relative aspect-[4/5] overflow-hidden mb-6 bg-ink/5">
               <img 
@@ -40,11 +45,12 @@ export function DesignGallery({ designs, onSelect }: DesignGalleryProps) {
                 </span>
               </div>
             </div>
-            <div className="flex justify-between items-baseline">
+            <div className="flex justify-between items-baseline mb-1">
               <h3 className="text-xl font-serif">{design.title}</h3>
-              <span className="text-[10px] uppercase tracking-widest text-ink-muted">{design.category}</span>
+              <span className="text-sm font-medium">Tk {design.price}</span>
             </div>
-            <p className="text-sm text-ink-muted mt-2 font-light line-clamp-2">{design.description}</p>
+            <span className="text-[10px] uppercase tracking-widest text-ink-muted">{design.category}</span>
+            <p className="text-sm text-ink-muted mt-3 font-light line-clamp-2">{design.description}</p>
           </motion.div>
         ))}
       </div>

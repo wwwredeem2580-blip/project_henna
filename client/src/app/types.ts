@@ -4,6 +4,7 @@ export interface Design {
   category: string;
   images: string[];
   description: string;
+  price: number;
 }
 
 export interface Product {
@@ -33,12 +34,17 @@ export interface Booking {
   date: string;
   phone: string;
   location: string;
+  locationType: 'artist_location' | 'user_location';
   eventType: string;
   people: string;
   info: string;
   time: string;
   status: BookingStatus;
   designId?: string;
+  designs?: { personIndex: number; designId: string }[];
+  extraFee?: number;
+  prepaymentAmount?: number;
+  transactionId?: string;
   createdAt: string;
 }
 
@@ -46,6 +52,8 @@ export interface AvailabilitySettings {
   availableDays: number[]; // 0=Sun, 1=Mon, ..., 6=Sat
   startTime: string; // e.g. "12:30"
   endTime: string; // e.g. "22:00"
+  travelFee: number;
+  prepaymentAmount: number;
 }
 
 export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";

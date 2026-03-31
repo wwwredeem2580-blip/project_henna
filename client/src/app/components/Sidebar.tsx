@@ -2,19 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ShoppingBag, Calendar, Image as ImageIcon, Info, Instagram, Facebook, Mail, LayoutDashboard, Menu, X } from "lucide-react";
+import { ShoppingBag, Calendar, Image as ImageIcon, Info, Instagram, Facebook, Mail, LayoutDashboard, Menu, X, Users, MapPin } from "lucide-react";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useStore } from '../context/StoreContext';
 
-export type Section = "home" | "designs" | "booking" | "shop" | "cart" | "product-details" | "login" | "register" | "admin";
-
-interface SidebarProps {
-  activeSection: Section;
-  setActiveSection: (section: Section) => void;
-  cartCount: number;
-}
-
-export function Sidebar({ activeSection, setActiveSection, cartCount }: SidebarProps) {
+export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const pathname = usePathname();
+  const { cartCount } = useStore();
 
   useEffect(() => {
     const checkDesktop = () => {
@@ -26,18 +23,19 @@ export function Sidebar({ activeSection, setActiveSection, cartCount }: SidebarP
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
-  const navItems: { id: Section; label: string; icon: any }[] = [
-    { id: "home", label: "RongMahal", icon: null },
-    { id: "designs", label: "Designs", icon: ImageIcon },
-    { id: "booking", label: "Pre-booking", icon: Calendar },
-    { id: "shop", label: "Shop", icon: ShoppingBag },
-    { id: "cart", label: `Cart`, icon: ShoppingBag },
-    { id: "login", label: "Sign In", icon: Info },
-    { id: "admin", label: "Admin", icon: LayoutDashboard },
+  const navItems = [
+    { id: "/", label: "Shop", icon: ShoppingBag },
+    { id: "/designs", label: "Designs", icon: ImageIcon },
+    { id: "/booking", label: "Pre-booking", icon: Calendar },
+    { id: "/about-us", label: "About Us", icon: Info },
+    { id: "/contact-us", label: "Contact Us", icon: Mail },
+    { id: "/tour", label: "Take a Tour", icon: MapPin },
+    { id: "/cart", label: `Cart`, icon: ShoppingBag },
+    { id: "/login", label: "Sign In", icon: Info },
+    { id: "/admin", label: "Admin", icon: LayoutDashboard },
   ];
 
-  const handleNavClick = (id: Section) => {
-    setActiveSection(id);
+  const handleNavClick = () => {
     setIsOpen(false);
   };
 
@@ -46,15 +44,16 @@ export function Sidebar({ activeSection, setActiveSection, cartCount }: SidebarP
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 w-full h-16 bg-bg border-b border-ink/5 z-[60]">
         <div className="max-w-[1080px] mx-auto h-full flex items-center justify-between px-6">
-          <div 
+          <Link 
+            href="/"
             className="flex items-center space-x-3 cursor-pointer"
-            onClick={() => handleNavClick("home")}
+            onClick={handleNavClick}
           >
             <div className="w-8 h-8 relative flex-shrink-0">
                <img src="/logo/logo.png" alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
             </div>
             <h1 className="text-xl font-serif tracking-tight">Ria’s Henna</h1>
-          </div>
+          </Link>
           <button 
             onClick={() => setIsOpen(!isOpen)}
             className="p-2 text-ink hover:bg-ink/5 rounded-full transition-colors"
@@ -74,56 +73,61 @@ export function Sidebar({ activeSection, setActiveSection, cartCount }: SidebarP
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className={`w-64 border-r border-ink/5 p-8 lg:p-12 flex flex-col justify-between z-50 bg-bg flex-shrink-0 ${
               isDesktop
-                ? 'hidden lg:flex sticky top-0 h-screen'
-                : 'fixed left-0 top-0 h-full'
+                ? 'hidden lg:flex sticky top-0 h-screen overflow-y-auto no-scrollbar'
+                : 'fixed left-0 top-0 h-full overflow-y-auto'
             }`}
           >
             <div className="space-y-12">
-              <div 
+              <Link 
+                href="/"
                 className="cursor-pointer group hidden lg:flex flex-col items-start"
-                onClick={() => handleNavClick("home")}
+                onClick={handleNavClick}
               >
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 mb-6 overflow-hidden">
                   <img src="/logo/logo.png" alt="Ria's Henna Artistry" className="w-full h-full object-contain mix-blend-multiply opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
                 </div>
                 <h1 className="text-3xl font-serif tracking-tight leading-none">Ria’s Henna<br />Artistry</h1>
                 <div className="h-0.5 w-0 group-hover:w-8 bg-ink transition-all duration-500 mt-4" />
-              </div>
+              </Link>
 
               <nav className="space-y-6 mt-16 lg:mt-0">
-                {navItems.slice(1).map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavClick(item.id)}
-                    className={`flex items-center space-x-3 text-sm tracking-widest uppercase transition-all duration-300 ${
-                      activeSection === item.id ? "text-ink font-semibold" : "text-ink-muted hover:text-ink"
-                    }`}
-                  >
-                    <span className="flex items-center space-x-2">
-                      <span>{item.label}</span>
-                      {item.id === "cart" && cartCount > 0 && (
-                        <motion.span 
-                          key={cartCount}
-                          initial={{ scale: 1.5, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="inline-flex items-center justify-center bg-ink text-bg text-[10px] w-4 h-4 rounded-full"
-                        >
-                          {cartCount}
-                        </motion.span>
+                {navItems.map((item) => {
+                  const isActive = pathname === item.id || (item.id === "/" && pathname === "/shop");
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.id}
+                      onClick={handleNavClick}
+                      className={`flex items-center space-x-3 text-sm tracking-widest uppercase transition-all duration-300 ${
+                        isActive ? "text-ink font-semibold" : "text-ink-muted hover:text-ink"
+                      }`}
+                    >
+                      <span className="flex items-center space-x-2">
+                        <span>{item.label}</span>
+                        {item.id === "/cart" && cartCount > 0 && (
+                          <motion.span 
+                            key={cartCount}
+                            initial={{ scale: 1.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="inline-flex items-center justify-center bg-ink text-bg text-[10px] w-4 h-4 rounded-full"
+                          >
+                            {cartCount}
+                          </motion.span>
+                        )}
+                      </span>
+                      {isActive && (
+                        <motion.div 
+                          layoutId="active-indicator"
+                          className="h-px w-4 bg-ink"
+                        />
                       )}
-                    </span>
-                    {activeSection === item.id && (
-                      <motion.div 
-                        layoutId="active-indicator"
-                        className="h-px w-4 bg-ink"
-                      />
-                    )}
-                  </button>
-                ))}
+                    </Link>
+                  );
+                })}
               </nav>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-8 mt-12">
               <div className="space-y-4">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">Connect</p>
                 <div className="flex space-x-4">

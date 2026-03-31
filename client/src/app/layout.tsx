@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { StoreProvider } from "./context/StoreContext";
+import { ClientLayout } from "./components/ClientLayout";
 
 export const metadata: Metadata = {
   title: "Ria's Henna Artistry",
@@ -13,7 +15,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <StoreProvider>
+          <ClientLayout>
+            {children}
+          </ClientLayout>
+        </StoreProvider>
+      </body>
     </html>
   );
 }

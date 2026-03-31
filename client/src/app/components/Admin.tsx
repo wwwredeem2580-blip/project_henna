@@ -15,44 +15,22 @@ import {
 } from "lucide-react";
 import { Design, Product, Booking, Order, BookingStatus, OrderStatus, AvailabilitySettings } from "../types";
 
-interface AdminProps {
-  designs: Design[];
-  products: Product[];
-  bookings: Booking[];
-  orders: Order[];
-  onUpdateDesign: (design: Design) => void;
-  onAddDesign: (design: Design) => void;
-  onDeleteDesign: (id: string) => void;
-  onUpdateProduct: (product: Product) => void;
-  onAddProduct: (product: Product) => void;
-  onDeleteProduct: (id: string) => void;
-  onUpdateBookingStatus: (id: string, status: BookingStatus) => void;
-  onUpdateOrderStatus: (id: string, status: OrderStatus) => void;
-  availabilitySettings: AvailabilitySettings;
-  onUpdateAvailability: (settings: AvailabilitySettings) => void;
-}
+import { useStore } from "../context/StoreContext";
 
 type AdminTab = "bookings" | "orders" | "products" | "designs" | "settings";
 
-export function Admin({
-  designs,
-  products,
-  bookings,
-  orders,
-  onUpdateDesign,
-  onAddDesign,
-  onDeleteDesign,
-  onUpdateProduct,
-  onAddProduct,
-  onDeleteProduct,
-  onUpdateBookingStatus,
-  onUpdateOrderStatus,
-  availabilitySettings,
-  onUpdateAvailability
-}: AdminProps) {
+export function Admin() {
+  const { 
+    designs, setDesigns, 
+    products, setProducts, 
+    bookings, setBookings, 
+    orders, setOrders, 
+    availabilitySettings, setAvailabilitySettings 
+  } = useStore();
   const [activeTab, setActiveTab] = useState<AdminTab>("bookings");
   const [isEditingProduct, setIsEditingProduct] = useState<Product | null>(null);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [isEditingDesign, setIsEditingDesign] = useState<Design | null>(null);
   const [isAddingDesign, setIsAddingDesign] = useState(false);
 
   const tabs: { id: AdminTab; label: string; icon: any }[] = [
@@ -110,13 +88,13 @@ export function Admin({
             {activeTab === "bookings" && (
               <BookingManagement 
                 bookings={bookings} 
-                onUpdateStatus={onUpdateBookingStatus} 
+                onUpdateStatus={(id, status) => setBookings(bookings.map(b => b.id === id ? { ...b, status } : b))} 
               />
             )}
             {activeTab === "orders" && (
               <OrderManagement 
                 orders={orders} 
-                onUpdateStatus={onUpdateOrderStatus} 
+                onUpdateStatus={(id, status) => setOrders(orders.map(o => o.id === id ? { ...o, status } : o))} 
               />
             )}
             {activeTab === "products" && (
@@ -124,20 +102,21 @@ export function Admin({
                 products={products} 
                 onAdd={() => setIsAddingProduct(true)}
                 onEdit={setIsEditingProduct}
-                onDelete={onDeleteProduct}
+                onDelete={(id) => setProducts(products.filter(p => p.id !== id))}
               />
             )}
             {activeTab === "designs" && (
               <DesignManagement 
                 designs={designs} 
                 onAdd={() => setIsAddingDesign(true)}
-                onDelete={onDeleteDesign}
+                onEdit={setIsEditingDesign}
+                onDelete={(id) => setDesigns(designs.filter(d => d.id !== id))}
               />
             )}
             {activeTab === "settings" && (
               <SettingsManagement 
                 settings={availabilitySettings} 
-                onUpdate={onUpdateAvailability}
+                onUpdate={setAvailabilitySettings}
               />
             )}
           </motion.div>
@@ -147,7 +126,7 @@ export function Admin({
       {isAddingProduct && (
         <ProductModal 
           onClose={() => setIsAddingProduct(false)} 
-          onSave={(p) => { onAddProduct(p); setIsAddingProduct(false); }}
+          onSave={(p) => { setProducts([...products, p]); setIsAddingProduct(false); }}
           existingCategories={productCategories}
         />
       )}
@@ -155,14 +134,21 @@ export function Admin({
         <ProductModal 
           product={isEditingProduct}
           onClose={() => setIsEditingProduct(null)} 
-          onSave={(p) => { onUpdateProduct(p); setIsEditingProduct(null); }}
+          onSave={(p) => { setProducts(products.map(old => old.id === p.id ? p : old)); setIsEditingProduct(null); }}
           existingCategories={productCategories}
         />
       )}
       {isAddingDesign && (
         <DesignModal 
           onClose={() => setIsAddingDesign(false)} 
-          onSave={(d) => { onAddDesign(d); setIsAddingDesign(false); }}
+          onSave={(d) => { setDesigns([...designs, d]); setIsAddingDesign(false); }}
+        />
+      )}
+      {isEditingDesign && (
+        <DesignModal 
+          design={isEditingDesign}
+          onClose={() => setIsEditingDesign(null)} 
+          onSave={(d) => { setDesigns(designs.map(old => old.id === d.id ? d : old)); setIsEditingDesign(null); }}
         />
       )}
     </section>
@@ -182,7 +168,13 @@ function BookingManagement({ bookings, onUpdateStatus }: { bookings: Booking[], 
         <div key={booking.id} className="flex flex-col lg:grid lg:grid-cols-6 px-6 py-8 items-start lg:items-center bg-white/50 border border-ink/5 rounded-sm hover:border-ink/20 transition-all space-y-6 lg:space-y-0">
           <div className="lg:col-span-2 space-y-1">
             <p className="font-serif text-lg">{booking.name}</p>
-            <p className="text-xs text-ink-muted">{booking.eventType} • {booking.location}</p>
+            <p className="text-[10px] uppercase tracking-widest text-ink-muted">
+              {booking.eventType} • {booking.locationType === "user_location" ? "Artist Goes to Location" : "Come to Service Location"}
+            </p>
+            <p className="text-xs text-ink-muted">{booking.location}</p>
+            {booking.transactionId && (
+              <p className="text-[10px] font-mono bg-ink/5 px-2 py-0.5 inline-block rounded-sm mt-1">TXID: {booking.transactionId}</p>
+            )}
           </div>
           <div className="text-sm font-light">
             <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Date & Time</span>
@@ -328,9 +320,10 @@ function ProductManagement({ products, onAdd, onEdit, onDelete }: {
   );
 }
 
-function DesignManagement({ designs, onAdd, onDelete }: { 
+function DesignManagement({ designs, onAdd, onEdit, onDelete }: { 
   designs: Design[], 
   onAdd: () => void,
+  onEdit: (d: Design) => void,
   onDelete: (id: string) => void
 }) {
   return (
@@ -350,6 +343,9 @@ function DesignManagement({ designs, onAdd, onDelete }: {
             <div className="aspect-[4/5] overflow-hidden mb-6 bg-ink/5 relative">
               <img src={design.images[0]} alt={design.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => onEdit(design)} className="p-2 bg-bg text-ink rounded-full hover:bg-ink hover:text-bg transition-all">
+                  <Edit2 size={14} />
+                </button>
                 <button onClick={() => onDelete(design.id)} className="p-2 bg-bg text-rose-600 rounded-full hover:bg-rose-600 hover:text-bg transition-all">
                   <Trash2 size={14} />
                 </button>
@@ -357,8 +353,9 @@ function DesignManagement({ designs, onAdd, onDelete }: {
             </div>
             <div className="flex justify-between items-baseline">
               <h3 className="font-serif text-xl">{design.title}</h3>
-              <span className="text-[10px] uppercase tracking-widest text-ink-muted">{design.category}</span>
+              <p className="text-[10px] uppercase tracking-widest text-ink mt-1 font-medium">Tk {design.price}</p>
             </div>
+            <p className="text-[10px] uppercase tracking-widest text-ink-muted">{design.category}</p>
           </div>
         ))}
       </div>
@@ -653,12 +650,13 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
   );
 }
 
-function DesignModal({ onClose, onSave }: { onClose: () => void, onSave: (d: Design) => void }) {
-  const [formData, setFormData] = useState<Partial<Design>>({
+function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: () => void, onSave: (d: Design) => void }) {
+  const [formData, setFormData] = useState<Partial<Design>>(design || {
     title: "",
     category: "Traditional",
     images: [""],
-    description: ""
+    description: "",
+    price: 0
   });
 
   return (
@@ -677,13 +675,13 @@ function DesignModal({ onClose, onSave }: { onClose: () => void, onSave: (d: Des
         className="relative bg-bg w-full max-w-2xl p-6 lg:p-12 rounded-sm shadow-2xl"
       >
         <div className="flex justify-between items-start mb-12">
-          <h3 className="text-3xl lg:text-4xl font-serif">New Design</h3>
+          <h3 className="text-3xl lg:text-4xl font-serif">{design ? "Edit Design" : "New Design"}</h3>
           <button onClick={onClose} className="p-2 hover:bg-ink/5 rounded-full transition-colors">
             <X size={24} />
           </button>
         </div>
 
-        <form className="space-y-10" onSubmit={(e) => { e.preventDefault(); onSave({ ...formData, id: Date.now().toString() } as Design); }}>
+        <form className="space-y-10" onSubmit={(e) => { e.preventDefault(); onSave({ ...formData, id: design?.id || Date.now().toString() } as Design); }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest text-ink-muted">Design Title</label>
@@ -707,6 +705,16 @@ function DesignModal({ onClose, onSave }: { onClose: () => void, onSave: (d: Des
                 <option value="Arabic">Arabic</option>
                 <option value="Minimal">Minimal</option>
               </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Price (Tk)</label>
+              <input 
+                required
+                type="number" 
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+              />
             </div>
           </div>
 
@@ -772,7 +780,7 @@ function DesignModal({ onClose, onSave }: { onClose: () => void, onSave: (d: Des
             type="submit"
             className="w-full bg-ink text-bg py-6 text-[10px] uppercase tracking-[0.4em] hover:bg-ink/90 transition-all"
           >
-            Upload Design
+            {design ? "Save Changes" : "Upload Design"}
           </button>
         </form>
       </motion.div>
@@ -852,6 +860,27 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
             type="time" 
             value={formData.endTime}
             onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+            className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-2">
+          <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Travel Fee (Tk)</label>
+          <input 
+            type="number" 
+            value={formData.travelFee}
+            onChange={(e) => setFormData({ ...formData, travelFee: Number(e.target.value) })}
+            className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Pre-payment Amount (Tk)</label>
+          <input 
+            type="number" 
+            value={formData.prepaymentAmount}
+            onChange={(e) => setFormData({ ...formData, prepaymentAmount: Number(e.target.value) })}
             className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
           />
         </div>

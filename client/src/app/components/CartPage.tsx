@@ -2,20 +2,32 @@
 
 import { motion } from "motion/react";
 import { X, Minus, Plus, ShoppingBag, ArrowRight } from "lucide-react";
-import { CartItem } from "../types";
+import { useStore } from "../context/StoreContext";
+import { useRouter } from "next/navigation";
 
-interface CartPageProps {
-  cart: CartItem[];
-  onUpdateQuantity: (id: string, delta: number, selectedSize?: string) => void;
-  onRemove: (id: string, selectedSize?: string) => void;
-  onCheckout: () => void;
-  onContinueShopping: () => void;
-}
+export function CartPage() {
+  const { cart, handleUpdateQuantity, handleRemoveFromCart, setOrders, orders, setCart } = useStore();
+  const router = useRouter();
 
-export function CartPage({ cart, onUpdateQuantity, onRemove, onCheckout, onContinueShopping }: CartPageProps) {
   const subtotal = cart.reduce((acc, item) => {
     return acc + item.price * item.quantity;
   }, 0);
+
+  const handleCheckout = () => {
+    const newOrder = {
+      id: `ORD-${Date.now()}`,
+      items: [...cart],
+      total: subtotal,
+      status: "pending" as const,
+      createdAt: new Date().toISOString(),
+      customerName: "Guest User",
+      customerEmail: "guest@example.com"
+    };
+    setOrders([...orders, newOrder]);
+    setCart([]);
+    alert("Order placed successfully!");
+    router.push("/");
+  };
 
   if (cart.length === 0) {
     return (
@@ -28,7 +40,7 @@ export function CartPage({ cart, onUpdateQuantity, onRemove, onCheckout, onConti
           <p className="text-sm text-ink-muted">Looks like you haven't added anything yet.</p>
         </div>
         <button 
-          onClick={onContinueShopping}
+          onClick={() => router.push("/")}
           className="bg-ink text-bg px-8 lg:px-12 py-5 lg:py-6 text-[10px] uppercase tracking-[0.4em] hover:bg-ink/90 transition-colors"
         >
           Start Shopping
@@ -68,7 +80,7 @@ export function CartPage({ cart, onUpdateQuantity, onRemove, onCheckout, onConti
                     {item.selectedSize && <p className="text-sm text-ink-muted mt-1">Size: {item.selectedSize}</p>}
                   </div>
                   <button 
-                    onClick={() => onRemove(item.id, item.selectedSize)}
+                    onClick={() => handleRemoveFromCart(item.id, item.selectedSize)}
                     className="p-2 text-ink-muted hover:text-ink transition-colors"
                   >
                     <X size={16} />
@@ -78,14 +90,14 @@ export function CartPage({ cart, onUpdateQuantity, onRemove, onCheckout, onConti
                 <div className="flex justify-between items-center pt-4">
                   <div className="flex items-center border border-ink/10 rounded-full px-4 py-2 space-x-6">
                     <button 
-                      onClick={() => onUpdateQuantity(item.id, -1, item.selectedSize)}
+                      onClick={() => handleUpdateQuantity(item.id, -1, item.selectedSize)}
                       className="text-ink-muted hover:text-ink transition-colors"
                     >
-                      <Minus size={14} />
+                      <  Minus size={14} />
                     </button>
                     <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
                     <button 
-                      onClick={() => onUpdateQuantity(item.id, 1, item.selectedSize)}
+                      onClick={() => handleUpdateQuantity(item.id, 1, item.selectedSize)}
                       className="text-ink-muted hover:text-ink transition-colors"
                     >
                       <Plus size={14} />
@@ -119,7 +131,7 @@ export function CartPage({ cart, onUpdateQuantity, onRemove, onCheckout, onConti
             </div>
 
             <button 
-              onClick={onCheckout}
+              onClick={handleCheckout}
               className="w-full bg-ink text-bg py-6 text-[10px] uppercase tracking-[0.4em] hover:bg-ink/90 transition-colors flex items-center justify-center space-x-3 group"
             >
               <span>Checkout</span>
@@ -127,7 +139,7 @@ export function CartPage({ cart, onUpdateQuantity, onRemove, onCheckout, onConti
             </button>
 
             <button 
-              onClick={onContinueShopping}
+              onClick={() => router.push("/")}
               className="w-full text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink transition-colors"
             >
               Continue Shopping

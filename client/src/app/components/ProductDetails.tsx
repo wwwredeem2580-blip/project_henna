@@ -4,14 +4,16 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Product } from "../types";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { useStore } from "../context/StoreContext";
+import { useRouter } from "next/navigation";
 
 interface ProductDetailsProps {
   product: Product;
-  onBack: () => void;
-  onAddToCart: (product: Product, selectedSize?: string) => void;
 }
 
-export function ProductDetails({ product, onBack, onAddToCart }: ProductDetailsProps) {
+export function ProductDetails({ product }: ProductDetailsProps) {
+  const { handleAddToCart } = useStore();
+  const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(
     product.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined
@@ -43,11 +45,11 @@ export function ProductDetails({ product, onBack, onAddToCart }: ProductDetailsP
       {/* Left Content */}
       <div className="flex-1 px-6 lg:px-12 py-12 lg:py-32 flex flex-col justify-center max-w-2xl order-2 lg:order-1">
         <button 
-          onClick={onBack}
+          onClick={() => router.push("/")}
           className="flex items-center space-x-2 text-ink-muted hover:text-ink transition-colors mb-8 lg:mb-12 group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[10px] uppercase tracking-widest">Back to Boutique</span>
+          <span className="text-[10px] uppercase tracking-widest">Back to Shop</span>
         </button>
 
         <div className="space-y-8">
@@ -80,7 +82,7 @@ export function ProductDetails({ product, onBack, onAddToCart }: ProductDetailsP
 
           <div className="flex flex-col space-y-4 max-w-xs">
             <button 
-              onClick={() => onAddToCart(product, selectedSize)}
+              onClick={() => handleAddToCart(product, selectedSize)}
               className="w-full border border-ink py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink hover:text-bg transition-all duration-300"
             >
               Add to Cart
@@ -88,11 +90,16 @@ export function ProductDetails({ product, onBack, onAddToCart }: ProductDetailsP
           </div>
 
           <div className="space-y-4 pt-8 border-t border-ink/5">
-            <p className="text-sm text-ink leading-relaxed font-light">
+            <p className="text-lg text-ink leading-relaxed font-light">
               {product.description}
             </p>
-            <div className="flex space-x-4">
-              <span className="text-xs uppercase tracking-widest text-ink-muted">Stock: {product.stock} units</span>
+            <div className="flex flex-col space-y-2 pt-4">
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${product.stock > 10 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <span className="text-sm font-medium uppercase tracking-widest">
+                  Availability: {product.stock > 0 ? `${product.stock} units in stock` : 'Out of stock'}
+                </span>
+              </div>
               <span className="text-xs uppercase tracking-widest text-ink-muted">Brand: {product.brand}</span>
             </div>
           </div>

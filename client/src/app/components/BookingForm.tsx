@@ -2,21 +2,16 @@
 
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Design, Booking, AvailabilitySettings } from "../types";
+import { Booking } from "../types";
 import { Check, X } from "lucide-react";
 import { CustomDropdown } from "./ui/CustomDropdown";
 import { CustomCalendar } from "./ui/CustomCalendar";
+import { useStore } from "../context/StoreContext";
+import { useRouter } from "next/navigation";
 
-interface BookingFormProps {
-  selectedDesign: Design | null;
-  onClearDesign: () => void;
-  onAddBooking: (booking: Booking) => void;
-  bookings: Booking[];
-  availabilitySettings: AvailabilitySettings;
-  onBrowseDesigns: () => void;
-}
-
-export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, bookings, availabilitySettings, onBrowseDesigns }: BookingFormProps) {
+export function BookingForm() {
+  const { designs, selectedDesign, setSelectedDesign, bookings, setBookings, availabilitySettings } = useStore();
+  const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -24,11 +19,17 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
     date: "",
     phone: "",
     location: "",
+    locationType: "artist_location" as "artist_location" | "user_location",
     eventType: "wedding",
     people: "1",
     info: "",
     time: ""
   });
+
+  const [personDesigns, setPersonDesigns] = useState<Record<number, string>>({});
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentStep, setPaymentStep] = useState(1);
+  const [transactionId, setTransactionId] = useState("");
 
   const bookedDates = bookings.filter(b => b.status === "confirmed").map(b => b.date);
 
@@ -39,8 +40,6 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
     { value: "other", label: "Other" },
   ];
 
-  // Generate time slots based on availability settings
-  // E.g. "12:30" to "22:00" in 30 min intervals
   const generateTimeSlots = () => {
     const slots = [];
     let [startH, startM] = availabilitySettings.startTime.split(":").map(Number);
@@ -68,17 +67,51 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
 
   const timeOptions = generateTimeSlots();
 
+  const calculateTotal = () => {
+    let designTotal = 0;
+    const numPeople = parseInt(formData.people) || 1;
+
+    if (numPeople > 1) {
+      for (let i = 0; i < numPeople; i++) {
+        const dId = personDesigns[i] || selectedDesign?.id;
+        const design = designs.find(d => d.id === dId);
+        designTotal += design?.price || 0;
+      }
+    } else {
+      designTotal = selectedDesign?.price || 0;
+    }
+
+    const travelFee = formData.locationType === "user_location" ? availabilitySettings.travelFee : 0;
+    return designTotal + travelFee;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowPaymentModal(true);
+  };
+
+  const confirmBooking = () => {
+    const numPeople = parseInt(formData.people) || 1;
+    const multiPersonDesigns = numPeople > 1 ? 
+      Array.from({ length: numPeople }).map((_, i) => ({
+        personIndex: i,
+        designId: personDesigns[i] || selectedDesign?.id || ""
+      })) : undefined;
+
     const newBooking: Booking = {
       ...formData,
       id: Date.now().toString(),
       status: "pending",
       designId: selectedDesign?.id,
+      designs: multiPersonDesigns,
+      extraFee: formData.locationType === "user_location" ? availabilitySettings.travelFee : 0,
+      prepaymentAmount: availabilitySettings.prepaymentAmount,
+      transactionId: transactionId,
       createdAt: new Date().toISOString()
     };
-    onAddBooking(newBooking);
+    setBookings([...bookings, newBooking]);
     setSubmitted(true);
+    setShowPaymentModal(false);
   };
 
   if (submitted) {
@@ -99,17 +132,18 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
           </div>
           <h2 className="text-3xl font-serif">Prebooking Successful</h2>
           <p className="text-sm text-ink-muted leading-relaxed">
-            Prebooking successful, you will be getting a booking confirmation callback.
+            You will recieve confirmation callback from us soon. Thanks for choosing Ria’s Henna Artistry.
           </p>
           <button 
             onClick={() => {
               setSubmitted(false);
               setFormData({...formData, date: "", time: "", info: ""}); // Reset some fields
-              onClearDesign();
+              setSelectedDesign(null);
+              router.push("/");
             }}
             className="mt-8 bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all w-full"
           >
-            Close
+            Close & Return Home
           </button>
         </motion.div>
       </div>
@@ -204,15 +238,68 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
             </div>
           </div>
 
+          {parseInt(formData.people) > 1 && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }} 
+              animate={{ opacity: 1, height: "auto" }}
+              className="space-y-6 pt-4 border-t border-ink/5"
+            >
+              <label className="text-[10px] uppercase tracking-widest text-ink-muted block">Design Selection per Person</label>
+              <div className="grid grid-cols-1 gap-6">
+                {Array.from({ length: parseInt(formData.people) }).map((_, i) => (
+                  <div key={i} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-ink/5 rounded-sm">
+                    <span className="text-xs font-serif">Person {i + 1}</span>
+                    <select
+                      value={personDesigns[i] || selectedDesign?.id || ""}
+                      onChange={(e) => setPersonDesigns({ ...personDesigns, [i]: e.target.value })}
+                      className="bg-transparent border-b border-ink/10 py-1 text-xs outline-none focus:border-ink min-w-[200px]"
+                    >
+                      <option value="">Select a design</option>
+                      {designs.map(d => (
+                        <option key={d.id} value={d.id}>{d.title} - Tk {d.price}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          <div className="space-y-4">
+            <label className="text-[10px] uppercase tracking-widest text-ink-muted block">Service Location</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, locationType: "artist_location" })}
+                className={`p-4 border text-[10px] uppercase tracking-widest transition-all ${
+                  formData.locationType === "artist_location" ? "border-ink bg-ink text-bg" : "border-ink/10 hover:border-ink/30"
+                }`}
+              >
+                Come to Our Location
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, locationType: "user_location" })}
+                className={`p-4 border text-[10px] uppercase tracking-widest transition-all ${
+                  formData.locationType === "user_location" ? "border-ink bg-ink text-bg" : "border-ink/10 hover:border-ink/30"
+                }`}
+              >
+                Artist goes to you (+Tk {availabilitySettings.travelFee})
+              </button>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Event Location</label>
+            <label className="text-[10px] uppercase tracking-widest text-ink-muted">
+              {formData.locationType === "user_location" ? "Your Location Address" : "Branch Preference (Optional)"}
+            </label>
             <input 
-              required 
+              required={formData.locationType === "user_location"}
               type="text" 
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors" 
-              placeholder="Venue name or address" 
+              placeholder={formData.locationType === "user_location" ? "House, Road, Area" : "Select a branch or leave empty"} 
             />
           </div>
 
@@ -244,7 +331,7 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
                 <div className="relative aspect-video overflow-hidden rounded-sm">
                   <img src={selectedDesign.images[0]} alt={selectedDesign.title} className="object-cover w-full h-full" referrerPolicy="no-referrer" />
                   <button 
-                    onClick={onClearDesign}
+                    onClick={() => setSelectedDesign(null)}
                     className="absolute top-2 right-2 p-1 bg-ink text-bg rounded-full hover:scale-110 transition-transform"
                   >
                     <X size={12} />
@@ -254,10 +341,20 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
                   <p className="text-xs uppercase tracking-widest text-ink-muted mb-1">Design Choice</p>
                   <p className="text-lg font-serif">{selectedDesign.title}</p>
                 </div>
-                <div className="pt-6 border-t border-ink/5">
+                <div className="pt-6 border-t border-ink/5 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-ink-muted">Service Fee</span>
-                    <span>Starting from $150</span>
+                    <span className="text-ink-muted">Service Total</span>
+                    <span className="font-medium">Tk {calculateTotal() - (formData.locationType === "user_location" ? availabilitySettings.travelFee : 0)}</span>
+                  </div>
+                  {formData.locationType === "user_location" && (
+                    <div className="flex justify-between text-sm text-rose-600">
+                      <span className="">Travel Fee</span>
+                      <span className="font-medium">+Tk {availabilitySettings.travelFee}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-serif pt-2 border-t border-ink/5">
+                    <span>Total Amount</span>
+                    <span>Tk {calculateTotal()}</span>
                   </div>
                 </div>
               </div>
@@ -265,7 +362,7 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
               <div className="py-12 text-center space-y-4">
                 <p className="text-sm text-ink-muted italic">No design selected yet.</p>
                 <button 
-                  onClick={onBrowseDesigns}
+                  onClick={() => router.push("/designs")}
                   type="button"
                   className="text-[10px] uppercase tracking-widest border-b border-ink/20 pb-1"
                 >
@@ -274,6 +371,91 @@ export function BookingForm({ selectedDesign, onClearDesign, onAddBooking, booki
               </div>
             )}
           </div>
+
+          {showPaymentModal && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center px-6">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={() => setShowPaymentModal(false)}
+                className="absolute inset-0 bg-ink/60 backdrop-blur-md"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="relative bg-bg max-w-md w-full p-8 lg:p-10 shadow-2xl rounded-sm text-center"
+              >
+                <button 
+                  onClick={() => setShowPaymentModal(false)}
+                  className="absolute top-4 right-4 p-2 hover:bg-ink/5 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+
+                {paymentStep === 1 ? (
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-serif">Secure Pre-booking</h3>
+                      <p className="text-xs text-ink-muted uppercase tracking-widest">Pre-payment Required</p>
+                    </div>
+                    
+                    <div className="bg-ink/5 p-6 rounded-sm space-y-4">
+                      <p className="text-sm">To confirm your slot, a pre-payment of <span className="font-bold">Tk {availabilitySettings.prepaymentAmount}</span> is required via bKash.</p>
+                      <div className="aspect-square w-48 mx-auto bg-white p-2 border border-ink/10 rounded-sm">
+                        {/* Placeholder for QR Code */}
+                        <div className="w-full h-full bg-ink/5 flex items-center justify-center border-2 border-dashed border-ink/20">
+                          <img src="/images/bkash_qr_placeholder.png" alt="bKash QR" className="w-full h-full object-contain" />
+                          <span className="hidden">bKash QR</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] uppercase tracking-widest text-ink-muted">Scan to pay Tk {availabilitySettings.prepaymentAmount}</p>
+                    </div>
+
+                    <button 
+                      onClick={() => setPaymentStep(2)}
+                      className="w-full bg-ink text-bg py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all"
+                    >
+                      I Have Paid
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-serif">Transaction Details</h3>
+                      <p className="text-xs text-ink-muted uppercase tracking-widest">Verify Your Payment</p>
+                    </div>
+
+                    <div className="space-y-4 text-left">
+                      <label className="text-[10px] uppercase tracking-widest text-ink-muted">bKash Transaction ID</label>
+                      <input 
+                        required
+                        type="text" 
+                        value={transactionId}
+                        onChange={(e) => setTransactionId(e.target.value)}
+                        className="w-full bg-transparent border-b border-ink/10 py-3 focus:border-ink outline-none transition-colors font-mono" 
+                        placeholder="e.g. 8N7X2L9P"
+                      />
+                      <p className="text-[9px] text-ink-muted">Please paste the transaction ID received in your bKash confirmation SMS.</p>
+                    </div>
+
+                    <button 
+                      onClick={confirmBooking}
+                      disabled={!transactionId}
+                      className="w-full bg-ink text-bg py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Confirm & Book Now
+                    </button>
+                    <button 
+                      onClick={() => setPaymentStep(1)}
+                      className="text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink underline"
+                    >
+                      Back to QR Code
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          )}
 
           <div className="p-6 lg:p-10 border border-ink/5 bg-white/50 backdrop-blur-sm rounded-sm space-y-4">
             <h3 className="text-xs uppercase tracking-[0.2em] font-semibold">Booking Policy</h3>

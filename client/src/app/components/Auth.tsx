@@ -1,20 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import React from "react";
+import { motion } from "motion/react";
 import { ArrowRight, Mail, Lock, User, Instagram, Facebook } from "lucide-react";
+import { useStore } from "../context/StoreContext";
+import { useRouter } from "next/navigation";
 
 interface AuthProps {
-  onSuccess: () => void;
-  onSwitchToRegister: () => void;
-  onSwitchToLogin: () => void;
   mode: "login" | "register";
 }
 
-export function Auth({ onSuccess, onSwitchToRegister, onSwitchToLogin, mode }: AuthProps) {
+export function Auth({ mode }: AuthProps) {
+  const { setIsLoggedIn } = useStore();
+  const router = useRouter();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSuccess();
+    setIsLoggedIn(true);
+    router.push("/");
   };
 
   return (
@@ -53,7 +56,9 @@ export function Auth({ onSuccess, onSwitchToRegister, onSwitchToLogin, mode }: A
           <div className="space-y-2 relative">
             <label className="text-[10px] uppercase tracking-widest text-ink-muted">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-0 top-1/2 -translate-y-1/2 text-ink-muted" size={16} />
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-ink-muted">
+                <Mail size={16} />
+              </span>
               <input 
                 required 
                 type="email" 
@@ -66,7 +71,9 @@ export function Auth({ onSuccess, onSwitchToRegister, onSwitchToLogin, mode }: A
           <div className="space-y-2 relative">
             <label className="text-[10px] uppercase tracking-widest text-ink-muted">Password</label>
             <div className="relative">
-              <Lock className="absolute left-0 top-1/2 -translate-y-1/2 text-ink-muted" size={16} />
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-ink-muted">
+                <Lock size={16} />
+              </span>
               <input 
                 required 
                 type="password" 
@@ -78,7 +85,7 @@ export function Auth({ onSuccess, onSwitchToRegister, onSwitchToLogin, mode }: A
 
           <button 
             type="submit"
-            className="w-full bg-ink text-bg py-6 text-[10px] uppercase tracking-[0.4em] hover:bg-ink/90 transition-colors flex items-center justify-center space-x-3 group"
+            className="w-full bg-ink text-bg py-6 text-[10px] uppercase tracking-[0.4em] hover:bg-ink/90 transition-all flex items-center justify-center space-x-3 group"
           >
             <span>{mode === "login" ? "Sign In" : "Create Account"}</span>
             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -107,7 +114,7 @@ export function Auth({ onSuccess, onSwitchToRegister, onSwitchToLogin, mode }: A
           <p className="text-xs text-ink-muted">
             {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
             <button 
-              onClick={mode === "login" ? onSwitchToRegister : onSwitchToLogin}
+              onClick={() => router.push(mode === "login" ? "/register" : "/login")}
               className="text-ink font-semibold border-b border-ink pb-0.5 ml-1"
             >
               {mode === "login" ? "Register now" : "Sign in here"}
