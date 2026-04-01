@@ -86,3 +86,12 @@ export interface Order {
   status: OrderStatus;
   createdAt: string;
 }
+export interface Story {
+  id: string;
+  title: string;
+  thumbnail: string;
+  type: "image" | "video";
+  contentUrl: string;
+  link?: string;
+  linkText?: string;
+}

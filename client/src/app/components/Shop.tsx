@@ -7,6 +7,8 @@ import { Product } from "../types";
 import { useStore } from "../context/StoreContext";
 import { useRouter } from "next/navigation";
 
+import { Stories } from "./Stories";
+
 export function Shop() {
   const { products, handleAddToCart, cartCount } = useStore();
   const router = useRouter();
@@ -19,6 +21,7 @@ export function Shop() {
 
   return (
     <section className="px-6 lg:px-12 py-12 lg:py-24 min-h-screen">
+      <Stories />
       <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-12 lg:mb-20 space-y-6 md:space-y-0">
         <div>
           <h2 className="text-4xl lg:text-5xl font-serif mb-4">Shop</h2>
