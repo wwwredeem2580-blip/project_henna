@@ -3,20 +3,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Play, X, ArrowDown } from "lucide-react";
-
-const GALLERY_ITEMS = [
-  { id: 1, title: "Grand Bridal Legacy", subtitle: "Traditional Wedding Artistry", category: "Weddings", image: "/tour/wedding.png" },
-  { id: 2, title: "Boishakhi Street Fest", subtitle: "A Celebration of Colors", category: "Festivals", image: "/tour/fest.png" },
-  { id: 3, title: "Corporate Elegance", subtitle: "Minimalist Professional Sessions", category: "Corporate", image: "/tour/corporate.png" },
-  { id: 4, title: "Ria’s Personal Journey", subtitle: "A Muse to Henna Art", category: "Legacy", image: "/tour/legacy.png" },
-  { id: 5, title: "Contemporary Fusion", subtitle: "Arabic & Indian Blends", category: "Designs", image: "https://images.unsplash.com/photo-1590593162211-996843477430?q=80&w=800&auto=format&fit=crop" },
-  { id: 6, title: "Eid Celebration", subtitle: "Patterns of Joy & Faith", category: "Festivals", image: "https://images.unsplash.com/photo-1516053894464-9f4460d3767c?q=80&w=800&auto=format&fit=crop" },
-  { id: 7, title: "Intricate Details", subtitle: "A Masterpiece on Skin", category: "Portfolio", image: "https://images.unsplash.com/photo-1505933334113-567ad0030763?q=80&w=800&auto=format&fit=crop" },
-  { id: 8, title: "Minimalist Charm", subtitle: "Simple Beauty, Lasting Impression", category: "Private", image: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=800&auto=format&fit=crop" },
-];
+import { useStore } from "../context/StoreContext";
+import { TourItem } from "../types";
 
 export default function TakeATour() {
+  const { availabilitySettings } = useStore();
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+
+  const tourItems = [...(availabilitySettings.tourItems || [])].sort((a, b) => a.order - b.order);
 
   return (
     <div className="bg-bg text-ink min-h-screen px-6 lg:px-24 py-24">
@@ -49,7 +43,7 @@ export default function TakeATour() {
 
       {/* Grid Gallery */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {GALLERY_ITEMS.map((item, index) => (
+        {tourItems.map((item, index) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 20 }}
@@ -122,7 +116,7 @@ export default function TakeATour() {
               className="w-full max-w-5xl aspect-video bg-ink/5 rounded-2xl overflow-hidden relative group"
             >
               <img 
-                src={GALLERY_ITEMS.find(s => s.id.toString() === activeVideo)?.image} 
+                src={tourItems.find(s => s.id.toString() === activeVideo)?.image} 
                 alt="Video Placeholder"
                 className="w-full h-full object-cover opacity-40 blur-sm"
               />

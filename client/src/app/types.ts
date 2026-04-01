@@ -65,6 +65,19 @@ export interface BlockedSlot {
   reason?: string;
 }
 
+export interface TourItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  description: string;
+  image: string;
+  videoUrl?: string;
+  link?: string;
+  linkText?: string;
+  order: number;
+}
+
 export interface AvailabilitySettings {
   availableDays: number[]; // 0=Sun, 1=Mon, ..., 6=Sat
   startTime: string; // e.g. "12:30"
@@ -73,6 +86,7 @@ export interface AvailabilitySettings {
   prepaymentAmount: number;
   paymentMethods: PaymentMethod[];
   blockedSlots: BlockedSlot[];
+  tourItems: TourItem[];
 }
 
 export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";

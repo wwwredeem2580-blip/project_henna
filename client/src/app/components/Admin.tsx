@@ -12,6 +12,8 @@ import {
   Check, 
   X, 
   Package,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { Design, Product, Booking, Order, BookingStatus, OrderStatus, AvailabilitySettings } from "../types";
 
@@ -816,7 +818,7 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
 
 function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySettings, onUpdate: (s: AvailabilitySettings) => void }) {
   const [formData, setFormData] = useState<AvailabilitySettings>(settings);
-  const [activeSubTab, setActiveSubTab] = useState<"schedule" | "payments" | "blocks">("schedule");
+  const [activeSubTab, setActiveSubTab] = useState<"schedule" | "payments" | "blocks" | "tour">("schedule");
 
   const daysOfWeek = [
     { value: 0, label: "Sunday" },
@@ -844,7 +846,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
   return (
     <div className="max-w-4xl space-y-12">
       <div className="flex border-b border-ink/5 space-x-12">
-        {(["schedule", "payments", "blocks"] as const).map((tab) => (
+        {(["schedule", "payments", "blocks", "tour"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveSubTab(tab)}
@@ -852,7 +854,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
               activeSubTab === tab ? "text-ink font-bold" : "text-ink/40 hover:text-ink/60"
             }`}
           >
-            {tab === "schedule" ? "Schedule" : tab === "payments" ? "Payment Methods" : "Manual Blocks"}
+            {tab === "schedule" ? "Schedule" : tab === "payments" ? "Payment Methods" : tab === "blocks" ? "Manual Blocks" : "Tour & Stories"}
             {activeSubTab === tab && (
               <motion.div layoutId="subtab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-ink" />
             )}
@@ -1120,6 +1122,209 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                 <Plus size={14} />
                 <span>Add Manual Block</span>
               </button>
+            </div>
+          </div>
+        )}
+        {activeSubTab === "tour" && (
+          <div className="space-y-8">
+            <div className="flex justify-between items-end">
+              <div>
+                <h3 className="font-serif text-2xl mb-2">Tour & Stories Management</h3>
+                <p className="text-ink-muted text-sm">Manage the imagery, descriptions, and sequence of your Take a Tour gallery.</p>
+              </div>
+              <button 
+                onClick={() => setFormData({ 
+                  ...formData, 
+                  tourItems: [
+                    ...formData.tourItems, 
+                    { id: Date.now().toString(), title: "New Gallery Item", subtitle: "Genre/Subtitle", category: "Category", description: "", image: "", order: formData.tourItems.length + 1 }
+                  ] 
+                })}
+                className="flex items-center space-x-2 bg-ink text-bg px-6 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-ink/90 transition-all font-bold"
+              >
+                <Plus size={14} />
+                <span>Add New Item</span>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6">
+              {[...formData.tourItems].sort((a, b) => a.order - b.order).map((item, idx) => (
+                <div key={item.id} className="p-8 bg-white border border-ink/5 rounded-sm space-y-8 relative group">
+                  <div className="absolute top-4 right-4 flex space-x-2">
+                    <button 
+                      disabled={idx === 0}
+                      onClick={() => {
+                        const newItems = [...formData.tourItems].sort((a, b) => a.order - b.order);
+                        const tempOrder = newItems[idx].order;
+                        newItems[idx].order = newItems[idx-1].order;
+                        newItems[idx-1].order = tempOrder;
+                        setFormData({ ...formData, tourItems: newItems });
+                      }}
+                      className="p-2 text-ink/40 hover:text-ink disabled:opacity-20 transition-colors"
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button 
+                      disabled={idx === formData.tourItems.length - 1}
+                      onClick={() => {
+                        const newItems = [...formData.tourItems].sort((a, b) => a.order - b.order);
+                        const tempOrder = newItems[idx].order;
+                        newItems[idx].order = newItems[idx+1].order;
+                        newItems[idx+1].order = tempOrder;
+                        setFormData({ ...formData, tourItems: newItems });
+                      }}
+                      className="p-2 text-ink/40 hover:text-ink disabled:opacity-20 transition-colors"
+                    >
+                      <ArrowDown size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setFormData({ ...formData, tourItems: formData.tourItems.filter(i => i.id !== item.id) })}
+                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-colors ml-2"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col lg:flex-row gap-12">
+                    <div className="lg:w-1/3 flex flex-col space-y-4">
+                      <div className="relative aspect-[3/4] bg-bg border border-ink/10 flex items-center justify-center overflow-hidden group/image">
+                        {item.image ? (
+                          <img src={item.image} alt="Tour Item" className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="text-ink/10" size={48} />
+                        )}
+                        <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                           <label className="bg-bg text-ink px-4 py-2 text-[10px] uppercase tracking-widest cursor-pointer hover:bg-ink hover:text-bg transition-colors">
+                              Change Media
+                              <input 
+                                type="file" 
+                                accept="image/*,video/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      const newItems = [...formData.tourItems];
+                                      const itemIdx = newItems.findIndex(i => i.id === item.id);
+                                      newItems[itemIdx] = { ...item, image: reader.result as string };
+                                      setFormData({ ...formData, tourItems: newItems });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                           </label>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Video URL (Optional)</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. legacy_video.mp4"
+                          value={item.videoUrl || ""}
+                          onChange={(e) => {
+                            const newItems = [...formData.tourItems];
+                            const itemIdx = newItems.findIndex(i => i.id === item.id);
+                            newItems[itemIdx] = { ...item, videoUrl: e.target.value };
+                            setFormData({ ...formData, tourItems: newItems });
+                          }}
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif italic text-xs" 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 content-start">
+                      <div className="space-y-2 col-span-2">
+                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Item Title</label>
+                        <input 
+                          type="text" 
+                          value={item.title}
+                          onChange={(e) => {
+                            const newItems = [...formData.tourItems];
+                            const itemIdx = newItems.findIndex(i => i.id === item.id);
+                            newItems[itemIdx] = { ...item, title: e.target.value };
+                            setFormData({ ...formData, tourItems: newItems });
+                          }}
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif text-xl" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Genre / Subtitle</label>
+                        <input 
+                          type="text" 
+                          value={item.subtitle}
+                          onChange={(e) => {
+                            const newItems = [...formData.tourItems];
+                            const itemIdx = newItems.findIndex(i => i.id === item.id);
+                            newItems[itemIdx] = { ...item, subtitle: e.target.value };
+                            setFormData({ ...formData, tourItems: newItems });
+                          }}
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Category (Tab)</label>
+                        <input 
+                          type="text" 
+                          value={item.category}
+                          onChange={(e) => {
+                            const newItems = [...formData.tourItems];
+                            const itemIdx = newItems.findIndex(i => i.id === item.id);
+                            newItems[itemIdx] = { ...item, category: e.target.value };
+                            setFormData({ ...formData, tourItems: newItems });
+                          }}
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif text-rose-800" 
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2">
+                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Full Description</label>
+                        <textarea 
+                          rows={3}
+                          value={item.description}
+                          onChange={(e) => {
+                            const newItems = [...formData.tourItems];
+                            const itemIdx = newItems.findIndex(i => i.id === item.id);
+                            newItems[itemIdx] = { ...item, description: e.target.value };
+                            setFormData({ ...formData, tourItems: newItems });
+                          }}
+                          className="w-full bg-transparent border border-ink/10 p-4 focus:border-ink outline-none transition-colors font-serif leading-relaxed text-sm" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">CTA Link (URL)</label>
+                        <input 
+                          type="text" 
+                          placeholder="/booking or https://..."
+                          value={item.link || ""}
+                          onChange={(e) => {
+                            const newItems = [...formData.tourItems];
+                            const itemIdx = newItems.findIndex(i => i.id === item.id);
+                            newItems[itemIdx] = { ...item, link: e.target.value };
+                            setFormData({ ...formData, tourItems: newItems });
+                          }}
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif italic text-xs" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">CTA Button Text</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Book Now"
+                          value={item.linkText || ""}
+                          onChange={(e) => {
+                            const newItems = [...formData.tourItems];
+                            const itemIdx = newItems.findIndex(i => i.id === item.id);
+                            newItems[itemIdx] = { ...item, linkText: e.target.value };
+                            setFormData({ ...formData, tourItems: newItems });
+                          }}
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif italic text-xs" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

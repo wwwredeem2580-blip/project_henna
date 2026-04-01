@@ -2,55 +2,30 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Story } from "../types";
+import { Story, TourItem } from "../types";
 import { StoryViewer } from "./StoryViewer";
-
-const SAMPLE_STORIES: Story[] = [
-  {
-    id: "1",
-    title: "Our Legacy",
-    thumbnail: "/tour/legacy.png",
-    type: "image",
-    contentUrl: "/tour/legacy.png",
-    link: "/tour",
-    linkText: "Take a Tour"
-  },
-  {
-    id: "2",
-    title: "Grand Weddings",
-    thumbnail: "/tour/wedding.png",
-    type: "image",
-    contentUrl: "/tour/wedding.png",
-    link: "/booking",
-    linkText: "Book Now"
-  },
-  {
-    id: "3",
-    title: "Festivals",
-    thumbnail: "/tour/fest.png",
-    type: "image",
-    contentUrl: "/tour/fest.png",
-    link: "/designs",
-    linkText: "View Designs"
-  },
-  {
-    id: "4",
-    title: "Corporate",
-    thumbnail: "/tour/corporate.png",
-    type: "image",
-    contentUrl: "/tour/corporate.png",
-    link: "/contact",
-    linkText: "Inquire Now"
-  }
-];
+import { useStore } from "../context/StoreContext";
 
 export function Stories() {
+  const { availabilitySettings } = useStore();
   const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
+
+  const stories: Story[] = (availabilitySettings.tourItems || [])
+    .sort((a, b) => a.order - b.order)
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      thumbnail: item.image,
+      type: "image" as const,
+      contentUrl: item.image,
+      link: item.link || "/tour",
+      linkText: item.linkText || "Take a Tour"
+    }));
 
   return (
     <div className="mb-12">
       <div className="flex space-x-6 overflow-x-auto no-scrollbar pb-4 -mx-2 px-2">
-        {SAMPLE_STORIES.map((story, index) => (
+        {stories.map((story, index) => (
           <motion.div
             key={story.id}
             initial={{ opacity: 0, scale: 0.9 }}
@@ -80,7 +55,7 @@ export function Stories() {
       <AnimatePresence>
         {activeStoryIndex !== null && (
           <StoryViewer 
-            stories={SAMPLE_STORIES} 
+            stories={stories} 
             initialIndex={activeStoryIndex} 
             onClose={() => setActiveStoryIndex(null)} 
           />
