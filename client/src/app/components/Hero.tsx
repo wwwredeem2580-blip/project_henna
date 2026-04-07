@@ -2,7 +2,8 @@
 
 import { motion } from "motion/react";
 import { ArrowRight, Leaf, Clock, MapPin, Star } from "lucide-react";
-import { Section } from "./Sidebar";
+
+type Section = "booking" | "shop" | "designs" | "tour";
 
 const TESTIMONIALS = [
   {
