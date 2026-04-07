@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, Plus } from "lucide-react";
 import { Product } from "../types";
 import { useStore } from "../context/StoreContext";
@@ -13,6 +13,7 @@ export function Shop() {
   const { products, handleAddToCart, cartCount } = useStore();
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const categories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
 
   const filteredProducts = activeCategory === "All" 
@@ -74,8 +75,10 @@ export function Shop() {
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAddToCart(product);
+                  setToastMessage(`Added ${product.name} to cart`);
+                  setTimeout(() => setToastMessage(null), 2500);
                 }}
-                className="absolute bottom-6 right-6 w-12 h-12 bg-bg rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500 shadow-sm hover:bg-ink hover:text-bg"
+                className="absolute bottom-6 right-6 w-12 h-12 bg-bg rounded-full flex items-center justify-center opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-4 sm:group-hover:translate-y-0 transition-all duration-500 shadow-sm hover:bg-ink hover:text-bg shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
               >
                 <Plus size={20} />
               </button>
@@ -93,6 +96,20 @@ export function Shop() {
           </motion.div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 50, x: "-50%" }}
+            className="fixed bottom-8 left-1/2 z-[100] bg-ink text-bg px-6 py-4 rounded-full text-xs uppercase tracking-widest font-semibold shadow-2xl flex items-center space-x-3 whitespace-nowrap"
+          >
+            <ShoppingCart size={14} />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
