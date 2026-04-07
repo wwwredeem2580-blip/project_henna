@@ -47,11 +47,12 @@ export default function TakeATour() {
         {tourItems.map((item, index) => (
           <motion.div
             key={item.id}
+            onClick={() => setActiveVideo(item.id.toString())}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ delay: index * 0.05 }}
-            className={`group relative overflow-hidden bg-ink/5 aspect-[3/4] ${
+            className={`group relative overflow-hidden bg-ink/5 aspect-[3/4] cursor-pointer ${
                 index % 3 === 0 ? "lg:col-span-2 lg:aspect-video" : ""
             }`}
           >
@@ -114,20 +115,20 @@ export default function TakeATour() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="w-full max-w-5xl aspect-video bg-ink/5 rounded-2xl overflow-hidden relative group"
+              className="w-full max-w-5xl aspect-[4/3] sm:aspect-video bg-ink/5 rounded-2xl overflow-hidden relative group"
             >
               <img 
                 src={tourItems.find(s => s.id.toString() === activeVideo)?.image} 
                 alt="Video Placeholder"
                 className="w-full h-full object-cover opacity-40 blur-sm"
               />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12 space-y-6">
-                <div className="bg-ink text-bg rounded-full p-8 animate-pulse shadow-2xl text-ink">
-                  <Play size={48} fill="currentColor" className="ml-2" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 sm:p-12 space-y-4 sm:space-y-6">
+                <div className="bg-ink text-bg rounded-full p-4 sm:p-8 animate-pulse shadow-2xl">
+                  <Play className="ml-1 sm:ml-2 w-8 h-8 sm:w-12 sm:h-12" fill="currentColor" />
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-3xl font-serif">Cinematic Experience Coming Soon</h3>
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-ink-muted">Relive the memories</p>
+                <div className="space-y-1 sm:space-y-2">
+                  <h3 className="text-xl sm:text-3xl font-serif px-2">Cinematic Experience Coming Soon</h3>
+                  <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] text-ink-muted">Relive the memories</p>
                 </div>
               </div>
             </motion.div>

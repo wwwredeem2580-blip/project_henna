@@ -846,13 +846,13 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
   };
 
   return (
-    <div className="max-w-4xl space-y-12">
-      <div className="flex border-b border-ink/5 space-x-12">
+    <div className="max-w-4xl space-y-8 lg:space-y-12 w-full">
+      <div className="flex overflow-x-auto space-x-6 lg:space-x-12 border-b border-ink/5 scrollbar-hide pb-1">
         {(["schedule", "payments", "blocks", "tour"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveSubTab(tab)}
-            className={`pb-4 text-[10px] uppercase tracking-[0.2em] transition-all relative ${
+            className={`flex-shrink-0 whitespace-nowrap pb-4 text-[10px] uppercase tracking-[0.2em] transition-all relative ${
               activeSubTab === tab ? "text-ink font-bold" : "text-ink/40 hover:text-ink/60"
             }`}
           >
@@ -986,7 +986,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                     </button>
                   </div>
 
-                  <div className="flex items-center space-x-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
                     <div className="relative w-24 h-24 bg-white border border-ink/10 rounded-sm overflow-hidden flex-shrink-0 flex items-center justify-center">
                       {method.qrCode ? (
                         <img src={method.qrCode} alt="QR Code" className="w-full h-full object-contain" />
@@ -1129,7 +1129,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
         )}
         {activeSubTab === "tour" && (
           <div className="space-y-8">
-            <div className="flex justify-between items-end">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end space-y-4 lg:space-y-0">
               <div>
                 <h3 className="font-serif text-2xl mb-2">Tour & Stories Management</h3>
                 <p className="text-ink-muted text-sm">Manage the imagery, descriptions, and sequence of your Take a Tour gallery.</p>
@@ -1151,8 +1151,8 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
             
             <div className="grid grid-cols-1 gap-6">
               {[...formData.tourItems].sort((a, b) => a.order - b.order).map((item, idx) => (
-                <div key={item.id} className="p-8 bg-white border border-ink/5 rounded-sm space-y-8 relative group">
-                  <div className="absolute top-4 right-4 flex space-x-2">
+                <div key={item.id} className="p-4 sm:p-8 pt-16 sm:pt-16 lg:pt-8 bg-white border border-ink/5 rounded-sm space-y-8 relative group">
+                  <div className="absolute top-4 right-4 flex space-x-1 sm:space-x-2">
                     <button 
                       disabled={idx === 0}
                       onClick={() => {
@@ -1187,7 +1187,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                     </button>
                   </div>
 
-                  <div className="flex flex-col lg:flex-row gap-12">
+                  <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
                     <div className="lg:w-1/3 flex flex-col space-y-4">
                       <div className="relative aspect-[3/4] bg-bg border border-ink/10 flex items-center justify-center overflow-hidden group/image">
                         {item.image ? (
