@@ -45,9 +45,6 @@ export function Stories() {
                 </div>
               </div>
             </div>
-            <p className="text-[10px] text-center mt-2 font-medium tracking-tight text-ink/70 group-hover:text-ink transition-colors uppercase">
-              {story.title}
-            </p>
           </motion.div>
         ))}
       </div>

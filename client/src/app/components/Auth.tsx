@@ -22,16 +22,9 @@ export function Auth({ mode }: AuthProps) {
 
   return (
     <section className="min-h-screen flex flex-col items-center justify-center px-6 lg:px-12 py-12 lg:py-24 bg-bg">
-      <motion.div 
-        key={mode}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md space-y-8 lg:space-y-12"
-      >
+      <div className="w-full max-w-md space-y-8 lg:space-y-12">
         <div className="text-center space-y-4">
-          <h2 className="text-4xl lg:text-5xl font-serif">{mode === "login" ? "Welcome Back" : "Join RongMahal"}</h2>
+          <h2 className="text-4xl lg:text-5xl font-serif">{mode === "login" ? "Welcome Back" : "Join Ria’s Henna"}</h2>
           <p className="text-ink-muted uppercase tracking-widest text-[10px]">
             {mode === "login" ? "Enter your details to continue" : "Create an account for a premium experience"}
           </p>
@@ -128,7 +121,7 @@ export function Auth({ mode }: AuthProps) {
             </button>
           </p>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

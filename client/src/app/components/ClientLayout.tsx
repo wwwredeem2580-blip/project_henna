@@ -5,7 +5,6 @@ import { Sidebar } from "./Sidebar";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
-import { FrozenRoute } from "./FrozenRoute";
 
 export function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -15,22 +14,20 @@ export function ClientLayout({ children }: { children: ReactNode }) {
       <div className="max-w-[1440px] mx-auto min-h-screen flex relative">
         <Sidebar />
         
-        <main className="flex-1 min-h-screen relative overflow-hidden pt-16 lg:pt-0">
-          <AnimatePresence mode="wait">
+        <main className="flex-1 min-h-screen relative pt-16 lg:pt-0">
+          <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={pathname}
               initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0, pointerEvents: "auto" }}
+              exit={{ opacity: 0, y: -10, pointerEvents: "none" }}
               transition={{ 
-                duration: 0.3, 
-                ease: [0.22, 1, 0.36, 1],
+                duration: 0.2,
+                ease: "easeOut",
               }}
-              style={{ width: "100%" }}
+              style={{ width: "100%", position: "relative" }}
             >
-              <FrozenRoute>
-                {children}
-              </FrozenRoute>
+              {children}
             </motion.div>
           </AnimatePresence>
 

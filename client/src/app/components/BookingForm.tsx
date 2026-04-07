@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Booking } from "../types";
-import { Check, X } from "lucide-react";
+import { Check, X, Image as ImageIcon } from "lucide-react";
 import { CustomDropdown } from "./ui/CustomDropdown";
 import { CustomCalendar } from "./ui/CustomCalendar";
 import { useStore } from "../context/StoreContext";
@@ -31,6 +31,21 @@ export function BookingForm() {
   const [paymentStep, setPaymentStep] = useState(1);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [transactionId, setTransactionId] = useState("");
+  const [designSelectionTarget, setDesignSelectionTarget] = useState<number | null>(null);
+
+  // Persistence: Load from localStorage
+  React.useEffect(() => {
+    const savedFormData = localStorage.getItem("booking_form_data");
+    const savedPersonDesigns = localStorage.getItem("booking_person_designs");
+    if (savedFormData) setFormData(JSON.parse(savedFormData));
+    if (savedPersonDesigns) setPersonDesigns(JSON.parse(savedPersonDesigns));
+  }, []);
+
+  // Persistence: Save to localStorage
+  React.useEffect(() => {
+    localStorage.setItem("booking_form_data", JSON.stringify(formData));
+    localStorage.setItem("booking_person_designs", JSON.stringify(personDesigns));
+  }, [formData, personDesigns]);
 
   const generateTimeSlots = (date?: string) => {
     const slots = [];
@@ -152,6 +167,9 @@ export function BookingForm() {
       createdAt: new Date().toISOString()
     };
     setBookings([...bookings, newBooking]);
+    // Clear persistence on success
+    localStorage.removeItem("booking_form_data");
+    localStorage.removeItem("booking_person_designs");
     setSubmitted(true);
     setShowPaymentModal(false);
   };
@@ -287,24 +305,97 @@ export function BookingForm() {
               className="space-y-6 pt-4 border-t border-ink/5"
             >
               <label className="text-[10px] uppercase tracking-widest text-ink-muted block">Design Selection per Person</label>
-              <div className="grid grid-cols-1 gap-6">
-                {Array.from({ length: parseInt(formData.people) }).map((_, i) => (
-                  <div key={i} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-ink/5 rounded-sm">
-                    <span className="text-xs font-serif">Person {i + 1}</span>
-                    <select
-                      value={personDesigns[i] || selectedDesign?.id || ""}
-                      onChange={(e) => setPersonDesigns({ ...personDesigns, [i]: e.target.value })}
-                      className="bg-transparent border-b border-ink/10 py-1 text-xs outline-none focus:border-ink min-w-[200px]"
-                    >
-                      <option value="">Select a design</option>
-                      {designs.map(d => (
-                        <option key={d.id} value={d.id}>{d.title} - Tk {d.price}</option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 gap-4">
+                {Array.from({ length: parseInt(formData.people) }).map((_, i) => {
+                  const selectedId = personDesigns[i] || selectedDesign?.id;
+                  const design = designs.find(d => d.id === selectedId);
+                  
+                  return (
+                    <div key={i} className="flex items-center justify-between p-4 bg-ink/5 rounded-sm group hover:bg-ink/[0.08] transition-colors">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-ink/10 rounded-sm overflow-hidden flex-shrink-0">
+                          {design ? (
+                            <img src={design.images[0]} alt={design.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-ink/20">
+                              <ImageIcon size={20} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase tracking-widest text-ink/40 block">Person {i + 1}</span>
+                          <p className="text-xs font-serif font-medium">{design ? design.title : "No design chosen"}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setDesignSelectionTarget(i)}
+                        className="text-[10px] uppercase tracking-widest border border-ink/10 px-4 py-2 hover:bg-ink hover:text-bg transition-all"
+                      >
+                        {design ? "Change" : "Choose Design"}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
+          )}
+
+          {designSelectionTarget !== null && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center px-6">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={() => setDesignSelectionTarget(null)}
+                className="absolute inset-0 bg-ink/60 backdrop-blur-md"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="relative bg-bg max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl rounded-sm"
+              >
+                <div className="p-8 border-b border-ink/5 flex justify-between items-center bg-bg shrink-0">
+                  <div>
+                    <h3 className="text-2xl font-serif">Select Design</h3>
+                    <p className="text-[10px] uppercase tracking-widest text-ink-muted mt-1">Choosing for Person {designSelectionTarget + 1}</p>
+                  </div>
+                  <button onClick={() => setDesignSelectionTarget(null)} className="p-2 hover:bg-ink/5 rounded-full transition-colors">
+                    <X size={24} />
+                  </button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {designs.map((design) => (
+                      <div 
+                        key={design.id}
+                        onClick={() => {
+                          setPersonDesigns({ ...personDesigns, [designSelectionTarget]: design.id });
+                          setDesignSelectionTarget(null);
+                        }}
+                        className={`group cursor-pointer border rounded-sm overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 ${
+                          (personDesigns[designSelectionTarget] || selectedDesign?.id) === design.id ? "border-ink" : "border-ink/5"
+                        }`}
+                      >
+                        <div className="aspect-square relative overflow-hidden">
+                          <img src={design.images[0]} alt={design.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-[10px] uppercase tracking-[0.3em] text-bg bg-ink px-4 py-2">Select Design</span>
+                          </div>
+                        </div>
+                        <div className="p-4 space-y-2">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-serif text-sm">{design.title}</h4>
+                            <span className="text-[10px] font-bold">Tk {design.price}</span>
+                          </div>
+                          <p className="text-[10px] uppercase tracking-widest text-ink-muted">{design.category}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           )}
 
           <div className="space-y-4">

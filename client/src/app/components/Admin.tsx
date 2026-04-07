@@ -80,13 +80,13 @@ export function Admin() {
       </div>
 
       <div className="min-h-[60vh]">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0, pointerEvents: "auto" }}
+            exit={{ opacity: 0, y: -8, pointerEvents: "none" }}
+            transition={{ duration: 0.15 }}
           >
             {activeTab === "bookings" && (
               <BookingManagement 
@@ -96,7 +96,7 @@ export function Admin() {
                   if (status === "confirmed") {
                     setConfirmingBooking(bookings.find(b => b.id === id) || null);
                   } else {
-                    setBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
+                    setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
                   }
                 }} 
               />
@@ -166,7 +166,9 @@ export function Admin() {
           booking={confirmingBooking}
           onClose={() => setConfirmingBooking(null)}
           onConfirm={(startTime, endTime) => {
-            setBookings(bookings.map(b => b.id === confirmingBooking.id ? { ...b, status: "confirmed", time: startTime, endTime } : b));
+            if (confirmingBooking) {
+              setBookings(prev => prev.map(b => b.id === confirmingBooking.id ? { ...b, status: "confirmed", time: startTime, endTime } : b));
+            }
             setConfirmingBooking(null);
           }}
         />
