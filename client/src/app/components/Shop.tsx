@@ -42,7 +42,7 @@ export function Shop() {
           <button
             key={category}
             onClick={() => setActiveCategory(category)}
-            className={`px-8 py-3 text-sm uppercase tracking-[0.2em] transition-all duration-300 rounded-full border ${
+            className={`px-5 py-2 text-[10px] md:text-xs uppercase md:px-6 tracking-widest transition-all duration-300 rounded-full border ${
               activeCategory === category 
                 ? "bg-ink text-bg border-ink" 
                 : "bg-transparent text-ink border-ink/10 hover:border-ink/30"
