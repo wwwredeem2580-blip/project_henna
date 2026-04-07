@@ -115,12 +115,25 @@ export function CustomCalendar({ value, onChange, label, bookedDates = [], avail
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="absolute z-50 left-0 right-0 mt-2 bg-bg border border-ink/5 shadow-2xl rounded-sm p-4 lg:p-6 w-[calc(100vw-3rem)] sm:w-[320px]"
-          >
+          <>
+            {/* Mobile: full-screen centered modal */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="sm:hidden fixed inset-0 z-[200] bg-ink/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="
+                sm:absolute sm:left-0 sm:right-0 sm:mt-2 sm:z-50 sm:w-[320px]
+                fixed sm:!fixed-none z-[201] left-4 right-4 top-1/2 -translate-y-1/2 sm:translate-y-0 sm:top-auto
+                bg-bg border border-ink/5 shadow-2xl rounded-sm p-4 lg:p-6
+              "
+            >
             <div className="flex justify-between items-center mb-6">
               <h4 className="font-serif text-lg">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h4>
               <div className="flex space-x-2">
@@ -145,6 +158,7 @@ export function CustomCalendar({ value, onChange, label, bookedDates = [], avail
               {renderDays()}
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

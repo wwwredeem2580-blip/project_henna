@@ -20,7 +20,7 @@ export function Shop() {
     : products.filter(p => p.category === activeCategory);
 
   return (
-    <section className="px-6 lg:px-12 py-12 lg:py-24 min-h-screen">
+    <section className="px-4 sm:px-6 lg:px-12 py-12 lg:py-24 min-h-screen w-full overflow-x-hidden">
       <Stories />
       <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-12 lg:mb-20 space-y-6 md:space-y-0">
         <div>

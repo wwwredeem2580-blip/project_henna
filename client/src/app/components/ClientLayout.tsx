@@ -10,11 +10,11 @@ export function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-bg selection:bg-ink selection:text-bg">
+    <div className="min-h-screen bg-bg selection:bg-ink selection:text-bg overflow-x-hidden relative w-full">
       <div className="max-w-[1440px] mx-auto min-h-screen flex relative">
         <Sidebar />
         
-        <main className="flex-1 min-h-screen relative pt-16 lg:pt-0">
+        <main className="flex-1 min-w-0 min-h-screen relative pt-16 lg:pt-0">
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={pathname}

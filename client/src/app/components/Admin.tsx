@@ -50,7 +50,7 @@ export function Admin() {
   });
 
   return (
-    <section className="px-6 lg:px-12 py-12 lg:py-24 min-h-screen bg-bg">
+    <section className="px-4 sm:px-6 lg:px-12 py-12 lg:py-24 min-h-screen bg-bg w-full overflow-x-hidden">
       <div className="mb-16 flex flex-col lg:flex-row lg:justify-between lg:items-end space-y-4 lg:space-y-0">
         <div>
           <h2 className="text-4xl lg:text-5xl font-serif mb-4">Management</h2>
@@ -187,7 +187,7 @@ function BookingManagement({ bookings, availabilitySettings, onUpdateStatus }: {
         <div className="col-span-2 text-right">Actions</div>
       </div>
       {bookings.map((booking) => (
-        <div key={booking.id} className="flex flex-col lg:grid lg:grid-cols-6 px-6 py-8 items-start lg:items-center bg-white/50 border border-ink/5 rounded-sm hover:border-ink/20 transition-all space-y-6 lg:space-y-0">
+        <div key={booking.id} className="flex flex-col lg:grid lg:grid-cols-6 px-4 sm:px-6 py-6 lg:py-8 items-start lg:items-center bg-white/50 border border-ink/5 rounded-sm hover:border-ink/20 transition-all space-y-4 lg:space-y-0">
           <div className="lg:col-span-2 space-y-1">
             <p className="font-serif text-lg">{booking.name}</p>
             <p className="text-[10px] uppercase tracking-widest text-ink-muted">
@@ -1355,7 +1355,7 @@ function ConfirmationModal({ booking, onClose, onConfirm }: { booking: Booking, 
   });
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center px-6 text-ink">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 text-ink">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
