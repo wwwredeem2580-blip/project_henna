@@ -13,6 +13,7 @@ export function BookingForm() {
   const { designs, selectedDesign, setSelectedDesign, bookings, setBookings, availabilitySettings } = useStore();
   const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -46,6 +47,13 @@ export function BookingForm() {
     localStorage.setItem("booking_form_data", JSON.stringify(formData));
     localStorage.setItem("booking_person_designs", JSON.stringify(personDesigns));
   }, [formData, personDesigns]);
+
+  // Clear error when design is selected
+  React.useEffect(() => {
+    if (selectedDesign || Object.keys(personDesigns).length > 0) {
+      setError(null);
+    }
+  }, [selectedDesign, personDesigns]);
 
   const generateTimeSlots = (date?: string) => {
     const slots = [];
@@ -140,6 +148,36 @@ export function BookingForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    const numPeople = parseInt(formData.people) || 1;
+    let allHaveDesigns = true;
+
+    if (numPeople > 1) {
+      for (let i = 0; i < numPeople; i++) {
+        const dId = personDesigns[i] || selectedDesign?.id;
+        if (!dId) {
+          allHaveDesigns = false;
+          break;
+        }
+      }
+    } else {
+      if (!selectedDesign) allHaveDesigns = false;
+    }
+
+    if (!allHaveDesigns) {
+      setError("Please select a design before prebooking.");
+      const serviceSection = document.getElementById("selected-service-section");
+      if (serviceSection) {
+        serviceSection.scrollIntoView({ behavior: "smooth", block: "center" });
+        serviceSection.classList.add("ring-2", "ring-rose-500", "ring-offset-8");
+        setTimeout(() => {
+          serviceSection.classList.remove("ring-2", "ring-rose-500", "ring-offset-8");
+        }, 3000);
+      }
+      return;
+    }
+
     if (availabilitySettings.paymentMethods.length > 0) {
       setSelectedPaymentMethod(availabilitySettings.paymentMethods[0].id);
     }
@@ -447,6 +485,16 @@ export function BookingForm() {
             />
           </div>
 
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="p-4 bg-rose-50 border border-rose-100 text-rose-600 text-[10px] uppercase tracking-widest text-center"
+            >
+              {error}
+            </motion.div>
+          )}
+
           <button 
             type="submit"
             className="w-full bg-ink text-bg py-6 text-[10px] uppercase tracking-[0.4em] hover:bg-ink/90 transition-colors"
@@ -456,7 +504,7 @@ export function BookingForm() {
         </form>
 
         <div className="space-y-8">
-          <div className="p-6 lg:p-10 border border-ink/5 bg-white/50 backdrop-blur-sm rounded-sm">
+          <div id="selected-service-section" className="p-6 lg:p-10 border border-ink/5 bg-white/50 backdrop-blur-sm rounded-sm transition-all duration-500">
             <h3 className="text-xl font-serif mb-6">Selected Service</h3>
             
             {selectedDesign ? (

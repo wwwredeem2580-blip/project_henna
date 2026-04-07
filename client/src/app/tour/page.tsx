@@ -11,8 +11,7 @@ export default function TakeATour() {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
   const tourItems = [...(availabilitySettings.tourItems || [])]
-    .sort((a, b) => a.order - b.order)
-    .slice(0, 4);
+    .sort((a, b) => a.order - b.order);
 
   return (
     <div className="bg-bg text-ink min-h-screen px-6 lg:px-24 py-24">

@@ -111,10 +111,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       { id: "2", title: "Boishakhi Street Fest", subtitle: "A Celebration of Colors", category: "Festivals", description: "Vibrant and energetic designs inspired by the spirit of Boishakh celebrations.", image: "/tour/fest.png", order: 2 },
       { id: "3", title: "Corporate Elegance", subtitle: "Minimalist Professional Sessions", category: "Corporate", description: "Sophisticated and clean patterns perfect for professional environments and events.", image: "/tour/corporate.png", order: 3 },
       { id: "4", title: "Ria’s Personal Journey", subtitle: "A Muse to Henna Art", category: "Legacy", description: "A peek into the artistic evolution of Ria’s Henna Artistry over a decade.", image: "/tour/legacy.png", order: 4 },
-      { id: "5", title: "Contemporary Fusion", subtitle: "Arabic & Indian Blends", category: "Designs", description: "Modern blends of Arabic strokes and Indian fillers for a unique artistic statement.", image: "https://images.unsplash.com/photo-1590593162211-996843477430?q=80&w=800&auto=format&fit=crop", order: 5 },
-      { id: "6", title: "Eid Celebration", subtitle: "Patterns of Joy & Faith", category: "Festivals", description: "Joyous patterns crafted to celebrate the spirit of Eid with elegance.", image: "https://images.unsplash.com/photo-1516053894464-9f4460d3767c?q=80&w=800&auto=format&fit=crop", order: 6 },
-      { id: "7", title: "Intricate Details", subtitle: "A Masterpiece on Skin", category: "Portfolio", description: "Deeply detailed artwork showing the mastery of intricate henna patterns.", image: "https://images.unsplash.com/photo-1505933334113-567ad0030763?q=80&w=800&auto=format&fit=crop", order: 7 },
-      { id: "8", title: "Minimalist Charm", subtitle: "Simple Beauty, Lasting Impression", category: "Private", description: "Understated beauty that leaves a lasting impression through minimalist design.", image: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=800&auto=format&fit=crop", order: 8 },
     ]
   });
 
