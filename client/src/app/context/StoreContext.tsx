@@ -16,7 +16,7 @@ const INITIAL_PRODUCTS: Product[] = [
     brand: "Ria’s Henna Artistry", 
     price: 120, 
     images: [
-      "/images/Henna_100gV2.png",
+      "/images/Henna_Cone.png",
       "/images/Henna_200gV2.png",
       "/images/Henna_1000gV2.png"
     ], 
@@ -24,9 +24,9 @@ const INITIAL_PRODUCTS: Product[] = [
     description: "Our signature organic henna cone is crafted with the finest Rajasthani henna powder, essential oils, and lemon juice. It provides a rich, deep stain that lasts for weeks. Perfect for intricate bridal designs.",
     sizes: ["100g", "200g", "1kg"],
     variantImages: {
-      "100g": "/images/Henna_100gV2.png",
-      "200g": "/images/Henna_200gV2.png",
-      "1kg": "/images/Henna_1000gV2.png"
+      "100g": "/images/Henna_Cone.png",
+      "200g": "/images/Henna_Cone.png",
+      "1kg": "/images/Henna_Cone.png"
     },
     stock: 150
   },
@@ -49,9 +49,14 @@ const INITIAL_PRODUCTS: Product[] = [
     brand: "Naturals", 
     price: 240, 
     images: [
-      "https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=600&auto=format&fit=crop"
-    ], 
+      "/images/Henna_100gV2.png",
+      "/images/Henna_200gV2.png",
+    ],
+    sizes: ["100g", "200g"],
+    variantImages: {
+      "100g": "/images/Henna_100gV2.png",
+      "200g": "/images/Henna_200gV2.png",
+    },
     category: "Hair Mask",
     description: "A nourishing blend of amla, reetha, and shikakai. This herbal hair mask strengthens the roots, prevents hair fall, and adds a natural shine to your tresses.",
     stock: 42

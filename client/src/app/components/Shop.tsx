@@ -9,13 +9,17 @@ import { useRouter } from "next/navigation";
 
 import { Stories } from "./Stories";
 
-// Category images mapping
-const categoryImages: Record<string, string> = {
-  "All": "https://images.unsplash.com/photo-1595981234058-a9302fb97620?w=100&h=100&fit=crop",
-  "Henna Cone": "https://images.unsplash.com/photo-1597154369831-b3a067bbd124?w=100&h=100&fit=crop",
-  "Henna Oil": "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=100&h=100&fit=crop",
-  "Hair Mask": "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=100&h=100&fit=crop",
-  "Henna Powder": "https://images.unsplash.com/photo-1595981234058-a9302fb97620?w=100&h=100&fit=crop",
+// Category images mapping - using local images
+const categoryImages: Record<string, string[]> = {
+  "All": [
+    "/images/Henna_Cone.png",
+    "/images/Henna_100gV2.png",
+    "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop",
+  ],
+  "Henna Cone": ["/images/Henna_Cone.png"],
+  "Henna Powder": ["/images/Henna_100g.png", "/images/Henna_200g.png", "/images/Henna_500g.png"],
+  "Henna Oil": ["https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop"],
+  "Hair Mask": ["/images/Henna_100gV2.png"],
 };
 
 export function Shop() {
@@ -29,12 +33,12 @@ export function Shop() {
     ? products 
     : products.filter(p => p.category === activeCategory);
 
-  // Get a representative image for each category
-  const getCategoryImage = (category: string) => {
+  // Get images for each category
+  const getCategoryImages = (category: string): string[] => {
     if (categoryImages[category]) return categoryImages[category];
     // Find a product from this category to use its image
     const productInCategory = products.find(p => p.category === category);
-    return productInCategory?.images[0] || "https://images.unsplash.com/photo-1595981234058-a9302fb97620?w=100&h=100&fit=crop";
+    return productInCategory?.images ? [productInCategory.images[0]] : ["/images/Henna_Cone.png"];
   };
 
   const handleAddToCartClick = (e: React.MouseEvent, product: Product) => {
@@ -69,28 +73,60 @@ export function Shop() {
 
       {/* Category Filter with Images */}
       <div className="flex flex-wrap gap-4 mb-12">
-        {categories.map(category => (
-          <button
-            key={category}
-            onClick={() => setActiveCategory(category)}
-            className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-300 min-w-[80px] ${
-              activeCategory === category 
-                ? "bg-ink text-bg border-ink" 
-                : "bg-transparent text-ink border-ink/10 hover:border-ink/30"
-            }`}
-          >
-            <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-ink/10 shadow-sm">
-              <img 
-                src={getCategoryImage(category)} 
-                alt={category}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold text-center leading-tight">
-              {category}
-            </span>
-          </button>
-        ))}
+        {categories.map(category => {
+          const images = getCategoryImages(category);
+          const hasMultipleImages = images.length > 1;
+          
+          return (
+            <button
+              key={category}
+              onClick={() => setActiveCategory(category)}
+              className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-300 min-w-[80px] ${
+                activeCategory === category 
+                  ? "bg-ink text-bg border-ink" 
+                  : "bg-transparent text-ink border-ink/10 hover:border-ink/30"
+              }`}
+            >
+              <div className="relative w-14 h-14 flex-shrink-0">
+                {hasMultipleImages ? (
+                  // Stacked images effect
+                  <>
+                    {images.slice(0, 3).map((img, idx) => (
+                      <div
+                        key={idx}
+                        className="absolute w-10 h-10 rounded-md overflow-hidden border border-ink/10 shadow-sm bg-bg"
+                        style={{
+                          left: `${idx * 6}px`,
+                          top: `${idx * 4}px`,
+                          zIndex: idx,
+                          transform: `rotate(${(idx - 1) * 6}deg)`,
+                        }}
+                      >
+                        <img 
+                          src={img} 
+                          alt={`${category} ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  // Single image
+                  <div className="w-14 h-14 rounded-lg overflow-hidden border border-ink/10 shadow-sm">
+                    <img 
+                      src={images[0]} 
+                      alt={category}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+              <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold text-center leading-tight">
+                {category}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-10">
@@ -121,14 +157,14 @@ export function Shop() {
               <div className="flex gap-2 pt-1">
                 <button 
                   onClick={(e) => handleAddToCartClick(e, product)}
-                  className="w-10 h-10 flex items-center justify-center border border-ink/20 rounded-md hover:bg-ink hover:text-bg hover:border-ink transition-all duration-300"
+                  className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center border border-ink/20 rounded-md hover:bg-ink hover:text-bg hover:border-ink transition-all duration-300"
                   title="Add to Cart"
                 >
                   <ShoppingCart size={16} />
                 </button>
                 <button 
                   onClick={(e) => handleOrderNowClick(e, product)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-cta text-white rounded-md text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-cta text-white rounded-md text-[9px] md:text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300"
                 >
                   <span>Order Now</span>
                   <ArrowRight size={12} />
