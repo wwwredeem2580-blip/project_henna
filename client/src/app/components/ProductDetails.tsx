@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Product } from "../types";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useStore } from "../context/StoreContext";
 import { useRouter } from "next/navigation";
 
@@ -80,12 +80,22 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </div>
           )}
 
-          <div className="flex flex-col space-y-4 max-w-xs">
+          <div className="flex flex-col sm:flex-row gap-4 max-w-lg">
             <button 
               onClick={() => handleAddToCart(product, selectedSize)}
-              className="w-full border border-ink py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink hover:text-bg transition-all duration-300"
+              className="flex-1 border border-ink py-4 text-[10px] uppercase tracking-[0.2em] hover:bg-ink hover:text-bg transition-all duration-300"
             >
               Add to Cart
+            </button>
+            <button 
+              onClick={() => {
+                handleAddToCart(product, selectedSize);
+                router.push("/cart");
+              }}
+              className="flex-1 flex items-center justify-center gap-2 py-4 px-6 bg-cta text-white text-[10px] uppercase tracking-[0.2em] hover:bg-cta-hover transition-all duration-300"
+            >
+              <span>Buy Now</span>
+              <ArrowRight size={14} />
             </button>
           </div>
 
