@@ -31,7 +31,7 @@ export function DesignGallery() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.1 }}
-            className="group cursor-pointer"
+            className="group cursor-pointer flex flex-col"
           >
             <div className="relative aspect-[3/4] overflow-hidden mb-3 bg-ink/5">
               <img 
@@ -41,19 +41,21 @@ export function DesignGallery() {
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col flex-1 space-y-2">
               <p className="text-[9px] uppercase tracking-widest text-ink-muted">{design.category}</p>
-              <h3 className="text-md font-medium line-clamp-2">{design.title}</h3>
+              <h3 className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{design.title}</h3>
               <p className="text-base font-bold text-ink">
                 Tk {design.price.toLocaleString()}
               </p>
-              <button 
-                onClick={(e) => handleBookNow(e, design)}
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-cta text-white rounded-md text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300"
-              >
-                <Calendar size={12} />
-                <span>Book Now</span>
-              </button>
+              <div className="mt-auto pt-2">
+                <button 
+                  onClick={(e) => handleBookNow(e, design)}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-cta text-white rounded-md text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300"
+                >
+                  <Calendar size={12} />
+                  <span>Book Now</span>
+                </button>
+              </div>
             </div>
           </motion.div>
         ))}
