@@ -165,10 +165,10 @@ export function Shop() {
                 </button>
                 <button 
                   onClick={(e) => handleOrderNowClick(e, product)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-cta text-white rounded-md text-[9px] md:text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300"
+                  className="flex-1 whitespace-nowrap flex items-center justify-center gap-1.5 py-1.5 px-2 bg-cta text-white rounded-md text-[9px] md:text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300"
                 >
                   <span>Order Now</span>
-                  <ArrowRight size={12} />
+                  <ArrowRight size={10} />
                 </button>
               </div>
             </div>
