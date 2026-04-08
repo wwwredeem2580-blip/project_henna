@@ -92,7 +92,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 handleAddToCart(product, selectedSize);
                 router.push("/cart");
               }}
-              className="flex-1 flex items-center justify-center gap-2 py-4 px-6 bg-cta text-white text-[10px] uppercase tracking-[0.2em] hover:bg-cta-hover transition-all duration-300"
+              className="flex-1 flex items-center justify-center gap-2 py-4 px-6 bg-cta text-white text-[10px] uppercase tracking-[0.2em] hover:bg-cta-hover transition-all duration-300 animate-bounce-cta"
             >
               <span>Buy Now</span>
               <ArrowRight size={14} />

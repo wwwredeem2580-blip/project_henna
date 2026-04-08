@@ -112,10 +112,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ],
     blockedSlots: [],
     tourItems: [
-      { id: "1", title: "Grand Bridal Legacy", subtitle: "Traditional Wedding Artistry", category: "Weddings", description: "Experience the timeless beauty of traditional bridal henna, crafted with precision and passion.", image: "/tour/wedding.png", order: 1 },
-      { id: "2", title: "Boishakhi Street Fest", subtitle: "A Celebration of Colors", category: "Festivals", description: "Vibrant and energetic designs inspired by the spirit of Boishakh celebrations.", image: "/tour/fest.png", order: 2 },
-      { id: "3", title: "Corporate Elegance", subtitle: "Minimalist Professional Sessions", category: "Corporate", description: "Sophisticated and clean patterns perfect for professional environments and events.", image: "/tour/corporate.png", order: 3 },
-      { id: "4", title: "Ria’s Personal Journey", subtitle: "A Muse to Henna Art", category: "Legacy", description: "A peek into the artistic evolution of Ria’s Henna Artistry over a decade.", image: "/tour/legacy.png", order: 4 },
+      { id: "1", title: "Free Delivery", subtitle: "Boishakhi Special Offer", category: "Offer", description: "এই বৈশাখী অফারে সারাদেশে ডেলিভারি চার্জ ফ্রি।", image: "/images/boishakhi_offer.png", order: 1 },
+      { id: "2", title: "Grand Bridal Legacy", subtitle: "Traditional Wedding Artistry", category: "Weddings", description: "Experience the timeless beauty of traditional bridal henna, crafted with precision and passion.", image: "/tour/wedding.png", order: 2 },
+      { id: "3", title: "Boishakhi Street Fest", subtitle: "A Celebration of Colors", category: "Festivals", description: "Vibrant and energetic designs inspired by the spirit of Boishakh celebrations.", image: "/tour/fest.png", order: 3 },
+      { id: "4", title: "Corporate Elegance", subtitle: "Minimalist Professional Sessions", category: "Corporate", description: "Sophisticated and clean patterns perfect for professional environments and events.", image: "/tour/corporate.png", order: 4 },
+      { id: "5", title: "Ria’s Personal Journey", subtitle: "A Muse to Henna Art", category: "Legacy", description: "A peek into the artistic evolution of Ria’s Henna Artistry over a decade.", image: "/tour/legacy.png", order: 5 },
     ]
   });
 

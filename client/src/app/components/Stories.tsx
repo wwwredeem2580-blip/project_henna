@@ -35,7 +35,7 @@ export function Stories() {
             onClick={() => setActiveStoryIndex(0)}
             className="flex-shrink-0 cursor-pointer group w-[80vw] sm:w-[60vw] lg:w-[35vw]"
           >
-            <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[2/1] rounded-xl overflow-hidden border border-ink/10 shadow-lg group-hover:scale-[1.01] transition-transform duration-300">
+            <div className="relative w-full aspect-[16/9] lg:aspect-[18/9] overflow-hidden border border-ink/10 shadow-lg group-hover:scale-[1.01] transition-transform duration-300">
               <img 
                 src={stories[0].thumbnail} 
                 alt={stories[0].title} 
