@@ -4,9 +4,9 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Design, Product, CartItem, Booking, Order, BookingStatus, OrderStatus, AvailabilitySettings } from '../types';
 
 const INITIAL_DESIGNS: Design[] = [
-  { id: "1", title: "Ria’s Henna Exclusive Variant 1", category: "Traditional", images: ["/images/mehendi_design_001.png"], description: "Intricate patterns inspired by Mughal architecture, featuring detailed peacocks and floral motifs.", price: 150 },
-  { id: "2", title: "Ria’s Henna Exclusive Variant 2", category: "Contemporary", images: ["/images/mehendi_design_002.png"], description: "Clean lines and geometric shapes for the modern bride who appreciates subtle elegance.", price: 120 },
-  { id: "3", title: "Ria’s Henna Exclusive Variant 3", category: "Fusion", images: ["/images/mehendi_design_003.png"], description: "Bold Arabic strokes mixed with traditional Indian fillers for a striking, high-contrast look.", price: 200 },
+  { id: "2", title: "Flower Bouquet Design", category: "Contemporary", images: ["/images/mehendi_design_002.png"], description: "Clean lines and geometric shapes for the modern bride who appreciates subtle elegance.", price: 120 },
+  { id: "1", title: "Dynamic Mosque with Sunrise Design", category: "Traditional", images: ["/images/mehendi_design_001.png"], description: "Intricate patterns inspired by Mughal architecture, featuring detailed peacocks and floral motifs.", price: 150 },
+  { id: "3", title: "Arabic Style Design", category: "Fusion", images: ["/images/mehendi_design_003.png"], description: "Bold Arabic strokes mixed with traditional Indian fillers for a striking, high-contrast look.", price: 200 },
 ];
 
 const INITIAL_PRODUCTS: Product[] = [
