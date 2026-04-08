@@ -76,7 +76,7 @@ export default function NotFound() {
                 <span className="text-gray-400">you're lost</span>
               </h1>
               
-              <p className="text-[15px] text-gray-500 mb-10 leading-relaxed font-light">
+              <p className="text-[15px] text-gray-600 mb-10 leading-relaxed">
                 The page you are looking for might have been removed, had its name changed, or is temporarily unavailable. Let's get you back on track.
               </p>
 

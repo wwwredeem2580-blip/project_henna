@@ -28,7 +28,7 @@ export default function TakeATour() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-6xl lg:text-8xl font-serif leading-tight"
+          className="text-6xl lg:text-8xl font-semibold leading-tight"
         >
           A Visual Legacy
         </motion.h1>
@@ -36,7 +36,7 @@ export default function TakeATour() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="text-xl text-ink-muted font-light max-w-xl italic"
+          className="text-xl text-ink-muted max-w-xl italic"
         >
           Explore a decade of artistry across grand weddings, vibrant festivals, and professional corporate fests.
         </motion.p>
@@ -67,11 +67,11 @@ export default function TakeATour() {
                 <span className="text-[9px] uppercase tracking-[0.5em] text-bg/60 mb-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-100">
                     {item.category}
                 </span>
-                <h3 className="text-2xl lg:text-4xl font-serif text-bg mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-200">
+                <h3 className="text-2xl lg:text-4xl font-semibold text-bg mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-200">
                     {item.title}
                 </h3>
                 <div className="w-12 h-px bg-bg/20 my-4 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 delay-300" />
-                <p className="text-xs text-bg/70 italic font-light max-w-xs transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-400">
+                <p className="text-xs text-bg/80 italic max-w-xs transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-400">
                     {item.subtitle}
                 </p>
                 
@@ -127,7 +127,7 @@ export default function TakeATour() {
                   <Play className="ml-1 sm:ml-2 w-8 h-8 sm:w-12 sm:h-12" fill="currentColor" />
                 </div>
                 <div className="space-y-1 sm:space-y-2">
-                  <h3 className="text-xl sm:text-3xl font-serif px-2">Cinematic Experience Coming Soon</h3>
+                  <h3 className="text-xl sm:text-3xl font-semibold px-2">Cinematic Experience Coming Soon</h3>
                   <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] text-ink-muted">Relive the memories</p>
                 </div>
               </div>

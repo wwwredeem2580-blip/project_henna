@@ -114,7 +114,7 @@ export function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps
 
             {/* Content Bottom */}
             <div className="absolute bottom-12 left-0 right-0 p-8 text-center space-y-6">
-              <h3 className="text-3xl font-serif text-white">{currentStory.title}</h3>
+              <h3 className="text-3xl font-semibold text-white">{currentStory.title}</h3>
               {currentStory.link && (
                 <button 
                   onClick={() => {

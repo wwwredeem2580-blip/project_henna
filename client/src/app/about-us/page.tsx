@@ -9,7 +9,7 @@ export default function AboutUs() {
         <motion.h2 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-4xl lg:text-6xl font-serif mb-8"
+          className="text-4xl lg:text-6xl font-semibold mb-8"
         >
           Our Story
         </motion.h2>

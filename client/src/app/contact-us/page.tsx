@@ -11,7 +11,7 @@ export default function ContactUs() {
           <motion.h2 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-4xl lg:text-6xl font-serif mb-8"
+            className="text-4xl lg:text-6xl font-semibold mb-8"
           >
             Get in Touch
           </motion.h2>

@@ -228,7 +228,7 @@ export function BookingForm() {
           <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20">
             <Check className="text-white" size={32} />
           </div>
-          <h2 className="text-3xl font-serif">Prebooking Successful</h2>
+          <h2 className="text-3xl font-semibold">Prebooking Successful</h2>
           <p className="text-sm text-ink-muted leading-relaxed">
             You will recieve confirmation callback from us soon. Thanks for choosing Ria’s Henna Artistry.
           </p>
@@ -251,7 +251,7 @@ export function BookingForm() {
   return (
     <section className="px-6 lg:px-12 py-12 lg:py-24 min-h-screen max-w-5xl">
       <div className="mb-12 lg:mb-16">
-        <h2 className="text-4xl lg:text-5xl font-serif mb-4">Pre-booking</h2>
+        <h2 className="text-4xl lg:text-5xl font-semibold mb-4">Pre-booking</h2>
         <p className="text-ink-muted uppercase tracking-widest text-xs">Secure your date with our professional artists</p>
       </div>
 
@@ -362,7 +362,7 @@ export function BookingForm() {
                         </div>
                         <div className="space-y-1">
                           <span className="text-[10px] uppercase tracking-widest text-ink/40 block">Person {i + 1}</span>
-                          <p className="text-xs font-serif font-medium">{design ? design.title : "No design chosen"}</p>
+                          <p className="text-xs font-medium">{design ? design.title : "No design chosen"}</p>
                         </div>
                       </div>
                       <button
@@ -394,7 +394,7 @@ export function BookingForm() {
               >
                 <div className="p-8 border-b border-ink/5 flex justify-between items-center bg-bg shrink-0">
                   <div>
-                    <h3 className="text-2xl font-serif">Select Design</h3>
+                    <h3 className="text-2xl font-semibold">Select Design</h3>
                     <p className="text-[10px] uppercase tracking-widest text-ink-muted mt-1">Choosing for Person {designSelectionTarget + 1}</p>
                   </div>
                   <button onClick={() => setDesignSelectionTarget(null)} className="p-2 hover:bg-ink/5 rounded-full transition-colors">
@@ -423,7 +423,7 @@ export function BookingForm() {
                         </div>
                         <div className="p-4 space-y-2">
                           <div className="flex justify-between items-start">
-                            <h4 className="font-serif text-sm">{design.title}</h4>
+                            <h4 className="text-sm font-medium">{design.title}</h4>
                             <span className="text-[10px] font-bold">Tk {design.price}</span>
                           </div>
                           <p className="text-[10px] uppercase tracking-widest text-ink-muted">{design.category}</p>
@@ -505,7 +505,7 @@ export function BookingForm() {
 
         <div className="space-y-8">
           <div id="selected-service-section" className="p-6 lg:p-10 border border-ink/5 bg-white/50 backdrop-blur-sm rounded-sm transition-all duration-500">
-            <h3 className="text-xl font-serif mb-6">Selected Service</h3>
+            <h3 className="text-xl font-semibold mb-6">Selected Service</h3>
             
             {selectedDesign ? (
               <div className="space-y-6">
@@ -520,7 +520,7 @@ export function BookingForm() {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-widest text-ink-muted mb-1">Design Choice</p>
-                  <p className="text-lg font-serif">{selectedDesign.title}</p>
+                  <p className="text-lg font-semibold">{selectedDesign.title}</p>
                 </div>
                 <div className="pt-6 border-t border-ink/5 space-y-2">
                   <div className="flex justify-between text-sm">
@@ -533,7 +533,7 @@ export function BookingForm() {
                       <span className="font-medium">+Tk {availabilitySettings.travelFee}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-lg font-serif pt-2 border-t border-ink/5">
+                  <div className="flex justify-between text-lg font-semibold pt-2 border-t border-ink/5">
                     <span>Total Amount</span>
                     <span>Tk {calculateTotal()}</span>
                   </div>
@@ -576,7 +576,7 @@ export function BookingForm() {
                 {paymentStep === 1 ? (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-serif">Secure Pre-booking</h3>
+                      <h3 className="text-2xl font-semibold">Secure Pre-booking</h3>
                       <p className="text-xs text-ink-muted uppercase tracking-widest">Select Payment Method</p>
                     </div>
                     
@@ -631,7 +631,7 @@ export function BookingForm() {
                 ) : (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-serif">Transaction Details</h3>
+                      <h3 className="text-2xl font-semibold">Transaction Details</h3>
                       <p className="text-xs text-ink-muted uppercase tracking-widest">Verify Your Payment</p>
                     </div>
 

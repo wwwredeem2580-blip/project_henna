@@ -105,9 +105,9 @@ export function CustomCalendar({ value, onChange, label, bookedDates = [], avail
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors text-left font-serif"
+        className="w-full flex justify-between items-center bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors text-left"
       >
-        <span className={value ? "text-ink" : "text-ink-muted font-serif italic opacity-50"}>
+        <span className={value ? "text-ink" : "text-ink-muted italic opacity-50"}>
           {value ? new Date(value).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' }) : "Select date"}
         </span>
         <CalendarIcon size={14} className="text-ink-muted" />
@@ -135,7 +135,7 @@ export function CustomCalendar({ value, onChange, label, bookedDates = [], avail
               "
             >
             <div className="flex justify-between items-center mb-6">
-              <h4 className="font-serif text-lg">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h4>
+              <h4 className="font-semibold text-lg">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h4>
               <div className="flex space-x-2">
                 <button type="button" onClick={handlePrevMonth} className="p-1 hover:bg-ink/5 rounded-full transition-colors">
                   <ChevronLeft size={16} />

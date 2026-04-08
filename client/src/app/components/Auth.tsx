@@ -24,7 +24,7 @@ export function Auth({ mode }: AuthProps) {
     <section className="min-h-screen flex flex-col items-center justify-center px-6 lg:px-12 py-12 lg:py-24 bg-bg">
       <div className="w-full max-w-md space-y-8 lg:space-y-12">
         <div className="text-center space-y-4">
-          <h2 className="text-4xl lg:text-5xl font-serif">{mode === "login" ? "Welcome Back" : "Join Ria’s Henna"}</h2>
+          <h2 className="text-4xl lg:text-5xl font-semibold">{mode === "login" ? "Welcome Back" : "Join Ria's Henna"}</h2>
           <p className="text-ink-muted uppercase tracking-widest text-[10px]">
             {mode === "login" ? "Enter your details to continue" : "Create an account for a premium experience"}
           </p>

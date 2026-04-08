@@ -55,7 +55,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         <div className="space-y-8">
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-widest text-ink-muted">{product.category}</p>
-            <h2 className="text-4xl lg:text-5xl font-serif leading-tight">{product.name}</h2>
+            <h2 className="text-4xl lg:text-5xl font-semibold leading-tight">{product.name}</h2>
             <p className="text-xl font-medium mt-4">Tk {product.price.toLocaleString()}</p>
           </div>
 
@@ -90,7 +90,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           <div className="space-y-4 pt-8 border-t border-ink/5">
-            <p className="text-lg text-ink leading-relaxed font-light">
+            <p className="text-lg text-ink leading-relaxed">
               {product.description}
             </p>
             <div className="flex flex-col space-y-2 pt-4">

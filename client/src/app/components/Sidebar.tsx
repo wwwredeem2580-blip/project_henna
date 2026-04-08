@@ -52,7 +52,7 @@ export function Sidebar() {
             <div className="w-8 h-8 relative flex-shrink-0">
                <img src="/logo/logo.png" alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
             </div>
-            <h1 className="text-xl font-serif tracking-tight">Ria’s Henna</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Ria's Henna</h1>
           </Link>
           <button 
             onClick={() => setIsOpen(!isOpen)}
@@ -86,7 +86,7 @@ export function Sidebar() {
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 mb-6 overflow-hidden">
                   <img src="/logo/logo.png" alt="Ria's Henna Artistry" className="w-full h-full object-contain mix-blend-multiply opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
                 </div>
-                <h1 className="text-3xl font-serif tracking-tight leading-none">Ria’s Henna<br />Artistry</h1>
+                <h1 className="text-3xl font-semibold tracking-tight leading-none">Ria's Henna<br />Artistry</h1>
                 <div className="h-0.5 w-0 group-hover:w-8 bg-ink transition-all duration-500 mt-4" />
               </Link>
 
@@ -137,7 +137,7 @@ export function Sidebar() {
                 </div>
               </div>
               <p className="text-[10px] text-ink-muted leading-relaxed">
-                © 2026 Ria’s Henna Artistry.<br />
+                © 2026 Ria's Henna Artistry.<br />
                 Artistry in every stroke.
               </p>
             </div>

@@ -38,9 +38,9 @@ export function CustomDropdown({ options, value, onChange, label }: CustomDropdo
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors text-left font-serif"
+        className="w-full flex justify-between items-center bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors text-left"
       >
-        <span className={selectedOption ? "text-ink" : "text-ink-muted font-serif italic opacity-50"}>
+        <span className={selectedOption ? "text-ink" : "text-ink-muted italic opacity-50"}>
           {selectedOption ? selectedOption.label : "Select option"}
         </span>
         <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
@@ -62,7 +62,7 @@ export function CustomDropdown({ options, value, onChange, label }: CustomDropdo
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`w-full px-4 py-3 text-left text-sm transition-colors hover:bg-ink hover:text-bg font-serif ${
+                className={`w-full px-4 py-3 text-left text-sm transition-colors hover:bg-ink hover:text-bg ${
                   value === option.value ? "bg-ink/5 font-medium" : ""
                 }`}
               >

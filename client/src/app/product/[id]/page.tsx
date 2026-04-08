@@ -14,7 +14,7 @@ export default function ProductPage() {
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <h2 className="text-3xl font-serif mb-4">Product Not Found</h2>
+        <h2 className="text-3xl font-semibold mb-4">Product Not Found</h2>
         <button 
           onClick={() => router.push("/")}
           className="bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-widest"

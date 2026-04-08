@@ -36,7 +36,7 @@ function TestimonialCard({ name, event, text }: { name: string, event: string, t
           <Star key={i} size={14} className="fill-ink text-ink" />
         ))}
       </div>
-      <p className="text-lg md:text-xl font-serif leading-relaxed mb-8">"{text}"</p>
+      <p className="text-lg md:text-xl font-medium leading-relaxed mb-8">"{text}"</p>
       <div>
         <p className="text-xs font-bold uppercase tracking-widest text-ink">{name}</p>
         <p className="text-[10px] text-ink-muted uppercase tracking-[0.2em] mt-1">{event}</p>
@@ -62,7 +62,7 @@ export function Hero({ onNavigate }: HeroProps) {
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <p className="text-xs uppercase tracking-[0.4em] text-ink-muted mb-6">Ria’s Henna Artistry</p>
-            <h2 className="text-5xl md:text-8xl font-serif leading-[1.1] tracking-tight">
+            <h2 className="text-5xl md:text-8xl font-semibold leading-[1.1] tracking-tight">
               Pure henna. <br />
               <span className="italic ml-8 md:ml-24">Genuine artistry.</span>
             </h2>
@@ -74,7 +74,7 @@ export function Hero({ onNavigate }: HeroProps) {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="max-w-2xl"
           >
-            <p className="text-lg md:text-xl text-ink-muted font-light leading-relaxed">
+            <p className="text-lg md:text-xl text-ink-muted leading-relaxed">
               We specialize in custom drawn, bespoke designs using our signature chemical-free henna paste—handcrafted for your most cherished moments.
             </p>
           </motion.div>
@@ -115,7 +115,7 @@ export function Hero({ onNavigate }: HeroProps) {
       <section className="px-6 lg:px-12 py-24 lg:py-32 bg-ink/5">
         <div className="mb-16 lg:mb-20">
           <p className="text-xs uppercase tracking-[0.2em] text-ink-muted font-bold mb-4">Values</p>
-          <h3 className="text-3xl lg:text-5xl font-serif">Why Choose Us</h3>
+          <h3 className="text-3xl lg:text-5xl font-semibold">Why Choose Us</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
@@ -123,8 +123,8 @@ export function Hero({ onNavigate }: HeroProps) {
             <div className="w-12 h-12 rounded-full border border-ink/20 flex items-center justify-center bg-bg shadow-sm">
               <Leaf size={20} className="text-ink" />
             </div>
-            <h4 className="text-xl font-serif">100% Organic & Chemical-Free</h4>
-            <p className="text-sm text-ink-muted leading-relaxed font-light">
+            <h4 className="text-xl font-semibold">100% Organic & Chemical-Free</h4>
+            <p className="text-sm text-ink-muted leading-relaxed">
               We strictly use pure Rajasthani henna powder, essential oils, sugar, and water. Absolutely zero synthetic dyes, preservatives, or harmful additives—meaning it's perfectly safe for all skin types.
             </p>
           </div>
@@ -132,8 +132,8 @@ export function Hero({ onNavigate }: HeroProps) {
             <div className="w-12 h-12 rounded-full border border-ink/20 flex items-center justify-center bg-bg shadow-sm">
               <Clock size={20} className="text-ink" />
             </div>
-            <h4 className="text-xl font-serif">Proven Stain Quality</h4>
-            <p className="text-sm text-ink-muted leading-relaxed font-light">
+            <h4 className="text-xl font-semibold">Proven Stain Quality</h4>
+            <p className="text-sm text-ink-muted leading-relaxed">
               Through a meticulous mixing and resting process, we guarantee a rich, deep color that develops beautifully over 48 hours and is proven to last for weeks without fading prematurely.
             </p>
           </div>
@@ -141,8 +141,8 @@ export function Hero({ onNavigate }: HeroProps) {
             <div className="w-12 h-12 rounded-full border border-ink/20 flex items-center justify-center bg-bg shadow-sm">
               <MapPin size={20} className="text-ink" />
             </div>
-            <h4 className="text-xl font-serif">Reliable & Professional</h4>
-            <p className="text-sm text-ink-muted leading-relaxed font-light">
+            <h4 className="text-xl font-semibold">Reliable & Professional</h4>
+            <p className="text-sm text-ink-muted leading-relaxed">
               Transparent upfront pricing, immediate availability calendar, and guaranteed punctuality for your events. From intimate appointments to broad bridal sessions, we manage your time with absolute respect.
             </p>
           </div>
@@ -162,8 +162,8 @@ export function Hero({ onNavigate }: HeroProps) {
           <div className="space-y-10 order-1 lg:order-2">
             <div className="space-y-6">
               <p className="text-xs uppercase tracking-[0.2em] text-ink-muted font-bold">Services</p>
-              <h3 className="text-3xl lg:text-5xl font-serif">Bridal & Event Artistry</h3>
-              <p className="text-lg text-ink-muted font-light leading-relaxed">
+              <h3 className="text-3xl lg:text-5xl font-semibold">Bridal & Event Artistry</h3>
+              <p className="text-lg text-ink-muted leading-relaxed">
                 Whether you're looking for traditional full-arm bridal masterpieces, contemporary geometric styles for a party, or elegant minimalist designs for Eid, we craft a bespoke henna experience entirely centered around your vision.
               </p>
             </div>
@@ -182,7 +182,7 @@ export function Hero({ onNavigate }: HeroProps) {
       <section className="px-6 lg:px-12 py-24 lg:py-32 bg-ink/5">
         <div className="text-center mb-16 lg:mb-24">
           <p className="text-xs uppercase tracking-[0.2em] text-ink-muted font-bold mb-4">Client Love</p>
-          <h3 className="text-3xl lg:text-5xl font-serif">Stories of Celebration</h3>
+          <h3 className="text-3xl lg:text-5xl font-semibold">Stories of Celebration</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
@@ -207,8 +207,8 @@ export function Hero({ onNavigate }: HeroProps) {
           <div className="space-y-10">
             <div className="space-y-6">
               <p className="text-xs uppercase tracking-[0.2em] text-ink-muted font-bold">Boutique</p>
-              <h3 className="text-3xl lg:text-5xl font-serif">Our Handcrafted Cones</h3>
-              <p className="text-lg text-ink-muted font-light leading-relaxed">
+              <h3 className="text-3xl lg:text-5xl font-semibold">Our Handcrafted Cones</h3>
+              <p className="text-lg text-ink-muted leading-relaxed">
                 We sell the exact same premium organic henna cones that we use on our clients. By producing everything fresh in small studio batches, we ensure unmatched consistency, intense stains, and a silky smooth application every time.
               </p>
             </div>

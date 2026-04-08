@@ -36,7 +36,7 @@ export function CartPage() {
           <ShoppingBag size={28} className="text-ink-muted" />
         </div>
         <div className="text-center space-y-4">
-          <h2 className="text-3xl lg:text-4xl font-serif">Your cart is empty</h2>
+          <h2 className="text-3xl lg:text-4xl font-semibold">Your cart is empty</h2>
           <p className="text-sm text-ink-muted">Looks like you haven't added anything yet.</p>
         </div>
         <button 
@@ -52,7 +52,7 @@ export function CartPage() {
   return (
     <section className="px-6 lg:px-12 py-12 lg:py-24 min-h-screen max-w-6xl">
       <div className="mb-12 lg:mb-20">
-        <h2 className="text-4xl lg:text-5xl font-serif mb-4">Shopping Cart</h2>
+        <h2 className="text-4xl lg:text-5xl font-semibold mb-4">Shopping Cart</h2>
         <p className="text-ink-muted uppercase tracking-widest text-xs">Review your selection before checkout</p>
       </div>
 
@@ -76,7 +76,7 @@ export function CartPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-[10px] uppercase tracking-widest text-ink-muted mb-1">{item.brand}</p>
-                    <h3 className="text-xl font-serif">{item.name}</h3>
+                    <h3 className="text-xl font-semibold">{item.name}</h3>
                     {item.selectedSize && <p className="text-sm text-ink-muted mt-1">Size: {item.selectedSize}</p>}
                   </div>
                   <button 
@@ -113,7 +113,7 @@ export function CartPage() {
         {/* Summary */}
         <div className="space-y-8">
           <div className="p-10 border border-ink/5 bg-white/50 backdrop-blur-sm rounded-sm space-y-8">
-            <h3 className="text-xl font-serif">Order Summary</h3>
+            <h3 className="text-xl font-semibold">Order Summary</h3>
             
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
@@ -125,7 +125,7 @@ export function CartPage() {
                 <span className="text-[10px] uppercase tracking-widest">Calculated at next step</span>
               </div>
               <div className="pt-6 border-t border-ink/5 flex justify-between items-baseline">
-                <span className="text-lg font-serif">Total</span>
+                <span className="text-lg font-semibold">Total</span>
                 <span className="text-2xl font-medium">Tk {subtotal.toLocaleString()}</span>
               </div>
             </div>

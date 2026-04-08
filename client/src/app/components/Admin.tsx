@@ -53,7 +53,7 @@ export function Admin() {
     <section className="px-4 sm:px-6 lg:px-12 py-12 lg:py-24 min-h-screen bg-bg w-full overflow-x-hidden">
       <div className="mb-16 flex flex-col lg:flex-row lg:justify-between lg:items-end space-y-4 lg:space-y-0">
         <div>
-          <h2 className="text-4xl lg:text-5xl font-serif mb-4">Management</h2>
+          <h2 className="text-4xl lg:text-5xl font-semibold mb-4">Management</h2>
           <p className="text-ink-muted uppercase tracking-widest text-xs">Admin Control Center</p>
         </div>
       </div>
@@ -189,7 +189,7 @@ function BookingManagement({ bookings, availabilitySettings, onUpdateStatus }: {
       {bookings.map((booking) => (
         <div key={booking.id} className="flex flex-col lg:grid lg:grid-cols-6 px-4 sm:px-6 py-6 lg:py-8 items-start lg:items-center bg-white/50 border border-ink/5 rounded-sm hover:border-ink/20 transition-all space-y-4 lg:space-y-0">
           <div className="lg:col-span-2 space-y-1">
-            <p className="font-serif text-lg">{booking.name}</p>
+            <p className="font-medium text-lg">{booking.name}</p>
             <p className="text-[10px] uppercase tracking-widest text-ink-muted">
               {booking.eventType} • {booking.locationType === "user_location" ? "Artist Goes to Location" : "Come to Service Location"}
             </p>
@@ -203,7 +203,7 @@ function BookingManagement({ bookings, availabilitySettings, onUpdateStatus }: {
               </div>
             )}
           </div>
-          <div className="text-sm font-light">
+          <div className="text-sm">
             <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Date & Time</span>
             <p>{booking.date}</p>
             <p className="text-[10px] text-ink-muted uppercase tracking-widest mt-0.5">
@@ -268,7 +268,7 @@ function OrderManagement({ orders, onUpdateStatus }: { orders: Order[], onUpdate
       {orders.map((order) => (
         <div key={order.id} className="flex flex-col lg:grid lg:grid-cols-6 px-6 py-8 items-start lg:items-center bg-white/50 border border-ink/5 rounded-sm space-y-6 lg:space-y-0">
           <div className="lg:col-span-2 space-y-1">
-            <p className="font-serif text-lg">{order.customerName}</p>
+            <p className="font-medium text-lg">{order.customerName}</p>
             <p className="text-[10px] text-ink-muted uppercase tracking-widest">#{order.id}</p>
           </div>
           <div className="text-sm font-medium">
@@ -335,7 +335,7 @@ function ProductManagement({ products, onAdd, onEdit, onDelete }: {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-baseline">
-                <h3 className="font-serif text-xl">{product.name}</h3>
+                <h3 className="font-semibold text-xl">{product.name}</h3>
                 <span className="text-sm font-medium">Tk {product.price.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-[10px] uppercase tracking-widest text-ink-muted">
@@ -382,7 +382,7 @@ function DesignManagement({ designs, onAdd, onEdit, onDelete }: {
               </div>
             </div>
             <div className="flex justify-between items-baseline">
-              <h3 className="font-serif text-xl">{design.title}</h3>
+              <h3 className="font-semibold text-xl">{design.title}</h3>
               <p className="text-[10px] uppercase tracking-widest text-ink mt-1 font-medium">Tk {design.price}</p>
             </div>
             <p className="text-[10px] uppercase tracking-widest text-ink-muted">{design.category}</p>
@@ -449,7 +449,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
         className="relative bg-bg w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 lg:p-12 rounded-sm shadow-2xl custom-scrollbar"
       >
         <div className="flex justify-between items-start mb-12">
-          <h3 className="text-3xl lg:text-4xl font-serif">{product ? "Edit Product" : "New Product"}</h3>
+          <h3 className="text-3xl lg:text-4xl font-semibold">{product ? "Edit Product" : "New Product"}</h3>
           <button onClick={onClose} className="p-2 hover:bg-ink/5 rounded-full transition-colors">
             <X size={24} />
           </button>
@@ -705,7 +705,7 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
         className="relative bg-bg w-full max-w-2xl p-6 lg:p-12 rounded-sm shadow-2xl"
       >
         <div className="flex justify-between items-start mb-12">
-          <h3 className="text-3xl lg:text-4xl font-serif">{design ? "Edit Design" : "New Design"}</h3>
+          <h3 className="text-3xl lg:text-4xl font-semibold">{design ? "Edit Design" : "New Design"}</h3>
           <button onClick={onClose} className="p-2 hover:bg-ink/5 rounded-full transition-colors">
             <X size={24} />
           </button>
@@ -868,7 +868,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
         {activeSubTab === "schedule" && (
           <div className="space-y-12">
             <div>
-              <h3 className="font-serif text-2xl mb-2">Availability Schedule</h3>
+              <h3 className="font-semibold text-2xl mb-2">Availability Schedule</h3>
               <p className="text-ink-muted text-sm">Configure which days and times you are available for bookings.</p>
             </div>
 
@@ -942,7 +942,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
         {activeSubTab === "payments" && (
           <div className="space-y-8">
             <div>
-              <h3 className="font-serif text-2xl mb-2">Payment Methods</h3>
+              <h3 className="font-semibold text-2xl mb-2">Payment Methods</h3>
               <p className="text-ink-muted text-sm">Manage methods and QR codes for pre-payment.</p>
             </div>
             
@@ -1038,7 +1038,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
         {activeSubTab === "blocks" && (
           <div className="space-y-8">
             <div>
-              <h3 className="font-serif text-2xl mb-2">Manual Time Blocks</h3>
+              <h3 className="font-semibold text-2xl mb-2">Manual Time Blocks</h3>
               <p className="text-ink-muted text-sm">Block specific times for personal tasks or holidays.</p>
             </div>
             
@@ -1131,7 +1131,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
           <div className="space-y-8">
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end space-y-4 lg:space-y-0">
               <div>
-                <h3 className="font-serif text-2xl mb-2">Tour & Stories Management</h3>
+                <h3 className="font-semibold text-2xl mb-2">Tour & Stories Management</h3>
                 <p className="text-ink-muted text-sm">Manage the imagery, descriptions, and sequence of your Take a Tour gallery.</p>
               </div>
               <button 
@@ -1370,7 +1370,7 @@ function ConfirmationModal({ booking, onClose, onConfirm }: { booking: Booking, 
         className="relative bg-bg w-full max-w-md p-8 rounded-sm shadow-2xl space-y-8"
       >
         <div className="space-y-2">
-          <h3 className="text-2xl font-serif">Confirm Booking</h3>
+          <h3 className="text-2xl font-semibold">Confirm Booking</h3>
           <p className="text-xs text-ink-muted uppercase tracking-widest">Select blocked duration</p>
         </div>
 

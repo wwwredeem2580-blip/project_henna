@@ -25,7 +25,7 @@ export function Shop() {
       <Stories />
       <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-12 lg:mb-20 space-y-6 md:space-y-0">
         <div>
-          <h2 className="text-4xl lg:text-5xl font-serif mb-4">Shop</h2>
+          <h2 className="text-4xl lg:text-5xl font-semibold mb-4">Shop</h2>
           <p className="text-ink-muted uppercase tracking-widest text-xs">Premium products for your beauty rituals</p>
         </div>
         <div 
@@ -53,7 +53,7 @@ export function Shop() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12 lg:gap-y-16">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
         {filteredProducts.map((product, index) => (
           <motion.div
             key={product.id}
@@ -64,7 +64,7 @@ export function Shop() {
             className="group cursor-pointer"
             onClick={() => router.push(`/product/${product.id}`)}
           >
-            <div className="relative aspect-[3/4] overflow-hidden mb-6 bg-ink/5">
+            <div className="relative aspect-[3/4] overflow-hidden mb-3 bg-ink/5">
               <img 
                 src={product.images[0]} 
                 alt={product.name} 
@@ -78,18 +78,18 @@ export function Shop() {
                   setToastMessage(`Added ${product.name} to cart`);
                   setTimeout(() => setToastMessage(null), 2500);
                 }}
-                className="absolute bottom-6 right-6 w-12 h-12 bg-bg rounded-full flex items-center justify-center opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-4 sm:group-hover:translate-y-0 transition-all duration-500 shadow-sm hover:bg-ink hover:text-bg shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
+                className="absolute bottom-3 right-3 w-9 h-9 bg-bg rounded-full flex items-center justify-center opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-4 sm:group-hover:translate-y-0 transition-all duration-500 shadow-sm hover:bg-ink hover:text-bg shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
               >
-                <Plus size={20} />
+                <Plus size={16} />
               </button>
             </div>
-            <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-widest text-ink-muted">{product.brand}</p>
+            <div className="space-y-1">
+              <p className="text-[9px] uppercase tracking-widest text-ink-muted">{product.brand}</p>
               <div className="flex justify-between items-baseline">
-                <h3 className="text-xl lg:text-2xl font-serif">{product.name}</h3>
-                <span className="text-base lg:text-lg font-medium">Tk {product.price.toLocaleString()}</span>
+                <h3 className="text-sm font-medium truncate">{product.name}</h3>
+                <span className="text-xs font-semibold whitespace-nowrap ml-1">Tk {product.price.toLocaleString()}</span>
               </div>
-              <p className="text-sm text-ink-muted line-clamp-2 leading-relaxed">
+              <p className="text-xs text-ink-muted line-clamp-1 leading-relaxed">
                 {product.description}
               </p>
             </div>
