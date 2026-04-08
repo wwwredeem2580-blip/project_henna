@@ -2,12 +2,21 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ShoppingCart, Plus } from "lucide-react";
+import { ShoppingCart, ArrowRight } from "lucide-react";
 import { Product } from "../types";
 import { useStore } from "../context/StoreContext";
 import { useRouter } from "next/navigation";
 
 import { Stories } from "./Stories";
+
+// Category images mapping
+const categoryImages: Record<string, string> = {
+  "All": "https://images.unsplash.com/photo-1595981234058-a9302fb97620?w=100&h=100&fit=crop",
+  "Henna Cone": "https://images.unsplash.com/photo-1597154369831-b3a067bbd124?w=100&h=100&fit=crop",
+  "Henna Oil": "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=100&h=100&fit=crop",
+  "Hair Mask": "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=100&h=100&fit=crop",
+  "Henna Powder": "https://images.unsplash.com/photo-1595981234058-a9302fb97620?w=100&h=100&fit=crop",
+};
 
 export function Shop() {
   const { products, handleAddToCart, cartCount } = useStore();
@@ -19,6 +28,27 @@ export function Shop() {
   const filteredProducts = activeCategory === "All" 
     ? products 
     : products.filter(p => p.category === activeCategory);
+
+  // Get a representative image for each category
+  const getCategoryImage = (category: string) => {
+    if (categoryImages[category]) return categoryImages[category];
+    // Find a product from this category to use its image
+    const productInCategory = products.find(p => p.category === category);
+    return productInCategory?.images[0] || "https://images.unsplash.com/photo-1595981234058-a9302fb97620?w=100&h=100&fit=crop";
+  };
+
+  const handleAddToCartClick = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    handleAddToCart(product);
+    setToastMessage(`Added ${product.name} to cart`);
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  const handleOrderNowClick = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    handleAddToCart(product);
+    router.push("/cart");
+  };
 
   return (
     <section className="px-4 sm:px-6 lg:px-12 py-12 lg:py-24 min-h-screen w-full overflow-x-hidden">
@@ -37,23 +67,33 @@ export function Shop() {
         </div>
       </div>
 
+      {/* Category Filter with Images */}
       <div className="flex flex-wrap gap-4 mb-12">
         {categories.map(category => (
           <button
             key={category}
             onClick={() => setActiveCategory(category)}
-            className={`px-5 py-2 text-[10px] md:text-xs uppercase md:px-6 tracking-widest transition-all duration-300 rounded-full border ${
+            className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-300 min-w-[80px] ${
               activeCategory === category 
                 ? "bg-ink text-bg border-ink" 
                 : "bg-transparent text-ink border-ink/10 hover:border-ink/30"
             }`}
           >
-            {category}
+            <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-ink/10 shadow-sm">
+              <img 
+                src={getCategoryImage(category)} 
+                alt={category}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold text-center leading-tight">
+              {category}
+            </span>
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-10">
         {filteredProducts.map((product, index) => (
           <motion.div
             key={product.id}
@@ -71,27 +111,29 @@ export function Shop() {
                 className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
                 referrerPolicy="no-referrer"
               />
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart(product);
-                  setToastMessage(`Added ${product.name} to cart`);
-                  setTimeout(() => setToastMessage(null), 2500);
-                }}
-                className="absolute bottom-3 right-3 w-9 h-9 bg-bg rounded-full flex items-center justify-center opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-4 sm:group-hover:translate-y-0 transition-all duration-500 shadow-sm hover:bg-ink hover:text-bg shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
-              >
-                <Plus size={16} />
-              </button>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <p className="text-[9px] uppercase tracking-widest text-ink-muted">{product.brand}</p>
-              <div className="flex justify-between items-baseline">
-                <h3 className="text-sm font-medium truncate">{product.name}</h3>
-                <span className="text-xs font-semibold whitespace-nowrap ml-1">Tk {product.price.toLocaleString()}</span>
-              </div>
-              <p className="text-xs text-ink-muted line-clamp-1 leading-relaxed">
-                {product.description}
+              <h3 className="text-sm font-medium truncate">{product.name}</h3>
+              <p className="text-base font-bold text-ink">
+                Tk {product.price.toLocaleString()}
               </p>
+              <div className="flex gap-2 pt-1">
+                <button 
+                  onClick={(e) => handleAddToCartClick(e, product)}
+                  className="w-10 h-10 flex items-center justify-center border border-ink/20 rounded-md hover:bg-ink hover:text-bg hover:border-ink transition-all duration-300"
+                  title="Add to Cart"
+                >
+                  <ShoppingCart size={16} />
+                </button>
+                <button 
+                  onClick={(e) => handleOrderNowClick(e, product)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-cta text-white rounded-md text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300"
+                >
+                  <span>Order Now</span>
+                  <ArrowRight size={12} />
+                </button>
+              </div>
             </div>
           </motion.div>
         ))}

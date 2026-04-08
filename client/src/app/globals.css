@@ -6,6 +6,8 @@
   --color-bg: #f5f5f5;
   --color-ink: #111111;
   --color-ink-muted: #111111cc;
+  --color-cta: #b44d3e;
+  --color-cta-hover: #9a3f32;
 }
 
 @layer base {
