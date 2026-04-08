@@ -73,7 +73,7 @@ export function Sidebar() {
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className={`w-64 border-r border-ink/5 p-8 lg:p-12 flex flex-col justify-between z-50 bg-bg flex-shrink-0 ${
               isDesktop
-                ? 'hidden lg:flex sticky top-0 h-screen overflow-y-auto no-scrollbar'
+                ? 'hidden lg:flex fixed top-0 h-screen overflow-y-auto no-scrollbar'
                 : 'fixed left-0 top-0 h-full overflow-y-auto'
             }`}
           >

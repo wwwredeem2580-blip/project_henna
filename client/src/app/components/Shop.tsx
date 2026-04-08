@@ -57,9 +57,10 @@ export function Shop() {
   return (
     <section className="px-4 sm:px-6 lg:px-12 py-12 lg:py-24 min-h-screen w-full overflow-x-hidden">
       <Stories />
+      <div className="w-full h-[1px] mb-10 bg-ink"></div>
       <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-12 lg:mb-20 space-y-6 md:space-y-0">
         <div>
-          <h2 className="text-4xl lg:text-5xl font-semibold mb-4">Shop</h2>
+          <h2 className="text-4xl lg:text-5xl font-normal mb-4">Our Products</h2>
           <p className="text-ink-muted uppercase tracking-widest text-xs">Premium products for your beauty rituals</p>
         </div>
         <div 

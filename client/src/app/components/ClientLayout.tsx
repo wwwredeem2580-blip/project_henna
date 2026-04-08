@@ -14,7 +14,7 @@ export function ClientLayout({ children }: { children: ReactNode }) {
       <div className="max-w-[1440px] mx-auto min-h-screen flex relative">
         <Sidebar />
         
-        <main className="flex-1 min-w-0 min-h-screen relative pt-16 lg:pt-0">
+        <main className="flex-1 min-w-0 min-h-screen relative pt-16 lg:pt-0 lg:ml-64">
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={pathname}
