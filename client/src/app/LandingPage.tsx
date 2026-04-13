@@ -42,9 +42,11 @@ export default function LandingPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
+        <div className="flex space-x-6 overflow-x-auto no-scrollbar pb-8 -mx-6 px-6 lg:-mx-12 lg:px-12 scroll-smooth">
           {bestSellers.map((product, index) => (
-            <ProductCard key={product.id} product={product} index={index} onAdd={handleAddToCartClick} />
+            <div key={product.id} className="w-[180px] sm:w-[220px] md:w-[260px] lg:w-[300px] flex-shrink-0">
+              <ProductCard product={product} index={index} onAdd={handleAddToCartClick} />
+            </div>
           ))}
         </div>
       </section>
@@ -65,9 +67,11 @@ export default function LandingPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
+        <div className="flex space-x-6 overflow-x-auto no-scrollbar pb-8 -mx-6 px-6 lg:-mx-12 lg:px-12 scroll-smooth">
           {featuredDesigns.map((design, index) => (
-            <DesignCard key={design.id} design={design} index={index} />
+            <div key={design.id} className="w-[180px] sm:w-[220px] md:w-[260px] lg:w-[300px] flex-shrink-0">
+              <DesignCard design={design} index={index} />
+            </div>
           ))}
         </div>
       </section>
@@ -203,7 +207,7 @@ function DesignCard({ design, index }: { design: Design, index: number }) {
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
-      className="group cursor-pointer flex flex-col"
+      className="group cursor-pointer flex flex-col h-full"
       onClick={() => router.push("/designs")}
     >
       <div className="relative aspect-[3/4] overflow-hidden mb-4 bg-ink/5 rounded-sm">

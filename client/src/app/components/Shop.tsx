@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, ArrowRight } from "lucide-react";
 import { Product } from "../types";
 import { useStore } from "../context/StoreContext";
 import { useRouter, useSearchParams } from "next/navigation";
-
-import { Stories } from "./Stories";
-import { useEffect } from "react";
 
 // Category images mapping - using local images
 const categoryImages: Record<string, string[]> = {
@@ -66,8 +63,6 @@ export function Shop() {
 
   return (
     <section className="px-4 sm:px-6 lg:px-12 py-12 lg:py-24 min-h-screen w-full overflow-x-hidden">
-      <Stories />
-      <div className="w-full h-[1px] mb-10 bg-ink"></div>
       <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-12 lg:mb-20 space-y-6 md:space-y-0">
         <div>
           <h2 className="text-4xl lg:text-5xl font-normal mb-4">Our Products</h2>
