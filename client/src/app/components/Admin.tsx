@@ -53,7 +53,7 @@ export function Admin() {
       <div className="mb-16 flex flex-col lg:flex-row lg:justify-between lg:items-end space-y-4 lg:space-y-0">
         <div>
           <h2 className="text-4xl lg:text-5xl font-semibold mb-4">Management</h2>
-          <p className="text-ink-muted uppercase tracking-widest text-xs">Admin Control Center</p>
+          <p className="text-ink/80 uppercase tracking-widest text-xs">Admin Control Center</p>
         </div>
       </div>
 
@@ -62,8 +62,8 @@ export function Admin() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-3 pb-6 text-[10px] uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
-              activeTab === tab.id ? "text-ink font-bold" : "text-ink-muted hover:text-ink"
+            className={`flex items-center space-x-3 pb-6 text-xs uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
+              activeTab === tab.id ? "text-ink font-bold" : "text-ink/80 hover:text-ink"
             }`}
           >
             <tab.icon size={14} />
@@ -193,7 +193,7 @@ export function Admin() {
 function BookingManagement({ bookings, availabilitySettings, onUpdateStatus }: { bookings: Booking[], availabilitySettings: AvailabilitySettings, onUpdateStatus: (id: string, status: BookingStatus) => void }) {
   return (
     <div className="space-y-6">
-      <div className="hidden lg:grid grid-cols-6 px-6 py-4 text-[10px] uppercase tracking-widest text-ink-muted border-b border-ink/5">
+      <div className="hidden lg:grid grid-cols-6 px-6 py-4 text-xs uppercase tracking-widest text-ink/80 font-bold border-b border-ink/5">
         <div className="col-span-2">Client / Event</div>
         <div>Date</div>
         <div>Status</div>
@@ -203,10 +203,10 @@ function BookingManagement({ bookings, availabilitySettings, onUpdateStatus }: {
         <div key={booking.id} className="flex flex-col lg:grid lg:grid-cols-6 px-4 sm:px-6 py-6 lg:py-8 items-start lg:items-center bg-white/50 border border-ink/5 rounded-sm hover:border-ink/20 transition-all space-y-4 lg:space-y-0">
           <div className="lg:col-span-2 space-y-1">
             <p className="font-medium text-lg">{booking.name}</p>
-            <p className="text-[10px] uppercase tracking-widest text-ink-muted">
+            <p className="text-xs uppercase tracking-widest text-ink/80 font-bold">
               {booking.eventType} • {booking.locationType === "user_location" ? "Artist Goes to Location" : "Come to Service Location"}
             </p>
-            <p className="text-xs text-ink-muted">{booking.location}</p>
+            <p className="text-sm text-ink/70">{booking.location}</p>
             {booking.transactionId && (
               <div className="flex items-center space-x-2 mt-1">
                 <span className="text-[10px] uppercase tracking-widest text-ink/40">
@@ -217,14 +217,14 @@ function BookingManagement({ bookings, availabilitySettings, onUpdateStatus }: {
             )}
           </div>
           <div className="text-sm">
-            <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Date & Time</span>
+            <span className="lg:hidden text-xs uppercase tracking-widest text-ink/80 font-bold block mb-1">Date & Time</span>
             <p>{booking.date}</p>
-            <p className="text-[10px] text-ink-muted uppercase tracking-widest mt-0.5">
+            <p className="text-xs text-ink uppercase tracking-widest mt-0.5 font-bold">
               {booking.time} {booking.endTime ? `— ${booking.endTime}` : ""}
             </p>
           </div>
           <div>
-            <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Status</span>
+            <span className="lg:hidden text-xs uppercase tracking-widest text-ink/80 font-bold block mb-1">Status</span>
             <span className={`text-[8px] uppercase tracking-widest px-3 py-1 rounded-full border ${
               booking.status === "pending" ? "border-amber-200 text-amber-600 bg-amber-50" :
               booking.status === "confirmed" ? "border-emerald-200 text-emerald-600 bg-emerald-50" :
@@ -256,7 +256,7 @@ function BookingManagement({ bookings, availabilitySettings, onUpdateStatus }: {
             {booking.status === "confirmed" && (
               <button 
                 onClick={() => onUpdateStatus(booking.id, "completed")}
-                className="w-full lg:w-auto flex items-center justify-center space-x-2 p-3 lg:p-0 text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink border border-ink/10 lg:border-none rounded-sm lg:rounded-none transition-colors"
+                className="w-full lg:w-auto flex items-center justify-center space-x-2 p-3 lg:p-0 text-xs uppercase tracking-widest text-ink/80 font-bold hover:text-ink border border-ink/10 lg:border-none rounded-sm lg:rounded-none transition-colors"
               >
                 <span>Mark Completed</span>
                 <Check size={14} />
@@ -272,7 +272,7 @@ function BookingManagement({ bookings, availabilitySettings, onUpdateStatus }: {
 function OrderManagement({ orders, onUpdateStatus }: { orders: Order[], onUpdateStatus: (id: string, status: OrderStatus) => void }) {
   return (
     <div className="space-y-6">
-      <div className="hidden lg:grid grid-cols-6 px-6 py-4 text-[10px] uppercase tracking-widest text-ink-muted border-b border-ink/5">
+      <div className="hidden lg:grid grid-cols-6 px-6 py-4 text-xs uppercase tracking-widest text-ink/80 font-bold border-b border-ink/5">
         <div className="col-span-2">Customer / Order ID</div>
         <div>Total</div>
         <div>Status</div>
@@ -285,18 +285,18 @@ function OrderManagement({ orders, onUpdateStatus }: { orders: Order[], onUpdate
             <p className="text-[10px] text-ink-muted uppercase tracking-widest">#{order.id}</p>
           </div>
           <div className="text-sm font-medium">
-            <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Total</span>
+            <span className="lg:hidden text-xs uppercase tracking-widest text-ink/80 font-bold block mb-1">Total</span>
             Tk {order.total.toLocaleString()}
           </div>
           <div>
-            <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Status</span>
+            <span className="lg:hidden text-xs uppercase tracking-widest text-ink/80 font-bold block mb-1">Status</span>
             <span className="text-[8px] uppercase tracking-widest px-3 py-1 rounded-full border border-ink/10">
               {order.status}
             </span>
           </div>
           <div className="lg:col-span-2 flex justify-start lg:justify-end space-x-4 w-full">
             <div className="w-full lg:w-auto">
-              <span className="lg:hidden text-[10px] uppercase tracking-widest text-ink-muted block mb-1">Update Status</span>
+              <span className="lg:hidden text-xs uppercase tracking-widest text-ink/80 font-bold block mb-1">Update Status</span>
               <select 
                 value={order.status}
                 onChange={(e) => onUpdateStatus(order.id, e.target.value as OrderStatus)}
@@ -351,7 +351,7 @@ function ProductManagement({ products, onAdd, onEdit, onDelete }: {
                 <h3 className="font-semibold text-xl">{product.name}</h3>
                 <span className="text-sm font-medium">Tk {product.price.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-[10px] uppercase tracking-widest text-ink-muted">
+              <div className="flex justify-between text-xs uppercase tracking-widest text-ink/80 font-bold">
                 <span>{product.category} • {product.brand}</span>
                 <span>Stock: {product.stock}</span>
               </div>
@@ -385,7 +385,7 @@ function DesignManagement({ designs, onAdd, onEdit, onDelete }: {
           <div key={design.id} className="group bg-white/50 border border-ink/5 p-6 rounded-sm hover:border-ink/20 transition-all">
             <div className="aspect-[4/5] overflow-hidden mb-6 bg-ink/5 relative">
               <img src={design.images[0]} alt={design.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-4 right-4 opacity-40 group-hover:opacity-100 transition-opacity">
                 <button onClick={() => onEdit(design)} className="p-2 bg-bg text-ink rounded-full hover:bg-ink hover:text-bg transition-all">
                   <Edit2 size={14} />
                 </button>
@@ -396,9 +396,9 @@ function DesignManagement({ designs, onAdd, onEdit, onDelete }: {
             </div>
             <div className="flex justify-between items-baseline">
               <h3 className="font-semibold text-xl">{design.title}</h3>
-              <p className="text-[10px] uppercase tracking-widest text-ink mt-1 font-medium">Tk {design.price}</p>
+              <p className="text-xs uppercase tracking-widest font-bold">Tk {design.price}</p>
             </div>
-            <p className="text-[10px] uppercase tracking-widest text-ink-muted">{design.category}</p>
+            <p className="text-xs uppercase tracking-widest text-ink/80 font-bold">{design.category}</p>
           </div>
         ))}
       </div>
@@ -479,7 +479,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
         <form className="space-y-10" onSubmit={(e) => { e.preventDefault(); onSave({ ...formData, id: product?.id || Date.now().toString() } as Product); }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Product Name</label>
+              <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Product Name</label>
               <input 
                 required
                 type="text" 
@@ -489,7 +489,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Secondary Title (e.g. Bengali)</label>
+              <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Secondary Title (e.g. Bengali)</label>
               <input 
                 type="text" 
                 value={formData.secondaryName}
@@ -499,7 +499,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center mb-1">
-                <label className="text-[10px] uppercase tracking-widest text-ink-muted">Category</label>
+                <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Category</label>
                 <button 
                   type="button" 
                   onClick={() => setIsCustomCategory(!isCustomCategory)} 
@@ -532,7 +532,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Brand</label>
+              <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Brand</label>
               <input 
                 required
                 type="text" 
@@ -542,7 +542,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Previous Price (Tk)</label>
+              <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Previous Price (Tk)</label>
               <input 
                 type="number" 
                 value={formData.originalPrice || ""}
@@ -551,7 +551,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Current Price (Tk)</label>
+              <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Current Price (Tk)</label>
               <input 
                 required
                 type="number" 
@@ -561,7 +561,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Stock Quantity</label>
+              <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Stock Quantity</label>
               <input 
                 required
                 type="number" 
@@ -573,7 +573,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Available Sizes & Prices (Optional)</label>
+            <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Available Sizes & Prices (Optional)</label>
             <div className="space-y-4">
               {formData.sizes?.map((sizeObj, idx) => {
                 // Handle cases where sizes might be string (migration) or object
@@ -667,7 +667,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Product Images</label>
+            <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Product Images</label>
             
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {formData.images?.filter(url => url.length > 0).map((url, idx) => (
@@ -704,7 +704,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
                   }}
                 />
                 <Plus className="text-ink/30 group-hover:text-ink/60 transition-colors mb-2" size={24} />
-                <span className="text-[10px] uppercase tracking-widest text-ink-muted group-hover:text-ink transition-colors">Add Image</span>
+                <span className="text-xs uppercase tracking-widest text-ink/80 font-bold group-hover:text-ink transition-colors">Add Image</span>
               </div>
             </div>
             {(!formData.images || formData.images.filter(u => u.length > 0).length === 0) && (
@@ -713,7 +713,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Description</label>
+            <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Description</label>
             <textarea 
               required
               rows={4}
@@ -772,7 +772,7 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
         <form className="space-y-10" onSubmit={(e) => { e.preventDefault(); onSave({ ...formData, id: design?.id || Date.now().toString() } as Design); }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Design Title</label>
+              <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Design Title</label>
               <input 
                 required
                 type="text" 
@@ -783,7 +783,7 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center mb-1">
-                <label className="text-[10px] uppercase tracking-widest text-ink-muted">Category</label>
+                <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Category</label>
                 <button 
                   type="button" 
                   onClick={() => setIsCustomCategory(!isCustomCategory)} 
@@ -814,7 +814,7 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
               )}
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Price (Tk)</label>
+              <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Price (Tk)</label>
               <input 
                 required
                 type="number" 
@@ -826,7 +826,7 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Design Image</label>
+            <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Design Image</label>
             <div className="flex items-center space-x-6">
               {formData.images?.[0] ? (
                 <div className="relative w-32 h-32 bg-ink/5 rounded-sm overflow-hidden flex-shrink-0">
@@ -873,7 +873,7 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Description</label>
+            <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Description</label>
             <textarea 
               required
               rows={4}
@@ -925,7 +925,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
   return (
     <div className="max-w-4xl space-y-8 lg:space-y-12 w-full">
       <div className="flex overflow-x-auto space-x-6 lg:space-x-12 border-b border-ink/5 scrollbar-hide pb-1">
-        {(["schedule", "payments", "blocks", "tour"] as const).map((tab) => (
+        {(["schedule", "payments", "blocks", "tour", "policy"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveSubTab(tab)}
@@ -933,7 +933,10 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
               activeSubTab === tab ? "text-ink font-bold" : "text-ink/40 hover:text-ink/60"
             }`}
           >
-            {tab === "schedule" ? "Schedule" : tab === "payments" ? "Payment Methods" : tab === "blocks" ? "Manual Blocks" : "Tour & Stories"}
+            {tab === "schedule" ? "Schedule" : 
+             tab === "payments" ? "Payment Methods" : 
+             tab === "blocks" ? "Manual Blocks" : 
+             tab === "tour" ? "Tour & Stories" : "Booking Policy"}
             {activeSubTab === tab && (
               <motion.div layoutId="subtab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-ink" />
             )}
@@ -950,7 +953,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
             </div>
 
             <div className="space-y-6">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Enabled Days</label>
+              <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Enabled Days</label>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {daysOfWeek.map(day => (
                   <label 
@@ -974,7 +977,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
+                <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Start Time</label>
                 <input 
                   type="time" 
                   value={formData.startTime}
@@ -983,7 +986,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
+                <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">End Time</label>
                 <input 
                   type="time" 
                   value={formData.endTime}
@@ -995,7 +998,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Travel Fee (Tk)</label>
+                <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Travel Fee (Tk)</label>
                 <input 
                   type="number" 
                   value={formData.travelFee}
@@ -1004,7 +1007,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Pre-payment Amount (Tk)</label>
+                <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Pre-payment Amount (Tk)</label>
                 <input 
                   type="number" 
                   value={formData.prepaymentAmount}
@@ -1029,7 +1032,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                   <div className="flex justify-between items-start">
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Method Name</label>
+                        <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Method Name</label>
                         <input 
                           type="text" 
                           value={method.name}
@@ -1042,7 +1045,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Instruction</label>
+                        <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Instruction</label>
                         <input 
                           type="text" 
                           value={method.instruction}
@@ -1072,7 +1075,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                       )}
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] uppercase tracking-widest text-ink-muted block mb-2 font-bold">QR Code Image</label>
+                      <label className="text-xs uppercase tracking-widest text-ink/80 font-bold block mb-2 font-bold">QR Code Image</label>
                       <input 
                         type="file" 
                         accept="image/*"
@@ -1103,7 +1106,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                     { id: Date.now().toString(), name: "New Method", qrCode: "", instruction: "Enter payment instruction here" }
                   ] 
                 })}
-                className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-ink/60 hover:text-ink transition-colors mt-4"
+                className="flex items-center space-x-2 text-xs uppercase tracking-[0.2em] font-bold"
               >
                 <Plus size={14} />
                 <span>Add Payment Method</span>
@@ -1124,7 +1127,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                 <div key={slot.id} className="p-6 bg-white border border-ink/5 rounded-sm flex flex-col md:flex-row md:items-end gap-6">
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Date</label>
+                      <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Date</label>
                       <input 
                         type="date" 
                         value={slot.date}
@@ -1137,7 +1140,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
+                      <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Start Time</label>
                       <input 
                         type="time" 
                         value={slot.startTime}
@@ -1150,7 +1153,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
+                      <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">End Time</label>
                       <input 
                         type="time" 
                         value={slot.endTime}
@@ -1164,7 +1167,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                     </div>
                   </div>
                   <div className="flex-1 space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Reason (Optional)</label>
+                    <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Reason (Optional)</label>
                     <div className="flex items-center space-x-4">
                       <input 
                         type="text" 
@@ -1196,7 +1199,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                     { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], startTime: "09:00", endTime: "10:00", reason: "" }
                   ] 
                 })}
-                className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-ink/60 hover:text-ink transition-colors mt-4"
+                className="flex items-center space-x-2 text-xs uppercase tracking-[0.2em] font-bold"
               >
                 <Plus size={14} />
                 <span>Add Manual Block</span>
@@ -1297,7 +1300,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Video URL (Optional)</label>
+                        <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Video URL (Optional)</label>
                         <input 
                           type="text" 
                           placeholder="e.g. legacy_video.mp4"
@@ -1308,14 +1311,14 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                             newItems[itemIdx] = { ...item, videoUrl: e.target.value };
                             setFormData({ ...formData, tourItems: newItems });
                           }}
-                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif italic text-xs" 
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors text-sm text-ink/80 font-serif italic" 
                         />
                       </div>
                     </div>
 
                     <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 content-start">
                       <div className="space-y-2 col-span-2">
-                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Item Title</label>
+                        <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Item Title</label>
                         <input 
                           type="text" 
                           value={item.title}
@@ -1329,7 +1332,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Genre / Subtitle</label>
+                        <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Genre / Subtitle</label>
                         <input 
                           type="text" 
                           value={item.subtitle}
@@ -1343,7 +1346,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Category (Tab)</label>
+                        <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Category (Tab)</label>
                         <input 
                           type="text" 
                           value={item.category}
@@ -1357,7 +1360,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                         />
                       </div>
                       <div className="space-y-2 col-span-2">
-                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Full Description</label>
+                        <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Full Description</label>
                         <textarea 
                           rows={3}
                           value={item.description}
@@ -1371,7 +1374,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">CTA Link (URL)</label>
+                        <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">CTA Link (URL)</label>
                         <input 
                           type="text" 
                           placeholder="/booking or https://..."
@@ -1382,11 +1385,11 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                             newItems[itemIdx] = { ...item, link: e.target.value };
                             setFormData({ ...formData, tourItems: newItems });
                           }}
-                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif italic text-xs" 
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors text-sm text-ink/80 font-serif italic" 
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">CTA Button Text</label>
+                        <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">CTA Button Text</label>
                         <input 
                           type="text" 
                           placeholder="e.g. Book Now"
@@ -1397,7 +1400,7 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
                             newItems[itemIdx] = { ...item, linkText: e.target.value };
                             setFormData({ ...formData, tourItems: newItems });
                           }}
-                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif italic text-xs" 
+                          className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors text-sm text-ink/80 font-serif italic" 
                         />
                       </div>
                     </div>
@@ -1407,12 +1410,59 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
             </div>
           </div>
         )}
+        {activeSubTab === "policy" && (
+          <div className="space-y-8">
+            <div>
+              <h3 className="font-semibold text-2xl mb-2">Booking Policy</h3>
+              <p className="text-ink/80 text-sm">Update the terms and conditions shown on the pre-booking page.</p>
+            </div>
+            
+            <div className="space-y-4">
+              {(formData.bookingPolicy || []).map((policy, idx) => (
+                <div key={idx} className="flex items-center space-x-4 bg-white p-4 border border-ink/5 rounded-sm group">
+                  <div className="flex-1">
+                    <input 
+                      type="text" 
+                      value={policy}
+                      onChange={(e) => {
+                        const newPolicy = [...(formData.bookingPolicy || [])];
+                        newPolicy[idx] = e.target.value;
+                        setFormData({ ...formData, bookingPolicy: newPolicy });
+                      }}
+                      className="w-full bg-transparent py-2 focus:border-ink outline-none transition-colors font-serif text-sm" 
+                    />
+                  </div>
+                  <button 
+                    onClick={() => setFormData({ 
+                      ...formData, 
+                      bookingPolicy: (formData.bookingPolicy || []).filter((_, i) => i !== idx) 
+                    })}
+                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-full transition-opacity opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              
+              <button 
+                onClick={() => setFormData({ 
+                  ...formData, 
+                  bookingPolicy: [...(formData.bookingPolicy || []), "New policy point"] 
+                })}
+                className="flex items-center space-x-2 bg-ink/5 text-ink px-6 py-4 text-xs uppercase tracking-widest hover:bg-ink hover:text-bg transition-all font-bold w-full justify-center border border-dashed border-ink/10"
+              >
+                <Plus size={14} />
+                <span>Add Policy Point</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="pt-4 flex justify-end">
         <button 
           onClick={handleSave}
-          className="bg-ink text-bg px-12 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+          className="bg-ink text-bg px-12 py-4 text-xs uppercase tracking-[0.3em] font-bold"
         >
           Save All Settings
         </button>
@@ -1441,7 +1491,7 @@ function CategoryManagement({
     const cats = type === 'product' ? productCategories : designCategories;
     const exists = cats.find(c => c.id === cat.id);
     if (exists) {
-      onUpdate(type, cats.map(c => c.id === cat.id ? cat : old));
+      onUpdate(type, cats.map(c => c.id === cat.id ? cat : c));
     } else {
       onUpdate(type, [...cats, cat]);
     }
@@ -1455,11 +1505,11 @@ function CategoryManagement({
         <div className="flex justify-between items-end">
           <div>
             <h3 className="text-2xl font-semibold mb-2">Shop Categories</h3>
-            <p className="text-[10px] uppercase tracking-widest text-ink-muted">Manage categories for your products</p>
+            <p className="text-xs uppercase tracking-widest text-ink/80 font-bold">Manage categories for your products</p>
           </div>
           <button 
             onClick={() => setEditingCategory({ type: 'product' })}
-            className="flex items-center space-x-3 bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+            className="flex items-center space-x-3 bg-ink text-bg px-8 py-4 text-xs uppercase tracking-[0.3em] font-bold"
           >
             <Plus size={14} />
             <span>New Product Category</span>
@@ -1469,7 +1519,7 @@ function CategoryManagement({
           {productCategories.map((cat) => (
             <div key={cat.id} className="group relative aspect-square bg-white shadow-sm border border-ink/5 rounded-xl overflow-hidden">
               <img src={cat.image} alt={cat.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute inset-0 bg-ink/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center space-y-2">
+              <div className="absolute inset-0 bg-ink/20 opacity-40 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center space-y-2">
                 <button 
                   onClick={() => setEditingCategory({ type: 'product', category: cat })}
                   className="bg-bg text-ink p-2 rounded-full hover:bg-ink hover:text-bg transition-colors"
@@ -1498,11 +1548,11 @@ function CategoryManagement({
         <div className="flex justify-between items-end">
           <div>
             <h3 className="text-2xl font-semibold mb-2">Design Categories</h3>
-            <p className="text-[10px] uppercase tracking-widest text-ink-muted">Manage categories for your art portfolio</p>
+            <p className="text-xs uppercase tracking-widest text-ink/80 font-bold">Manage categories for your art portfolio</p>
           </div>
           <button 
             onClick={() => setEditingCategory({ type: 'design' })}
-            className="flex items-center space-x-3 bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+            className="flex items-center space-x-3 bg-ink text-bg px-8 py-4 text-xs uppercase tracking-[0.3em] font-bold"
           >
             <Plus size={14} />
             <span>New Design Category</span>
@@ -1512,7 +1562,7 @@ function CategoryManagement({
           {designCategories.map((cat) => (
             <div key={cat.id} className="group relative aspect-square bg-white shadow-sm border border-ink/5 rounded-xl overflow-hidden">
               <img src={cat.image} alt={cat.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute inset-0 bg-ink/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center space-y-2">
+              <div className="absolute inset-0 bg-ink/20 opacity-40 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center space-y-2">
                 <button 
                   onClick={() => setEditingCategory({ type: 'design', category: cat })}
                   className="bg-bg text-ink p-2 rounded-full hover:bg-ink hover:text-bg transition-colors"
@@ -1581,7 +1631,7 @@ function CategoryModal({
         <div className="flex justify-between items-start">
           <div className="space-y-2">
             <h3 className="text-2xl font-semibold">{category ? "Edit Category" : "New Category"}</h3>
-            <p className="text-[10px] uppercase tracking-widest text-ink-muted">For {type === 'product' ? 'Shop' : 'Designs'}</p>
+            <p className="text-xs uppercase tracking-widest text-ink/80 font-bold">For {type === 'product' ? 'Shop' : 'Designs'}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-ink/5 rounded-full transition-colors">
             <X size={20} />
@@ -1590,7 +1640,7 @@ function CategoryModal({
 
         <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); onSave(formData); }}>
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Category Name</label>
+            <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Category Name</label>
             <input 
               required
               type="text" 
@@ -1602,7 +1652,7 @@ function CategoryModal({
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Category Image</label>
+            <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Category Image</label>
             <div className="flex items-center space-x-6">
               <div className="w-24 h-24 bg-ink/5 rounded-xl overflow-hidden border border-ink/5 flex-shrink-0">
                 {formData.image ? (
@@ -1649,7 +1699,7 @@ function CategoryModal({
 
           <button 
             type="submit"
-            className="w-full bg-ink text-bg py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+            className="w-full bg-ink text-bg py-4 text-xs uppercase tracking-[0.3em] font-bold"
           >
             Save Category
           </button>
@@ -1686,12 +1736,12 @@ function ConfirmationModal({ booking, onClose, onConfirm }: { booking: Booking, 
       >
         <div className="space-y-2">
           <h3 className="text-2xl font-semibold">Confirm Booking</h3>
-          <p className="text-xs text-ink-muted uppercase tracking-widest">Select blocked duration</p>
+          <p className="text-sm text-ink/70 uppercase tracking-widest">Select blocked duration</p>
         </div>
 
         <div className="grid grid-cols-2 gap-8">
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Start Time</label>
+            <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">Start Time</label>
             <input 
               type="time" 
               value={startTime}
@@ -1700,7 +1750,7 @@ function ConfirmationModal({ booking, onClose, onConfirm }: { booking: Booking, 
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">End Time</label>
+            <label className="text-xs uppercase tracking-widest text-ink/80 font-bold">End Time</label>
             <input 
               type="time" 
               value={endTime}
@@ -1713,13 +1763,13 @@ function ConfirmationModal({ booking, onClose, onConfirm }: { booking: Booking, 
         <div className="space-y-4">
           <button 
             onClick={() => onConfirm(startTime, endTime)}
-            className="w-full bg-ink text-bg py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+            className="w-full bg-ink text-bg py-4 text-xs uppercase tracking-[0.3em] font-bold"
           >
             Confirm & Block Time
           </button>
           <button 
             onClick={onClose}
-            className="w-full py-4 text-[10px] uppercase tracking-[0.3em] text-ink-muted hover:text-ink transition-all"
+            className="w-full py-4 text-xs uppercase tracking-[0.3em] text-ink/80 hover:text-ink transition-all"
           >
             Cancel
           </button>

@@ -137,6 +137,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       { id: "dcat1", name: "Traditional", image: "/images/mehendi_design_001.png" },
       { id: "dcat2", name: "Contemporary", image: "/images/mehendi_design_002.png" },
       { id: "dcat3", name: "Fusion", image: "/images/mehendi_design_003.png" }
+    ],
+    bookingPolicy: [
+      "50% deposit required for confirmation",
+      "Cancellations must be made 7 days prior",
+      "Travel fees may apply for outside city limits"
     ]
   });
 

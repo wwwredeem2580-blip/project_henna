@@ -102,6 +102,7 @@ export interface AvailabilitySettings {
   tourItems: TourItem[];
   productCategories: CategoryMetadata[];
   designCategories: CategoryMetadata[];
+  bookingPolicy: string[];
 }
 
 export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";

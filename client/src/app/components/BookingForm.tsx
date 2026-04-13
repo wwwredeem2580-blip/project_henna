@@ -669,10 +669,17 @@ export function BookingForm() {
 
           <div className="p-6 lg:p-10 border border-ink/5 bg-white/50 backdrop-blur-sm rounded-sm space-y-4">
             <h3 className="text-xs uppercase tracking-[0.2em] font-semibold">Booking Policy</h3>
-            <ul className="text-xs text-ink-muted space-y-3 leading-relaxed">
-              <li>• 50% deposit required for confirmation</li>
-              <li>• Cancellations must be made 7 days prior</li>
-              <li>• Travel fees may apply for outside city limits</li>
+            <ul className="text-xs text-ink/80 space-y-3 leading-relaxed">
+              {(availabilitySettings.bookingPolicy || []).map((policy, idx) => (
+                <li key={idx}>• {policy}</li>
+              ))}
+              {(!availabilitySettings.bookingPolicy || availabilitySettings.bookingPolicy.length === 0) && (
+                <>
+                  <li>• 50% deposit required for confirmation</li>
+                  <li>• Cancellations must be made 7 days prior</li>
+                  <li>• Travel fees may apply for outside city limits</li>
+                </>
+              )}
             </ul>
           </div>
         </div>
