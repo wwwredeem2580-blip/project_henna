@@ -735,7 +735,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
   );
 }
 
-function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: () => void, onSave: (d: Design) => void }) {
+function DesignModal({ design, onClose, onSave, designCategories }: { design?: Design, onClose: () => void, onSave: (d: Design) => void, designCategories: string[] }) {
   const [formData, setFormData] = useState<Partial<Design>>(design || {
     title: "",
     category: "Traditional",
@@ -745,7 +745,6 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
   });
 
   const [isCustomCategory, setIsCustomCategory] = useState(false);
-  const designCategories = ["Traditional", "Contemporary", "Arabic", "Minimal"];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
