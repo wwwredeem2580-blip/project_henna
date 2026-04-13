@@ -114,14 +114,14 @@ export function Sidebar() {
 
               <nav className="space-y-6 mt-16 lg:mt-0">
                 {navItems.map((item) => {
-                  const isActive = pathname === item.id || (item.id === "/" && pathname === "/shop");
+                  const isActive = pathname === item.id;
                   return (
                     <Link
                       key={item.id}
                       href={item.id}
                       onClick={handleNavClick}
                       className={`flex items-center space-x-3 text-base tracking-widest uppercase transition-all duration-300 ${
-                        isActive ? "text-ink font-bold" : "text-ink-muted hover:text-ink font-semibold"
+                        isActive ? "text-cta font-bold" : "text-ink-muted hover:text-ink font-semibold"
                       }`}
                     >
                       <span className="flex items-center space-x-2">
@@ -140,7 +140,7 @@ export function Sidebar() {
                       {isActive && (
                         <motion.div 
                           layoutId="active-indicator"
-                          className="h-px w-4 bg-ink"
+                          className="h-px w-4 bg-cta"
                         />
                       )}
                     </Link>
