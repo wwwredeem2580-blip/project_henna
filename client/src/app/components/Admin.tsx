@@ -19,7 +19,7 @@ import { Design, Product, Booking, Order, BookingStatus, OrderStatus, Availabili
 
 import { useStore } from "../context/StoreContext";
 
-type AdminTab = "bookings" | "orders" | "products" | "designs" | "settings";
+type AdminTab = "bookings" | "orders" | "products" | "designs" | "categories" | "settings";
 
 export function Admin() {
   const { 
@@ -41,13 +41,12 @@ export function Admin() {
     { id: "orders", label: "Orders", icon: Package },
     { id: "products", label: "Shop", icon: ShoppingBag },
     { id: "designs", label: "Designs", icon: ImageIcon },
+    { id: "categories", label: "Categories", icon: Package },
     { id: "settings", label: "Settings", icon: Edit2 },
   ];
 
-  const productCategories = Array.from(new Set(products.map(p => p.category)));
-  ["Henna Cone", "Henna Oil", "Hair Mask"].forEach(c => {
-    if (!productCategories.includes(c)) productCategories.push(c);
-  });
+  const productCategoriesList = availabilitySettings.productCategories || [];
+  const designCategoriesList = availabilitySettings.designCategories || [];
 
   return (
     <section className="px-4 sm:px-6 lg:px-12 py-12 lg:py-24 min-h-screen bg-bg w-full overflow-x-hidden">
@@ -123,6 +122,18 @@ export function Admin() {
                 onDelete={(id) => setDesigns(designs.filter(d => d.id !== id))}
               />
             )}
+            {activeTab === "categories" && (
+              <CategoryManagement 
+                productCategories={productCategoriesList}
+                designCategories={designCategoriesList}
+                onUpdate={(type, cats) => {
+                  setAvailabilitySettings({
+                    ...availabilitySettings,
+                    [type === 'product' ? 'productCategories' : 'designCategories']: cats
+                  });
+                }}
+              />
+            )}
             {activeTab === "settings" && (
               <SettingsManagement 
                 settings={availabilitySettings} 
@@ -137,7 +148,7 @@ export function Admin() {
         <ProductModal 
           onClose={() => setIsAddingProduct(false)} 
           onSave={(p) => { setProducts([...products, p]); setIsAddingProduct(false); }}
-          existingCategories={productCategories}
+          existingCategories={productCategoriesList.map(c => c.name)}
         />
       )}
       {isEditingProduct && (
@@ -145,13 +156,14 @@ export function Admin() {
           product={isEditingProduct}
           onClose={() => setIsEditingProduct(null)} 
           onSave={(p) => { setProducts(products.map(old => old.id === p.id ? p : old)); setIsEditingProduct(null); }}
-          existingCategories={productCategories}
+          existingCategories={productCategoriesList.map(c => c.name)}
         />
       )}
       {isAddingDesign && (
         <DesignModal 
           onClose={() => setIsAddingDesign(false)} 
           onSave={(d) => { setDesigns([...designs, d]); setIsAddingDesign(false); }}
+          designCategories={designCategoriesList.map(c => c.name)}
         />
       )}
       {isEditingDesign && (
@@ -159,6 +171,7 @@ export function Admin() {
           design={isEditingDesign}
           onClose={() => setIsEditingDesign(null)} 
           onSave={(d) => { setDesigns(designs.map(old => old.id === d.id ? d : old)); setIsEditingDesign(null); }}
+          designCategories={designCategoriesList.map(c => c.name)}
         />
       )}
       {confirmingBooking && (
@@ -795,8 +808,8 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif"
                 >
+                  <option value="">Select Category</option>
                   {designCategories.map(c => <option key={c} value={c}>{c}</option>)}
-                  {/* Also show any existing categories from designs that are not in the predefined list */}
                 </select>
               )}
             </div>
@@ -1404,6 +1417,244 @@ function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySett
           Save All Settings
         </button>
       </div>
+    </div>
+  );
+}
+
+function CategoryManagement({ 
+  productCategories, 
+  designCategories, 
+  onUpdate 
+}: { 
+  productCategories: CategoryMetadata[], 
+  designCategories: CategoryMetadata[], 
+  onUpdate: (type: 'product' | 'design', cats: CategoryMetadata[]) => void 
+}) {
+  const [editingCategory, setEditingCategory] = useState<{ type: 'product' | 'design', category?: CategoryMetadata } | null>(null);
+
+  const handleDelete = (type: 'product' | 'design', id: string) => {
+    const cats = type === 'product' ? productCategories : designCategories;
+    onUpdate(type, cats.filter(c => c.id !== id));
+  };
+
+  const handleSave = (type: 'product' | 'design', cat: CategoryMetadata) => {
+    const cats = type === 'product' ? productCategories : designCategories;
+    const exists = cats.find(c => c.id === cat.id);
+    if (exists) {
+      onUpdate(type, cats.map(c => c.id === cat.id ? cat : old));
+    } else {
+      onUpdate(type, [...cats, cat]);
+    }
+    setEditingCategory(null);
+  };
+
+  return (
+    <div className="space-y-16">
+      {/* Product Categories */}
+      <div className="space-y-8">
+        <div className="flex justify-between items-end">
+          <div>
+            <h3 className="text-2xl font-semibold mb-2">Shop Categories</h3>
+            <p className="text-[10px] uppercase tracking-widest text-ink-muted">Manage categories for your products</p>
+          </div>
+          <button 
+            onClick={() => setEditingCategory({ type: 'product' })}
+            className="flex items-center space-x-3 bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+          >
+            <Plus size={14} />
+            <span>New Product Category</span>
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          {productCategories.map((cat) => (
+            <div key={cat.id} className="group relative aspect-square bg-white shadow-sm border border-ink/5 rounded-xl overflow-hidden">
+              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-ink/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center space-y-2">
+                <button 
+                  onClick={() => setEditingCategory({ type: 'product', category: cat })}
+                  className="bg-bg text-ink p-2 rounded-full hover:bg-ink hover:text-bg transition-colors"
+                >
+                  <Edit2 size={12} />
+                </button>
+                <button 
+                  onClick={() => handleDelete('product', cat.id)}
+                  className="bg-bg text-rose-600 p-2 rounded-full hover:bg-rose-600 hover:text-bg transition-colors"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+              <div className="absolute bottom-0 inset-x-0 p-3 bg-bg/90 backdrop-blur-sm">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-center line-clamp-1">{cat.name}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-[1px] bg-ink/5" />
+
+      {/* Design Categories */}
+      <div className="space-y-8">
+        <div className="flex justify-between items-end">
+          <div>
+            <h3 className="text-2xl font-semibold mb-2">Design Categories</h3>
+            <p className="text-[10px] uppercase tracking-widest text-ink-muted">Manage categories for your art portfolio</p>
+          </div>
+          <button 
+            onClick={() => setEditingCategory({ type: 'design' })}
+            className="flex items-center space-x-3 bg-ink text-bg px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+          >
+            <Plus size={14} />
+            <span>New Design Category</span>
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          {designCategories.map((cat) => (
+            <div key={cat.id} className="group relative aspect-square bg-white shadow-sm border border-ink/5 rounded-xl overflow-hidden">
+              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-ink/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center space-y-2">
+                <button 
+                  onClick={() => setEditingCategory({ type: 'design', category: cat })}
+                  className="bg-bg text-ink p-2 rounded-full hover:bg-ink hover:text-bg transition-colors"
+                >
+                  <Edit2 size={12} />
+                </button>
+                <button 
+                  onClick={() => handleDelete('design', cat.id)}
+                  className="bg-bg text-rose-600 p-2 rounded-full hover:bg-rose-600 hover:text-bg transition-colors"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+              <div className="absolute bottom-0 inset-x-0 p-3 bg-bg/90 backdrop-blur-sm">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-center line-clamp-1">{cat.name}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {editingCategory && (
+        <CategoryModal 
+          type={editingCategory.type}
+          category={editingCategory.category}
+          onClose={() => setEditingCategory(null)}
+          onSave={(cat) => handleSave(editingCategory.type, cat)}
+        />
+      )}
+    </div>
+  );
+}
+
+function CategoryModal({ 
+  type, 
+  category, 
+  onClose, 
+  onSave 
+}: { 
+  type: 'product' | 'design', 
+  category?: CategoryMetadata, 
+  onClose: () => void, 
+  onSave: (cat: CategoryMetadata) => void 
+}) {
+  const [formData, setFormData] = useState<CategoryMetadata>(category || {
+    id: Date.now().toString(),
+    name: "",
+    image: ""
+  });
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+      />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="relative bg-bg w-full max-w-lg p-8 rounded-sm shadow-2xl space-y-8"
+      >
+        <div className="flex justify-between items-start">
+          <div className="space-y-2">
+            <h3 className="text-2xl font-semibold">{category ? "Edit Category" : "New Category"}</h3>
+            <p className="text-[10px] uppercase tracking-widest text-ink-muted">For {type === 'product' ? 'Shop' : 'Designs'}</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-ink/5 rounded-full transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); onSave(formData); }}>
+          <div className="space-y-2">
+            <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Category Name</label>
+            <input 
+              required
+              type="text" 
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+              placeholder="e.g. Traditional Arabic"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-[10px] uppercase tracking-widest text-ink-muted font-bold">Category Image</label>
+            <div className="flex items-center space-x-6">
+              <div className="w-24 h-24 bg-ink/5 rounded-xl overflow-hidden border border-ink/5 flex-shrink-0">
+                {formData.image ? (
+                  <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-ink/20">
+                    <ImageIcon size={32} />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 space-y-3">
+                <input 
+                  required
+                  type="text" 
+                  value={formData.image}
+                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  className="w-full text-[10px] bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors" 
+                  placeholder="Paste image URL or use upload →"
+                />
+                <div className="relative inline-block">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setFormData({ ...formData, image: reader.result as string });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <div className="bg-ink/5 px-4 py-2 rounded-md text-[10px] uppercase tracking-widest font-semibold flex items-center space-x-2">
+                    <ImageIcon size={14} />
+                    <span>Upload Image</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            type="submit"
+            className="w-full bg-ink text-bg py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-ink/90 transition-all font-semibold"
+          >
+            Save Category
+          </button>
+        </form>
+      </motion.div>
     </div>
   );
 }

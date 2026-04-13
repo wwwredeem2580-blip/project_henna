@@ -1,3 +1,9 @@
+export interface CategoryMetadata {
+  id: string;
+  name: string;
+  image: string;
+}
+
 export interface Design {
   id: string;
   title: string;
@@ -94,6 +100,8 @@ export interface AvailabilitySettings {
   paymentMethods: PaymentMethod[];
   blockedSlots: BlockedSlot[];
   tourItems: TourItem[];
+  productCategories: CategoryMetadata[];
+  designCategories: CategoryMetadata[];
 }
 
 export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";

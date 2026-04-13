@@ -113,7 +113,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     startTime: "12:30",
     endTime: "22:00",
     travelFee: 500,
-    prepaymentAmount: 200,
+    prepaymentAmount: 500,
     paymentMethods: [
       { id: "1", name: "bKash", qrCode: "/images/bkash_qr_placeholder.png", instruction: "Send money to our bKash merchant account." },
       { id: "2", name: "Nagad", qrCode: "/images/bkash_qr_placeholder.png", instruction: "Send money to our Nagad personal account." },
@@ -121,11 +121,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ],
     blockedSlots: [],
     tourItems: [
-      { id: "1", title: "Free Delivery", subtitle: "Boishakhi Special Offer", category: "Offer", description: "এই বৈশাখী অফারে সারাদেশে ডেলিভারি চার্জ ফ্রি।", image: "/images/boishakhi_offer.png", order: 1 },
+      { id: "1", title: "Free Delivery", subtitle: "Boishakhi Special Offer", category: "Offer", description: "এই বৈশাখী অফারে সারাদেশে ডেলিভারি চার্জ ফ্রি。", image: "/images/boishakhi_offer.png", order: 1 },
       { id: "2", title: "Grand Bridal Legacy", subtitle: "Traditional Wedding Artistry", category: "Weddings", description: "Experience the timeless beauty of traditional bridal henna, crafted with precision and passion.", image: "/tour/wedding.png", order: 2 },
       { id: "3", title: "Boishakhi Street Fest", subtitle: "A Celebration of Colors", category: "Festivals", description: "Vibrant and energetic designs inspired by the spirit of Boishakh celebrations.", image: "/tour/fest.png", order: 3 },
       { id: "4", title: "Corporate Elegance", subtitle: "Minimalist Professional Sessions", category: "Corporate", description: "Sophisticated and clean patterns perfect for professional environments and events.", image: "/tour/corporate.png", order: 4 },
       { id: "5", title: "Ria’s Personal Journey", subtitle: "A Muse to Henna Art", category: "Legacy", description: "A peek into the artistic evolution of Ria’s Henna Artistry over a decade.", image: "/tour/legacy.png", order: 5 },
+    ],
+    productCategories: [
+      { id: "cat1", name: "Henna Cone", image: "/images/Henna_Cone.png" },
+      { id: "cat2", name: "Henna Powder", image: "/images/Henna_100g.png" },
+      { id: "cat3", name: "Henna Oil", image: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop" },
+      { id: "cat4", name: "Hair Mask", image: "/images/Henna_100gV2.png" }
+    ],
+    designCategories: [
+      { id: "dcat1", name: "Traditional", image: "/images/mehendi_design_001.png" },
+      { id: "dcat2", name: "Contemporary", image: "/images/mehendi_design_002.png" },
+      { id: "dcat3", name: "Fusion", image: "/images/mehendi_design_003.png" }
     ]
   });
 

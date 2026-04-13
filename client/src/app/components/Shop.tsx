@@ -7,21 +7,8 @@ import { Product } from "../types";
 import { useStore } from "../context/StoreContext";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Category images mapping - using local images
-const categoryImages: Record<string, string[]> = {
-  "All": [
-    "/images/Henna_Cone.png",
-    "/images/Henna_100gV2.png",
-    "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop",
-  ],
-  "Henna Cone": ["/images/Henna_Cone.png"],
-  "Henna Powder": ["/images/Henna_100g.png", "/images/Henna_200g.png", "/images/Henna_500g.png"],
-  "Henna Oil": ["https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop"],
-  "Hair Mask": ["/images/Henna_100gV2.png"],
-};
-
 export function Shop() {
-  const { products, handleAddToCart, cartCount } = useStore();
+  const { products, handleAddToCart, cartCount, availabilitySettings } = useStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeCategory, setActiveCategory] = useState<string>("All");
@@ -41,10 +28,15 @@ export function Shop() {
     : products.filter(p => p.category === activeCategory);
 
   // Get images for each category
-  const getCategoryImages = (category: string): string[] => {
-    if (categoryImages[category]) return categoryImages[category];
-    // Find a product from this category to use its image
-    const productInCategory = products.find(p => p.category === category);
+  const getCategoryImages = (categoryName: string): string[] => {
+    if (categoryName === "All") {
+      return (availabilitySettings.productCategories || []).slice(0, 3).map(c => c.image);
+    }
+    const cat = availabilitySettings.productCategories?.find(c => c.name === categoryName);
+    if (cat?.image) return [cat.image];
+    
+    // Find a product from this category to use its image as fallback
+    const productInCategory = products.find(p => p.category === categoryName);
     return productInCategory?.images ? [productInCategory.images[0]] : ["/images/Henna_Cone.png"];
   };
 
