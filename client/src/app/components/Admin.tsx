@@ -15,7 +15,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
-import { Design, Product, Booking, Order, BookingStatus, OrderStatus, AvailabilitySettings } from "../types";
+import { Design, Product, Booking, Order, BookingStatus, OrderStatus, AvailabilitySettings, CategoryMetadata } from "../types";
 
 import { useStore } from "../context/StoreContext";
 
@@ -896,7 +896,7 @@ function DesignModal({ design, onClose, onSave, designCategories }: { design?: D
 
 function SettingsManagement({ settings, onUpdate }: { settings: AvailabilitySettings, onUpdate: (s: AvailabilitySettings) => void }) {
   const [formData, setFormData] = useState<AvailabilitySettings>(settings);
-  const [activeSubTab, setActiveSubTab] = useState<"schedule" | "payments" | "blocks" | "tour">("schedule");
+  const [activeSubTab, setActiveSubTab] = useState<"schedule" | "payments" | "blocks" | "tour" | "policy">("schedule");
 
   const daysOfWeek = [
     { value: 0, label: "Sunday" },
