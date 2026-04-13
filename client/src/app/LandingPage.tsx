@@ -27,7 +27,7 @@ export default function LandingPage() {
       <HeroBanner />
       
       {/* Best Selling Products */}
-      <section className="px-6 lg:px-12 py-10 lg:py-16">
+      <section className="px-6 lg:px-12 py-10 lg:py-10 mt-10">
         <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-16 space-y-4 md:space-y-0">
           <div>
             <p className="text-[10px] uppercase tracking-[0.3em] text-ink-muted mb-3">Popular Choice</p>
@@ -145,7 +145,7 @@ function ProductCard({ product, index, onAdd }: { product: Product, index: numbe
       </div>
       <div className="space-y-1 flex flex-col flex-1">
         <p className="text-[9px] uppercase tracking-widest text-ink-muted">{product.brand}</p>
-        <h3 className="text-[14px] sm:text-[16px] font-medium line-clamp-2 leading-tight min-h-[2.5rem]">{product.name}</h3>
+        <h3 className="text-[14px] sm:text-[16px] font-medium line-clamp-2 leading-tight">{product.name}</h3>
         {product.secondaryName ? (
           <h4 className="text-[14px] mt-2 font-medium text-ink/70 line-clamp-1 leading-tight">{product.secondaryName}</h4>
         ) : (
@@ -228,7 +228,7 @@ function DesignCard({ design, index }: { design: Design, index: number }) {
       </div>
       <div className="flex flex-col flex-1 space-y-1">
         <p className="text-[9px] uppercase tracking-widest text-ink-muted">{design.category}</p>
-        <h3 className="text-[14px] font-medium line-clamp-2 leading-tight flex-1">{design.title}</h3>
+        <h3 className="text-[14px] sm:text-[16px] font-medium line-clamp-2 leading-tight flex-1">{design.title}</h3>
         <p className="text-base font-bold text-ink pt-1">
           Tk {design.price.toLocaleString()}
         </p>
