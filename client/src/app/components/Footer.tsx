@@ -63,38 +63,38 @@ export function Footer() {
               <img src="/logo/logo.png" alt="Ria's Henna Artistry" className="w-8 h-8 object-contain mix-blend-multiply" />
               <span className="text-lg font-semibold tracking-tight">Ria's Henna Artistry</span>
             </Link>
-            <p className="max-w-xs text-xs text-ink-muted leading-relaxed">
+            <p className="max-w-xs text-md text-ink/80 leading-relaxed">
               Artistry in every stroke. Dedicated to providing the finest organic henna experience for your most cherished moments.
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-12 gap-y-8">
             <div className="space-y-4">
-              <h5 className="text-[10px] uppercase tracking-widest font-bold">Shop</h5>
+              <h5 className="text-xs uppercase tracking-widest font-bold">Shop</h5>
               <div className="flex flex-col space-y-2">
-                <Link href="/" className="text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink transition-colors">All Products</Link>
-                <Link href="/designs" className="text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink transition-colors">Henna Designs</Link>
+                <Link href="/" className="text-xs uppercase tracking-widest text-ink/80 hover:text-ink transition-colors">All Products</Link>
+                <Link href="/designs" className="text-xs uppercase tracking-widest text-ink/80 hover:text-ink transition-colors">Henna Designs</Link>
               </div>
             </div>
             <div className="space-y-4">
-              <h5 className="text-[10px] uppercase tracking-widest font-bold">Company</h5>
+              <h5 className="text-xs uppercase tracking-widest font-bold">Company</h5>
               <div className="flex flex-col space-y-2">
-                <Link href="/about-us" className="text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink transition-colors">About Us</Link>
-                <Link href="/contact-us" className="text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink transition-colors">Contact</Link>
+                <Link href="/about-us" className="text-xs uppercase tracking-widest text-ink/80 hover:text-ink transition-colors">About Us</Link>
+                <Link href="/contact-us" className="text-xs uppercase tracking-widest text-ink/80 hover:text-ink transition-colors">Contact</Link>
               </div>
             </div>
             <div className="space-y-4">
-              <h5 className="text-[10px] uppercase tracking-widest font-bold">Connect</h5>
+              <h5 className="text-xs uppercase tracking-widest font-bold">Connect</h5>
               <div className="flex space-x-4">
-                <Instagram size={18} className="text-ink-muted hover:text-ink cursor-pointer transition-colors" />
-                <Facebook size={18} className="text-ink-muted hover:text-ink cursor-pointer transition-colors" />
-                <Mail size={18} className="text-ink-muted hover:text-ink cursor-pointer transition-colors" />
+                <Instagram size={18} className="text-ink/80 hover:text-ink cursor-pointer transition-colors" />
+                <Facebook size={18} className="text-ink/80 hover:text-ink cursor-pointer transition-colors" />
+                <Mail size={18} className="text-ink/80 hover:text-ink cursor-pointer transition-colors" />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center mt-20 pt-8 border-t border-ink/5 space-y-4 md:space-y-0 text-[10px] text-ink-muted uppercase tracking-widest">
+        <div className="flex flex-col md:flex-row justify-between items-center mt-20 pt-8 border-t border-ink/5 space-y-4 md:space-y-0 text-xs text-ink/60 uppercase tracking-widest">
           <p>© 2026 Ria's Henna Artistry. All rights reserved.</p>
           <div className="flex space-x-6">
             <Link href="/privacy" className="hover:text-ink transition-colors">Privacy Policy</Link>

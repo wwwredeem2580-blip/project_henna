@@ -33,6 +33,7 @@ const INITIAL_PRODUCTS: Product[] = [
       "200g": "/images/Henna_Cone.png",
       "1kg": "/images/Henna_Cone.png"
     },
+    secondaryName: "অর্গানিক মেহেদী কোন্",
     stock: 150
   },
   { 
@@ -47,6 +48,7 @@ const INITIAL_PRODUCTS: Product[] = [
     ], 
     category: "Henna Oil",
     description: "Infused with eucalyptus and tea tree oils, this henna oil helps darken the stain and keeps the skin hydrated. Apply before and after mehendi application for the best results.",
+    secondaryName: "মেহেদী অয়েল",
     stock: 85
   },
   { 
@@ -68,6 +70,7 @@ const INITIAL_PRODUCTS: Product[] = [
     },
     category: "Hair Mask",
     description: "A nourishing blend of amla, reetha, and shikakai. This herbal hair mask strengthens the roots, prevents hair fall, and adds a natural shine to your tresses.",
+    secondaryName: "হারবাল মেহেদী হেয়ার মাস্ক",
     stock: 42
   },
 ];

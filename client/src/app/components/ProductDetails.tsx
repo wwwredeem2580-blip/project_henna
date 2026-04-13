@@ -49,16 +49,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <div className="flex-1 px-6 lg:px-12 py-12 lg:py-32 flex flex-col justify-center max-w-2xl order-2 lg:order-1">
         <button 
           onClick={() => router.push("/")}
-          className="flex items-center space-x-2 text-ink-muted hover:text-ink transition-colors mb-8 lg:mb-12 group"
+          className="flex items-center space-x-2 text-ink/80 hover:text-ink transition-colors mb-8 lg:mb-12 group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[10px] uppercase tracking-widest">Back to Shop</span>
+          <span className="text-xs uppercase tracking-widest">Back to Shop</span>
         </button>
 
         <div className="space-y-8">
           <div className="space-y-2">
-            <p className="text-xs uppercase tracking-widest text-ink-muted">{product.category}</p>
+            <p className="text-xs uppercase tracking-widest text-ink/80 font-bold">{product.category}</p>
             <h2 className="text-4xl lg:text-5xl font-semibold leading-tight">{product.name}</h2>
+            {product.secondaryName && (
+              <h3 className="text-xl lg:text-2xl font-medium text-ink/80 mt-2">{product.secondaryName}</h3>
+            )}
             <div className="flex items-baseline space-x-3 mt-4">
               <p className="text-2xl font-bold">Tk {displayPrice.toLocaleString()}</p>
               {product.originalPrice && (
@@ -69,7 +72,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
           {product.sizes && (
             <div className="space-y-4">
-              <p className="text-[10px] uppercase tracking-widest text-ink-muted">Select Size</p>
+              <p className="text-xs uppercase tracking-widest text-ink/80 font-bold">Select Size</p>
               <div className="flex flex-wrap gap-3">
                 {product.sizes.map((s) => (
                   <button
@@ -118,7 +121,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   Availability: {product.stock > 0 ? `${product.stock} units in stock` : 'Out of stock'}
                 </span>
               </div>
-              <span className="text-xs uppercase tracking-widest text-ink-muted">Brand: {product.brand}</span>
+              <span className="text-xs uppercase tracking-widest text-ink/80 font-bold">Brand: {product.brand}</span>
             </div>
           </div>
         </div>

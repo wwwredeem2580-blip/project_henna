@@ -60,13 +60,6 @@ export function Shop() {
           <h2 className="text-4xl lg:text-5xl font-normal mb-4">Our Products</h2>
           <p className="text-ink-muted uppercase tracking-widest text-xs">Premium products for your beauty rituals</p>
         </div>
-        <div 
-          onClick={() => router.push("/cart")}
-          className="flex items-center space-x-2 text-ink-muted hover:text-ink cursor-pointer transition-colors self-start md:self-auto"
-        >
-          <ShoppingCart size={18} />
-          <span className="text-[10px] uppercase tracking-widest font-semibold">Cart ({cartCount})</span>
-        </div>
       </div>
 
       {/* Category Filter with Images */}
@@ -147,10 +140,10 @@ export function Shop() {
               />
             </div>
             <div className="space-y-1 flex flex-col flex-1">
-              <p className="text-[9px] uppercase tracking-widest text-ink-muted">{product.brand}</p>
-              <h3 className="text-sm font-medium line-clamp-2 leading-tight min-h-[2.5rem]">{product.name}</h3>
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-ink-muted">{product.brand}</p>
+              <h3 className="text-[15px] sm:text-[16px] font-medium line-clamp-2 leading-tight mb-2">{product.name}</h3>
               {product.secondaryName ? (
-                <h4 className="text-sm font-medium text-ink/70 line-clamp-1 leading-tight h-4">{product.secondaryName}</h4>
+                <h4 className="text-[14px] sm:text-[15px] font-medium text-ink/90 line-clamp-1 leading-tight">{product.secondaryName}</h4>
               ) : (
                 <div className="h-4" />
               )}

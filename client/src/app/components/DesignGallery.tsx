@@ -129,7 +129,7 @@ export function DesignGallery() {
             </div>
             <div className="flex flex-col flex-1 space-y-1">
               <p className="text-[9px] uppercase tracking-widest text-ink-muted">{design.category}</p>
-              <h3 className="text-sm font-medium line-clamp-2 leading-tight min-h-[2.5rem] tracking-tight">{design.title}</h3>
+              <h3 className="text-[15px] sm:text-[16px] font-medium line-clamp-2 leading-tight min-h-[2.5rem] tracking-tight">{design.title}</h3>
               <p className="text-base font-bold text-ink pt-1">
                 Tk {design.price.toLocaleString()}
               </p>
