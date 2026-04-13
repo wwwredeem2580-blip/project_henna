@@ -44,7 +44,7 @@ export default function LandingPage() {
 
         <div className="flex space-x-6 overflow-x-auto no-scrollbar pb-8 -mx-6 px-6 lg:-mx-12 lg:px-12 scroll-smooth">
           {bestSellers.map((product, index) => (
-            <div key={product.id} className="w-[180px] sm:w-[220px] md:w-[260px] lg:w-[300px] flex-shrink-0">
+            <div key={product.id} className="w-[150px] sm:w-[180px] md:w-[220px] lg:w-[240px] flex-shrink-0">
               <ProductCard product={product} index={index} onAdd={handleAddToCartClick} />
             </div>
           ))}
@@ -69,7 +69,7 @@ export default function LandingPage() {
 
         <div className="flex space-x-6 overflow-x-auto no-scrollbar pb-8 -mx-6 px-6 lg:-mx-12 lg:px-12 scroll-smooth">
           {featuredDesigns.map((design, index) => (
-            <div key={design.id} className="w-[180px] sm:w-[220px] md:w-[260px] lg:w-[300px] flex-shrink-0">
+            <div key={design.id} className="w-[150px] sm:w-[180px] md:w-[220px] lg:w-[240px] flex-shrink-0">
               <DesignCard design={design} index={index} />
             </div>
           ))}
