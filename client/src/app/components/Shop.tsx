@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ShoppingCart, ArrowRight } from "lucide-react";
+import { ShoppingCart, ArrowRight, Search, X } from "lucide-react";
 import { Product } from "../types";
 import { useStore } from "../context/StoreContext";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,6 +12,7 @@ export function Shop() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const cat = searchParams.get("category");
@@ -23,9 +24,14 @@ export function Shop() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const categories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
 
-  const filteredProducts = activeCategory === "All" 
-    ? products 
-    : products.filter(p => p.category === activeCategory);
+  const filteredProducts = products.filter(p => {
+    const matchesCategory = activeCategory === "All" || p.category === activeCategory;
+    const matchesSearch = 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.secondaryName && p.secondaryName.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesCategory && matchesSearch;
+  });
 
   // Get images for each category
   const getCategoryImages = (categoryName: string): string[] => {
@@ -55,10 +61,29 @@ export function Shop() {
 
   return (
     <section className="px-4 sm:px-6 lg:px-12 py-12 lg:py-24 min-h-screen w-full overflow-x-hidden">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-12 lg:mb-20 space-y-6 md:space-y-0">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-12 lg:mb-20 space-y-6 md:space-y-0 border-b border-ink/5 pb-8">
         <div>
           <h2 className="text-4xl lg:text-5xl font-normal mb-4">Our Products</h2>
-          <p className="text-ink-muted uppercase tracking-widest text-xs">Premium products for your beauty rituals</p>
+          <p className="text-ink/60 uppercase tracking-widest text-xs">Premium products for your beauty rituals</p>
+        </div>
+
+        <div className="relative w-full md:w-80 group">
+          <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-ink/60 group-focus-within:text-ink transition-colors" size={18} />
+          <input 
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent border-b border-ink/30 py-3 pl-8 pr-10 focus:border-ink outline-none transition-all placeholder:text-ink/40 text-base"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery("")}
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-ink/60 hover:text-ink transition-colors"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -120,69 +145,81 @@ export function Shop() {
         })}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-10">
-        {filteredProducts.map((product, index) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.1 }}
-            className="group cursor-pointer flex flex-col h-full"
-            onClick={() => router.push(`/product/${product.id}`)}
-          >
-            <div className="relative aspect-[3/4] overflow-hidden mb-3 bg-ink/5 flex-shrink-0">
-              <img 
-                src={product.images[0]} 
-                alt={product.name} 
-                className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <div className="space-y-1 flex flex-col flex-1">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-ink-muted">{product.brand}</p>
-              <h3 className="text-[15px] sm:text-[16px] font-medium line-clamp-2 leading-tight mb-2">{product.name}</h3>
-              {product.secondaryName ? (
+      {filteredProducts.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-10">
+          {filteredProducts.map((product, index) => (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              className="group cursor-pointer flex flex-col h-full"
+              onClick={() => router.push(`/product/${product.id}`)}
+            >
+              <div className="relative aspect-[3/4] overflow-hidden mb-3 bg-ink/5 flex-shrink-0">
+                <img 
+                  src={product.images[0]} 
+                  alt={product.name} 
+                  className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="space-y-1 flex flex-col flex-1">
+                <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-ink/60">{product.brand}</p>
+                <h3 className="text-[15px] sm:text-[16px] font-medium line-clamp-2 leading-tight mb-2">{product.name}</h3>
+                {product.secondaryName ? (
                 <h4 className="text-[14px] sm:text-[15px] font-medium text-ink/90 line-clamp-1 leading-tight">{product.secondaryName}</h4>
-              ) : (
-                <div className="h-4" />
-              )}
-              <div className="flex items-baseline space-x-2 pt-1">
-                <p className="text-base font-bold text-ink">
-                  Tk {product.price.toLocaleString()}
-                </p>
-                {product.originalPrice && (
-                  <p className="text-xs text-ink/60 line-through font-medium italic">Tk {product.originalPrice.toLocaleString()}</p>
+                ) : (
+                  <div className="h-4" />
                 )}
-              </div>
-              {product.sizes && product.sizes.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-1">
-                  <span className="text-[8px] uppercase tracking-tighter text-ink font-bold">Sizes:</span>
-                  {product.sizes.map(s => (
-                    <span key={s.size} className="text-[8px] bg-ink/5 border border-ink/20 px-1 rounded-sm uppercase tracking-tighter text-ink font-medium">{s.size}</span>
-                  ))}
+                <div className="flex items-baseline space-x-2 pt-1">
+                  <p className="text-base font-bold text-ink">
+                    Tk {product.price.toLocaleString()}
+                  </p>
+                  {product.originalPrice && (
+                    <p className="text-xs text-ink/60 line-through font-medium italic">Tk {product.originalPrice.toLocaleString()}</p>
+                  )}
                 </div>
-              )}
-              <div className="flex gap-2 pt-4 mt-auto">
-                <button 
-                  onClick={(e) => handleAddToCartClick(e, product)}
-                  className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center border border-ink/20 rounded-md hover:bg-ink hover:text-bg hover:border-ink transition-all duration-300"
-                  title="Add to Cart"
-                >
-                  <ShoppingCart size={16} />
-                </button>
-                <button 
-                  onClick={(e) => handleOrderNowClick(e, product)}
-                  className="flex-1 whitespace-nowrap flex items-center justify-center gap-1.5 py-1.5 px-2 bg-cta text-white rounded-md text-[9px] md:text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300 shadow-sm"
-                >
-                  <span>Order Now</span>
-                  <ArrowRight size={10} />
-                </button>
+                {product.sizes && product.sizes.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    <span className="text-[8px] uppercase tracking-tighter text-ink font-bold">Sizes:</span>
+                    {product.sizes.map(s => (
+                      <span key={s.size} className="text-[8px] bg-ink/5 border border-ink/20 px-1 rounded-sm uppercase tracking-tighter text-ink font-medium">{s.size}</span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2 pt-4 mt-auto">
+                  <button 
+                    onClick={(e) => handleAddToCartClick(e, product)}
+                    className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center border border-ink/20 rounded-md hover:bg-ink hover:text-bg hover:border-ink transition-all duration-300"
+                    title="Add to Cart"
+                  >
+                    <ShoppingCart size={16} />
+                  </button>
+                  <button 
+                    onClick={(e) => handleOrderNowClick(e, product)}
+                    className="flex-1 whitespace-nowrap flex items-center justify-center gap-1.5 py-1.5 px-2 bg-cta text-white rounded-md text-[9px] md:text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300 shadow-sm"
+                  >
+                    <span>Order Now</span>
+                    <ArrowRight size={10} />
+                  </button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <div className="py-24 text-center">
+          <p className="text-xl text-ink/40 font-light mb-4 text-ink">No products found matching "{searchQuery}"</p>
+          <button 
+            onClick={() => { setSearchQuery(""); setActiveCategory("All"); }}
+            className="text-xs uppercase tracking-[0.2em] font-bold text-cta hover:text-cta-hover transition-colors"
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
 
       <AnimatePresence>
         {toastMessage && (
