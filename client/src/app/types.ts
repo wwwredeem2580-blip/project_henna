@@ -14,17 +14,24 @@ export interface PaymentMethod {
   instruction?: string;
 }
 
+export interface ProductSize {
+  size: string;
+  price: number;
+}
+
 export interface Product {
   id: string;
   name: string;
   brand: string;
   price: number;
+  originalPrice?: number;
   images: string[];
   category: string;
   description: string;
-  sizes?: string[];
+  sizes?: ProductSize[];
   variantImages?: Record<string, string>;
   stock: number;
+  secondaryName?: string;
 }
 
 export interface CartItem extends Product {

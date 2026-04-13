@@ -15,6 +15,7 @@ const INITIAL_PRODUCTS: Product[] = [
     name: "Organic Henna Cone", 
     brand: "Ria’s Henna Artistry", 
     price: 120, 
+    originalPrice: 150,
     images: [
       "/images/Henna_Cone.png",
       "/images/Henna_200gV2.png",
@@ -22,7 +23,11 @@ const INITIAL_PRODUCTS: Product[] = [
     ], 
     category: "Henna Cone",
     description: "Our signature organic henna cone is crafted with the finest Rajasthani henna powder, essential oils, and lemon juice. It provides a rich, deep stain that lasts for weeks. Perfect for intricate bridal designs.",
-    sizes: ["100g", "200g", "1kg"],
+    sizes: [
+      { size: "100g", price: 120 },
+      { size: "200g", price: 230 },
+      { size: "1kg", price: 950 }
+    ],
     variantImages: {
       "100g": "/images/Henna_Cone.png",
       "200g": "/images/Henna_Cone.png",
@@ -35,6 +40,7 @@ const INITIAL_PRODUCTS: Product[] = [
     name: "Henna Oil (30ml)", 
     brand: "Pure Essence", 
     price: 180, 
+    originalPrice: 200,
     images: [
       "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=600&auto=format&fit=crop"
@@ -52,7 +58,10 @@ const INITIAL_PRODUCTS: Product[] = [
       "/images/Henna_100gV2.png",
       "/images/Henna_200gV2.png",
     ],
-    sizes: ["100g", "200g"],
+    sizes: [
+      { size: "100g", price: 240 },
+      { size: "200g", price: 450 }
+    ],
     variantImages: {
       "100g": "/images/Henna_100gV2.png",
       "200g": "/images/Henna_200gV2.png",
@@ -123,19 +132,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleAddToCart = (product: Product, selectedSize?: string) => {
-    const sizeToUse = selectedSize || (product.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined);
+    const sizeObj = product.sizes?.find(s => s.size === selectedSize) || 
+                   (product.sizes && product.sizes.length > 0 ? product.sizes[0] : null);
     
+    const sizeName = sizeObj ? sizeObj.size : undefined;
+    const priceToUse = sizeObj ? sizeObj.price : product.price;
+
     setCart(prevCart => {
       const existingItem = prevCart.find(item => 
-        item.id === product.id && item.selectedSize === sizeToUse
+        item.id === product.id && item.selectedSize === sizeName
       );
       if (existingItem) {
         return prevCart.map(item => 
-          (item.id === product.id && item.selectedSize === sizeToUse) 
+          (item.id === product.id && item.selectedSize === sizeName) 
             ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prevCart, { ...product, quantity: 1, selectedSize: sizeToUse }];
+      return [...prevCart, { ...product, price: priceToUse, quantity: 1, selectedSize: sizeName }];
     });
   };
 

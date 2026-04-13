@@ -5,10 +5,18 @@ import { useStore } from "../context/StoreContext";
 import { useRouter } from "next/navigation";
 import { Design } from "../types";
 import { Calendar } from "lucide-react";
+import { useState } from "react";
 
 export function DesignGallery() {
   const { designs, setSelectedDesign } = useStore();
   const router = useRouter();
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+
+  const categories = ["All", ...Array.from(new Set(designs.map(d => d.category)))];
+
+  const filteredDesigns = activeCategory === "All" 
+    ? designs 
+    : designs.filter(d => d.category === activeCategory);
 
   const handleBookNow = (e: React.MouseEvent, design: Design) => {
     e.stopPropagation();
@@ -23,8 +31,25 @@ export function DesignGallery() {
         <p className="text-ink-muted uppercase tracking-widest text-xs">Select a style for your pre-booking</p>
       </div>
 
+      {/* Category Filter */}
+      <div className="flex flex-wrap gap-4 mb-12">
+        {categories.map(category => (
+          <button
+            key={category}
+            onClick={() => setActiveCategory(category)}
+            className={`px-8 py-3 rounded-full border text-[10px] uppercase tracking-widest font-semibold transition-all duration-300 ${
+              activeCategory === category 
+                ? "bg-ink text-bg border-ink" 
+                : "bg-transparent text-ink border-ink/10 hover:border-ink/30"
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-10">
-        {designs.map((design, index) => (
+        {filteredDesigns.map((design, index) => (
           <motion.div
             key={design.id}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -41,10 +66,10 @@ export function DesignGallery() {
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div className="flex flex-col flex-1 space-y-2">
+            <div className="flex flex-col flex-1 space-y-1">
               <p className="text-[9px] uppercase tracking-widest text-ink-muted">{design.category}</p>
-              <h3 className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{design.title}</h3>
-              <p className="text-base font-bold text-ink">
+              <h3 className="text-sm font-medium line-clamp-2 leading-tight min-h-[2.5rem]">{design.title}</h3>
+              <p className="text-base font-bold text-ink pt-1">
                 Tk {design.price.toLocaleString()}
               </p>
               <div className="mt-auto pt-2">

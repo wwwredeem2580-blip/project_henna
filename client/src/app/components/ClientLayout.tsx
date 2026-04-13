@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { Sidebar } from "./Sidebar";
+import { Footer } from "./Footer";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
@@ -14,22 +15,26 @@ export function ClientLayout({ children }: { children: ReactNode }) {
       <div className="max-w-[1440px] mx-auto min-h-screen flex relative">
         <Sidebar />
         
-        <main className="flex-1 min-w-0 min-h-screen relative pt-16 lg:pt-0 lg:ml-64">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
-              key={pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0, pointerEvents: "auto" }}
-              exit={{ opacity: 0, y: -10, pointerEvents: "none" }}
-              transition={{ 
-                duration: 0.2,
-                ease: "easeOut",
-              }}
-              style={{ width: "100%", position: "relative" }}
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
+        <main className="flex-1 min-w-0 min-h-screen relative pt-16 lg:pt-0 lg:ml-64 flex flex-col">
+          <div className="flex-1">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0, pointerEvents: "auto" }}
+                exit={{ opacity: 0, y: -10, pointerEvents: "none" }}
+                transition={{ 
+                  duration: 0.2,
+                  ease: "easeOut",
+                }}
+                style={{ width: "100%", position: "relative" }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <Footer />
 
           {/* Decorative background elements */}
           <div className="fixed top-0 right-0 w-1/3 h-screen pointer-events-none opacity-[0.02] z-0">

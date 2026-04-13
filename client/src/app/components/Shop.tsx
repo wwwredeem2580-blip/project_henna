@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart, ArrowRight } from "lucide-react";
 import { Product } from "../types";
 import { useStore } from "../context/StoreContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Stories } from "./Stories";
+import { useEffect } from "react";
 
 // Category images mapping - using local images
 const categoryImages: Record<string, string[]> = {
@@ -25,7 +26,16 @@ const categoryImages: Record<string, string[]> = {
 export function Shop() {
   const { products, handleAddToCart, cartCount } = useStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeCategory, setActiveCategory] = useState<string>("All");
+
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat) {
+      setActiveCategory(cat);
+    }
+  }, [searchParams]);
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const categories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -138,10 +148,10 @@ export function Shop() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.1 }}
-            className="group cursor-pointer"
+            className="group cursor-pointer flex flex-col h-full"
             onClick={() => router.push(`/product/${product.id}`)}
           >
-            <div className="relative aspect-[3/4] overflow-hidden mb-3 bg-ink/5">
+            <div className="relative aspect-[3/4] overflow-hidden mb-3 bg-ink/5 flex-shrink-0">
               <img 
                 src={product.images[0]} 
                 alt={product.name} 
@@ -149,13 +159,31 @@ export function Shop() {
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1 flex flex-col flex-1">
               <p className="text-[9px] uppercase tracking-widest text-ink-muted">{product.brand}</p>
-              <h3 className="text-sm font-medium truncate">{product.name}</h3>
-              <p className="text-base font-bold text-ink">
-                Tk {product.price.toLocaleString()}
-              </p>
-              <div className="flex gap-2 pt-1">
+              <h3 className="text-sm font-medium line-clamp-2 leading-tight min-h-[2.5rem]">{product.name}</h3>
+              {product.secondaryName ? (
+                <h4 className="text-sm font-medium text-ink/70 line-clamp-1 leading-tight h-4">{product.secondaryName}</h4>
+              ) : (
+                <div className="h-4" />
+              )}
+              <div className="flex items-baseline space-x-2 pt-1">
+                <p className="text-base font-bold text-ink">
+                  Tk {product.price.toLocaleString()}
+                </p>
+                {product.originalPrice && (
+                  <p className="text-xs text-ink/60 line-through font-medium italic">Tk {product.originalPrice.toLocaleString()}</p>
+                )}
+              </div>
+              {product.sizes && product.sizes.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-1">
+                  <span className="text-[8px] uppercase tracking-tighter text-ink font-bold">Sizes:</span>
+                  {product.sizes.map(s => (
+                    <span key={s.size} className="text-[8px] bg-ink/5 border border-ink/20 px-1 rounded-sm uppercase tracking-tighter text-ink font-medium">{s.size}</span>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2 pt-4 mt-auto">
                 <button 
                   onClick={(e) => handleAddToCartClick(e, product)}
                   className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center border border-ink/20 rounded-md hover:bg-ink hover:text-bg hover:border-ink transition-all duration-300"
@@ -165,7 +193,7 @@ export function Shop() {
                 </button>
                 <button 
                   onClick={(e) => handleOrderNowClick(e, product)}
-                  className="flex-1 whitespace-nowrap flex items-center justify-center gap-1.5 py-1.5 px-2 bg-cta text-white rounded-md text-[9px] md:text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300"
+                  className="flex-1 whitespace-nowrap flex items-center justify-center gap-1.5 py-1.5 px-2 bg-cta text-white rounded-md text-[9px] md:text-[10px] uppercase tracking-wider font-semibold hover:bg-cta-hover transition-all duration-300 shadow-sm"
                 >
                   <span>Order Now</span>
                   <ArrowRight size={10} />

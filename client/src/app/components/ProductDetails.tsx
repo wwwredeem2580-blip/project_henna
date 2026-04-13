@@ -16,8 +16,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(
-    product.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined
+    product.sizes && product.sizes.length > 0 ? product.sizes[0].size : undefined
   );
+
+  const selectedSizeObj = product.sizes?.find(s => s.size === selectedSize);
+  const displayPrice = selectedSizeObj ? selectedSizeObj.price : product.price;
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
@@ -33,7 +36,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       const idx = product.images.indexOf(product.variantImages[size]);
       if (idx !== -1) setCurrentImageIndex(idx);
     } else if (product.sizes) {
-      const index = product.sizes.indexOf(size);
+      const index = product.sizes.findIndex(s => s.size === size);
       if (index !== -1 && index < product.images.length) {
         setCurrentImageIndex(index);
       }
@@ -56,24 +59,29 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-widest text-ink-muted">{product.category}</p>
             <h2 className="text-4xl lg:text-5xl font-semibold leading-tight">{product.name}</h2>
-            <p className="text-xl font-medium mt-4">Tk {product.price.toLocaleString()}</p>
+            <div className="flex items-baseline space-x-3 mt-4">
+              <p className="text-2xl font-bold">Tk {displayPrice.toLocaleString()}</p>
+              {product.originalPrice && (
+                <p className="text-lg text-ink/30 line-through font-medium">Tk {product.originalPrice.toLocaleString()}</p>
+              )}
+            </div>
           </div>
 
           {product.sizes && (
             <div className="space-y-4">
               <p className="text-[10px] uppercase tracking-widest text-ink-muted">Select Size</p>
               <div className="flex flex-wrap gap-3">
-                {product.sizes.map((size) => (
+                {product.sizes.map((s) => (
                   <button
-                    key={size}
-                    onClick={() => handleSizeChange(size)}
+                    key={s.size}
+                    onClick={() => handleSizeChange(s.size)}
                     className={`px-6 py-2 text-[10px] uppercase tracking-widest transition-all duration-300 border ${
-                      selectedSize === size 
+                      selectedSize === s.size 
                         ? "bg-ink text-bg border-ink" 
                         : "bg-transparent text-ink border-ink/10 hover:border-ink/30"
                     }`}
                   >
-                    {size}
+                    {s.size}
                   </button>
                 ))}
               </div>

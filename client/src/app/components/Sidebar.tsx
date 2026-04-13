@@ -24,7 +24,8 @@ export function Sidebar() {
   }, []);
 
   const navItems = [
-    { id: "/", label: "Shop", icon: ShoppingBag },
+    { id: "/", label: "Home", icon: ShoppingBag },
+    { id: "/shop", label: "Shop", icon: ShoppingBag },
     { id: "/designs", label: "Designs", icon: ImageIcon },
     { id: "/booking", label: "Pre-booking", icon: Calendar },
     { id: "/about-us", label: "About Us", icon: Info },
@@ -43,23 +44,44 @@ export function Sidebar() {
     <>
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 w-full h-16 bg-bg border-b border-ink/5 z-[60]">
-        <div className="max-w-[1080px] mx-auto h-full flex items-center justify-between px-6">
+        <div className="max-w-[1440px] mx-auto h-full flex items-center justify-between px-6">
           <Link 
             href="/"
             className="flex items-center space-x-3 cursor-pointer"
             onClick={handleNavClick}
           >
-            <div className="w-8 h-8 relative flex-shrink-0">
+            <div className="w-10 h-10 relative flex-shrink-0">
                <img src="/logo/logo.png" alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
             </div>
-            <h1 className="text-xl font-semibold tracking-tight">Ria's Henna</h1>
+            <h1 className="text-xl font-semibold tracking-tight leading-none">Ria's Henna<br /><span className="text-[10px] uppercase tracking-widest font-normal">Artistry</span></h1>
           </Link>
-          <button 
-            onClick={() => setIsOpen(!isOpen)}
-            className="p-2 text-ink hover:bg-ink/5 rounded-full transition-colors"
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex items-center space-x-2">
+            <Link 
+              href="/cart"
+              className="p-2 text-ink hover:bg-ink/5 rounded-full transition-colors relative"
+              onClick={handleNavClick}
+            >
+              <ShoppingBag size={20} />
+              {cartCount > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-ink text-bg text-[10px] flex items-center justify-center rounded-full leading-none">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            <Link 
+              href="/login"
+              className="p-2 text-ink hover:bg-ink/5 rounded-full transition-colors"
+              onClick={handleNavClick}
+            >
+              <Users size={20} />
+            </Link>
+            <button 
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2 text-ink hover:bg-ink/5 rounded-full transition-colors ml-1"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -98,8 +120,8 @@ export function Sidebar() {
                       key={item.id}
                       href={item.id}
                       onClick={handleNavClick}
-                      className={`flex items-center space-x-3 text-sm tracking-widest uppercase transition-all duration-300 ${
-                        isActive ? "text-ink font-semibold" : "text-ink-muted hover:text-ink"
+                      className={`flex items-center space-x-3 text-base tracking-widest uppercase transition-all duration-300 ${
+                        isActive ? "text-ink font-bold" : "text-ink-muted hover:text-ink font-semibold"
                       }`}
                     >
                       <span className="flex items-center space-x-2">
@@ -127,20 +149,6 @@ export function Sidebar() {
               </nav>
             </div>
 
-            <div className="space-y-8 mt-12">
-              <div className="space-y-4">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">Connect</p>
-                <div className="flex space-x-4">
-                  <Instagram size={16} className="text-ink-muted hover:text-ink cursor-pointer transition-colors" />
-                  <Facebook size={16} className="text-ink-muted hover:text-ink cursor-pointer transition-colors" />
-                  <Mail size={16} className="text-ink-muted hover:text-ink cursor-pointer transition-colors" />
-                </div>
-              </div>
-              <p className="text-[10px] text-ink-muted leading-relaxed">
-                © 2026 Ria's Henna Artistry.<br />
-                Artistry in every stroke.
-              </p>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

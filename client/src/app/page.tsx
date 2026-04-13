@@ -1,7 +1,7 @@
 "use client";
 
-import { Shop } from "./components/Shop";
+import LandingPage from "./LandingPage";
 
 export default function Page() {
-  return <Shop />;
+  return <LandingPage />;
 }

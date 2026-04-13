@@ -404,7 +404,8 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
     description: "",
     stock: 0,
     sizes: [],
-    variantImages: {}
+    variantImages: {},
+    secondaryName: ""
   });
 
   const handleImageChange = (index: number, val: string) => {
@@ -417,20 +418,27 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
     setFormData({ ...formData, images: [...(formData.images || []), ""] });
   };
 
-  const handleSizeChange = (index: number, val: string) => {
+  const handleSizeChange = (index: number, field: 'size' | 'price', val: any) => {
     const newSizes = [...(formData.sizes || [])];
     const newSizeImages = { ...(formData.variantImages || {}) };
-    const oldSize = newSizes[index];
-    if (oldSize && newSizeImages[oldSize]) {
-      newSizeImages[val] = newSizeImages[oldSize];
-      delete newSizeImages[oldSize];
+    const oldSize = newSizes[index]?.size;
+    
+    if (field === 'size') {
+      const newSizeName = val as string;
+      if (oldSize && newSizeImages[oldSize]) {
+        newSizeImages[newSizeName] = newSizeImages[oldSize];
+        delete newSizeImages[oldSize];
+      }
+      newSizes[index] = { ...newSizes[index], size: newSizeName };
+    } else {
+      newSizes[index] = { ...newSizes[index], price: Number(val) };
     }
-    newSizes[index] = val;
+    
     setFormData({ ...formData, sizes: newSizes, variantImages: newSizeImages });
   };
 
   const addSizeField = () => {
-    setFormData({ ...formData, sizes: [...(formData.sizes || []), ""] });
+    setFormData({ ...formData, sizes: [...(formData.sizes || []), { size: "", price: 0 }] });
   };
 
   return (
@@ -468,6 +476,15 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
               />
             </div>
             <div className="space-y-2">
+              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Secondary Title (e.g. Bengali)</label>
+              <input 
+                type="text" 
+                value={formData.secondaryName}
+                onChange={(e) => setFormData({ ...formData, secondaryName: e.target.value })}
+                className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+              />
+            </div>
+            <div className="space-y-2">
               <div className="flex justify-between items-center mb-1">
                 <label className="text-[10px] uppercase tracking-widest text-ink-muted">Category</label>
                 <button 
@@ -500,7 +517,7 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest text-ink-muted">Brand</label>
               <input 
@@ -512,7 +529,16 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Price (Tk)</label>
+              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Previous Price (Tk)</label>
+              <input 
+                type="number" 
+                value={formData.originalPrice || ""}
+                onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value ? Number(e.target.value) : undefined })}
+                className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Current Price (Tk)</label>
               <input 
                 required
                 type="number" 
@@ -534,76 +560,92 @@ function ProductModal({ product, onClose, onSave, existingCategories }: { produc
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Available Sizes (Optional)</label>
+            <label className="text-[10px] uppercase tracking-widest text-ink-muted">Available Sizes & Prices (Optional)</label>
             <div className="space-y-4">
-              {formData.sizes?.map((size, idx) => (
-                <div key={idx} className="flex space-x-4 items-center">
-                  <input 
-                    type="text" 
-                    value={size}
-                    onChange={(e) => handleSizeChange(idx, e.target.value)}
-                    className="flex-1 bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
-                    placeholder="e.g. 25g"
-                  />
-                  <div className="relative w-8 h-8 rounded-sm overflow-hidden flex-shrink-0 border border-dashed border-ink/20 hover:border-ink/50 transition-colors flex items-center justify-center group">
-                    {formData.variantImages?.[size] ? (
-                      <>
-                        <img src={formData.variantImages[size]} alt="Variant" className="w-full h-full object-cover" />
-                        <button 
-                          type="button" 
-                          onClick={() => {
-                            const newSizeImages = { ...(formData.variantImages || {}) };
-                            delete newSizeImages[size];
-                            setFormData({ ...formData, variantImages: newSizeImages });
-                          }} 
-                          className="absolute inset-0 bg-rose-600/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 size={10} className="text-white" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <input 
-                          type="file" 
-                          accept="image/*"
-                          title="Add Variant Image"
-                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                const url = reader.result as string;
-                                const newSizeImages = { ...(formData.variantImages || {}), [size]: url };
-                                const newImages = Array.from(new Set([...(formData.images || []), url]));
-                                setFormData({ ...formData, images: newImages, variantImages: newSizeImages });
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-                        <ImageIcon className="text-ink/30" size={14} />
-                      </>
-                    )}
+              {formData.sizes?.map((sizeObj, idx) => {
+                // Handle cases where sizes might be string (migration) or object
+                const s = typeof sizeObj === 'string' ? sizeObj : sizeObj.size;
+                const p = typeof sizeObj === 'string' ? 0 : sizeObj.price;
+                
+                return (
+                  <div key={idx} className="flex space-x-4 items-center">
+                    <input 
+                      type="text" 
+                      value={s}
+                      onChange={(e) => handleSizeChange(idx, 'size', e.target.value)}
+                      className="flex-1 bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                      placeholder="e.g. 25g"
+                    />
+                    <div className="flex items-center bg-ink/[0.03] border-b border-ink/10 px-2 min-w-[120px]">
+                      <span className="text-xs text-ink/50 mr-1">Tk</span>
+                      <input 
+                        type="number" 
+                        value={p}
+                        onChange={(e) => handleSizeChange(idx, 'price', e.target.value)}
+                        className="w-full bg-transparent py-2 focus:border-ink outline-none transition-colors font-serif text-sm" 
+                        placeholder="Price"
+                      />
+                    </div>
+                    <div className="relative w-8 h-8 rounded-sm overflow-hidden flex-shrink-0 border border-dashed border-ink/20 hover:border-ink/50 transition-colors flex items-center justify-center group">
+                      {formData.variantImages?.[s] ? (
+                        <>
+                          <img src={formData.variantImages[s]} alt="Variant" className="w-full h-full object-cover" />
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              const newSizeImages = { ...(formData.variantImages || {}) };
+                              delete newSizeImages[s];
+                              setFormData({ ...formData, variantImages: newSizeImages });
+                            }} 
+                            className="absolute inset-0 bg-rose-600/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={10} className="text-white" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            title="Add Variant Image"
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  const url = reader.result as string;
+                                  const newSizeImages = { ...(formData.variantImages || {}), [s]: url };
+                                  const newImages = Array.from(new Set([...(formData.images || []), url]));
+                                  setFormData({ ...formData, images: newImages, variantImages: newSizeImages });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          <ImageIcon className="text-ink/30" size={14} />
+                        </>
+                      )}
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const newSizes = formData.sizes?.filter((_, i) => i !== idx) || [];
+                        const newSizeImages = { ...(formData.variantImages || {}) };
+                        delete newSizeImages[s];
+                        setFormData({ ...formData, sizes: newSizes, variantImages: newSizeImages });
+                      }}
+                      className="text-rose-600 p-2 hover:bg-rose-50 rounded-full transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      const newSizes = formData.sizes?.filter((_, i) => i !== idx) || [];
-                      const newSizeImages = { ...(formData.variantImages || {}) };
-                      delete newSizeImages[size];
-                      setFormData({ ...formData, sizes: newSizes, variantImages: newSizeImages });
-                    }}
-                    className="text-rose-600 p-2"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
               <button 
                 type="button"
                 onClick={addSizeField}
-                className="flex items-center space-x-2 text-[10px] uppercase tracking-widest text-ink-muted hover:text-ink transition-colors"
+                className="flex items-center space-x-2 text-[10px] uppercase tracking-widest text-ink hover:underline font-bold"
               >
                 <Plus size={14} />
                 <span>Add Size Option</span>
@@ -689,6 +731,9 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
     price: 0
   });
 
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const designCategories = ["Traditional", "Contemporary", "Arabic", "Minimal"];
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
       <motion.div 
@@ -724,17 +769,36 @@ function DesignModal({ design, onClose, onSave }: { design?: Design, onClose: ()
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-ink-muted">Category</label>
-              <select 
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif"
-              >
-                <option value="Traditional">Traditional</option>
-                <option value="Contemporary">Contemporary</option>
-                <option value="Arabic">Arabic</option>
-                <option value="Minimal">Minimal</option>
-              </select>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-[10px] uppercase tracking-widest text-ink-muted">Category</label>
+                <button 
+                  type="button" 
+                  onClick={() => setIsCustomCategory(!isCustomCategory)} 
+                  className="text-[10px] uppercase tracking-widest text-ink hover:underline border-none bg-transparent"
+                >
+                  {isCustomCategory ? "Select Existing" : "Add Custom"}
+                </button>
+              </div>
+              {isCustomCategory ? (
+                <input 
+                  required
+                  type="text" 
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif" 
+                  placeholder="Enter custom category"
+                />
+              ) : (
+                <select 
+                  required
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full bg-transparent border-b border-ink/10 py-2 focus:border-ink outline-none transition-colors font-serif"
+                >
+                  {designCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                  {/* Also show any existing categories from designs that are not in the predefined list */}
+                </select>
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest text-ink-muted">Price (Tk)</label>
